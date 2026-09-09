@@ -18,27 +18,7 @@ A proposal is not a decision until explicitly accepted by the project owner.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The project should be developed incrementally, with the project owner retaining control over architectural and product decisions.
-
-### Decision
-
-Development will proceed in small, explicit steps.
-
-Significant architectural decisions require discussion and approval before implementation.
-
-The repository documentation will be maintained as part of development.
-
-### Rationale
-
-This reduces unnecessary complexity and prevents architectural decisions from being made implicitly during implementation.
-
-### Consequences
-
-- Work will be divided into small increments.
-- The assistant should not silently change architecture.
-- Significant decisions will be recorded in this document.
+Development proceeds in small, explicit steps. Significant architectural decisions require discussion and approval before implementation, and repository documentation is maintained as part of development.
 
 ---
 
@@ -47,30 +27,7 @@ This reduces unnecessary complexity and prevents architectural decisions from be
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The project needs durable persistence of architectural decisions, progress, instructions, and development context.
-
-### Decision
-
-The GitHub repository is the canonical persistent source of truth for the project.
-
-Project knowledge that must survive beyond a conversation should be stored in repository documentation.
-
-### Rationale
-
-Repository documentation is versioned, accessible to development tools, and independent of conversation history.
-
-### Consequences
-
-The following documents form the project's persistent documentation layer:
-
-- `AGENTS.md`
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `docs/DECISIONS.md`
-- `docs/PROGRESS.md`
-- `docs/ROADMAP.md`
+The GitHub repository is the canonical persistent source of truth. Project knowledge that must survive beyond a conversation is stored in repository documentation.
 
 ---
 
@@ -79,25 +36,7 @@ The following documents form the project's persistent documentation layer:
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The project must be straightforward to develop on both Windows 11 and macOS.
-
-### Decision
-
-The application development environment will use Docker and VS Code Dev Containers.
-
-The development environment will run in a Linux-based container.
-
-### Rationale
-
-Containerization reduces host-platform differences and keeps project-specific development dependencies isolated from the host operating system.
-
-### Consequences
-
-- Project development dependencies should be installed inside the Dev Container.
-- The host should require only the general development prerequisites.
-- Host-specific runtime dependencies should be avoided where practical.
+Development uses Docker and VS Code Dev Containers with a Linux-based container. Project-specific development dependencies belong inside the container; host-specific runtime dependencies should be avoided where practical.
 
 ---
 
@@ -106,21 +45,7 @@ Containerization reduces host-platform differences and keeps project-specific de
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The backend requires a mature ecosystem suitable for data processing, file handling, web APIs, and future image/data analysis.
-
-### Decision
-
-Python will be used for the backend.
-
-### Rationale
-
-Python provides a strong ecosystem for web APIs, data processing, spreadsheet import, image processing, and potential future extensions.
-
-### Consequences
-
-Python-specific project tooling will be established inside the Dev Container.
+Python is the backend language, providing the ecosystem needed for APIs, data processing, spreadsheet import, image processing, and future extensions.
 
 ---
 
@@ -129,26 +54,7 @@ Python-specific project tooling will be established inside the Dev Container.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The Python environment should have reproducible dependency management without relying on host-specific Python environments.
-
-### Decision
-
-`uv` will be used for Python project and dependency management.
-
-### Rationale
-
-`uv` provides project dependency management and lockfile-based reproducibility while fitting naturally into the containerized development environment.
-
-### Consequences
-
-The Python project will use:
-
-- `pyproject.toml`
-- `uv.lock`
-
-Python dependencies will be managed through `uv`.
+`uv` is used for Python project and dependency management. The Python project uses `pyproject.toml` and `uv.lock`, with dependencies managed through `uv`.
 
 ---
 
@@ -157,21 +63,7 @@ Python dependencies will be managed through `uv`.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The application requires a backend API to connect the database, application logic, file management, and web frontend.
-
-### Decision
-
-FastAPI will be used as the backend web framework.
-
-### Rationale
-
-FastAPI provides a modern Python API framework with type-driven validation and good support for development of HTTP APIs.
-
-### Consequences
-
-The backend will expose application functionality through HTTP APIs.
+FastAPI is the backend web framework. The backend exposes application functionality through HTTP APIs.
 
 ---
 
@@ -180,23 +72,7 @@ The backend will expose application functionality through HTTP APIs.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The application is initially intended for personal use and does not require a separate database server.
-
-### Decision
-
-SQLite will be used as the initial database engine.
-
-### Rationale
-
-SQLite is lightweight, portable, requires no separate database service, and is appropriate for the initial scale and deployment model.
-
-### Consequences
-
-The database will initially be stored as a local SQLite database file.
-
-A future change to another database engine remains possible if project requirements justify it.
+SQLite is the initial database engine. It is lightweight, portable, and requires no separate database service. A future database-engine change remains possible if justified by requirements.
 
 ---
 
@@ -205,21 +81,7 @@ A future change to another database engine remains possible if project requireme
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The application needs a structured way to define and access its relational data model.
-
-### Decision
-
-SQLAlchemy will be used as the database abstraction/ORM layer.
-
-### Rationale
-
-SQLAlchemy provides a mature Python interface for relational databases and keeps application code relatively independent of the specific database engine.
-
-### Consequences
-
-Database models and database access will use SQLAlchemy.
+SQLAlchemy is the database abstraction/ORM layer. Database models and database access use SQLAlchemy.
 
 ---
 
@@ -228,25 +90,7 @@ Database models and database access will use SQLAlchemy.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The application needs a graphical user interface that works consistently across Windows and macOS.
-
-### Decision
-
-The primary user interface will be a web application accessed through a browser on the host.
-
-A native desktop GUI is not the current UI architecture.
-
-### Rationale
-
-A browser-based UI fits naturally with the containerized backend and avoids maintaining separate native GUI implementations for Windows and macOS.
-
-### Consequences
-
-The frontend and backend will communicate over HTTP.
-
-The application will be usable from a mainstream web browser.
+The primary UI is a web application accessed through a browser on the host. A native desktop GUI is not the current UI architecture. Frontend and backend communicate over HTTP.
 
 ---
 
@@ -255,21 +99,7 @@ The application will be usable from a mainstream web browser.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The frontend should use a modern component-based framework rather than requiring the project to build its UI around raw JavaScript.
-
-### Decision
-
-Vue 3 will be used for the frontend.
-
-### Rationale
-
-Vue provides a component-based development model suitable for a progressively growing application while remaining relatively lightweight.
-
-### Consequences
-
-Frontend functionality will be organized primarily into Vue components.
+Vue 3 is the frontend framework. Frontend functionality is organized primarily into Vue components.
 
 ---
 
@@ -278,21 +108,7 @@ Frontend functionality will be organized primarily into Vue components.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The frontend is expected to grow beyond a minimal interface and will communicate with a typed backend API.
-
-### Decision
-
-TypeScript will be used for frontend development.
-
-### Rationale
-
-Static typing improves maintainability and makes larger frontend codebases easier to reason about.
-
-### Consequences
-
-Frontend source code will use TypeScript rather than general-purpose JavaScript wherever applicable.
+TypeScript is used for frontend development to improve maintainability and provide static typing for the growing frontend codebase.
 
 ---
 
@@ -301,21 +117,7 @@ Frontend source code will use TypeScript rather than general-purpose JavaScript 
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The Vue frontend requires a development and build toolchain.
-
-### Decision
-
-Vite will be used as the frontend development and build tool.
-
-### Rationale
-
-Vite provides a straightforward development experience for Vue and TypeScript applications.
-
-### Consequences
-
-The frontend project will be structured as a Vite-based Vue application.
+Vite is the frontend development and build tool for the Vue/TypeScript application.
 
 ---
 
@@ -324,25 +126,7 @@ The frontend project will be structured as a Vite-based Vue application.
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-The project already has coin photographs in JPG files and may accumulate a significant number of images.
-
-### Decision
-
-Original coin photographs will be stored as external files rather than directly inside the SQLite database.
-
-The database will store metadata and references to the image files.
-
-### Rationale
-
-Keeping large binary images outside the relational database simplifies file handling and database backup/management.
-
-### Consequences
-
-The application must have a defined filesystem storage strategy for coin photographs.
-
-The exact storage layout and backup strategy will be decided separately when image management is implemented.
+Original coin photographs are stored as external files rather than SQLite BLOBs. The database stores references and metadata. Exact storage layout and backup strategy will be decided during image management implementation.
 
 ---
 
@@ -351,23 +135,7 @@ The exact storage layout and backup strategy will be decided separately when ima
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-Existing coin descriptions and metadata are stored in XLS/XLSX files.
-
-### Decision
-
-The application will support importing existing spreadsheet data into the application database.
-
-The exact spreadsheet structure and import mapping will be determined during the import phase.
-
-### Rationale
-
-Existing collection data should be reused rather than manually re-entered.
-
-### Consequences
-
-Spreadsheet import will be implemented as a dedicated development phase after the initial database/application foundation exists.
+Existing XLS/XLSX data will be imported into the application database. Exact spreadsheet structure, mappings, validation, and duplicate handling will be determined during the import phase.
 
 ---
 
@@ -376,25 +144,7 @@ Spreadsheet import will be implemented as a dedicated development phase after th
 **Status:** Accepted  
 **Date:** 2026-09-07
 
-### Context
-
-Application functionality depends on having a reliable and reproducible development environment.
-
-### Decision
-
-Development will begin with the development environment rather than application features.
-
-The first implementation phase is:
-
-**Phase 1 — Development Environment**
-
-### Rationale
-
-A working and reproducible development environment provides the foundation for all subsequent implementation work.
-
-### Consequences
-
-The immediate implementation scope is limited to establishing and verifying the development environment.
+Development begins with the development environment rather than application features. The first implementation phase is **Phase 1 — Development Environment**.
 
 ---
 
@@ -403,32 +153,13 @@ The immediate implementation scope is limited to establishing and verifying the 
 **Status:** Accepted  
 **Date:** 2026-09-09
 
-### Context
-
-The development environment must provide consistent Python and Node.js versions across the supported host platforms while keeping development dependencies out of the host system.
-
-### Decision
-
-The Development Container will use:
+The Dev Container uses:
 
 - Python **3.14.7**
 - Node.js **24.20.0**
 - `uv` **0.12.10**
 
-These tools will be provided inside the Dev Container rather than installed on the host.
-
-Python 3.14 is the selected runtime because the project is new and therefore has no existing Python 3.13 compatibility burden. If compatibility problems with the selected project dependencies are encountered, the project may return to Python 3.13 as a deliberate compatibility decision.
-
-### Rationale
-
-Python 3.14 is a stable release and provides a current supported runtime for a new project. Pinning exact versions improves reproducibility and makes the development environment deterministic.
-
-### Consequences
-
-- The Dev Container configuration must provide Python 3.14.7 and Node.js 24.20.0, and install `uv` 0.12.10.
-- The project should not require Python or Node.js to be installed directly on the host.
-- Runtime version changes are deliberate maintenance decisions and must be documented.
-- If Python 3.14 causes material compatibility problems, Python 3.13 can be reconsidered as a fallback.
+These tools are provided inside the container rather than installed on the host. Python 3.14 is selected for this new project; Python 3.13 may be reconsidered if material dependency compatibility problems are encountered.
 
 ---
 
@@ -437,30 +168,7 @@ Python 3.14 is a stable release and provides a current supported runtime for a n
 **Status:** Accepted  
 **Date:** 2026-09-09
 
-### Context
-
-The project should have a predictable and reproducible development environment in which the selected tools and packages are known to work together. Uncontrolled dependency updates can introduce incompatibilities, breaking changes, or unstable behaviour.
-
-### Decision
-
-Versions of installed development tools and project dependencies will be explicitly defined and pinned wherever the relevant tooling supports it.
-
-The project will use stable, production-quality releases. Experimental and prerelease versions will not be used by default, including alpha, beta, release-candidate, nightly, or otherwise explicitly experimental releases.
-
-Dependency updates will be deliberate and controlled rather than automatically tracking the newest available release.
-
-### Rationale
-
-Explicit versioning and stable releases improve reproducibility, compatibility, and long-term project stability. This is particularly important because the project is intended to be developed incrementally and maintained over an extended period.
-
-### Consequences
-
-- The Dev Container will use explicitly selected versions of its installed development tools.
-- Python project dependencies will be locked through `uv.lock`.
-- Frontend dependencies will use the appropriate lockfile mechanism when the frontend project is created.
-- New dependencies must be evaluated for stability and compatibility before adoption.
-- Upgrading a significant dependency is a deliberate maintenance change and should be tested before acceptance.
-- The project will not adopt prerelease or experimental dependencies merely to obtain newer features.
+Development tools and project dependencies use explicitly selected and pinned versions wherever supported. Stable production-quality releases are preferred; prerelease and experimental releases are not used by default. Dependency upgrades are deliberate and tested changes.
 
 ---
 
@@ -469,28 +177,37 @@ Explicit versioning and stable releases improve reproducibility, compatibility, 
 **Status:** Accepted  
 **Date:** 2026-09-09
 
-### Context
+Current project state, completed work, configuration, and test results must be based on facts and verified whenever possible. Assumptions and plans must not be presented as facts. Failures, incomplete work, and unverifiable states must be stated clearly. `docs/PROGRESS.md` records only verified current state.
 
-The project requires reliable knowledge of its actual state. Development decisions and progress must not be based on unverified assumptions or claims about work that has not actually been performed.
+---
 
-### Decision
+## D-019 — Separate Backend and Frontend Source Trees
 
-All information about the current project state, completed work, configuration, and test results must be based on facts and verified whenever verification is possible.
+**Status:** Accepted  
+**Date:** 2026-09-09
 
-Assumptions, predictions, intended actions, and planned work must not be presented as facts. The assistant must not claim that an action was completed when it was not actually completed, or confirm a state that has not been checked.
+The repository uses separate top-level `backend/` and `frontend/` project directories.
 
-If something does not work, has not been completed, or cannot be verified, the actual state must be stated clearly. Diagnostic and corrective attempts should then continue until a verified result is obtained or a clear limitation is established.
+The Python backend source is under:
 
-`docs/PROGRESS.md` must reflect only the verified current state of the project. A task may be marked complete only after it has actually been completed and verified.
+```text
+backend/src/coin_catalog/
+```
+
+The Vue frontend source will be under:
+
+```text
+frontend/src/
+```
+
+Python project commands are run from `backend/`; frontend project commands are run from `frontend/`. The repository root remains the shared workspace for documentation, development configuration, Git metadata, and other repository-level files.
 
 ### Rationale
 
-A fact-based development process prevents false confidence, makes failures visible, and provides an accurate basis for the next development step. This is especially important for incremental development and for preserving reliable project context over time.
+Separate source trees prevent Python and frontend `src/` directories from being mixed and make the boundaries between the two applications explicit.
 
 ### Consequences
 
-- Project status reports must distinguish verified facts from unverified or planned work.
-- Failed or incomplete work must remain explicitly identified as such.
-- Tool results, tests, and other reliable evidence should be used to establish project state.
-- Documentation must not claim a state that has not been verified.
-- The assistant should continue troubleshooting rather than hiding or glossing over failures.
+- The backend project metadata lives under `backend/`.
+- The frontend project will be created under `frontend/`.
+- The physical project layout is part of the current architecture and should be reflected consistently in project documentation.
