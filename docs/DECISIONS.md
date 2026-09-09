@@ -426,3 +426,35 @@ Using defined major/minor release lines provides a stable compatibility target w
 - The Dev Container configuration must provide Python 3.13.x and Node.js 24.x LTS.
 - The project should not require Python or Node.js to be installed directly on the host.
 - Exact patch versions may be updated as appropriate within the selected release lines.
+
+---
+
+## D-017 — Stable and Pinned Dependency Policy
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+### Context
+
+The project should have a predictable and reproducible development environment in which the selected tools and packages are known to work together. Uncontrolled dependency updates can introduce incompatibilities, breaking changes, or unstable behaviour.
+
+### Decision
+
+Versions of installed development tools and project dependencies will be explicitly defined and pinned wherever the relevant tooling supports it.
+
+The project will use stable, production-quality releases. Experimental and prerelease versions will not be used by default, including alpha, beta, release-candidate, nightly, or otherwise explicitly experimental releases.
+
+Dependency updates will be deliberate and controlled rather than automatically tracking the newest available release.
+
+### Rationale
+
+Explicit versioning and stable releases improve reproducibility, compatibility, and long-term project stability. This is particularly important because the project is intended to be developed incrementally and maintained over an extended period.
+
+### Consequences
+
+- The Dev Container will use explicitly selected versions of its installed development tools.
+- Python project dependencies will be locked through `uv.lock`.
+- Frontend dependencies will use the appropriate lockfile mechanism when the frontend project is created.
+- New dependencies must be evaluated for stability and compatibility before adoption.
+- Upgrading a significant dependency is a deliberate maintenance change and should be tested before acceptance.
+- The project will not adopt prerelease or experimental dependencies merely to obtain newer features.
