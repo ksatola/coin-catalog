@@ -82,7 +82,8 @@ backend/
 ├── pyproject.toml
 └── src/
     └── coin_catalog/
-        └── __init__.py
+        ├── __init__.py
+        └── main.py
 ```
 
 `backend/.python-version` currently contains:
@@ -91,9 +92,7 @@ backend/
 3.14
 ```
 
-`backend/pyproject.toml` declares Python `>=3.14`, uses the `uv_build` build backend, and currently has no project dependencies. The generated `backend/src/coin_catalog/__init__.py` contains the placeholder console entry point created by `uv init`.
-
-Python project commands should be run from the backend project directory:
+`backend/pyproject.toml` declares Python `>=3.14`, uses the `uv_build` build backend, and includes the FastAPI standard extra used by the development CLI. Python project commands should be run from the backend project directory:
 
 ```bash
 cd /workspaces/coin-catalog/backend
@@ -111,6 +110,62 @@ The command completed successfully and produced:
 
 ```text
 backend import OK
+```
+
+### FastAPI application
+
+The initial FastAPI application is defined in:
+
+```text
+backend/src/coin_catalog/main.py
+```
+
+It currently provides a single health endpoint:
+
+```text
+GET /health
+```
+
+FastAPI was added with `uv` using:
+
+```bash
+uv add fastapi
+uv add "fastapi[standard]"
+```
+
+The FastAPI import and CLI were verified successfully. The development server was also verified successfully with:
+
+```bash
+uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000
+```
+
+The server started on port `8000`, completed application startup, and responded successfully to:
+
+```bash
+curl http://localhost:8000/health
+```
+
+with:
+
+```json
+{"status":"ok"}
+```
+
+### FastAPI development server
+
+Run from the backend directory:
+
+```bash
+cd /workspaces/coin-catalog/backend
+uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000
+```
+
+The Dev Container forwards port `8000` for the backend.
+
+When finished with the development server, return to the terminal running FastAPI and press:
+
+```text
+Ctrl+C
 ```
 
 ## Frontend Project
@@ -191,6 +246,19 @@ Network: http://172.17.0.2:5173/
 
 The Dev Container forwards port `5173` for the frontend.
 
+### Vite API proxy
+
+During development, frontend API requests use relative `/api/...` paths. Vite proxies these requests to the FastAPI server on port `8000` and removes the `/api` prefix before forwarding.
+
+The intended request flow is:
+
+```text
+Browser → Vite :5173 → FastAPI :8000
+/api/health           /health
+```
+
+This configuration is an approved Phase 2 architecture decision, but the Vite proxy itself has **not yet been implemented or verified**.
+
 ### Verify host-browser access
 
 With the Vite development server running inside the Dev Container, open the following address in a browser on the host machine:
@@ -201,15 +269,15 @@ http://localhost:5173/
 
 Host-browser access was successfully verified on 2026-09-09. The generated blank Vue application loaded successfully and displayed the default blank-project message.
 
-When finished with the development server, return to the terminal running Vite and press:
-
-```text
-Ctrl+C
-```
-
 ## Current Scope
 
-At this stage, the development environment, initial Python backend project, and initial Vue frontend project have been established and verified. FastAPI and SQLAlchemy have not yet been added to the backend. No application functionality has been implemented yet.
+At this stage, the development environment, initial Python backend project, FastAPI application skeleton, and initial Vue frontend project have been established. The FastAPI `/health` endpoint has been verified directly. Frontend-to-backend communication through the Vite proxy has not yet been implemented or verified.
+
+The approved Phase 2 development-server arrangement is:
+
+- Vue/Vite on port `5173`
+- FastAPI on port `8000`
+- Vite `/api` proxy forwarding to FastAPI and removing the `/api` prefix
 
 The frontend currently uses the scaffolded Vue 3 + TypeScript + Vite foundation. Application components, routing, state management, UI libraries, testing, and frontend/backend communication will be introduced in later agreed steps.
 
