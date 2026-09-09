@@ -62,10 +62,11 @@ The project is currently establishing a reproducible development environment.
 - [x] `backend/.python-version` created and verified as `3.14` in the committed project structure.
 - [x] `backend/pyproject.toml` established for the Python backend project.
 - [x] Initial `backend/src/coin_catalog/__init__.py` retained as the generated Python package scaffold.
+- [x] Reorganized `backend/` project verified inside the user's local Dev Container.
+- [x] `coin_catalog` backend package import verified successfully with `uv run python -c "import coin_catalog; print('backend import OK')"`.
 
 ### Pending
 
-- [ ] Verify the reorganized `backend/` project inside the user's local Dev Container after the repository reorganization.
 - [ ] Verify Docker Desktop host configuration on the development machine.
 - [ ] Verify VS Code / Dev Containers extension configuration on the development machine.
 - [ ] Configure Vue 3 / TypeScript / Vite inside the project workspace.
@@ -278,7 +279,8 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Initialized the Python project with `uv init --python 3.14`.
 - Reorganized the Python project under `backend/` to keep backend and frontend source trees separate.
 - Updated project documentation to reflect the separate backend/frontend source-tree decision.
-- The reorganized backend project has not yet been rebuilt or otherwise fully verified inside the user's local Dev Container after the reorganization.
+- Rebuilt/reopened the user's local Dev Container after the repository reorganization and verified the reorganized backend project.
+- Verified the `coin_catalog` backend package imports successfully with `uv run python -c "import coin_catalog; print('backend import OK')"`.
 
 ### 2026-09-07
 
