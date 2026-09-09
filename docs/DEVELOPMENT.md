@@ -162,6 +162,12 @@ uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000
 
 The Dev Container forwards port `8000` for the backend.
 
+For direct browser or HTTP access during development:
+
+- `http://localhost:8000/health` — backend health endpoint; expected response is `{"status":"ok"}`.
+- `http://localhost:8000/docs` — FastAPI interactive API documentation.
+- `http://localhost:8000/` — no application route is currently defined, so `404 Not Found` is expected.
+
 When finished with the development server, return to the terminal running FastAPI and press:
 
 ```text
@@ -246,18 +252,55 @@ Network: http://172.17.0.2:5173/
 
 The Dev Container forwards port `5173` for the frontend.
 
+For host-browser access during development, use:
+
+```text
+http://localhost:5173/
+```
+
 ### Vite API proxy
 
 During development, frontend API requests use relative `/api/...` paths. Vite proxies these requests to the FastAPI server on port `8000` and removes the `/api` prefix before forwarding.
 
-The intended request flow is:
+The configured request flow is:
 
 ```text
 Browser → Vite :5173 → FastAPI :8000
 /api/health           /health
 ```
 
-This configuration is an approved Phase 2 architecture decision, but the Vite proxy itself has **not yet been implemented or verified**.
+The proxy was verified successfully on 2026-09-09 with:
+
+```bash
+curl http://localhost:5173/api/health
+```
+
+which returned:
+
+```json
+{"status":"ok"}
+```
+
+### Verify frontend-to-backend communication
+
+With both development servers running:
+
+1. Start FastAPI on port `8000`.
+2. Start Vite on port `5173`.
+3. Open:
+
+   ```text
+   http://localhost:5173/
+   ```
+
+4. The Vue application should display:
+
+   ```text
+   # Coin Catalog
+   Backend status: ok
+   ```
+
+This frontend-to-backend health check was successfully verified on 2026-09-09. The Vue application requests `/api/health`; Vite proxies the request to FastAPI `/health`; the returned status is displayed by the frontend.
 
 ### Verify host-browser access
 
@@ -267,11 +310,11 @@ With the Vite development server running inside the Dev Container, open the foll
 http://localhost:5173/
 ```
 
-Host-browser access was successfully verified on 2026-09-09. The generated blank Vue application loaded successfully and displayed the default blank-project message.
+Host-browser access and frontend-to-backend communication were successfully verified on 2026-09-09.
 
 ## Current Scope
 
-At this stage, the development environment, initial Python backend project, FastAPI application skeleton, and initial Vue frontend project have been established. The FastAPI `/health` endpoint has been verified directly. Frontend-to-backend communication through the Vite proxy has not yet been implemented or verified.
+At this stage, the development environment, initial Python backend project, FastAPI application skeleton, and initial Vue frontend project have been established. The FastAPI `/health` endpoint, Vite API proxy, and frontend-to-backend health display have all been verified.
 
 The approved Phase 2 development-server arrangement is:
 
@@ -279,6 +322,6 @@ The approved Phase 2 development-server arrangement is:
 - FastAPI on port `8000`
 - Vite `/api` proxy forwarding to FastAPI and removing the `/api` prefix
 
-The frontend currently uses the scaffolded Vue 3 + TypeScript + Vite foundation. Application components, routing, state management, UI libraries, testing, and frontend/backend communication will be introduced in later agreed steps.
+The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, testing, database integration, and other application functionality will be introduced in later agreed steps.
 
 Do not install project dependencies manually before the corresponding development step is agreed and documented.
