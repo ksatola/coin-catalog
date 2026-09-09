@@ -338,10 +338,10 @@ This provides a simple separation between stable project state and work in progr
 
 Persistent application data is stored in a top-level `data/` directory inside the repository working tree. The `data/` directory is ignored by Git and is not part of the repository's versioned source or documentation.
 
-The initial SQLite database will therefore use a path under:
+The initial SQLite database is:
 
 ```text
-/workspaces/coin-catalog/data/
+/workspaces/coin-catalog/data/coin-catalog.db
 ```
 
 ### Rationale
@@ -354,4 +354,35 @@ Keeping application data under the Dev Container workspace simplifies the develo
 - Git will not track files under `data/`.
 - Branch changes do not alter the local database because the database is not version-controlled.
 - Backup and portability of application data remain separate concerns and will be addressed later.
-- The exact database filename and SQLAlchemy configuration remain to be decided.
+
+---
+
+## D-025 — Project Coding Standards
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+The project follows the coding conventions documented in [`docs/CODING_STANDARDS.md`](CODING_STANDARDS.md).
+
+The standard establishes a deliberately small professional baseline, including:
+
+- PEP 8 and modern Python conventions,
+- Ruff for Python formatting and linting,
+- type hints and Pyright for static type checking,
+- Google-style docstrings for public Python code where useful,
+- pytest for Python testing,
+- Vue 3 and TypeScript conventions for frontend code,
+- explicit error-handling and security practices,
+- focused commits and synchronized documentation.
+
+Tools are introduced and configured when the corresponding development step requires them; listing a tool in the standard does not imply that it has already been installed or configured.
+
+### Rationale
+
+A concise, explicit coding standard provides consistent professional practices without adding unnecessary tooling or process. Keeping detailed standards in a dedicated document prevents `AGENTS.md` and `docs/DEVELOPMENT.md` from becoming overloaded with style rules.
+
+### Consequences
+
+- Contributors and AI agents should follow `docs/CODING_STANDARDS.md`.
+- Changes to coding conventions should be made deliberately and reflected in that document.
+- New tooling should still be justified and introduced incrementally.
