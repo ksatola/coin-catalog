@@ -70,35 +70,38 @@ uv 0.12.10
 
 These commands and the repository workspace path were successfully verified inside the Dev Container on 2026-09-09.
 
-## Python Project Initialization
+## Python Project
 
-The Python project is managed with `uv`.
+The Python backend is located under `backend/`.
 
-From the repository root inside the Dev Container, the project was initialized with:
-
-```bash
-uv init --python 3.14
-```
-
-This created the initial Python project structure:
+The current Python project structure is:
 
 ```text
-.python-version
-pyproject.toml
-src/
-└── coin_catalog/
-    └── __init__.py
+backend/
+├── .python-version
+├── pyproject.toml
+└── src/
+    └── coin_catalog/
+        └── __init__.py
 ```
 
-The generated `.python-version` currently contains:
+`backend/.python-version` currently contains:
 
 ```text
 3.14
 ```
 
-The generated `pyproject.toml` declares Python `>=3.14`, uses the `uv_build` build backend, and currently has no project dependencies. The generated `src/coin_catalog/__init__.py` contains the placeholder console entry point created by `uv init`.
+`backend/pyproject.toml` declares Python `>=3.14`, uses the `uv_build` build backend, and currently has no project dependencies. The generated `backend/src/coin_catalog/__init__.py` contains the placeholder console entry point created by `uv init`.
 
-The Python project initialization was successfully verified and committed to the repository on 2026-09-09.
+Python project commands should be run from the backend project directory:
+
+```bash
+cd /workspaces/coin-catalog/backend
+```
+
+The original Python project was initialized with `uv init --python 3.14` and was subsequently reorganized into the `backend/` directory so that backend and frontend source trees remain clearly separated.
+
+The Python project reorganization was successfully committed to the repository on 2026-09-09. The reorganized project has not yet been rebuilt or otherwise fully verified inside the user's local Dev Container after this change.
 
 ## Current Scope
 
