@@ -284,7 +284,7 @@ Planned work:
 
 The next concrete task is:
 
-**Synchronize `phase-3-database-foundation` with the latest stable `main`, then review the Phase 3 — Database Foundation documentation and decide the database location, configuration, session, and migration approach before implementing database code.**
+**Review the Phase 3 — Database Foundation documentation and decide the database location, configuration, session, and migration approach before implementing database code.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -332,3 +332,12 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Accepted D-023 establishing stable `main` and phase-based working branches.
 - Created and published `phase-3-database-foundation`.
 - Added `docs/GIT_WORKFLOW.md` and updated `AGENTS.md` and `docs/DEVELOPMENT.md` with the branching workflow.
+
+### 2026-09-07
+
+- Established the initial project architecture.
+- Established the repository documentation strategy.
+- Added `AGENTS.md`.
+- Added `docs/DECISIONS.md`.
+- Added `docs/ARCHITECTURE.md`.
+- Began Phase 1 — Development Environment.
