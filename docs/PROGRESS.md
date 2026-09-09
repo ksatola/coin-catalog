@@ -8,9 +8,9 @@ A task is marked complete only after it has been implemented and verified where 
 
 ## Current Phase
 
-**Phase 2 — Application Skeleton**
+**Phase 3 — Database Foundation**
 
-Phase 1 — Development Environment has been completed and verified. Phase 2 is implementing and verifying the minimal runnable backend/frontend application skeleton.
+Phase 1 — Development Environment and Phase 2 — Application Skeleton have been completed and verified. Phase 3 is now in preparation; database design decisions must be agreed before database implementation begins.
 
 ---
 
@@ -52,6 +52,7 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 - [x] `docs/ROADMAP.md` established as the roadmap.
 - [x] `README.md` established as the human-facing project documentation.
 - [x] `docs/DEVELOPMENT.md` established as the detailed development-environment documentation.
+- [x] `docs/GIT_WORKFLOW.md` established as the practical Git branching and merge workflow documentation.
 - [x] Host development software requirements documented: GitHub Desktop, VS Code, Docker Desktop.
 - [x] Docker Desktop host configuration verified through successful Dev Container build and startup.
 - [x] VS Code / Dev Containers configuration verified through successful container connection and development workflow.
@@ -78,15 +79,11 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 - [x] Initial frontend checkpoint committed and pushed to GitHub by the user.
 - [x] Detailed frontend development instructions added to `docs/DEVELOPMENT.md`.
 
-### Remaining / carried into Phase 2
-
-- [ ] Perform broader end-to-end development-environment verification after the application skeleton is runnable.
-
 ---
 
 ## Phase 2 — Application Skeleton
 
-**Status:** In progress
+**Status:** Complete
 
 ### Completed and verified
 
@@ -100,13 +97,11 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 - [x] Vite development proxy configured for `/api` requests to the FastAPI server.
 - [x] Vite development server verified successfully on port `5173` while the backend was running on port `8000`.
 - [x] Vite proxy request to `http://localhost:5173/api/health` verified successfully with `{"status":"ok"}`.
-
-### Remaining
-
-- [ ] Establish the minimal frontend application structure beyond the scaffold.
-- [ ] Make the Vue frontend call `/api/health` and display the returned backend status.
-- [ ] Establish basic application configuration where required.
-- [ ] Perform end-to-end environment verification with the runnable application.
+- [x] Vue frontend calls `/api/health` and displays the returned backend status.
+- [x] Frontend-to-backend health flow verified in the host browser; the application displayed `Backend status: ok`.
+- [x] Basic application configuration reviewed; no additional configuration infrastructure was required at this stage.
+- [x] Broader end-to-end environment verification completed successfully with both development servers running and the host browser displaying the backend status.
+- [x] Frontend health-status change committed and pushed to GitHub by the user.
 
 No coin-catalogue domain functionality has been implemented yet.
 
@@ -114,16 +109,29 @@ No coin-catalogue domain functionality has been implemented yet.
 
 ## Phase 3 — Database Foundation
 
-**Status:** Not started
+**Status:** Preparation
 
-Planned work:
+### Completed
 
+- [x] Stable `main` and phase-based working-branch strategy accepted and recorded as D-023.
+- [x] `phase-3-database-foundation` branch created and published to `origin`.
+- [x] Practical Git branching and merge workflow documented in `docs/GIT_WORKFLOW.md`.
+- [x] Branching instructions added to `AGENTS.md` and `docs/DEVELOPMENT.md`.
+
+### Planned
+
+- [ ] Review Phase 3 requirements and existing project documentation.
+- [ ] Synchronize the Phase 3 working branch with the latest stable `main` before substantial implementation.
 - [ ] Establish SQLite database location.
 - [ ] Establish SQLAlchemy configuration.
 - [ ] Establish database session handling.
 - [ ] Establish migration strategy.
 - [ ] Create initial database schema.
 - [ ] Add database tests.
+
+### Branch synchronization note
+
+The `phase-3-database-foundation` branch was created and published before the latest `main` progress-documentation commit. GitHub currently reports `main` as one commit ahead of the phase branch, with no commits on the phase branch that are missing from `main`. The branch should therefore be synchronized with the latest `main` before substantial Phase 3 implementation begins.
 
 ---
 
@@ -276,7 +284,7 @@ Planned work:
 
 The next concrete task is:
 
-**Make the Vue frontend call `/api/health` and display the returned backend status.**
+**Synchronize `phase-3-database-foundation` with the latest stable `main`, then review the Phase 3 — Database Foundation documentation and decide the database location, configuration, session, and migration approach before implementing database code.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -316,12 +324,11 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Verified `GET /health` directly with `curl` and received `{"status":"ok"}`.
 - Configured the Vite development proxy for `/api` requests to the FastAPI backend.
 - Verified the Vite proxy end-to-end with `curl http://localhost:5173/api/health`, receiving `{"status":"ok"}`.
-
-### 2026-09-07
-
-- Established the initial project architecture.
-- Established the repository documentation strategy.
-- Added `AGENTS.md`.
-- Added `docs/DECISIONS.md`.
-- Added `docs/ARCHITECTURE.md`.
-- Began Phase 1 — Development Environment.
+- Updated the Vue frontend to call `/api/health` and display the backend status.
+- Verified the frontend-to-backend health flow in the host browser; the page displayed `Backend status: ok`.
+- Reviewed basic application configuration and decided not to introduce configuration infrastructure at this stage.
+- Performed broader end-to-end environment verification successfully with FastAPI and Vite running together and the host browser displaying the backend health status.
+- User committed and pushed the frontend health-status change to GitHub.
+- Accepted D-023 establishing stable `main` and phase-based working branches.
+- Created and published `phase-3-database-foundation`.
+- Added `docs/GIT_WORKFLOW.md` and updated `AGENTS.md` and `docs/DEVELOPMENT.md` with the branching workflow.
