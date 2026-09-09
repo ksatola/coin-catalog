@@ -27,11 +27,12 @@ Important project knowledge must be recorded in the repository rather than relyi
 
 Relevant documentation:
 
-- `README.md` — project overview and user-facing setup instructions.
+- `README.md` — project overview and high-level user-facing project information.
 - `docs/ARCHITECTURE.md` — current technical architecture.
 - `docs/DECISIONS.md` — accepted architectural and significant product decisions.
 - `docs/PROGRESS.md` — current implementation status.
 - `docs/ROADMAP.md` — planned development phases.
+- `docs/DEVELOPMENT.md` — detailed development environment and setup instructions.
 
 When beginning work on the project, review these documents before making significant changes.
 
