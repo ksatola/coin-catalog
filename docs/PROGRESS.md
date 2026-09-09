@@ -86,7 +86,7 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 
 ## Phase 2 — Application Skeleton
 
-**Status:** In progress
+**Status:** Complete
 
 ### Completed and verified
 
@@ -100,13 +100,11 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 - [x] Vite development proxy configured for `/api` requests to the FastAPI server.
 - [x] Vite development server verified successfully on port `5173` while the backend was running on port `8000`.
 - [x] Vite proxy request to `http://localhost:5173/api/health` verified successfully with `{"status":"ok"}`.
-
-### Remaining
-
-- [ ] Establish the minimal frontend application structure beyond the scaffold.
-- [ ] Make the Vue frontend call `/api/health` and display the returned backend status.
-- [ ] Establish basic application configuration where required.
-- [ ] Perform end-to-end environment verification with the runnable application.
+- [x] Vue frontend calls `/api/health` and displays the returned backend status.
+- [x] Frontend-to-backend health flow verified in the host browser; the application displayed `Backend status: ok`.
+- [x] Basic application configuration reviewed; no additional configuration infrastructure was required at this stage.
+- [x] Broader end-to-end environment verification completed successfully with both development servers running and the host browser displaying the backend status.
+- [x] Frontend health-status change committed and pushed to GitHub by the user.
 
 No coin-catalogue domain functionality has been implemented yet.
 
@@ -276,7 +274,7 @@ Planned work:
 
 The next concrete task is:
 
-**Make the Vue frontend call `/api/health` and display the returned backend status.**
+**Review the Phase 3 — Database Foundation documentation and decide the database location, configuration, session, and migration approach before implementing database code.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -316,6 +314,11 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Verified `GET /health` directly with `curl` and received `{"status":"ok"}`.
 - Configured the Vite development proxy for `/api` requests to the FastAPI backend.
 - Verified the Vite proxy end-to-end with `curl http://localhost:5173/api/health`, receiving `{"status":"ok"}`.
+- Updated the Vue frontend to call `/api/health` and display the backend status.
+- Verified the frontend-to-backend health flow in the host browser; the page displayed `Backend status: ok`.
+- Reviewed basic application configuration and decided not to introduce configuration infrastructure at this stage.
+- Performed broader end-to-end environment verification successfully with FastAPI and Vite running together and the host browser displaying the backend health status.
+- User committed and pushed the frontend health-status change to GitHub.
 
 ### 2026-09-07
 
