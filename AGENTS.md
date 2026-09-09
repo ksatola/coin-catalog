@@ -34,6 +34,7 @@ Relevant documentation:
 - `docs/ROADMAP.md` — planned development phases.
 - `docs/DEVELOPMENT.md` — detailed development environment and setup instructions.
 - `docs/GIT_WORKFLOW.md` — practical Git branching, development, and merge workflow.
+- `docs/CODING_STANDARDS.md` — coding style, quality, documentation, testing, and Git conventions.
 
 When beginning work on the project, review these documents before making significant changes.
 
@@ -53,6 +54,7 @@ Principles:
 6. Maintain reproducible development environments.
 7. Keep documentation synchronized with the actual project state.
 8. Verify changes before considering a development step complete.
+9. Follow `docs/CODING_STANDARDS.md` for code quality and development conventions.
 
 The project owner should understand and approve significant technical or architectural decisions.
 
@@ -60,7 +62,7 @@ The project owner should understand and approve significant technical or archite
 
 ## 4. Verified State / Fact-Based Development
 
-All information about the current project state, completed work, configuration, and test results must be based on facts and verified whenever verification is possible.
+All information about the current project state, completed work, configuration, and test results must be based on facts and verified whenever possible.
 
 The assistant must not present assumptions, predictions, intended actions, or planned work as facts. The assistant must not claim that an action was completed when it was not actually completed, or confirm a state that has not been checked.
 
