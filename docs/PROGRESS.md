@@ -45,24 +45,28 @@ The project is currently establishing a reproducible development environment.
 - [x] `AGENTS.md` created.
 - [x] `docs/DECISIONS.md` created.
 - [x] `docs/ARCHITECTURE.md` created.
+- [x] `docs/PROGRESS.md` established as the progress record.
+- [x] `docs/ROADMAP.md` established as the roadmap.
+- [x] `README.md` established as the human-facing project documentation.
+- [x] Host development software requirements documented: GitHub Desktop, VS Code, Docker Desktop.
+- [x] Dev Container build and startup verified.
+- [x] Python 3.14.7 verified inside the Dev Container.
+- [x] Node.js 24.20.0 verified inside the Dev Container.
+- [x] `uv` 0.12.10 verified inside the Dev Container.
+- [x] Dev Container workspace path `/workspace` verified.
+- [x] Basic Dev Container startup and verification procedure documented in `README.md`.
 
 ### Pending
 
-- [ ] Confirm required host software and versions.
-- [ ] Configure Docker.
-- [ ] Configure VS Code / Dev Containers.
-- [ ] Select the Python minor version.
-- [ ] Configure Python and `uv` inside the Dev Container.
-- [ ] Select/configure Node.js version.
-- [ ] Configure Vue 3 / TypeScript / Vite inside the Dev Container.
+- [ ] Verify Docker Desktop host configuration on the development machine.
+- [ ] Verify VS Code / Dev Containers extension configuration on the development machine.
+- [ ] Configure Python project management with `uv` for the application project.
+- [ ] Configure Vue 3 / TypeScript / Vite inside the project workspace.
 - [ ] Define the initial project directory structure.
-- [ ] Build the development container.
-- [ ] Verify Python tooling inside the container.
-- [ ] Verify frontend tooling inside the container.
+- [ ] Verify frontend tooling inside the project container.
 - [ ] Verify browser access to the development application.
 - [ ] Create the initial runnable application skeleton.
 - [ ] Perform an end-to-end development-environment verification.
-- [ ] Update README with verified setup instructions.
 - [ ] Create the first development checkpoint/commit for the completed environment.
 
 ---
@@ -246,13 +250,23 @@ Planned work:
 
 The next concrete task is:
 
-**Establish the development environment and Dev Container.**
+**Continue Phase 1 by verifying the host-side Docker Desktop / VS Code setup and then configure the Python project environment with `uv`.**
 
-Before implementation, determine the required host-side software and select the Python and Node.js versions.
+Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
 ---
 
 ## Change Log
+
+### 2026-09-09
+
+- Built and started the Dev Container successfully.
+- Verified Python 3.14.7 inside the container.
+- Verified Node.js 24.20.0 inside the container.
+- Verified `uv` 0.12.10 inside the container.
+- Verified `/workspace` as the container workspace directory.
+- Documented the verified Dev Container startup and verification procedure in `README.md`.
+- Updated Phase 1 progress to reflect the verified environment state.
 
 ### 2026-09-07
 
