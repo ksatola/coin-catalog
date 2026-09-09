@@ -4,7 +4,7 @@
 
 Coin Catalog is a personal web application for managing a collection of coins.
 
-The application will combine:
+The application combines:
 
 - a Python backend,
 - a relational database,
@@ -58,7 +58,35 @@ The exact container topology may be refined during implementation.
 
 ---
 
-## 3. Development Environment
+## 3. Repository and Source Tree
+
+The repository root is the shared workspace for documentation, development configuration, Git metadata, and repository-level files.
+
+Backend and frontend projects use separate top-level directories:
+
+```text
+coin-catalog/
+├── AGENTS.md
+├── README.md
+├── .devcontainer/
+├── docs/
+├── backend/
+│   ├── .python-version
+│   ├── pyproject.toml
+│   └── src/
+│       └── coin_catalog/
+│           └── __init__.py
+└── frontend/
+    └── src/
+```
+
+The `frontend/` directory is the planned location for the Vue application and will be populated when frontend setup is implemented.
+
+This separation prevents the backend and frontend source trees from being mixed while keeping both projects inside the same repository and Dev Container workspace.
+
+---
+
+## 4. Development Environment
 
 Development uses:
 
@@ -78,9 +106,11 @@ The host computer is primarily responsible for:
 
 ---
 
-## 4. Backend
+## 5. Backend
 
 The backend is implemented in Python using FastAPI.
+
+The backend project is located under `backend/`, with Python source under `backend/src/coin_catalog/`.
 
 Responsibilities include:
 
@@ -98,7 +128,7 @@ The initial implementation should avoid creating unnecessary abstractions before
 
 ---
 
-## 5. Database
+## 6. Database
 
 SQLite is the initial database engine.
 
@@ -123,13 +153,15 @@ The detailed database schema will be designed in a later development phase.
 
 ---
 
-## 6. Frontend
+## 7. Frontend
 
 The frontend is a Vue 3 application using:
 
 - Vue 3
 - TypeScript
 - Vite
+
+The frontend project will be located under `frontend/`, with source code under `frontend/src/`.
 
 The frontend is responsible for:
 
@@ -157,7 +189,7 @@ Frontend implementation should use Vue components and TypeScript rather than bui
 
 ---
 
-## 7. API Communication
+## 8. API Communication
 
 The frontend and backend communicate through HTTP.
 
@@ -169,7 +201,7 @@ No detailed API contract is established yet.
 
 ---
 
-## 8. Coin Photographs
+## 9. Coin Photographs
 
 Original coin photographs are stored as files rather than database BLOBs.
 
@@ -194,7 +226,7 @@ The exact filesystem layout, naming convention, thumbnail strategy, and backup p
 
 ---
 
-## 9. Spreadsheet Import
+## 10. Spreadsheet Import
 
 Existing XLS/XLSX files are an external source of coin metadata.
 
@@ -217,7 +249,7 @@ The exact source columns, mappings, validation rules, duplicate handling, and er
 
 ---
 
-## 10. Data Ownership
+## 11. Data Ownership
 
 The project distinguishes between:
 
@@ -245,7 +277,7 @@ User collection data should not be committed to the Git repository unless explic
 
 ---
 
-## 11. Portability
+## 12. Portability
 
 The architecture targets:
 
@@ -260,7 +292,7 @@ Filesystem handling must account for differences between host operating systems,
 
 ---
 
-## 12. Security and Sensitive Data
+## 13. Security and Sensitive Data
 
 Secrets, credentials, personal data, and private collection data must not be committed to Git.
 
@@ -270,7 +302,7 @@ Security requirements will be refined as application functionality is implemente
 
 ---
 
-## 13. Testing
+## 14. Testing
 
 Testing will be introduced incrementally.
 
@@ -287,7 +319,7 @@ The exact testing framework and test strategy will be selected when implementati
 
 ---
 
-## 14. Deployment Model
+## 15. Deployment Model
 
 The initial project priority is development rather than production deployment.
 
@@ -297,7 +329,7 @@ A production/deployment architecture will be defined separately when the applica
 
 ---
 
-## 15. Current Architecture Boundaries
+## 16. Current Architecture Boundaries
 
 The following are intentionally **not yet fully specified**:
 
