@@ -12,6 +12,66 @@ The host machine is intentionally kept minimal. The following software is requir
 
 Python, Node.js, `uv`, and project-specific application dependencies are provided by the Dev Container and do not need to be installed directly on the host.
 
+## Git Branch Workflow
+
+`main` is the stable branch. Do not develop or commit directly on `main`.
+
+Development normally happens on a dedicated working branch. For a development phase, use the naming pattern:
+
+```text
+phase-N-short-description
+```
+
+For example:
+
+```text
+phase-3-database-foundation
+```
+
+For smaller independent changes, `feature/`, `fix/`, or `docs/` branches may be used.
+
+The complete branching strategy is documented in:
+
+```text
+docs/GIT_WORKFLOW.md
+```
+
+### Recommended GitHub Desktop procedure
+
+1. Open the `coin-catalog` repository in GitHub Desktop.
+2. Fetch/pull the latest changes from `origin`.
+3. Make sure the current branch is `main`.
+4. Create a new branch from the current `main` using **Branch → New Branch**.
+5. Give the branch a descriptive phase or working-branch name.
+6. Publish the branch to `origin`.
+7. Switch to that branch and continue development there.
+
+Before starting substantial work, verify that the working branch contains the latest stable `main`. If `main` has advanced since the branch was created, synchronize the branch before proceeding.
+
+### Working in VS Code
+
+The current Git branch is shown in the lower-left corner of VS Code. You can use the branch control to switch branches and, where appropriate, create a branch.
+
+Development and application execution work normally from a working branch. The Dev Container uses the checked-out repository workspace, so it is not tied to `main`.
+
+A normal workflow is therefore:
+
+```text
+working branch
+→ edit in VS Code
+→ run inside Dev Container
+→ test in browser / terminal
+→ commit
+→ push branch
+→ continue
+```
+
+When the work is complete, test and document it, push the branch, and open a pull request to `main`. Merge only after the relevant implementation, tests, documentation, and verification are complete.
+
+After a phase is merged, update local `main` and create the next phase branch from the updated stable branch.
+
+The project intentionally does not use a permanent `develop` branch.
+
 ## Open the Project in VS Code
 
 1. Start Docker Desktop and wait until Docker is running.
