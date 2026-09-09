@@ -73,14 +73,18 @@ coin-catalog/
 ├── backend/
 │   ├── .python-version
 │   ├── pyproject.toml
+│   ├── uv.lock
 │   └── src/
 │       └── coin_catalog/
-│           └── __init__.py
+│           ├── __init__.py
+│           └── main.py
 └── frontend/
+    ├── package.json
+    ├── vite.config.ts
     └── src/
 ```
 
-The `frontend/` directory is the planned location for the Vue application and will be populated when frontend setup is implemented.
+The `frontend/` directory contains the Vue 3 + TypeScript + Vite application. The backend source is under `backend/src/coin_catalog/`.
 
 This separation prevents the backend and frontend source trees from being mixed while keeping both projects inside the same repository and Dev Container workspace.
 
@@ -161,7 +165,7 @@ The frontend is a Vue 3 application using:
 - TypeScript
 - Vite
 
-The frontend project will be located under `frontend/`, with source code under `frontend/src/`.
+The frontend project is located under `frontend/`, with source code under `frontend/src/`.
 
 The frontend is responsible for:
 
@@ -195,7 +199,9 @@ The frontend and backend communicate through HTTP.
 
 The backend provides an API consumed by the Vue frontend.
 
-The exact API structure, endpoint naming, request/response models, and versioning strategy will be defined when the application skeleton is implemented.
+During development, Vite proxies frontend `/api/...` requests to the FastAPI development server on port `8000`. The frontend therefore uses relative `/api/...` paths for the initial development API connection.
+
+The exact API structure, endpoint naming, request/response models, and versioning strategy will be defined when the relevant application functionality is implemented.
 
 No detailed API contract is established yet.
 
