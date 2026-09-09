@@ -23,6 +23,8 @@ The roadmap may change as the project develops and new information becomes avail
 
 Establish a reproducible, cross-platform development environment based on Docker Dev Containers.
 
+The initial repository source layout is established with separate `backend/` and `frontend/` project directories. The backend Python project currently lives under `backend/`; the frontend directory will be populated during frontend setup.
+
 Planned work:
 
 - Configure Docker.
@@ -31,7 +33,6 @@ Planned work:
 - Configure Python and `uv` inside the Dev Container.
 - Select and configure the Node.js version.
 - Configure Vue 3, TypeScript, and Vite.
-- Define the initial project directory structure.
 - Build and verify the Dev Container.
 - Verify Python tooling.
 - Verify frontend tooling.
