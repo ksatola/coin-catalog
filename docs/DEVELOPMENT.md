@@ -101,7 +101,17 @@ cd /workspaces/coin-catalog/backend
 
 The original Python project was initialized with `uv init --python 3.14` and was subsequently reorganized into the `backend/` directory so that backend and frontend source trees remain clearly separated.
 
-The Python project reorganization was successfully committed to the repository on 2026-09-09. The reorganized project has not yet been rebuilt or otherwise fully verified inside the user's local Dev Container after this change.
+The Python project reorganization was successfully committed to the repository on 2026-09-09. The reorganized project was subsequently verified inside the user's local Dev Container by running:
+
+```bash
+uv run python -c "import coin_catalog; print('backend import OK')"
+```
+
+The command completed successfully and produced:
+
+```text
+backend import OK
+```
 
 ## Current Scope
 
