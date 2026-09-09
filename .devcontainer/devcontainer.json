@@ -1,0 +1,26 @@
+{
+  "name": "coin-catalog-dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "Vue.volar"
+      ]
+    }
+  },
+  "forwardPorts": [8000, 5173],
+  "portsAttributes": {
+    "8000": {
+      "label": "Backend"
+    },
+    "5173": {
+      "label": "Frontend"
+    }
+  },
+  "remoteUser": "root"
+}
