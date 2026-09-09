@@ -53,6 +53,8 @@ Phase 1 — Development Environment has been completed and verified. The project
 - [x] `README.md` established as the human-facing project documentation.
 - [x] `docs/DEVELOPMENT.md` established as the detailed development-environment documentation.
 - [x] Host development software requirements documented: GitHub Desktop, VS Code, Docker Desktop.
+- [x] Docker Desktop host configuration verified through successful Dev Container build and startup.
+- [x] VS Code / Dev Containers configuration verified through successful container connection and development workflow.
 - [x] Dev Container build and startup verified.
 - [x] Python 3.14.7 verified inside the Dev Container.
 - [x] Node.js 24.20.0 verified inside the Dev Container.
@@ -79,8 +81,6 @@ Phase 1 — Development Environment has been completed and verified. The project
 ### Remaining / carried into Phase 2
 
 - [ ] Perform broader end-to-end development-environment verification after the application skeleton is runnable.
-- [ ] Verify Docker Desktop host configuration as a separate host-environment checklist item.
-- [ ] Verify VS Code / Dev Containers extension configuration as a separate host-environment checklist item.
 
 ---
 
@@ -299,6 +299,7 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Expanded `docs/DEVELOPMENT.md` with step-by-step frontend setup, verification, and browser-access instructions.
 - Reviewed `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` before transitioning toward Phase 2.
 - Marked Phase 1 complete and began Phase 2 preparation.
+- Confirmed Docker Desktop host configuration and VS Code / Dev Containers configuration as verified through the successful Dev Container build, connection, and development workflow; removed them from the Phase 1 carryover list.
 
 ### 2026-09-07
 
