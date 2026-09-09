@@ -411,21 +411,24 @@ The development environment must provide consistent Python and Node.js versions 
 
 The Development Container will use:
 
-- Python **3.13.x**
-- Node.js **24.x LTS**
-- `uv` as the Python project and dependency manager
+- Python **3.14.7**
+- Node.js **24.20.0**
+- `uv` **0.12.10**
 
 These tools will be provided inside the Dev Container rather than installed on the host.
 
+Python 3.14 is the selected runtime because the project is new and therefore has no existing Python 3.13 compatibility burden. If compatibility problems with the selected project dependencies are encountered, the project may return to Python 3.13 as a deliberate compatibility decision.
+
 ### Rationale
 
-Using defined major/minor release lines provides a stable compatibility target while allowing maintenance updates within those release lines. Keeping the toolchain inside the container preserves the cross-platform development model.
+Python 3.14 is a stable release and provides a current supported runtime for a new project. Pinning exact versions improves reproducibility and makes the development environment deterministic.
 
 ### Consequences
 
-- The Dev Container configuration must provide Python 3.13.x and Node.js 24.x LTS.
+- The Dev Container configuration must provide Python 3.14.7 and Node.js 24.20.0, and install `uv` 0.12.10.
 - The project should not require Python or Node.js to be installed directly on the host.
-- Exact patch versions may be updated as appropriate within the selected release lines.
+- Runtime version changes are deliberate maintenance decisions and must be documented.
+- If Python 3.14 causes material compatibility problems, Python 3.13 can be reconsidered as a fallback.
 
 ---
 
