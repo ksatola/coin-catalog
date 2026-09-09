@@ -7,7 +7,9 @@ authors = [
     { name = "Krzysztof Satola", email = "2679192+ksatola@users.noreply.github.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+]
 
 [project.scripts]
 coin-catalog = "coin_catalog:main"
