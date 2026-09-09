@@ -64,18 +64,22 @@ The project is currently establishing a reproducible development environment.
 - [x] Initial `backend/src/coin_catalog/__init__.py` retained as the generated Python package scaffold.
 - [x] Reorganized `backend/` project verified inside the user's local Dev Container.
 - [x] `coin_catalog` backend package import verified successfully with `uv run python -c "import coin_catalog; print('backend import OK')"`.
+- [x] Vue 3 + TypeScript + Vite frontend project created under `frontend/`.
+- [x] Frontend scaffold created as a blank Vue project without example application code.
+- [x] Frontend dependencies installed successfully with `npm install`.
+- [x] Frontend dependency installation audited 152 packages and reported 0 vulnerabilities.
+- [x] Frontend production build verified successfully with `npm run build`.
+- [x] Vite development server verified successfully with `npm run dev -- --host 0.0.0.0`.
+- [x] Host-browser access to `http://localhost:5173/` verified successfully.
+- [x] Initial frontend checkpoint committed and pushed to GitHub by the user.
+- [x] Detailed frontend development instructions added to `docs/DEVELOPMENT.md`.
 
 ### Pending
 
 - [ ] Verify Docker Desktop host configuration on the development machine.
 - [ ] Verify VS Code / Dev Containers extension configuration on the development machine.
-- [ ] Configure Vue 3 / TypeScript / Vite inside the project workspace.
-- [ ] Create the `frontend/` project structure.
-- [ ] Verify frontend tooling inside the project container.
-- [ ] Verify browser access to the development application.
 - [ ] Create the initial runnable application skeleton.
 - [ ] Perform an end-to-end development-environment verification.
-- [ ] Create the first development checkpoint/commit for the completed environment.
 
 ---
 
@@ -258,7 +262,7 @@ Planned work:
 
 The next concrete task is:
 
-**Configure the frontend development environment with Vue 3, TypeScript, and Vite inside the Dev Container.**
+**Review the completed Phase 1 environment and prepare the transition to Phase 2 — Application Skeleton.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -281,6 +285,14 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Updated project documentation to reflect the separate backend/frontend source-tree decision.
 - Rebuilt/reopened the user's local Dev Container after the repository reorganization and verified the reorganized backend project.
 - Verified the `coin_catalog` backend package imports successfully with `uv run python -c "import coin_catalog; print('backend import OK')"`.
+- Created the Vue 3 + TypeScript + Vite frontend project under `frontend/`.
+- Selected the blank Vue project option and declined optional Router, Pinia, testing, linting, formatting, JSX, and other extras during initial scaffolding.
+- Installed frontend dependencies with `npm install`; 152 packages were audited and 0 vulnerabilities were reported.
+- Verified the frontend production build with `npm run build`; Vite 8.2.2 completed the build successfully.
+- Started Vite with `npm run dev -- --host 0.0.0.0` and verified the development server on port 5173.
+- Verified host-browser access to `http://localhost:5173/`.
+- User committed and pushed the initial frontend checkpoint to GitHub.
+- Expanded `docs/DEVELOPMENT.md` with step-by-step frontend setup, verification, and browser-access instructions.
 
 ### 2026-09-07
 
