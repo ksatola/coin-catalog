@@ -35,6 +35,14 @@ Python, Node.js, `uv`, and project-specific application dependencies are provide
 4. VS Code will build the development container the first time and then reopen the project inside the container.
 5. Wait until the container has finished building and VS Code has reconnected to it.
 
+The repository is mounted as the complete workspace at:
+
+```text
+/workspaces/coin-catalog
+```
+
+The entire repository is available inside the container, including Git metadata, development configuration, documentation, and application source files.
+
 ## Verify the Development Container
 
 Open the integrated terminal in VS Code:
@@ -57,13 +65,43 @@ The verified development environment currently reports:
 Python 3.14.7
 v24.20.0
 uv 0.12.10
-/workspace
+/workspaces/coin-catalog
 ```
 
-These commands were successfully verified inside the Dev Container on 2026-09-09.
+These commands and the repository workspace path were successfully verified inside the Dev Container on 2026-09-09.
+
+## Python Project Initialization
+
+The Python project is managed with `uv`.
+
+From the repository root inside the Dev Container, the project was initialized with:
+
+```bash
+uv init --python 3.14
+```
+
+This created the initial Python project structure:
+
+```text
+.python-version
+pyproject.toml
+src/
+└── coin_catalog/
+    └── __init__.py
+```
+
+The generated `.python-version` currently contains:
+
+```text
+3.14
+```
+
+The generated `pyproject.toml` declares Python `>=3.14`, uses the `uv_build` build backend, and currently has no project dependencies. The generated `src/coin_catalog/__init__.py` contains the placeholder console entry point created by `uv init`.
+
+The Python project initialization was successfully verified and committed to the repository on 2026-09-09.
 
 ## Current Scope
 
-At this stage, the Dev Container is only being used to establish the development environment. Application dependencies and application source structure will be added in later phases.
+At this stage, the environment and initial Python project metadata are being established. FastAPI, SQLAlchemy, Vue, Vite, and other application dependencies have not yet been added.
 
-Do not install FastAPI, SQLAlchemy, Vue, Vite, or other project dependencies manually before the corresponding development step is agreed and documented.
+Do not install project dependencies manually before the corresponding development step is agreed and documented.
