@@ -194,7 +194,7 @@ The Python backend source is under:
 backend/src/coin_catalog/
 ```
 
-The Vue frontend source will be under:
+The Vue frontend source is under:
 
 ```text
 frontend/src/
@@ -209,5 +209,82 @@ Separate source trees prevent Python and frontend `src/` directories from being 
 ### Consequences
 
 - The backend project metadata lives under `backend/`.
-- The frontend project will be created under `frontend/`.
+- The frontend project lives under `frontend/`.
 - The physical project layout is part of the current architecture and should be reflected consistently in project documentation.
+
+---
+
+## D-020 — Vite Development Proxy for Backend API
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+During development, the Vue frontend communicates with the FastAPI backend through relative `/api/...` paths. Vite proxies these requests to the FastAPI development server on port 8000.
+
+The frontend therefore does not directly address the backend development origin from browser JavaScript, avoiding the need for CORS configuration for the initial development workflow.
+
+### Rationale
+
+The proxy keeps the browser-facing development application on a single origin while allowing the frontend and backend to remain independently runnable. It reduces unnecessary configuration at the application-skeleton stage and avoids coupling frontend code to a development-specific backend URL.
+
+### Consequences
+
+- Vite development configuration will contain the `/api` proxy.
+- Frontend API calls should use relative `/api/...` paths rather than hard-coded `http://localhost:8000` URLs.
+- CORS is not required for the initial frontend-to-backend development connection.
+- If a future architecture requires genuine cross-origin browser requests, CORS policy will be evaluated and configured deliberately.
+
+---
+
+## D-021 — Separate Frontend and Backend Development Servers
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+The frontend and backend run as separate development servers inside the Dev Container:
+
+- Vue/Vite on port **5173**
+- FastAPI on port **8000**
+
+Both ports are exposed/forwarded by the Dev Container for host-browser development.
+
+### Rationale
+
+Keeping the servers independent preserves clear frontend/backend boundaries and allows each development toolchain to operate normally while the Vite proxy provides the browser-facing integration path.
+
+### Consequences
+
+- Frontend and backend can be started, stopped, and tested independently.
+- The Dev Container exposes both development ports.
+- The initial Phase 2 workflow requires both servers to be running for end-to-end frontend/backend verification.
+
+---
+
+## D-022 — Minimal Backend Application Structure
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+The initial FastAPI backend uses the following minimal structure:
+
+```text
+backend/
+├── .python-version
+├── pyproject.toml
+└── src/
+    └── coin_catalog/
+        ├── __init__.py
+        └── main.py
+```
+
+The initial `main.py` contains the FastAPI application and the first health/status endpoint. Additional modules and abstractions will be introduced only when justified by subsequent requirements.
+
+### Rationale
+
+The application skeleton should establish a runnable backend without prematurely introducing database, service, repository, configuration, or other structural layers that are not yet required.
+
+### Consequences
+
+- `main.py` is the initial FastAPI application entry point.
+- The first backend functionality is a health/status endpoint.
+- Database and broader application structure remain outside the initial skeleton and will be designed in their respective phases.
