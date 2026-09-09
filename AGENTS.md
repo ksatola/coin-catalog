@@ -33,6 +33,7 @@ Relevant documentation:
 - `docs/PROGRESS.md` — current implementation status.
 - `docs/ROADMAP.md` — planned development phases.
 - `docs/DEVELOPMENT.md` — detailed development environment and setup instructions.
+- `docs/GIT_WORKFLOW.md` — practical Git branching, development, and merge workflow.
 
 When beginning work on the project, review these documents before making significant changes.
 
@@ -287,9 +288,23 @@ Do not combine unrelated development steps merely for convenience.
 
 GitHub is the project's version-control and collaboration platform.
 
-Prefer small, meaningful commits.
+`main` is the stable branch. Development work must be performed on a dedicated working branch and must not be committed directly to `main`.
 
-Commit messages should describe the actual change.
+For a normal development phase, use a branch named:
+
+```text
+phase-N-short-description
+```
+
+Examples include `phase-3-database-foundation` and `phase-4-coin-data-model`.
+
+For smaller independent work, `feature/`, `fix/`, and `docs/` branches may be used where appropriate.
+
+Working branches are developed, run, tested, and documented normally. A working branch is merged into `main` only after its relevant implementation, tests, documentation, and verification are complete, preferably through a pull request.
+
+The project does not use a permanent `develop` branch.
+
+Prefer small, meaningful commits. Commit messages should describe the actual change.
 
 Examples:
 
@@ -299,9 +314,9 @@ Examples:
 - `feat: add coin database model`
 - `test: add coin repository tests`
 
-For larger changes, prefer a feature branch and pull request rather than directly modifying `main`.
-
 Never rewrite published history unless explicitly requested.
+
+See `docs/GIT_WORKFLOW.md` for the practical GitHub Desktop and VS Code workflow.
 
 ---
 
@@ -351,18 +366,6 @@ When repository state conflicts with conversation context, the repository docume
 
 The project is currently in:
 
-**Phase 1 — Development Environment**
+**Phase 3 — Database Foundation**
 
-The immediate objective is to establish a reproducible development environment using:
-
-- GitHub
-- Git
-- Docker
-- VS Code
-- Dev Containers
-- Linux
-- Python
-- `uv`
-- Node.js / frontend tooling
-
-The application itself should not be implemented until the development environment has been successfully established and verified.
+Phase 3 has not yet begun implementation. The immediate objective is to review the database-foundation requirements and agree the database location, configuration, session handling, migration approach, schema scope, and testing approach before implementing database code.
