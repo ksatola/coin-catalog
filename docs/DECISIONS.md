@@ -288,3 +288,43 @@ The application skeleton should establish a runnable backend without prematurely
 - `main.py` is the initial FastAPI application entry point.
 - The first backend functionality is a health/status endpoint.
 - Database and broader application structure remain outside the initial skeleton and will be designed in their respective phases.
+
+---
+
+## D-023 — Stable `main` and Phase-Based Working Branches
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+`main` is the project's stable branch. Development and experimentation must take place on dedicated working branches and must not be committed directly to `main`.
+
+The normal branch for a development phase uses the naming pattern:
+
+```text
+phase-N-short-description
+```
+
+For example:
+
+```text
+phase-3-database-foundation
+```
+
+Smaller independent work may use descriptive `feature/`, `fix/`, or `docs/` branches.
+
+Working branches are developed, run, tested, and documented normally. A branch is merged into `main` only after the relevant implementation, tests, documentation, and verification are complete, preferably through a pull request.
+
+The project does not use a permanent `develop` branch.
+
+### Rationale
+
+This provides a simple separation between stable project state and work in progress without introducing the additional complexity of a long-lived integration branch. The existing Docker/Dev Container workflow is independent of Git branch choice, so the application can be developed and run normally from a working branch.
+
+### Consequences
+
+- `main` remains the stable integration point.
+- Incomplete phase work can remain isolated on its working branch without destabilizing `main`.
+- The next phase should normally be branched from the latest stable `main`.
+- Working branches can contain multiple small logical commits.
+- Pull requests provide a natural final review and verification point before merging.
+- A more complex release or integration branching model will require a separate project decision.
