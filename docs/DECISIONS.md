@@ -328,3 +328,30 @@ This provides a simple separation between stable project state and work in progr
 - Working branches can contain multiple small logical commits.
 - Pull requests provide a natural final review and verification point before merging.
 - A more complex release or integration branching model will require a separate project decision.
+
+---
+
+## D-024 — Application Data Directory Inside Repository Working Tree
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+Persistent application data is stored in a top-level `data/` directory inside the repository working tree. The `data/` directory is ignored by Git and is not part of the repository's versioned source or documentation.
+
+The initial SQLite database will therefore use a path under:
+
+```text
+/workspaces/coin-catalog/data/
+```
+
+### Rationale
+
+Keeping application data under the Dev Container workspace simplifies the development environment and avoids a separate persistent `/data` mount. Git provides the source-control boundary, while `.gitignore` ensures runtime data is not committed.
+
+### Consequences
+
+- The database and future local application data can use a simple repository-relative `data/` path.
+- Git will not track files under `data/`.
+- Branch changes do not alter the local database because the database is not version-controlled.
+- Backup and portability of application data remain separate concerns and will be addressed later.
+- The exact database filename and SQLAlchemy configuration remain to be decided.
