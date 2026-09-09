@@ -13,10 +13,21 @@ RUN apt-get update \
         curl \
         git \
         build-essential \
-    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+        xz-utils \
+    && case "$(dpkg --print-architecture)" in \
+        amd64) NODE_ARCH="x64" ;; \
+        arm64) NODE_ARCH="arm64" ;; \
+        *) echo "Unsupported architecture: $(dpkg --print-architecture)" && exit 1 ;; \
+    esac \
+    && NODE_TARBALL="node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz" \
+    && curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TARBALL}" \
+    && curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" \
+    && grep " ${NODE_TARBALL}$" SHASUMS256.txt | sha256sum -c - \
+    && tar -xJf "${NODE_TARBALL}" -C /usr/local --strip-components=1 \
+    && rm -f "${NODE_TARBALL}" SHASUMS256.txt \
     && node --version \
-    && curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh \
+    && npm --version \
+    && curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh \
     && mv /root/.local/bin/uv /usr/local/bin/uv \
     && mv /root/.local/bin/uvx /usr/local/bin/uvx \
     && uv --version \
