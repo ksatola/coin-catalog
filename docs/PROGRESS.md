@@ -10,7 +10,7 @@ A task is marked complete only after it has been implemented and verified where 
 
 **Phase 2 — Application Skeleton**
 
-Phase 1 — Development Environment has been completed and verified. Phase 2 is establishing the minimal backend/frontend application skeleton and frontend-to-backend communication.
+Phase 1 — Development Environment has been completed and verified. Phase 2 is implementing and verifying the minimal runnable backend/frontend application skeleton.
 
 ---
 
@@ -88,27 +88,27 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 
 **Status:** In progress
 
-### Backend
+### Completed and verified
 
-- [x] Minimal backend application structure established.
-- [x] FastAPI dependency installed with `uv`.
-- [x] FastAPI standard CLI dependencies installed with `uv`.
+- [x] Minimal backend application structure established under `backend/src/coin_catalog/`.
 - [x] FastAPI application created in `backend/src/coin_catalog/main.py`.
+- [x] Initial `GET /health` endpoint implemented.
+- [x] FastAPI standard dependencies installed with `uv` so the FastAPI development CLI is available.
 - [x] FastAPI application import verified successfully.
-- [x] FastAPI CLI availability verified successfully.
-- [x] FastAPI development server started successfully on port `8000`.
-- [x] Initial `GET /health` endpoint verified successfully with `curl`.
+- [x] FastAPI development server verified successfully on port `8000`.
+- [x] Direct backend request to `http://localhost:8000/health` verified successfully with `{"status":"ok"}`.
+- [x] Vite development proxy configured for `/api` requests to the FastAPI server.
+- [x] Vite development server verified successfully on port `5173` while the backend was running on port `8000`.
+- [x] Vite proxy request to `http://localhost:5173/api/health` verified successfully with `{"status":"ok"}`.
 
-### Frontend / Backend Integration
+### Remaining
 
-- [ ] Configure Vite `/api` proxy to FastAPI.
-- [ ] Verify frontend-to-backend communication through the proxy.
-- [ ] Add minimal frontend health/status display.
-- [ ] Establish the complete two-server development workflow.
-- [ ] Establish basic application configuration.
+- [ ] Establish the minimal frontend application structure beyond the scaffold.
+- [ ] Make the Vue frontend call `/api/health` and display the returned backend status.
+- [ ] Establish basic application configuration where required.
 - [ ] Perform end-to-end environment verification with the runnable application.
 
-No catalogue functionality has been implemented yet.
+No coin-catalogue domain functionality has been implemented yet.
 
 ---
 
@@ -276,7 +276,7 @@ Planned work:
 
 The next concrete task is:
 
-**Configure the Vite `/api` proxy according to approved decision D-020, then verify it before changing the frontend UI.**
+**Make the Vue frontend call `/api/health` and display the returned backend status.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -314,7 +314,8 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Added the minimal FastAPI application and `GET /health` endpoint.
 - Added FastAPI dependencies with `uv`; verified the FastAPI CLI and development server.
 - Verified `GET /health` directly with `curl` and received `{"status":"ok"}`.
-- Documented the verified backend setup and the not-yet-implemented Vite proxy in `docs/DEVELOPMENT.md`.
+- Configured the Vite development proxy for `/api` requests to the FastAPI backend.
+- Verified the Vite proxy end-to-end with `curl http://localhost:5173/api/health`, receiving `{"status":"ok"}`.
 
 ### 2026-09-07
 
