@@ -461,3 +461,36 @@ Explicit versioning and stable releases improve reproducibility, compatibility, 
 - New dependencies must be evaluated for stability and compatibility before adoption.
 - Upgrading a significant dependency is a deliberate maintenance change and should be tested before acceptance.
 - The project will not adopt prerelease or experimental dependencies merely to obtain newer features.
+
+---
+
+## D-018 — Verified State / Fact-Based Development
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+### Context
+
+The project requires reliable knowledge of its actual state. Development decisions and progress must not be based on unverified assumptions or claims about work that has not actually been performed.
+
+### Decision
+
+All information about the current project state, completed work, configuration, and test results must be based on facts and verified whenever verification is possible.
+
+Assumptions, predictions, intended actions, and planned work must not be presented as facts. The assistant must not claim that an action was completed when it was not actually completed, or confirm a state that has not been checked.
+
+If something does not work, has not been completed, or cannot be verified, the actual state must be stated clearly. Diagnostic and corrective attempts should then continue until a verified result is obtained or a clear limitation is established.
+
+`docs/PROGRESS.md` must reflect only the verified current state of the project. A task may be marked complete only after it has actually been completed and verified.
+
+### Rationale
+
+A fact-based development process prevents false confidence, makes failures visible, and provides an accurate basis for the next development step. This is especially important for incremental development and for preserving reliable project context over time.
+
+### Consequences
+
+- Project status reports must distinguish verified facts from unverified or planned work.
+- Failed or incomplete work must remain explicitly identified as such.
+- Tool results, tests, and other reliable evidence should be used to establish project state.
+- Documentation must not claim a state that has not been verified.
+- The assistant should continue troubleshooting rather than hiding or glossing over failures.
