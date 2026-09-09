@@ -8,9 +8,9 @@ A task is marked complete only after it has been implemented and verified where 
 
 ## Current Phase
 
-**Phase 1 — Development Environment**
+**Phase 2 — Application Skeleton**
 
-The project is currently establishing a reproducible development environment.
+Phase 1 — Development Environment has been completed and verified. The project is now preparing the minimal backend/frontend application skeleton and frontend-to-backend communication.
 
 ---
 
@@ -38,6 +38,8 @@ The project is currently establishing a reproducible development environment.
 ---
 
 ## Phase 1 — Development Environment
+
+**Status:** Complete
 
 ### Completed
 
@@ -74,27 +76,29 @@ The project is currently establishing a reproducible development environment.
 - [x] Initial frontend checkpoint committed and pushed to GitHub by the user.
 - [x] Detailed frontend development instructions added to `docs/DEVELOPMENT.md`.
 
-### Pending
+### Remaining / carried into Phase 2
 
-- [ ] Verify Docker Desktop host configuration on the development machine.
-- [ ] Verify VS Code / Dev Containers extension configuration on the development machine.
-- [ ] Create the initial runnable application skeleton.
-- [ ] Perform an end-to-end development-environment verification.
+- [ ] Perform broader end-to-end development-environment verification after the application skeleton is runnable.
+- [ ] Verify Docker Desktop host configuration as a separate host-environment checklist item.
+- [ ] Verify VS Code / Dev Containers extension configuration as a separate host-environment checklist item.
 
 ---
 
 ## Phase 2 — Application Skeleton
 
-**Status:** Not started
+**Status:** In progress
 
 Planned work:
 
 - [ ] Establish backend application structure.
-- [ ] Establish frontend application structure.
+- [ ] Establish frontend application structure beyond the scaffold.
 - [ ] Establish frontend/backend development workflow.
 - [ ] Add initial health/status endpoint.
 - [ ] Verify frontend-to-backend communication.
 - [ ] Establish basic application configuration.
+- [ ] Perform end-to-end environment verification with the runnable application.
+
+No application functionality has been implemented yet.
 
 ---
 
@@ -262,7 +266,7 @@ Planned work:
 
 The next concrete task is:
 
-**Review the completed Phase 1 environment and prepare the transition to Phase 2 — Application Skeleton.**
+**Discuss and agree the minimal Phase 2 application skeleton before implementation.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -293,6 +297,8 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Verified host-browser access to `http://localhost:5173/`.
 - User committed and pushed the initial frontend checkpoint to GitHub.
 - Expanded `docs/DEVELOPMENT.md` with step-by-step frontend setup, verification, and browser-access instructions.
+- Reviewed `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` before transitioning toward Phase 2.
+- Marked Phase 1 complete and began Phase 2 preparation.
 
 ### 2026-09-07
 
