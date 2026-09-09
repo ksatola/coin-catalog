@@ -19,13 +19,13 @@ The roadmap may change as the project develops and new information becomes avail
 
 ## Phase 1 — Development Environment
 
-**Status:** In progress
+**Status:** Complete
 
 Establish a reproducible, cross-platform development environment based on Docker Dev Containers.
 
-The initial repository source layout is established with separate `backend/` and `frontend/` project directories. The backend Python project currently lives under `backend/`; the frontend directory will be populated during frontend setup.
+The repository now contains separate `backend/` and `frontend/` project directories. The backend Python project and the Vue frontend foundation have both been created and verified inside the Dev Container. Host-browser access to the Vite development server has also been verified.
 
-Planned work:
+Completed work:
 
 - Configure Docker.
 - Configure VS Code and Dev Containers.
@@ -37,14 +37,19 @@ Planned work:
 - Verify Python tooling.
 - Verify frontend tooling.
 - Verify browser access from the host system.
-- Create the initial runnable application skeleton.
-- Perform end-to-end environment verification.
-- Update `README.md` with verified setup and run instructions.
-- Create the first development checkpoint.
+- Create the initial frontend foundation.
+- Document the verified development environment and frontend workflow.
+- Create the frontend development checkpoint.
+
+Remaining environment checklist items that require explicit host-level verification are tracked in `docs/PROGRESS.md` and will not block discussion of the application skeleton.
 
 ## Phase 2 — Application Skeleton
 
+**Status:** Next
+
 Create the minimal backend/frontend application structure and establish communication between the Vue frontend and FastAPI backend.
+
+The phase will begin with another documentation review before implementation. The exact backend structure, initial health/status endpoint, frontend/backend development workflow, and configuration approach will be discussed and agreed before code is added.
 
 ## Phase 3 — Database Foundation
 
