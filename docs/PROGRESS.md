@@ -10,7 +10,7 @@ A task is marked complete only after it has been implemented and verified where 
 
 **Phase 2 — Application Skeleton**
 
-Phase 1 — Development Environment has been completed and verified. The project is now preparing the minimal backend/frontend application skeleton and frontend-to-backend communication.
+Phase 1 — Development Environment has been completed and verified. Phase 2 is establishing the minimal backend/frontend application skeleton and frontend-to-backend communication.
 
 ---
 
@@ -88,17 +88,27 @@ Phase 1 — Development Environment has been completed and verified. The project
 
 **Status:** In progress
 
-Planned work:
+### Backend
 
-- [ ] Establish backend application structure.
-- [ ] Establish frontend application structure beyond the scaffold.
-- [ ] Establish frontend/backend development workflow.
-- [ ] Add initial health/status endpoint.
-- [ ] Verify frontend-to-backend communication.
+- [x] Minimal backend application structure established.
+- [x] FastAPI dependency installed with `uv`.
+- [x] FastAPI standard CLI dependencies installed with `uv`.
+- [x] FastAPI application created in `backend/src/coin_catalog/main.py`.
+- [x] FastAPI application import verified successfully.
+- [x] FastAPI CLI availability verified successfully.
+- [x] FastAPI development server started successfully on port `8000`.
+- [x] Initial `GET /health` endpoint verified successfully with `curl`.
+
+### Frontend / Backend Integration
+
+- [ ] Configure Vite `/api` proxy to FastAPI.
+- [ ] Verify frontend-to-backend communication through the proxy.
+- [ ] Add minimal frontend health/status display.
+- [ ] Establish the complete two-server development workflow.
 - [ ] Establish basic application configuration.
 - [ ] Perform end-to-end environment verification with the runnable application.
 
-No application functionality has been implemented yet.
+No catalogue functionality has been implemented yet.
 
 ---
 
@@ -266,7 +276,7 @@ Planned work:
 
 The next concrete task is:
 
-**Discuss and agree the minimal Phase 2 application skeleton before implementation.**
+**Configure the Vite `/api` proxy according to approved decision D-020, then verify it before changing the frontend UI.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -300,6 +310,11 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Reviewed `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` before transitioning toward Phase 2.
 - Marked Phase 1 complete and began Phase 2 preparation.
 - Confirmed Docker Desktop host configuration and VS Code / Dev Containers configuration as verified through the successful Dev Container build, connection, and development workflow; removed them from the Phase 1 carryover list.
+- Recorded approved Phase 2 decisions for the Vite API proxy, separate development servers, and minimal backend application structure.
+- Added the minimal FastAPI application and `GET /health` endpoint.
+- Added FastAPI dependencies with `uv`; verified the FastAPI CLI and development server.
+- Verified `GET /health` directly with `curl` and received `{"status":"ok"}`.
+- Documented the verified backend setup and the not-yet-implemented Vite proxy in `docs/DEVELOPMENT.md`.
 
 ### 2026-09-07
 
