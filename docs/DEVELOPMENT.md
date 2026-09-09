@@ -2,6 +2,8 @@
 
 This document contains the detailed, verified instructions for opening and using the Coin Catalog development environment.
 
+For coding style, quality, documentation, testing, and related development conventions, see [`CODING_STANDARDS.md`](CODING_STANDARDS.md).
+
 ## Host Requirements
 
 The host machine is intentionally kept minimal. The following software is required on the host:
