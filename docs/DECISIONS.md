@@ -395,3 +395,34 @@ A working and reproducible development environment provides the foundation for a
 ### Consequences
 
 The immediate implementation scope is limited to establishing and verifying the development environment.
+
+---
+
+## D-016 — Development Container Runtime Versions
+
+**Status:** Accepted  
+**Date:** 2026-09-09
+
+### Context
+
+The development environment must provide consistent Python and Node.js versions across the supported host platforms while keeping development dependencies out of the host system.
+
+### Decision
+
+The Development Container will use:
+
+- Python **3.13.x**
+- Node.js **24.x LTS**
+- `uv` as the Python project and dependency manager
+
+These tools will be provided inside the Dev Container rather than installed on the host.
+
+### Rationale
+
+Using defined major/minor release lines provides a stable compatibility target while allowing maintenance updates within those release lines. Keeping the toolchain inside the container preserves the cross-platform development model.
+
+### Consequences
+
+- The Dev Container configuration must provide Python 3.13.x and Node.js 24.x LTS.
+- The project should not require Python or Node.js to be installed directly on the host.
+- Exact patch versions may be updated as appropriate within the selected release lines.
