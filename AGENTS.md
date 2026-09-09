@@ -116,13 +116,22 @@ The project should maintain:
 - `pyproject.toml` — declared project dependencies and configuration.
 - `uv.lock` — locked dependency versions.
 
+Dependency policy:
+
+- Explicitly define and pin versions of installed development tools and project dependencies wherever the relevant tooling supports it.
+- Use stable, production-quality releases.
+- Do not use alpha, beta, release-candidate, nightly, or otherwise experimental/prerelease versions by default.
+- Do not automatically track the newest available release.
+- Treat dependency upgrades as deliberate maintenance changes that require compatibility review and testing.
+
 When adding a dependency:
 
 1. Determine whether it is actually necessary.
-2. Prefer a well-maintained, established dependency.
-3. Add it using `uv`.
-4. Ensure the lock file is updated.
-5. Document significant dependency decisions when appropriate.
+2. Prefer a well-maintained, established, stable dependency.
+3. Select an explicit stable version compatible with the project.
+4. Add it using the appropriate project tooling (`uv` for Python dependencies).
+5. Ensure the relevant lock file is updated.
+6. Document significant dependency decisions when appropriate.
 
 The project owner should be able to understand the purpose of important dependencies.
 
