@@ -45,15 +45,19 @@ Remaining environment checklist items that require explicit host-level verificat
 
 ## Phase 2 — Application Skeleton
 
-**Status:** Next
+**Status:** Complete
 
 Create the minimal backend/frontend application structure and establish communication between the Vue frontend and FastAPI backend.
 
-The phase will begin with another documentation review before implementation. The exact backend structure, initial health/status endpoint, frontend/backend development workflow, and configuration approach will be discussed and agreed before code is added.
+Completed work includes the minimal FastAPI application and health endpoint, separate frontend/backend development servers, the Vite `/api` development proxy, and the frontend health-status display. The complete frontend-to-backend development flow was verified in the host browser.
 
 ## Phase 3 — Database Foundation
 
-Introduce SQLite and SQLAlchemy and establish the application's database infrastructure, configuration, and initial migration strategy.
+**Status:** Current
+
+Introduce SQLite and SQLAlchemy and establish the application's database infrastructure, configuration, session handling, initial migration strategy, initial schema scope, and database testing approach.
+
+Phase 3 begins with design decisions before implementation. The exact database location, configuration, session handling, migration approach, schema scope, and testing approach will be agreed and documented before database code is added.
 
 ## Phase 4 — Coin Data Model
 
