@@ -56,7 +56,26 @@ The project owner should understand and approve significant technical or archite
 
 ---
 
-## 4. Architecture
+## 4. Verified State / Fact-Based Development
+
+All information about the current project state, completed work, configuration, and test results must be based on facts and verified whenever verification is possible.
+
+The assistant must not present assumptions, predictions, intended actions, or planned work as facts. The assistant must not claim that an action was completed when it was not actually completed, or confirm a state that has not been checked.
+
+If something does not work, has not been completed, or cannot be verified, the actual state must be stated clearly. The next step should then be a concrete diagnostic or corrective attempt. Continue with further attempts until a verified result is obtained or a clear limitation is established.
+
+`docs/PROGRESS.md` must reflect only the verified current state of the project. A task may be marked complete only after it has actually been completed and verified.
+
+When reporting status, clearly distinguish between:
+
+- **Verified** — directly confirmed by an actual check, test, tool result, or other reliable evidence.
+- **Not verified** — not yet checked or lacking sufficient evidence.
+- **Planned** — intended future work, not completed work.
+- **Failed** — attempted but did not work.
+
+---
+
+## 5. Architecture
 
 The currently accepted architecture is:
 
@@ -94,7 +113,7 @@ The host platform should not be required to install project-specific runtime dep
 
 ---
 
-## 5. Cross-Platform Requirement
+## 6. Cross-Platform Requirement
 
 The project must support development and execution on:
 
@@ -107,7 +126,7 @@ Do not introduce host-specific assumptions unless they are unavoidable and docum
 
 ---
 
-## 6. Dependency Management
+## 7. Dependency Management
 
 Python dependencies are managed using `uv`.
 
@@ -137,7 +156,7 @@ The project owner should be able to understand the purpose of important dependen
 
 ---
 
-## 7. Frontend Guidelines
+## 8. Frontend Guidelines
 
 The frontend uses Vue 3 with TypeScript and Vite.
 
@@ -157,7 +176,7 @@ Do not introduce a large frontend framework or state-management solution without
 
 ---
 
-## 8. Backend Guidelines
+## 9. Backend Guidelines
 
 FastAPI is responsible for:
 
@@ -175,7 +194,7 @@ Do not put substantial application logic directly into route handlers.
 
 ---
 
-## 9. Database Guidelines
+## 10. Database Guidelines
 
 SQLite is the current database technology.
 
@@ -189,7 +208,7 @@ When database migrations become necessary, introduce an appropriate migration me
 
 ---
 
-## 10. Images and Files
+## 11. Images and Files
 
 Coin photographs are external files, not database blobs, unless a future decision explicitly changes this architecture.
 
@@ -201,7 +220,7 @@ Thumbnail generation and image processing should be implemented as separate serv
 
 ---
 
-## 11. Architectural Decisions
+## 12. Architectural Decisions
 
 Significant architectural decisions must be recorded in:
 
@@ -233,7 +252,7 @@ When an accepted architectural decision changes:
 
 ---
 
-## 12. Progress Tracking
+## 13. Progress Tracking
 
 Development progress is tracked in:
 
@@ -245,7 +264,7 @@ Do not mark work as completed based solely on intention or planned implementatio
 
 ---
 
-## 13. Working Incrementally
+## 14. Working Incrementally
 
 When implementing a requested change:
 
@@ -263,7 +282,7 @@ Do not combine unrelated development steps merely for convenience.
 
 ---
 
-## 14. Git Workflow
+## 15. Git Workflow
 
 GitHub is the project's version-control and collaboration platform.
 
@@ -285,7 +304,7 @@ Never rewrite published history unless explicitly requested.
 
 ---
 
-## 15. Documentation as Code
+## 16. Documentation as Code
 
 Documentation is part of the project.
 
@@ -306,7 +325,7 @@ Documentation must describe the actual current state, not an intended future sta
 
 ---
 
-## 16. AI Collaboration Rules
+## 17. AI Collaboration Rules
 
 The AI assistant should act as a development collaborator, not as the sole decision maker.
 
@@ -327,7 +346,7 @@ When repository state conflicts with conversation context, the repository docume
 
 ---
 
-## 17. Current Development Stage
+## 18. Current Development Stage
 
 The project is currently in:
 
