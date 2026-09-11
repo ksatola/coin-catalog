@@ -10,7 +10,7 @@ A task is marked complete only after it has been implemented and verified where 
 
 **Phase 3 — Database Foundation**
 
-Phase 1 — Development Environment and Phase 2 — Application Skeleton have been completed and verified. Phase 3 is now in preparation; database design decisions must be agreed before database implementation begins.
+Phase 1 — Development Environment and Phase 2 — Application Skeleton have been completed and verified. Phase 3 is in progress; the SQLite location, SQLAlchemy configuration and session handling, and Alembic migration tooling have been established and verified. The initial database schema remains to be designed.
 
 ---
 
@@ -109,7 +109,7 @@ No coin-catalogue domain functionality has been implemented yet.
 
 ## Phase 3 — Database Foundation
 
-**Status:** Preparation
+**Status:** In progress
 
 ### Completed
 
@@ -119,15 +119,20 @@ No coin-catalogue domain functionality has been implemented yet.
 - [x] Branching instructions added to `AGENTS.md` and `docs/DEVELOPMENT.md`.
 - [x] Phase 3 working branch synchronized with the latest stable `main` and pushed to `origin`.
 - [x] Phase 3 documentation review completed; no architecture change was required before database design.
+- [x] SQLite database location established as `/workspaces/coin-catalog/data/coin-catalog.db`.
+- [x] SQLAlchemy database engine and session configuration established.
+- [x] Database session test added and verified.
+- [x] Alembic selected and initialized for database schema migrations.
+- [x] Alembic configured to use the application's canonical `DATABASE_URL`.
+- [x] Alembic database connection verified with `uv run alembic current`.
+- [x] Ruff linting and formatting checks pass for the backend.
+- [x] Backend pytest suite passes with 1 test.
 
 ### Planned
 
-- [ ] Establish SQLite database location.
-- [ ] Establish SQLAlchemy configuration.
-- [ ] Establish database session handling.
-- [ ] Establish migration strategy.
-- [ ] Create initial database schema.
-- [ ] Add database tests.
+- [ ] Create the initial database schema.
+- [ ] Generate and review the first Alembic migration.
+- [ ] Apply the initial migration and verify the resulting schema.
 
 ---
 
@@ -280,13 +285,24 @@ Planned work:
 
 The next concrete task is:
 
-**Review the Phase 3 — Database Foundation documentation and decide the database location, configuration, session, and migration approach before implementing database code.**
+**Design the initial database schema before implementing the coin data model.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
 ---
 
 ## Change Log
+
+### 2026-09-11
+
+- Established the SQLite database location at `/workspaces/coin-catalog/data/coin-catalog.db`.
+- Established SQLAlchemy engine and session configuration and verified the database session test.
+- Added and initialized Alembic for database schema migrations.
+- Configured Alembic to use the application's canonical `DATABASE_URL`.
+- Verified `uv run alembic current` can connect to the SQLite database.
+- Verified backend Ruff linting and formatting checks pass.
+- Verified the backend pytest suite passes with 1 test.
+- Updated the Phase 3 documentation to reflect the verified database-foundation state.
 
 ### 2026-09-09
 
