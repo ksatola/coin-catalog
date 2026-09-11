@@ -142,9 +142,12 @@ The current Python project structure is:
 backend/
 ├── .python-version
 ├── pyproject.toml
+├── tests/
+│   └── test_database.py
 └── src/
     └── coin_catalog/
         ├── __init__.py
+        ├── database.py
         └── main.py
 ```
 
@@ -172,6 +175,34 @@ The command completed successfully and produced:
 
 ```text
 backend import OK
+```
+
+### Python tests and code quality
+
+Run Python project quality checks from the backend directory:
+
+```bash
+cd /workspaces/coin-catalog/backend
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+```
+
+`pytest` runs the backend test suite. `ruff check .` runs Ruff lint checks, and `ruff format --check .` verifies that Python files are formatted according to the project's Ruff configuration.
+
+When adding or updating Python development dependencies, use `uv` from the backend directory. For example:
+
+```bash
+cd /workspaces/coin-catalog/backend
+uv add --dev pytest ruff
+```
+
+After dependency changes, commit the corresponding `pyproject.toml` and `uv.lock` changes together when they belong to the same dependency update.
+
+The initial database session test was verified on 2026-09-11 with:
+
+```text
+1 passed
 ```
 
 ### FastAPI application
@@ -376,7 +407,7 @@ Host-browser access and frontend-to-backend communication were successfully veri
 
 ## Current Scope
 
-At this stage, the development environment, initial Python backend project, FastAPI application skeleton, and initial Vue frontend project have been established. The FastAPI `/health` endpoint, Vite API proxy, and frontend-to-backend health display have all been verified.
+At this stage, the development environment, initial Python backend project, FastAPI application skeleton, initial Vue frontend project, and initial database foundation have been established. The FastAPI `/health` endpoint, Vite API proxy, frontend-to-backend health display, SQLAlchemy database session, and initial database session test have been verified.
 
 The approved Phase 2 development-server arrangement is:
 
@@ -384,6 +415,6 @@ The approved Phase 2 development-server arrangement is:
 - FastAPI on port `8000`
 - Vite `/api` proxy forwarding to FastAPI and removing the `/api` prefix
 
-The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, testing, database integration, and other application functionality will be introduced in later agreed steps.
+The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, database schema, and other application functionality will be introduced in later agreed steps.
 
 Do not install project dependencies manually before the corresponding development step is agreed and documented.
