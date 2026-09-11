@@ -223,8 +223,6 @@ During development, the Vue frontend communicates with the FastAPI backend throu
 
 The frontend therefore does not directly address the backend development origin from browser JavaScript, avoiding the need for CORS configuration for the initial development workflow.
 
-### Rationale
-
 The proxy keeps the browser-facing development application on a single origin while allowing the frontend and backend to remain independently runnable. It reduces unnecessary configuration at the application-skeleton stage and avoids coupling frontend code to a development-specific backend URL.
 
 ### Consequences
@@ -386,3 +384,25 @@ A concise, explicit coding standard provides consistent professional practices w
 - Contributors and AI agents should follow `docs/CODING_STANDARDS.md`.
 - Changes to coding conventions should be made deliberately and reflected in that document.
 - New tooling should still be justified and introduced incrementally.
+
+---
+
+## D-026 — Alembic for Database Migrations
+
+**Status:** Accepted  
+**Date:** 2026-09-11
+
+Alembic is used for versioning and applying database schema changes. SQLAlchemy models define the application's database structure, while Alembic migration revisions record and apply transitions between schema versions.
+
+### Rationale
+
+The coin catalogue database will evolve as new fields, relationships, and features are introduced. Versioned migrations provide a reproducible and reviewable way to create and change the database schema while preserving existing application data.
+
+Alembic integrates directly with SQLAlchemy and fits the project's Git-based development workflow.
+
+### Consequences
+
+- Migration revisions are stored under `backend/migrations/versions/`.
+- Database schema changes must be represented by migration revisions.
+- Alembic's autogeneration may be used as a starting point, but generated migrations must be reviewed before being applied.
+- Database migration state is separate from application/coin data.
