@@ -142,6 +142,9 @@ The current Python project structure is:
 backend/
 ├── .python-version
 ├── pyproject.toml
+├── alembic.ini
+├── migrations/
+│   └── versions/
 ├── tests/
 │   └── test_database.py
 └── src/
@@ -204,6 +207,58 @@ The initial database session test was verified on 2026-09-11 with:
 ```text
 1 passed
 ```
+
+### Database and migrations
+
+The backend uses SQLite with SQLAlchemy. Alembic manages database schema migrations.
+
+The database is stored at:
+
+```text
+/workspaces/coin-catalog/data/coin-catalog.db
+```
+
+Run Alembic commands from the backend project directory:
+
+```bash
+cd /workspaces/coin-catalog/backend
+```
+
+Check the current database migration revision:
+
+```bash
+uv run alembic current
+```
+
+Create a new migration revision after a model/schema change:
+
+```bash
+uv run alembic revision --autogenerate -m "describe schema change"
+```
+
+Review the generated migration before applying it.
+
+Apply pending migrations:
+
+```bash
+uv run alembic upgrade head
+```
+
+Show the migration history:
+
+```bash
+uv run alembic history
+```
+
+Alembic uses the database URL configured by the backend's `coin_catalog.database.DATABASE_URL`. The Alembic environment therefore uses the same canonical database location as the application.
+
+Migration files are version-controlled under:
+
+```text
+backend/migrations/versions/
+```
+
+The SQLite database itself remains under the Git-ignored `data/` directory.
 
 ### FastAPI application
 
@@ -407,7 +462,7 @@ Host-browser access and frontend-to-backend communication were successfully veri
 
 ## Current Scope
 
-At this stage, the development environment, initial Python backend project, FastAPI application skeleton, initial Vue frontend project, and initial database foundation have been established. The FastAPI `/health` endpoint, Vite API proxy, frontend-to-backend health display, SQLAlchemy database session, and initial database session test have been verified.
+At this stage, the development environment, initial Python backend project, FastAPI application skeleton, initial Vue frontend project, and initial database foundation have been established. The FastAPI `/health` endpoint, Vite API proxy, frontend-to-backend health display, SQLAlchemy database session, initial database session test, and Alembic migration tooling have been verified.
 
 The approved Phase 2 development-server arrangement is:
 
