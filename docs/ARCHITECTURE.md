@@ -73,10 +73,14 @@ coin-catalog/
 ├── backend/
 │   ├── .python-version
 │   ├── pyproject.toml
+│   ├── alembic.ini
+│   ├── migrations/
+│   │   └── versions/
 │   ├── uv.lock
 │   └── src/
 │       └── coin_catalog/
 │           ├── __init__.py
+│           ├── database.py
 │           └── main.py
 └── frontend/
     ├── package.json
@@ -138,6 +142,8 @@ SQLite is the initial database engine.
 
 SQLAlchemy provides the application's database abstraction and ORM layer.
 
+Alembic provides database schema migration and versioning. Migration revisions are stored under `backend/migrations/versions/` and are used to create and evolve the database schema.
+
 Conceptually:
 
 ```text
@@ -147,10 +153,10 @@ FastAPI
 Application / Service Logic
    │
    ▼
-SQLAlchemy
-   │
-   ▼
-SQLite
+SQLAlchemy ─────► Alembic
+   │                │
+   ▼                ▼
+SQLite         Schema Migrations
 ```
 
 The detailed database schema will be designed in a later development phase.
@@ -251,7 +257,7 @@ Application Data Model
 SQLite
 ```
 
-The exact source columns, mappings, validation rules, duplicate handling, and error reporting will be defined after the initial data model exists.
+The exact source columns, mappings, validation, duplicate handling, and error reporting will be defined after the initial data model exists.
 
 ---
 
