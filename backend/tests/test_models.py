@@ -87,7 +87,11 @@ def test_category_relation_has_composite_primary_key_and_self_relation_check() -
 
     assert set(table.primary_key.columns.keys()) == {"parent_id", "child_id"}
     assert len(table.constraints) >= 1
-    assert any("parent_id <> child_id" in str(constraint.sqltext) for constraint in table.constraints if hasattr(constraint, "sqltext"))
+    assert any(
+        "parent_id <> child_id" in str(constraint.sqltext)
+        for constraint in table.constraints
+        if hasattr(constraint, "sqltext")
+    )
 
 
 def test_coin_category_has_composite_primary_key() -> None:
