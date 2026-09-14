@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from coin_catalog.database import DATABASE_URL, Base
 from coin_catalog import models  # noqa: F401
+from coin_catalog.database import DATABASE_URL, Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

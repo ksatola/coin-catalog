@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, Text
@@ -13,7 +13,7 @@ class Country(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list["Coin"]] = relationship(back_populates="country")
+    coins: Mapped[list[Coin]] = relationship(back_populates="country")
 
 
 class Issuer(Base):
@@ -22,7 +22,7 @@ class Issuer(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list["Coin"]] = relationship(back_populates="issuer")
+    coins: Mapped[list[Coin]] = relationship(back_populates="issuer")
 
 
 class Denomination(Base):
@@ -31,7 +31,7 @@ class Denomination(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list["Coin"]] = relationship(back_populates="denomination")
+    coins: Mapped[list[Coin]] = relationship(back_populates="denomination")
 
 
 class Mint(Base):
@@ -40,7 +40,7 @@ class Mint(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list["Coin"]] = relationship(back_populates="mint")
+    coins: Mapped[list[Coin]] = relationship(back_populates="mint")
 
 
 class Material(Base):
@@ -49,7 +49,7 @@ class Material(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list["Coin"]] = relationship(back_populates="material")
+    coins: Mapped[list[Coin]] = relationship(back_populates="material")
 
 
 class State(Base):
@@ -58,7 +58,7 @@ class State(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list["Coin"]] = relationship(back_populates="state")
+    coins: Mapped[list[Coin]] = relationship(back_populates="state")
 
 
 class Era(Base):
@@ -67,11 +67,11 @@ class Era(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    from_coins: Mapped[list["Coin"]] = relationship(
+    from_coins: Mapped[list[Coin]] = relationship(
         back_populates="from_era",
         foreign_keys="Coin.from_era_id",
     )
-    to_coins: Mapped[list["Coin"]] = relationship(
+    to_coins: Mapped[list[Coin]] = relationship(
         back_populates="to_era",
         foreign_keys="Coin.to_era_id",
     )
@@ -101,13 +101,13 @@ class Coin(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     country: Mapped[Country] = relationship(back_populates="coins")
