@@ -26,7 +26,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   submit: [payload: CoinFormSubmit]
   cancel: []
-  deleteAdditional: [image: CoinImage]
 }>()
 
 const emptyForm: CoinCreate = {
@@ -160,13 +159,30 @@ function removePendingAdditional(index: number): void {
   rebuildPendingAdditionalPreviewUrls()
 }
 
-function removeAdditionalImage(image: CoinImage): void {
-  emit('deleteAdditional', image)
-}
+async function removeAdditionalImage(image: CoinImage): Promise<void> {
+  if (!props.coin) {
+    return
+  }
 
-function clearAdditionalFiles(): void {
-  pendingFiles.additional = []
-  revokePendingAdditionalPreviewUrls()
+  try {
+    const response = await fetch(
+      `/api/coins/${props.coin.id}/images/${image.id}`,
+      {
+        method: 'DELETE',
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    additionalImages.value = additionalImages.value.filter(
+      (item) => item.id !== image.id,
+    )
+    imageErrorMessage.value = ''
+  } catch {
+    imageErrorMessage.value = 'Nie udało się usunąć zdjęcia dodatkowego.'
+  }
 }
 
 async function loadDictionary(
@@ -299,7 +315,6 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
           multiple
           :pending-count="pendingFiles.additional.length"
           @files="addAdditionalFiles"
-          @clear="clearAdditionalFiles"
         />
 
         <div
