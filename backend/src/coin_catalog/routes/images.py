@@ -63,7 +63,7 @@ def upload_image(
     upload: UploadFile = File(...),
     kind: str = Query(..., pattern="^(avers|rewers|additional)$"),
     replace: bool = Query(False),
-    response: Response | None = None,
+    response: Response = None,
     session: Session = Depends(get_db),
 ) -> CoinImage:
     coin = get_coin(coin_id, session)
@@ -104,8 +104,7 @@ def upload_image(
         existing.sort_order = sort_order
         session.commit()
         session.refresh(existing)
-        if response is not None:
-            response.status_code = status.HTTP_200_OK
+        response.status_code = status.HTTP_200_OK
         return existing
 
     image = CoinImage(
