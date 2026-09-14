@@ -88,7 +88,7 @@ SQLAlchemy is the database abstraction/ORM layer. Database models and database a
 ## D-009 — Web Application UI
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 The primary UI is a web application accessed through a browser on the host. A native desktop GUI is not the current UI architecture. Frontend and backend communicate over HTTP.
 
@@ -97,7 +97,7 @@ The primary UI is a web application accessed through a browser on the host. A na
 ## D-010 — Vue 3 Frontend
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Vue 3 is the frontend framework. Frontend functionality is organized primarily into Vue components.
 
@@ -106,7 +106,7 @@ Vue 3 is the frontend framework. Frontend functionality is organized primarily i
 ## D-011 — TypeScript
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 TypeScript is used for frontend development to improve maintainability and provide static typing for the growing frontend codebase.
 
@@ -115,7 +115,7 @@ TypeScript is used for frontend development to improve maintainability and provi
 ## D-012 — Vite
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Vite is the frontend development and build tool for the Vue/TypeScript application.
 
@@ -124,7 +124,7 @@ Vite is the frontend development and build tool for the Vue/TypeScript applicati
 ## D-013 — Coin Photographs Stored as Files
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Original coin photographs are stored as external files rather than SQLite BLOBs. The database stores references and metadata. Exact storage layout and backup strategy will be decided during image management implementation.
 
@@ -133,7 +133,7 @@ Original coin photographs are stored as external files rather than SQLite BLOBs.
 ## D-014 — Existing XLS/XLSX Data as Import Source
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Existing XLS/XLSX data will be imported into the application database. Exact spreadsheet structure, mappings, validation, and duplicate handling will be determined during the import phase.
 
@@ -142,7 +142,7 @@ Existing XLS/XLSX data will be imported into the application database. Exact spr
 ## D-015 — Current Development Priority
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Development begins with the development environment rather than application features. The first implementation phase is **Phase 1 — Development Environment**.
 
@@ -151,7 +151,7 @@ Development begins with the development environment rather than application feat
 ## D-016 — Development Container Runtime Versions
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The Dev Container uses:
 
@@ -421,10 +421,10 @@ coin
 country
 issuer
 denomination
-currency
 mint
 material
 state
+era
 ```
 
 SQLAlchemy model class names use the corresponding singular PascalCase form, for example `Coin`, `Country`, and `Issuer`.
@@ -437,3 +437,73 @@ The project owner selected singular table names as the preferred naming conventi
 
 - New database tables should use singular names unless a later decision supersedes this convention.
 - Foreign-key columns follow the corresponding singular entity name, for example `country_id`, `issuer_id`, and `state_id`.
+
+---
+
+## D-028 — Initial Coin Schema
+
+**Status:** Accepted  
+**Date: 2026-09-14
+
+The initial database schema models one `coin` row as one concrete physical coin in the collection. Multiple physically identical coins may therefore have separate `coin` rows.
+
+The `coin` table contains:
+
+```text
+id
+country_id
+issuer_id
+denomination_id
+from_year
+from_era_id
+to_year
+to_era_id
+mint_id
+material_id
+state_id
+description
+weight
+diameter
+has_video
+source
+created_at
+updated_at
+```
+
+Reference tables are:
+
+```text
+country
+issuer
+denomination
+mint
+material
+state
+era
+```
+
+All reference tables contain `id` and a unique, non-null `name`.
+
+`currency` is intentionally not part of the initial schema. `denomination` is the field used to identify the specific denomination of a coin; a separate currency field is not required for the initial catalogue.
+
+The date range is represented by `from_year`/`from_era_id` and `to_year`/`to_era_id`. A single-year coin uses the same value for both endpoints. No database range constraints are imposed on the year values.
+
+`weight` is stored as `NUMERIC` in grams and `diameter` as `NUMERIC` in millimetres. Units are not stored separately.
+
+`has_video` is a non-null boolean with a default of `FALSE`. Direct video URLs are not stored at this stage.
+
+`source` is a single optional `TEXT` field that may contain a URL or free text.
+
+`created_at` and `updated_at` are required UTC timestamps. `updated_at` changes when the record is updated.
+
+Optional coin metadata may be `NULL`; unknown values are not represented by artificial `Unknown` dictionary rows.
+
+### Rationale
+
+The schema is intentionally small while covering the information currently available in the collection. Separate reference tables provide consistent reusable values without introducing speculative attributes. Removing `currency` avoids duplicating or ambiguously defining monetary-system information that is not currently needed.
+
+### Consequences
+
+- The initial Alembic migration creates the schema described above.
+- Future schema changes must use new Alembic migration revisions.
+- Additional fields or reference entities require an explicit design decision when a real requirement appears.
