@@ -365,6 +365,12 @@ Verification commands may be proposed and, when appropriate, run without reposit
 
 The project is currently in:
 
-**Phase 3 — Database Foundation**
+**Phase 4 — Coin Entry and Browser**
 
-Phase 3 implementation is in progress. The initial SQLAlchemy database models and first Alembic migration have been implemented and verified. The next work should continue from the verified repository state and update progress documentation as milestones are completed.
+Phase 3 — Database Foundation has been completed and verified. The initial SQLAlchemy database models, first Alembic migration, and focused database behavior tests are in place.
+
+Phase 4 focuses on the first usable coin-catalogue workflow:
+
+```text
+formularz → zapis do SQLite → lista monet → szczegóły monety
+```
