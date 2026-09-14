@@ -9,7 +9,7 @@ from coin_catalog.models import Coin, Country, Denomination, Era
 
 
 @pytest.fixture
-def session() -> Generator[Session, None, None]:
+def session() -> Generator[Session]:
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     test_session = sessionmaker(bind=engine)()
