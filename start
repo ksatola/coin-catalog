@@ -41,7 +41,7 @@ start_service \
 start_service \
     "frontend" \
     "$ROOT_DIR/frontend" \
-    "npm run dev -- --host 0.0.0.0"
+    "npm run dev -- --host 0.0.0.0 --force"
 
 echo
 echo "Coin Catalog started."
