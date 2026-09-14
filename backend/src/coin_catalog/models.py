@@ -60,7 +60,7 @@ class State(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list[Coin]] = relationship(back_populates="coins")
+    coins: Mapped[list[Coin]] = relationship(back_populates="state")
 
 
 class Era(Base):
