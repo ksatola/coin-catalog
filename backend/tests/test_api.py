@@ -205,15 +205,15 @@ def test_dictionary_crud(
 
 
 @pytest.mark.parametrize(
-    ("dictionary_name", "coin_field"),
+    ("dictionary_name", "reference_key", "coin_field"),
     [
-        ("countries", "country_id"),
-        ("issuers", "issuer_id"),
-        ("denominations", "denomination_id"),
-        ("mints", "mint_id"),
-        ("materials", "material_id"),
-        ("states", "state_id"),
-        ("eras", "from_era_id"),
+        ("countries", "country_id", "country_id"),
+        ("issuers", "issuer_id", "issuer_id"),
+        ("denominations", "denomination_id", "denomination_id"),
+        ("mints", "mint_id", "mint_id"),
+        ("materials", "material_id", "material_id"),
+        ("states", "state_id", "state_id"),
+        ("eras", "era_id", "from_era_id"),
     ],
 )
 def test_dictionary_delete_is_blocked_when_used_by_coin(
@@ -221,9 +221,10 @@ def test_dictionary_delete_is_blocked_when_used_by_coin(
     session: Session,
     reference_data: dict[str, int],
     dictionary_name: str,
+    reference_key: str,
     coin_field: str,
 ) -> None:
-    item_id = reference_data[coin_field.removesuffix("_id") + "_id"]
+    item_id = reference_data[reference_key]
 
     coin_data = {
         "country_id": reference_data["country_id"],
