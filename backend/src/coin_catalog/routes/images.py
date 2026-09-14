@@ -11,7 +11,7 @@ from coin_catalog.schemas import CoinImageResponse
 
 router = APIRouter(prefix="/coins/{coin_id}/images", tags=["images"])
 
-IMAGES_DIR = Path(__file__).resolve().parents[3] / "images"
+IMAGES_DIR = Path(__file__).resolve().parents[4] / "images"
 PRIMARY_KINDS = {"avers", "rewers"}
 
 
