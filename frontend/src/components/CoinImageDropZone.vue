@@ -29,8 +29,15 @@ watch(
       return
     }
 
-    revokeLocalPreview()
-    localPreviewUrl.value = previewUrl ?? null
+    if (previewUrl) {
+      revokeLocalPreview()
+      localPreviewUrl.value = previewUrl
+      return
+    }
+
+    if (!localPreviewUrl.value?.startsWith('blob:')) {
+      localPreviewUrl.value = null
+    }
   },
 )
 
