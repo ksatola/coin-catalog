@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CoinCreate(BaseModel):
@@ -44,3 +44,32 @@ class DictionaryItemResponse(BaseModel):
 
     id: int
     name: str
+
+
+class CategoryCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class CategoryResponse(CategoryCreate):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class CategoryGraphItem(CategoryResponse):
+    parent_ids: list[int] = Field(default_factory=list)
+    child_ids: list[int] = Field(default_factory=list)
+
+
+class CoinImageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    coin_id: int
+    filename: str
+    kind: str
+    sort_order: int
+    created_at: datetime
