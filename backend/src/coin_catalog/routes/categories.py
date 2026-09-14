@@ -46,12 +46,12 @@ def would_create_cycle(parent_id: int, child_id: int, session: Session) -> bool:
             continue
         visited.add(current_id)
 
-        parent_ids = session.scalars(
-            select(CategoryRelation.parent_id).where(
-                CategoryRelation.child_id == current_id,
+        child_ids = session.scalars(
+            select(CategoryRelation.child_id).where(
+                CategoryRelation.parent_id == current_id,
             )
         ).all()
-        for next_id in parent_ids:
+        for next_id in child_ids:
             if next_id == parent_id:
                 return True
             queue.append(next_id)
