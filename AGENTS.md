@@ -361,6 +361,24 @@ No code, documentation, configuration, migration, or other repository content ma
 
 Verification commands may be proposed and, when appropriate, run without repository writes. Repository modifications remain subject to explicit approval.
 
+### 19.1 Preferred Change Presentation
+
+For repository changes, the assistant should present the proposed result in a form that is practical for the project owner to review.
+
+For code, configuration, and documentation files, prefer showing the complete proposed file content over unified diffs when the change spans multiple lines or files. The project owner should not be required to manually apply patches or reconstruct files from diffs.
+
+The preferred workflow is:
+
+1. Inspect the current repository state.
+2. Prepare the complete proposed file contents.
+3. Show the proposed contents to the project owner.
+4. Explain briefly why the changes are needed.
+5. Wait for explicit approval.
+6. After approval, write the approved changes to the repository.
+7. Verify the resulting repository state.
+
+The project owner is responsible for reviewing and approving the proposed result; the assistant should minimize manual file-editing work required from the project owner.
+
 ## 20. Current Development Stage
 
 The project is currently in:
