@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CoinForm from '../components/CoinForm.vue'
-import type { Coin, CoinFormSubmit } from '../types'
+import type { Coin, CoinFormSubmit, CoinImage } from '../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -53,6 +53,19 @@ async function uploadFile(
   }
 }
 
+async function deleteImage(coinId: number, image: CoinImage): Promise<void> {
+  const response = await fetch(
+    `/api/coins/${coinId}/images/${image.id}`,
+    {
+      method: 'DELETE',
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`)
+  }
+}
+
 async function saveCoin(payload: CoinFormSubmit): Promise<void> {
   if (!coin.value) return
 
@@ -79,6 +92,10 @@ async function saveCoin(payload: CoinFormSubmit): Promise<void> {
 
     for (const file of payload.images.additional) {
       await uploadFile(coin.value.id, file, 'additional')
+    }
+
+    for (const image of payload.images.additionalDeletes) {
+      await deleteImage(coin.value.id, image)
     }
 
     await router.push(`/monety/${coin.value.id}`)
