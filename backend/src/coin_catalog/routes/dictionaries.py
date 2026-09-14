@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from coin_catalog.database import get_db
 from coin_catalog.models import (
+    Coin,
     Country,
     Denomination,
     Era,
@@ -26,6 +27,16 @@ DICTIONARIES = {
     "eras": Era,
 }
 
+DICTIONARY_COIN_USAGE = {
+    "countries": (Coin.country_id,),
+    "issuers": (Coin.issuer_id,),
+    "denominations": (Coin.denomination_id,),
+    "mints": (Coin.mint_id,),
+    "materials": (Coin.material_id,),
+    "states": (Coin.state_id,),
+    "eras": (Coin.from_era_id, Coin.to_era_id),
+}
+
 
 def get_dictionary_model(dictionary_name: str):
     model = DICTIONARIES.get(dictionary_name)
@@ -35,6 +46,22 @@ def get_dictionary_model(dictionary_name: str):
             detail="Dictionary not found",
         )
     return model
+
+
+def is_dictionary_item_in_use(
+    dictionary_name: str,
+    item_id: int,
+    session: Session,
+) -> bool:
+    usage_columns = DICTIONARY_COIN_USAGE[dictionary_name]
+
+    for column in usage_columns:
+        statement = select(Coin.id).where(column == item_id).limit(1)
+
+        if session.scalar(statement) is not None:
+            return True
+
+    return False
 
 
 @router.get(
@@ -95,6 +122,7 @@ def update_dictionary_item(
         )
 
     name = item_data.name.strip()
+
     if not name:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -105,3 +133,31 @@ def update_dictionary_item(
     session.commit()
     session.refresh(item)
     return item
+
+
+@router.delete(
+    "/{dictionary_name}/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_dictionary_item(
+    dictionary_name: str,
+    item_id: int,
+    session: Session = Depends(get_db),
+) -> None:
+    model = get_dictionary_model(dictionary_name)
+    item = session.get(model, item_id)
+
+    if item is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found",
+        )
+
+    if is_dictionary_item_in_use(dictionary_name, item_id, session):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Item is used by a coin",
+        )
+
+    session.delete(item)
+    session.commit()
