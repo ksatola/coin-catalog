@@ -95,7 +95,9 @@ async function loadDictionaries(): Promise<void> {
 
 async function loadImages(): Promise<void> {
   try {
-    const response = await fetch(`/api/coins/${props.coin.id}/images`)
+    const response = await fetch(`/api/coins/${props.coin.id}/images`, {
+      cache: 'no-store',
+    })
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
