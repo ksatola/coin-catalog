@@ -98,13 +98,21 @@ def test_coin_can_have_multiple_categories(
     second = client.post("/categories", json={"name": "Second"}).json()
 
     response = client.post(f"/coins/{coin.id}/categories/{first['id']}")
-    assert response.status_code == 404
+    assert response.status_code == 200
+    response = client.post(f"/coins/{coin.id}/categories/{second['id']}")
+    assert response.status_code == 200
+
+    response = client.get(f"/coins/{coin.id}/categories")
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == sorted(
+        [first["id"], second["id"]]
+    )
 
 
 def test_image_upload_uses_six_digit_filename(
     client: TestClient,
     coin: Coin,
-    tmp_path: pytest.TempPathFactory,
+    tmp_path,
 ) -> None:
     images.IMAGES_DIR = tmp_path
 
@@ -122,7 +130,7 @@ def test_image_upload_uses_six_digit_filename(
 def test_primary_image_requires_explicit_replace(
     client: TestClient,
     coin: Coin,
-    tmp_path: pytest.TempPathFactory,
+    tmp_path,
 ) -> None:
     images.IMAGES_DIR = tmp_path
 
@@ -154,7 +162,7 @@ def test_primary_image_cannot_be_deleted(
     client: TestClient,
     coin: Coin,
     kind: str,
-    tmp_path: pytest.TempPathFactory,
+    tmp_path,
 ) -> None:
     images.IMAGES_DIR = tmp_path
     created = client.post(
@@ -164,9 +172,7 @@ def test_primary_image_cannot_be_deleted(
     )
     assert created.status_code == 201
 
-    response = client.delete(
-        f"/coins/{coin.id}/images/{created.json()['id']}"
-    )
+    response = client.delete(f"/coins/{coin.id}/images/{created.json()['id']}")
     assert response.status_code == 409
 
 
