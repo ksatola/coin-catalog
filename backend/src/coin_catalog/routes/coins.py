@@ -27,21 +27,13 @@ def create_coin(
 
 @router.get("", response_model=list[CoinResponse])
 def list_coins(session: Session = Depends(get_db)) -> list[Coin]:
-    statement = (
-        select(Coin)
-        .where(Coin.is_deleted.is_(False))
-        .order_by(Coin.id)
-    )
+    statement = select(Coin).where(Coin.is_deleted.is_(False)).order_by(Coin.id)
     return list(session.scalars(statement).all())
 
 
 @router.get("/archived", response_model=list[CoinResponse])
 def list_archived_coins(session: Session = Depends(get_db)) -> list[Coin]:
-    statement = (
-        select(Coin)
-        .where(Coin.is_deleted.is_(True))
-        .order_by(Coin.id)
-    )
+    statement = select(Coin).where(Coin.is_deleted.is_(True)).order_by(Coin.id)
     return list(session.scalars(statement).all())
 
 
