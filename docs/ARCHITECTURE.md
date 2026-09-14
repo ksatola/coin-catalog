@@ -4,65 +4,45 @@
 
 Coin Catalog is a personal web application for managing a collection of coins.
 
-The application combines:
+The current architecture combines:
 
-- a Python backend,
-- a relational database,
-- a browser-based frontend,
+- a Python/FastAPI backend,
+- SQLite with SQLAlchemy and Alembic,
+- a Vue 3 + TypeScript + Vite frontend,
 - filesystem-based coin photographs,
-- import of existing spreadsheet data.
+- Playwright end-to-end UI tests.
 
-The architecture is intentionally simple at the initial stage and should remain extensible as the application grows.
+The architecture remains intentionally simple and is extended only when required by implemented functionality.
 
 ---
 
 ## 2. High-Level Architecture
 
 ```text
-┌─────────────────────────────────────────────┐
-│                Host Computer                │
-│                                             │
-│  Windows 11 / macOS                         │
-│                                             │
-│  ┌───────────────┐                          │
-│  │ Web Browser   │                          │
-│  └───────┬───────┘                          │
-│          │ HTTP                             │
-│          ▼                                  │
-│  ┌───────────────────────────────────────┐  │
-│  │          Docker Dev Container         │  │
-│  │                                       │  │
-│  │  ┌──────────────┐  ┌───────────────┐ │  │
-│  │  │ Vue 3 /      │  │ FastAPI /     │ │  │
-│  │  │ TypeScript / │◄─►│ Python        │ │  │
-│  │  │ Vite         │  │               │ │  │
-│  │  └──────────────┘  └───────┬───────┘ │  │
-│  │                            │           │  │
-│  │                            ▼           │  │
-│  │                     ┌──────────────┐  │  │
-│  │                     │ SQLAlchemy   │  │  │
-│  │                     └──────┬───────┘  │  │
-│  │                            │           │  │
-│  │                            ▼           │  │
-│  │                     ┌──────────────┐  │  │
-│  │                     │    SQLite    │  │  │
-│  │                     └──────────────┘  │  │
-│  │                                       │  │
-│  │  Filesystem: coin photographs        │  │
-│  └───────────────────────────────────────┘  │
-│                                             │
-└─────────────────────────────────────────────┘
+Host Computer
+    │
+    └── Web Browser
+          │ HTTP
+          ▼
+    Docker Dev Container
+          │
+          ├── Vue 3 / TypeScript / Vite
+          │        │ /api/... proxy
+          │        ▼
+          ├── FastAPI / Python
+          │        │
+          │        ├── SQLAlchemy → SQLite
+          │        │
+          │        └── Image service → images/
+          │
+          └── Playwright UI tests
 ```
 
-The exact container topology may be refined during implementation.
+During development Vite serves the frontend on port `5173` and proxies `/api/...` requests to FastAPI on port `8000`.
 
 ---
 
 ## 3. Repository and Source Tree
-
-The repository root is the shared workspace for documentation, development configuration, Git metadata, and repository-level files.
-
-Backend and frontend projects use separate top-level directories:
 
 ```text
 coin-catalog/
@@ -70,6 +50,8 @@ coin-catalog/
 ├── README.md
 ├── .devcontainer/
 ├── docs/
+├── data/
+├── images/
 ├── backend/
 │   ├── .python-version
 │   ├── pyproject.toml
@@ -77,21 +59,29 @@ coin-catalog/
 │   ├── migrations/
 │   │   └── versions/
 │   ├── uv.lock
+│   ├── tests/
 │   └── src/
 │       └── coin_catalog/
 │           ├── __init__.py
 │           ├── database.py
+│           ├── main.py
 │           ├── models.py
-│           └── main.py
+│           ├── schemas.py
+│           └── routes/
+│               ├── __init__.py
+│               ├── coins.py
+│               ├── dictionaries.py
+│               └── images.py
 └── frontend/
     ├── package.json
+    ├── package-lock.json
     ├── vite.config.ts
-    └── src/
+    ├── src/
+    └── tests/
+        └── ui/
 ```
 
-The `frontend/` directory contains the Vue 3 + TypeScript + Vite application. The backend source is under `backend/src/coin_catalog/`.
-
-This separation prevents the backend and frontend source trees from being mixed while keeping both projects inside the same repository and Dev Container workspace.
+`images/` contains external collection photographs and is ignored by Git. `data/` contains the local SQLite database and is also runtime data rather than source code.
 
 ---
 
@@ -104,14 +94,9 @@ Development uses:
 - VS Code Dev Containers
 - Linux-based container
 
-The goal is to keep project-specific development dependencies inside the container.
+The verified workspace path is `/workspaces/coin-catalog`.
 
-The host computer is primarily responsible for:
-
-- running Docker,
-- running VS Code,
-- providing the browser,
-- providing Git access.
+The host primarily provides Docker, VS Code, browser access, and Git. Project-specific Python and Node dependencies are provided by the container.
 
 ---
 
@@ -119,33 +104,24 @@ The host computer is primarily responsible for:
 
 The backend is implemented in Python using FastAPI.
 
-The backend project is located under `backend/`, with Python source under `backend/src/coin_catalog/`.
-
 Responsibilities include:
 
-- exposing HTTP API endpoints,
-- application/business logic,
-- request validation,
-- database access,
-- filesystem/image management,
-- spreadsheet import,
-- coordination of application services.
+- HTTP API endpoints,
+- request/response schemas,
+- database access through SQLAlchemy,
+- coin CRUD and archive/restore behavior,
+- dictionary CRUD,
+- coin-image metadata and filesystem operations.
 
-The backend should be organized into logical layers as the application grows.
-
-The initial implementation should avoid creating unnecessary abstractions before they are needed.
+The backend uses explicit route modules rather than placing the complete API in `main.py`.
 
 ---
 
 ## 6. Database
 
-SQLite is the initial database engine.
+SQLite is the application database. SQLAlchemy provides the ORM and Alembic manages schema migrations.
 
-SQLAlchemy provides the application's database abstraction and ORM layer.
-
-Alembic provides database schema migration and versioning. Migration revisions are stored under `backend/migrations/versions/` and are used to create and evolve the database schema.
-
-The initial schema has been implemented and its first Alembic migration has been generated and applied. The initial domain tables are:
+The initial domain model contains:
 
 ```text
 coin
@@ -156,34 +132,26 @@ mint
 material
 state
 era
+category
+category_relation
+coin_category
+coin_image
 ```
 
-The `coin` table represents one concrete physical coin in the collection. Reference tables provide reusable values for country, issuer, denomination, mint, material, state, and era.
+The `coin` table represents a concrete physical coin. Reference tables provide reusable catalogue values. Categories and image metadata are represented separately from the core coin fields.
 
-`currency` is not part of the initial schema. `denomination` identifies the specific denomination of a coin.
+Coins use soft deletion through `is_deleted`; archived coins remain in the database and are excluded from the active list.
 
-The initial `coin` date representation uses `from_year`/`from_era_id` and `to_year`/`to_era_id`. A single-year coin uses identical endpoints. No database range constraints are imposed on the year values.
-
-`weight` is stored as `NUMERIC` in grams and `diameter` as `NUMERIC` in millimetres. `has_video` is a boolean flag; direct video URLs are not stored at this stage. `source` is a single optional text field.
-
-`created_at` and `updated_at` are required UTC timestamps.
-
-Conceptually:
+Coin dates use two independent endpoints:
 
 ```text
-FastAPI
-   │
-   ▼
-Application / Service Logic
-   │
-   ▼
-SQLAlchemy ─────► Alembic
-   │                │
-   ▼                ▼
-SQLite         Schema Migrations
+from_year + from_era_id
+to_year   + to_era_id
 ```
 
-The current database foundation has been verified with the backend test suite and Alembic migration commands. Further schema changes should be introduced through new reviewed migration revisions.
+The numeric year values are not compared across eras. This allows historically meaningful ranges such as `476 BC → 1 AD`.
+
+Weight is stored as `NUMERIC` in grams and diameter as `NUMERIC` in millimetres. `has_video` is a boolean flag and `source` is a single optional text field.
 
 ---
 
@@ -194,79 +162,74 @@ The frontend is a Vue 3 application using:
 - Vue 3
 - TypeScript
 - Vite
+- Vue Router
 
-The frontend project is located under `frontend/`, with source code under `frontend/src/`.
+The frontend provides the user-facing catalogue workflow, including coin creation, editing, browsing, details, archive/restore, dictionary management, and image selection.
 
-The frontend is responsible for:
-
-- displaying the coin catalogue,
-- browsing and filtering,
-- searching,
-- displaying coin photographs,
-- managing user interactions,
-- communicating with the backend API.
-
-Conceptually:
-
-```text
-Browser
-   │
-   ▼
-Vue 3 Application
-   │
-   │ HTTP
-   ▼
-FastAPI API
-```
-
-Frontend implementation should use Vue components and TypeScript rather than building the application around raw JavaScript.
+The application uses component-based Vue code and does not currently depend on Pinia or a UI component framework.
 
 ---
 
 ## 8. API Communication
 
-The frontend and backend communicate through HTTP.
+Frontend requests use relative `/api/...` paths. Vite proxies them to FastAPI during development.
 
-The backend provides an API consumed by the Vue frontend.
+Current API groups are:
 
-During development, Vite proxies frontend `/api/...` requests to the FastAPI development server on port `8000`. The frontend therefore uses relative `/api/...` paths for the initial development API connection.
+```text
+GET  /health
 
-The exact API structure, endpoint naming, request/response models, and versioning strategy will be defined when the relevant application functionality is implemented.
+POST /coins
+GET  /coins
+GET  /coins/archived
+GET  /coins/{coin_id}
+PUT  /coins/{coin_id}
+POST /coins/{coin_id}/archive
+POST /coins/{coin_id}/restore
 
-No detailed API contract is established yet.
+GET    /dictionaries/{dictionary_name}
+POST   /dictionaries/{dictionary_name}
+PUT    /dictionaries/{dictionary_name}/{item_id}
+DELETE /dictionaries/{dictionary_name}/{item_id}
+
+GET    /coins/{coin_id}/images
+POST   /coins/{coin_id}/images
+DELETE /coins/{coin_id}/images/{image_id}
+GET    /coins/{coin_id}/images/{image_id}/file
+```
+
+The image upload API supports primary `avers` and `rewers` images plus sequential additional images. Primary replacement requires explicit replacement confirmation.
 
 ---
 
 ## 9. Coin Photographs
 
-Original coin photographs are stored as files rather than database BLOBs.
+Coin photographs are stored as external JPG files rather than SQLite BLOBs.
 
-The database stores references and metadata associated with those photographs.
+The accepted storage decision is documented in `docs/IMAGE_STORAGE_DECISION.md`.
 
-Conceptually:
+The current convention is:
 
 ```text
-SQLite
-  │
-  └── coin record
-        │
-        └── image reference
-                │
-                ▼
-        Filesystem
-                │
-                └── original JPG
+images/
+├── 000404 - awers.jpg
+├── 000404 - rewers.jpg
+├── 000404 - 01.jpg
+├── 000404 - 02.jpg
+└── ...
 ```
 
-The exact filesystem layout, naming convention, thumbnail strategy, and backup procedure will be designed when image management is implemented.
+Each coin has exactly one primary obverse and one primary reverse image. Additional images are sequentially numbered. SQLite stores image metadata and references, including image kind and ordering.
+
+Image files are ignored by Git. The application must never silently overwrite an existing image; replacement is an explicit user action.
 
 ---
 
 ## 10. Spreadsheet Import
 
-Existing XLS/XLSX files are an external source of coin metadata.
+Existing XLS/XLSX files remain an external source of coin metadata.
 
-The import process will eventually follow a flow similar to:
+Import is not yet implemented. The future flow is expected to be:
 
 ```text
 XLS/XLSX
@@ -281,17 +244,15 @@ Application Data Model
 SQLite
 ```
 
-The exact source columns, mappings, validation, duplicate handling, and error reporting will be defined after the initial data model exists.
+Mappings, duplicate handling, validation, and error reporting will be specified when import work begins.
 
 ---
 
 ## 11. Data Ownership
 
-The project distinguishes between:
-
 ### Application source code
 
-Stored in the Git repository.
+Stored in Git.
 
 ### Application configuration
 
@@ -299,32 +260,25 @@ Stored in the project where appropriate, excluding secrets and machine-specific 
 
 ### Database
 
-Runtime/application data stored separately from source code.
+Runtime data stored separately from source code.
 
 ### Coin photographs
 
-External filesystem data.
+External files under `images/` and excluded from Git.
 
 ### Source spreadsheets
 
 External user data used for import.
 
-User collection data should not be committed to the Git repository unless explicitly decided.
+User collection data should not be committed to Git unless explicitly decided.
 
 ---
 
 ## 12. Portability
 
-The architecture targets:
+The architecture targets Windows 11 and macOS through the Docker-based development environment.
 
-- Windows 11
-- macOS
-
-The application should not depend on platform-specific runtime behaviour.
-
-Docker provides the primary environment boundary.
-
-Filesystem handling must account for differences between host operating systems, particularly path handling and mounted directories.
+Filesystem handling must remain portable across host platforms, especially for mounted directories and image paths.
 
 ---
 
@@ -332,52 +286,45 @@ Filesystem handling must account for differences between host operating systems,
 
 Secrets, credentials, personal data, and private collection data must not be committed to Git.
 
-Configuration containing secrets should be provided through environment variables or another appropriate mechanism.
+Configuration containing secrets should use environment variables or another appropriate mechanism.
 
-Security requirements will be refined as application functionality is implemented.
+Authentication and authorization are not currently implemented.
 
 ---
 
 ## 14. Testing
 
-Testing will be introduced incrementally.
+Current automated verification includes:
 
-The expected test areas include:
+- backend pytest tests,
+- backend Ruff checks,
+- frontend production build,
+- Playwright UI tests.
 
-- backend/application logic,
-- API behaviour,
-- database operations,
-- spreadsheet import,
-- frontend behaviour,
-- integration between frontend and backend.
+The Playwright suite covers the current coin UI workflows, including image replacement, additional-image upload, and the cross-era date-range regression case.
 
-The exact testing framework and test strategy will be selected when implementation reaches the relevant stage.
+Broader integration and CI coverage remain future work.
 
 ---
 
 ## 15. Deployment Model
 
-The initial project priority is development rather than production deployment.
+The current priority is local development rather than production deployment.
 
-The development environment and eventual runtime environment should remain as similar as reasonably practical.
-
-A production/deployment architecture will be defined separately when the application reaches a stage where deployment is required.
+A production deployment architecture will be defined when deployment becomes an actual requirement.
 
 ---
 
 ## 16. Current Architecture Boundaries
 
-The following are intentionally **not yet fully specified**:
+The following are not yet fully specified or implemented:
 
-- detailed API contract,
-- frontend component hierarchy,
-- image directory structure,
-- spreadsheet import mapping,
-- authentication,
-- authorization,
-- backup mechanism,
+- XLS/XLSX import,
+- advanced search and filtering,
+- collections and tags,
+- authentication and authorization,
+- backup/recovery automation,
 - production deployment,
-- CI/CD pipeline,
-- testing framework details beyond the currently established backend pytest checks.
+- CI/CD pipeline.
 
-The initial database schema and coin data model have now been specified and implemented as part of Phase 3. Future changes should be introduced when justified by actual requirements.
+The architecture should be updated when these areas become active development work.
