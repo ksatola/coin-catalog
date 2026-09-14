@@ -29,3 +29,14 @@ class CoinResponse(CoinCreate):
     is_deleted: bool
     created_at: datetime
     updated_at: datetime
+
+
+class DictionaryItemCreate(BaseModel):
+    name: str
+
+
+class DictionaryItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
