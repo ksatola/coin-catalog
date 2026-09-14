@@ -27,7 +27,9 @@ def upgrade() -> None:
         "category_relation",
         sa.Column("parent_id", sa.Integer(), nullable=False),
         sa.Column("child_id", sa.Integer(), nullable=False),
-        sa.CheckConstraint("parent_id <> child_id", name="ck_category_relation_not_self"),
+        sa.CheckConstraint(
+            "parent_id <> child_id", name="ck_category_relation_not_self"
+        ),
         sa.ForeignKeyConstraint(["child_id"], ["category.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["parent_id"], ["category.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("parent_id", "child_id"),
@@ -54,7 +56,9 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["coin_id"], ["coin.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("filename"),
-        sa.UniqueConstraint("coin_id", "kind", "sort_order", name="uq_coin_image_order"),
+        sa.UniqueConstraint(
+            "coin_id", "kind", "sort_order", name="uq_coin_image_order"
+        ),
     )
 
 
