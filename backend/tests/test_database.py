@@ -1,4 +1,4 @@
-from sqlalchemy import inspect, text
+from sqlalchemy import UniqueConstraint, text
 
 from coin_catalog.database import SessionLocal
 from coin_catalog.models import Base, Coin
@@ -51,7 +51,7 @@ def test_coin_columns() -> None:
         "source",
     }
 
-    assert required_columns | optional_columns == set(columns)
+    assert required_columns | optional_columns == set(columns.keys())
     assert "currency_id" not in columns
 
     for column_name in required_columns:
@@ -80,6 +80,11 @@ def test_reference_table_names_are_unique_and_required() -> None:
 
 def test_coin_has_no_unique_constraints() -> None:
     table = Base.metadata.tables["coin"]
+    unique_constraints = [
+        constraint
+        for constraint in table.constraints
+        if isinstance(constraint, UniqueConstraint)
+    ]
 
-    assert not inspect(table).unique_constraints
+    assert not unique_constraints
     assert list(Coin.__table__.primary_key.columns.keys()) == ["id"]
