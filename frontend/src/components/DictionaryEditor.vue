@@ -88,6 +88,41 @@ async function save(): Promise<void> {
   }
 }
 
+async function deleteItem(item: DictionaryItem): Promise<void> {
+  const confirmed = window.confirm(`Czy na pewno usunąć "${item.name}"?`)
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    const response = await fetch(
+      `/api/dictionaries/${selectedDictionary.value}/${item.id}`,
+      {
+        method: 'DELETE',
+      },
+    )
+
+    if (response.status === 409) {
+      errorMessage.value =
+        'Nie można usunąć wpisu, ponieważ jest używany przez monetę.'
+      return
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    if (editingId.value === item.id) {
+      cancelEdit()
+    }
+
+    await refresh()
+  } catch {
+    errorMessage.value = 'Nie udało się usunąć wpisu.'
+  }
+}
+
 async function changeDictionary(
   dictionary: typeof dictionaries[number]['key'],
 ): Promise<void> {
@@ -148,16 +183,20 @@ onMounted(refresh)
           <thead>
             <tr>
               <th>Nazwa</th>
-              <th></th>
+              <th>Akcje</th>
             </tr>
           </thead>
 
           <tbody>
             <tr v-for="item in items" :key="item.id">
               <td>{{ item.name }}</td>
-              <td>
+              <td class="actions">
                 <button type="button" @click="startEdit(item)">
                   Edytuj
+                </button>
+
+                <button type="button" @click="deleteItem(item)">
+                  Usuń
                 </button>
               </td>
             </tr>
@@ -205,6 +244,11 @@ onMounted(refresh)
 
 .dictionary-form input {
   flex: 1;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 table {
