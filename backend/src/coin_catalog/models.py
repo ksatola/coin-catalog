@@ -60,7 +60,7 @@ class State(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list[Coin]] = relationship(back_populates="state")
+    coins: Mapped[list[Coin]] = relationship(back_populates="coins")
 
 
 class Era(Base):
@@ -83,6 +83,11 @@ class Coin(Base):
     __tablename__ = "coin"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
     country_id: Mapped[int] = mapped_column(ForeignKey("country.id"), nullable=False)
     issuer_id: Mapped[int | None] = mapped_column(ForeignKey("issuer.id"))
     denomination_id: Mapped[int] = mapped_column(
