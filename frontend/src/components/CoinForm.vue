@@ -67,6 +67,7 @@ const primaryImages = reactive<{
 })
 
 const additionalImages = ref<CoinImage[]>([])
+const pendingDeletedImages = ref<CoinImage[]>([])
 const pendingFiles = reactive<{
   avers: File | null
   rewers: File | null
@@ -102,6 +103,7 @@ function clearImages(): void {
   primaryImages.avers = null
   primaryImages.rewers = null
   additionalImages.value = []
+  pendingDeletedImages.value = []
   pendingFiles.avers = null
   pendingFiles.rewers = null
   pendingFiles.additional = []
@@ -159,30 +161,16 @@ function removePendingAdditional(index: number): void {
   rebuildPendingAdditionalPreviewUrls()
 }
 
-async function removeAdditionalImage(image: CoinImage): Promise<void> {
-  if (!props.coin) {
+function removeAdditionalImage(image: CoinImage): void {
+  if (!window.confirm(`Czy na pewno usunąć zdjęcie „${image.filename}”?`)) {
     return
   }
 
-  try {
-    const response = await fetch(
-      `/api/coins/${props.coin.id}/images/${image.id}`,
-      {
-        method: 'DELETE',
-      },
-    )
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
-    }
-
-    additionalImages.value = additionalImages.value.filter(
-      (item) => item.id !== image.id,
-    )
-    imageErrorMessage.value = ''
-  } catch {
-    imageErrorMessage.value = 'Nie udało się usunąć zdjęcia dodatkowego.'
-  }
+  pendingDeletedImages.value.push(image)
+  additionalImages.value = additionalImages.value.filter(
+    (item) => item.id !== image.id,
+  )
+  imageErrorMessage.value = ''
 }
 
 async function loadDictionary(
@@ -265,6 +253,7 @@ function submitForm(): void {
       avers: pendingFiles.avers,
       rewers: pendingFiles.rewers,
       additional: [...pendingFiles.additional],
+      additionalDeletes: [...pendingDeletedImages.value],
     },
   }
 
