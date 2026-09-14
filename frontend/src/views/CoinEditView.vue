@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CoinForm from '../components/CoinForm.vue'
-import type { Coin, CoinFormSubmit } from '../types'
+import type { Coin, CoinFormSubmit, CoinImage } from '../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -50,6 +50,27 @@ async function uploadFile(
 
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`)
+  }
+}
+
+async function deleteAdditionalImage(image: CoinImage): Promise<void> {
+  if (!coin.value) return
+
+  try {
+    const response = await fetch(
+      `/api/coins/${coin.value.id}/images/${image.id}`,
+      {
+        method: 'DELETE',
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    await loadCoin()
+  } catch {
+    errorMessage.value = 'Nie udało się usunąć zdjęcia dodatkowego.'
   }
 }
 
@@ -107,6 +128,7 @@ onMounted(loadCoin)
       :coin="coin"
       @submit="saveCoin"
       @cancel="cancelEditing"
+      @delete-additional="deleteAdditionalImage"
     />
   </section>
 </template>
