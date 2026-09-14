@@ -84,7 +84,11 @@ def get_image_file(
             detail="Image file not found",
         )
 
-    return FileResponse(target, media_type="image/jpeg")
+    return FileResponse(
+        target,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.post("", response_model=CoinImageResponse, status_code=status.HTTP_201_CREATED)
