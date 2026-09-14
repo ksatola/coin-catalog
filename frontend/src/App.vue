@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 
 import CoinForm from './components/CoinForm.vue'
 import CoinList from './components/CoinList.vue'
+import DictionaryEditor from './components/DictionaryEditor.vue'
 import type { Coin, CoinCreate } from './types'
 
 const coins = ref<Coin[]>([])
@@ -49,6 +50,8 @@ onMounted(loadCoins)
 <template>
   <main>
     <h1>Coin Catalog</h1>
+
+    <DictionaryEditor />
 
     <CoinForm @submit="createCoin" />
 
