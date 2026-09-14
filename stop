@@ -56,3 +56,4 @@ stop_service "backend"
 echo
 echo "Coin Catalog stopped."
 show_stop_status
+
