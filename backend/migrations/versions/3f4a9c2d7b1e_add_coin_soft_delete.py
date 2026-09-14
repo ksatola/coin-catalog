@@ -4,8 +4,8 @@ Revision ID: 3f4a9c2d7b1e
 Revises: e6df2f7c0c11
 """
 
-import sqlalchemy as sa
 from alembic import op
+import sqlalchemy as sa
 
 
 revision = "3f4a9c2d7b1e"
@@ -28,3 +28,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_column("coin", "is_deleted")
+
