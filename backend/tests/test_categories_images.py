@@ -82,8 +82,14 @@ def test_category_graph_rejects_cycle(client: TestClient) -> None:
     second = client.post("/categories", json={"name": "Second"}).json()
     third = client.post("/categories", json={"name": "Third"}).json()
 
-    assert client.post(f"/categories/{second['id']}/parents/{first['id']}").status_code == 200
-    assert client.post(f"/categories/{third['id']}/parents/{second['id']}").status_code == 200
+    assert (
+        client.post(f"/categories/{second['id']}/parents/{first['id']}").status_code
+        == 200
+    )
+    assert (
+        client.post(f"/categories/{third['id']}/parents/{second['id']}").status_code
+        == 200
+    )
 
     response = client.post(f"/categories/{first['id']}/parents/{third['id']}")
     assert response.status_code == 409
