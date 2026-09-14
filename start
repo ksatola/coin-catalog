@@ -26,7 +26,7 @@ start_service() {
 
     (
         cd "$workdir"
-        exec bash -lc "$command"
+        exec setsid bash -lc "$command"
     ) >"$log_file" 2>&1 &
 
     echo $! >"$pid_file"
@@ -36,12 +36,12 @@ start_service() {
 start_service \
     "backend" \
     "$ROOT_DIR/backend" \
-    "uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000"
+    "exec uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000"
 
 start_service \
     "frontend" \
     "$ROOT_DIR/frontend" \
-    "npm run dev -- --host 0.0.0.0 --force"
+    "exec npm run dev -- --host 0.0.0.0 --force"
 
 echo
 echo "Coin Catalog started."
