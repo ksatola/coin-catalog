@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -63,6 +63,7 @@ def upload_image(
     upload: UploadFile = File(...),
     kind: str = Query(..., pattern="^(avers|rewers|additional)$"),
     replace: bool = Query(False),
+    response: Response | None = None,
     session: Session = Depends(get_db),
 ) -> CoinImage:
     coin = get_coin(coin_id, session)
@@ -103,6 +104,8 @@ def upload_image(
         existing.sort_order = sort_order
         session.commit()
         session.refresh(existing)
+        if response is not None:
+            response.status_code = status.HTTP_200_OK
         return existing
 
     image = CoinImage(
