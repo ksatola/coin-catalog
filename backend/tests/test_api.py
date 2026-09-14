@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
@@ -12,7 +13,11 @@ from coin_catalog.models import Coin, Country, Denomination, Era
 
 @pytest.fixture
 def session() -> Generator[Session]:
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(engine)
     test_session = sessionmaker(bind=engine)()
 
