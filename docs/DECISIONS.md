@@ -166,7 +166,7 @@ These tools are provided inside the container rather than installed on the host.
 ## D-017 — Stable and Pinned Dependency Policy
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 Development tools and project dependencies use explicitly selected and pinned versions wherever supported. Stable production-quality releases are preferred; prerelease and experimental releases are not used by default. Dependency upgrades are deliberate and tested changes.
 
@@ -175,7 +175,7 @@ Development tools and project dependencies use explicitly selected and pinned ve
 ## D-018 — Verified State / Fact-Based Development
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 Current project state, completed work, configuration, and test results must be based on facts and verified whenever possible. Assumptions and plans must not be presented as facts. Failures, incomplete work, and unverifiable states must be stated clearly. `docs/PROGRESS.md` records only verified current state.
 
@@ -184,7 +184,7 @@ Current project state, completed work, configuration, and test results must be b
 ## D-019 — Separate Backend and Frontend Source Trees
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The repository uses separate top-level `backend/` and `frontend/` project directories.
 
@@ -217,7 +217,7 @@ Separate source trees prevent Python and frontend `src/` directories from being 
 ## D-020 — Vite Development Proxy for Backend API
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 During development, the Vue frontend communicates with the FastAPI backend through relative `/api/...` paths. Vite proxies these requests to the FastAPI development server on port 8000.
 
@@ -237,7 +237,7 @@ The proxy keeps the browser-facing development application on a single origin wh
 ## D-021 — Separate Frontend and Backend Development Servers
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The frontend and backend run as separate development servers inside the Dev Container:
 
@@ -261,7 +261,7 @@ Keeping the servers independent preserves clear frontend/backend boundaries and 
 ## D-022 — Minimal Backend Application Structure
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The initial FastAPI backend uses the following minimal structure:
 
@@ -292,7 +292,7 @@ The application skeleton should establish a runnable backend without prematurely
 ## D-023 — Stable `main` and Phase-Based Working Branches
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 `main` is the project's stable branch. Development and experimentation must take place on dedicated working branches and must not be committed directly to `main`.
 
@@ -332,7 +332,7 @@ This provides a simple separation between stable project state and work in progr
 ## D-024 — Application Data Directory Inside Repository Working Tree
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 Persistent application data is stored in a top-level `data/` directory inside the repository working tree. The `data/` directory is ignored by Git and is not part of the repository's versioned source or documentation.
 
@@ -358,7 +358,7 @@ Keeping application data under the Dev Container workspace simplifies the develo
 ## D-025 — Project Coding Standards
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The project follows the coding conventions documented in [`docs/CODING_STANDARDS.md`](CODING_STANDARDS.md).
 
@@ -390,7 +390,7 @@ A concise, explicit coding standard provides consistent professional practices w
 ## D-026 — Alembic for Database Migrations
 
 **Status:** Accepted  
-**Date:** 2026-09-11
+**Date: 2026-09-11
 
 Alembic is used for versioning and applying database schema changes. SQLAlchemy models define the application's database structure, while Alembic migration revisions record and apply transitions between schema versions.
 
@@ -406,3 +406,34 @@ Alembic integrates directly with SQLAlchemy and fits the project's Git-based dev
 - Database schema changes must be represented by migration revisions.
 - Alembic's autogeneration may be used as a starting point, but generated migrations must be reviewed before being applied.
 - Database migration state is separate from application/coin data.
+
+---
+
+## D-027 — Singular Database Table Names
+
+**Status:** Accepted  
+**Date: 2026-09-14
+
+Database table names use the singular form. The initial domain tables are:
+
+```text
+coin
+country
+issuer
+denomination
+currency
+mint
+material
+state
+```
+
+SQLAlchemy model class names use the corresponding singular PascalCase form, for example `Coin`, `Country`, and `Issuer`.
+
+### Rationale
+
+The project owner selected singular table names as the preferred naming convention for consistency between database tables and their corresponding domain models.
+
+### Consequences
+
+- New database tables should use singular names unless a later decision supersedes this convention.
+- Foreign-key columns follow the corresponding singular entity name, for example `country_id`, `issuer_id`, and `state_id`.
