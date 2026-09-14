@@ -5,13 +5,18 @@ RUN_DIR="/tmp/coin-catalog"
 
 stop_process_tree() {
     local pid="$1"
+    local children=""
 
     if ! kill -0 "$pid" 2>/dev/null; then
         return
     fi
 
+    if [[ -r "/proc/$pid/task/$pid/children" ]]; then
+        children="$(cat "/proc/$pid/task/$pid/children" 2>/dev/null || true)"
+    fi
+
     local child
-    for child in $(pgrep -P "$pid" 2>/dev/null || true); do
+    for child in $children; do
         stop_process_tree "$child"
     done
 
