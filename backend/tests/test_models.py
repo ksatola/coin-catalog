@@ -71,7 +71,7 @@ def test_new_domain_tables_are_present() -> None:
 def test_category_has_expected_columns_and_unique_name() -> None:
     table = Category.__table__
 
-    assert set(table.columns) == {
+    assert set(table.columns.keys()) == {
         "id",
         "name",
         "description",
@@ -101,7 +101,7 @@ def test_coin_category_has_composite_primary_key() -> None:
 def test_coin_image_has_expected_columns_and_kind_constraint() -> None:
     table = CoinImage.__table__
 
-    assert set(table.columns) == {
+    assert set(table.columns.keys()) == {
         "id",
         "coin_id",
         "filename",
