@@ -4,7 +4,7 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
-import coin_catalog.database as database
+from coin_catalog import database
 
 
 def test_categories_and_images_migration_upgrade_and_downgrade(
