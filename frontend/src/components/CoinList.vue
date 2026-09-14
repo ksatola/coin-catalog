@@ -1,42 +1,50 @@
 <script setup lang="ts">
 import type { Coin } from '../types'
 
-defineProps<{
-  coins: Coin[]
-}>()
+withDefaults(
+  defineProps<{
+    coins: Coin[]
+    archived?: boolean
+  }>(),
+  {
+    archived: false,
+  },
+)
 
 const emit = defineEmits<{
   details: [coin: Coin]
-  edit: [coin: Coin]
   archive: [coin: Coin]
+  restore: [coin: Coin]
 }>()
 </script>
 
 <template>
-  <section>
-    <h2>Monety</h2>
+  <ul>
+    <li v-for="coin in coins" :key="coin.id">
+      <span>
+        #{{ coin.id }} — {{ coin.from_year }}–{{ coin.to_year }}
+        <span v-if="coin.description"> — {{ coin.description }}</span>
+      </span>
 
-    <p v-if="coins.length === 0">Brak monet w katalogu.</p>
+      <button type="button" @click="emit('details', coin)">
+        Szczegóły
+      </button>
 
-    <ul v-else>
-      <li v-for="coin in coins" :key="coin.id">
-        <span>
-          #{{ coin.id }} — {{ coin.from_year }}–{{ coin.to_year }}
-          <span v-if="coin.description"> — {{ coin.description }}</span>
-        </span>
+      <button
+        v-if="!archived"
+        type="button"
+        @click="emit('archive', coin)"
+      >
+        Archiwizuj
+      </button>
 
-        <button type="button" @click="emit('details', coin)">
-          Szczegóły
-        </button>
-
-        <button type="button" @click="emit('edit', coin)">
-          Edytuj
-        </button>
-
-        <button type="button" @click="emit('archive', coin)">
-          Archiwizuj
-        </button>
-      </li>
-    </ul>
-  </section>
+      <button
+        v-else
+        type="button"
+        @click="emit('restore', coin)"
+      >
+        Przywróć
+      </button>
+    </li>
+  </ul>
 </template>
