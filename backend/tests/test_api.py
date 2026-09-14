@@ -8,7 +8,18 @@ from sqlalchemy.pool import StaticPool
 
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
-from coin_catalog.models import Coin, Country, Denomination, Era
+from coin_catalog.models import Coin, Country, Denomination, Era, Issuer, Material, Mint, State
+
+
+DICTIONARY_NAMES = (
+    "countries",
+    "issuers",
+    "denominations",
+    "mints",
+    "materials",
+    "states",
+    "eras",
+)
 
 
 @pytest.fixture
@@ -44,15 +55,25 @@ def client(session: Session) -> Generator[TestClient]:
 @pytest.fixture
 def reference_data(session: Session) -> dict[str, int]:
     country = Country(name="Test Country")
+    issuer = Issuer(name="Test Issuer")
     denomination = Denomination(name="Test Denomination")
+    mint = Mint(name="Test Mint")
+    material = Material(name="Test Material")
+    state = State(name="Test State")
     era = Era(name="CE")
 
-    session.add_all([country, denomination, era])
+    session.add_all(
+        [country, issuer, denomination, mint, material, state, era],
+    )
     session.commit()
 
     return {
         "country_id": country.id,
+        "issuer_id": issuer.id,
         "denomination_id": denomination.id,
+        "mint_id": mint.id,
+        "material_id": material.id,
+        "state_id": state.id,
         "era_id": era.id,
     }
 
@@ -142,3 +163,112 @@ def test_get_missing_coin_returns_404(client: TestClient) -> None:
     response = client.get("/coins/999999")
 
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize("dictionary_name", DICTIONARY_NAMES)
+def test_dictionary_crud(
+    client: TestClient,
+    dictionary_name: str,
+) -> None:
+    response = client.post(
+        f"/dictionaries/{dictionary_name}",
+        json={"name": "Created Item"},
+    )
+
+    assert response.status_code == 201
+    item_id = response.json()["id"]
+    assert response.json()["name"] == "Created Item"
+
+    response = client.get(f"/dictionaries/{dictionary_name}")
+
+    assert response.status_code == 200
+    items = response.json()
+    assert any(item["id"] == item_id and item["name"] == "Created Item" for item in items)
+
+    response = client.put(
+        f"/dictionaries/{dictionary_name}/{item_id}",
+        json={"name": "Updated Item"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == item_id
+    assert response.json()["name"] == "Updated Item"
+
+    response = client.delete(f"/dictionaries/{dictionary_name}/{item_id}")
+
+    assert response.status_code == 204
+
+    response = client.get(f"/dictionaries/{dictionary_name}")
+
+    assert response.status_code == 200
+    assert all(item["id"] != item_id for item in response.json())
+
+
+@pytest.mark.parametrize(
+    ("dictionary_name", "coin_field"),
+    [
+        ("countries", "country_id"),
+        ("issuers", "issuer_id"),
+        ("denominations", "denomination_id"),
+        ("mints", "mint_id"),
+        ("materials", "material_id"),
+        ("states", "state_id"),
+        ("eras", "from_era_id"),
+    ],
+)
+def test_dictionary_delete_is_blocked_when_used_by_coin(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+    dictionary_name: str,
+    coin_field: str,
+) -> None:
+    item_id = reference_data[coin_field.removesuffix("_id") + "_id"]
+
+    coin_data = {
+        "country_id": reference_data["country_id"],
+        "denomination_id": reference_data["denomination_id"],
+        "from_year": 1900,
+        "from_era_id": reference_data["era_id"],
+        "to_year": 1900,
+        "to_era_id": reference_data["era_id"],
+    }
+    coin_data[coin_field] = item_id
+
+    coin = Coin(**coin_data)
+    session.add(coin)
+    session.commit()
+
+    response = client.delete(f"/dictionaries/{dictionary_name}/{item_id}")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Item is used by a coin"
+
+    response = client.get(f"/dictionaries/{dictionary_name}")
+
+    assert response.status_code == 200
+    assert any(item["id"] == item_id for item in response.json())
+
+
+def test_dictionary_era_delete_is_blocked_when_used_by_coin_to_era(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    item_id = reference_data["era_id"]
+
+    coin = Coin(
+        country_id=reference_data["country_id"],
+        denomination_id=reference_data["denomination_id"],
+        from_year=1900,
+        from_era_id=reference_data["era_id"],
+        to_year=1900,
+        to_era_id=reference_data["era_id"],
+    )
+    session.add(coin)
+    session.commit()
+
+    response = client.delete(f"/dictionaries/eras/{item_id}")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Item is used by a coin"
