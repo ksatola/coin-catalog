@@ -135,6 +135,145 @@ def test_list_coins_returns_active_coins_only(
     assert data[0]["id"] == active_coin.id
 
 
+def test_list_archived_coins_returns_archived_coins_only(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    active_coin = Coin(
+        country_id=reference_data["country_id"],
+        denomination_id=reference_data["denomination_id"],
+        from_year=1900,
+        from_era_id=reference_data["era_id"],
+        to_year=1900,
+        to_era_id=reference_data["era_id"],
+    )
+    archived_coin = Coin(
+        country_id=reference_data["country_id"],
+        denomination_id=reference_data["denomination_id"],
+        from_year=1901,
+        from_era_id=reference_data["era_id"],
+        to_year=1901,
+        to_era_id=reference_data["era_id"],
+        is_deleted=True,
+    )
+
+    session.add_all([active_coin, archived_coin])
+    session.commit()
+
+    response = client.get("/coins/archived")
+
+    assert response.status_code == 200
+
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == archived_coin.id
+    assert data[0]["is_deleted"] is True
+
+
+def test_archive_coin(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coin = Coin(
+        country_id=reference_data["country_id"],
+        denomination_id=reference_data["denomination_id"],
+        from_year=1900,
+        from_era_id=reference_data["era_id"],
+        to_year=1900,
+        to_era_id=reference_data["era_id"],
+    )
+    session.add(coin)
+    session.commit()
+
+    response = client.post(f"/coins/{coin.id}/archive")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == coin.id
+    assert response.json()["is_deleted"] is True
+
+    response = client.get("/coins")
+    assert response.status_code == 200
+    assert all(item["id"] != coin.id for item in response.json())
+
+    response = client.get("/coins/archived")
+    assert response.status_code == 200
+    assert any(item["id"] == coin.id for item in response.json())
+
+
+def test_restore_coin(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coin = Coin(
+        country_id=reference_data["country_id"],
+        denomination_id=reference_data["denomination_id"],
+        from_year=1900,
+        from_era_id=reference_data["era_id"],
+        to_year=1900,
+        to_era_id=reference_data["era_id"],
+        is_deleted=True,
+    )
+    session.add(coin)
+    session.commit()
+
+    response = client.post(f"/coins/{coin.id}/restore")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == coin.id
+    assert response.json()["is_deleted"] is False
+
+    response = client.get("/coins/archived")
+    assert response.status_code == 200
+    assert all(item["id"] != coin.id for item in response.json())
+
+    response = client.get("/coins")
+    assert response.status_code == 200
+    assert any(item["id"] == coin.id for item in response.json())
+
+
+def test_archive_and_restore_coin_round_trip(
+    client: TestClient,
+    reference_data: dict[str, int],
+) -> None:
+    response = client.post(
+        "/coins",
+        json={
+            "country_id": reference_data["country_id"],
+            "denomination_id": reference_data["denomination_id"],
+            "from_year": 1900,
+            "from_era_id": reference_data["era_id"],
+            "to_year": 1900,
+            "to_era_id": reference_data["era_id"],
+            "description": "Round trip coin",
+        },
+    )
+    assert response.status_code == 201
+    coin_id = response.json()["id"]
+
+    response = client.post(f"/coins/{coin_id}/archive")
+    assert response.status_code == 200
+    assert response.json()["is_deleted"] is True
+
+    response = client.get("/coins/archived")
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [coin_id]
+
+    response = client.post(f"/coins/{coin_id}/restore")
+    assert response.status_code == 200
+    assert response.json()["is_deleted"] is False
+
+    response = client.get("/coins/archived")
+    assert response.status_code == 200
+    assert all(item["id"] != coin_id for item in response.json())
+
+    response = client.get("/coins")
+    assert response.status_code == 200
+    assert any(item["id"] == coin_id for item in response.json())
+
+
 def test_get_coin(
     client: TestClient,
     session: Session,
