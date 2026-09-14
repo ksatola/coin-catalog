@@ -8,9 +8,9 @@ A task is marked complete only after it has been implemented and verified where 
 
 ## Current Phase
 
-**Phase 3 — Database Foundation**
+**Phase 4 — Coin Entry and Browser**
 
-Phase 1 — Development Environment and Phase 2 — Application Skeleton have been completed and verified. Phase 3 is in progress; the SQLite location, SQLAlchemy configuration and session handling, Alembic migration tooling, initial SQLAlchemy models, and the first schema migration have been established and verified.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, and Phase 3 — Database Foundation have been completed and verified. Phase 4 begins the first simple user-facing application flow: coin entry, SQLite persistence, coin list, and coin details.
 
 ---
 
@@ -109,7 +109,7 @@ No coin-catalogue domain functionality has been implemented yet.
 
 ## Phase 3 — Database Foundation
 
-**Status:** In progress
+**Status:** Complete
 
 ### Completed
 
@@ -135,24 +135,25 @@ No coin-catalogue domain functionality has been implemented yet.
 - [x] Ruff linting and formatting checks pass for the backend after model cleanup.
 - [x] Focused database behavior tests added and verified; backend pytest suite passes with 5 tests.
 
-### Planned
-
-- [ ] Review whether Phase 3 requires any additional database-foundation work before closing the phase.
+No additional database-foundation work is currently planned for this phase.
 
 ---
 
-## Phase 4 — Coin Data Model
+## Phase 4 — Coin Entry and Browser
 
-**Status:** Not started
+**Status:** In progress
 
 Planned work:
 
-- [ ] Define the initial coin data model.
-- [ ] Define required and optional fields.
-- [ ] Define identifiers.
-- [ ] Define relationships required by the initial catalogue.
-- [ ] Implement database models.
-- [ ] Add model/database tests.
+- [ ] Design a simple coin-entry form.
+- [ ] Allow creation of a new coin using the existing data model.
+- [ ] Add basic form validation.
+- [ ] Build a simple browser for coins stored in the database.
+- [ ] Display basic coin data in the browser.
+- [ ] Add a basic detail view for a selected coin.
+- [ ] Verify the complete flow: form → SQLite persistence → coin list → coin details.
+
+This phase intentionally does not include spreadsheet import, image management, search/filtering, collections/tags, or other advanced functionality.
 
 ---
 
@@ -290,7 +291,7 @@ Planned work:
 
 The next concrete task is:
 
-**Review and close Phase 3 Database Foundation if no additional database-foundation work is required.**
+**Design the simple coin-entry interface and coin browser for Phase 4.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -311,7 +312,8 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Applied the initial migration successfully and verified it as the current Alembic head.
 - Added focused database behavior tests using an isolated in-memory SQLite database.
 - Verified Ruff and pytest after test cleanup; pytest reports 5 passing tests.
-- Updated architecture, decision, development, and progress documentation to match the verified implementation.
+- Closed Phase 3 Database Foundation and defined Phase 4 as the first simple user-facing coin entry and browser flow.
+- Updated the roadmap to reflect the completed database foundation and the new Phase 4 scope.
 
 ### 2026-09-11
 
