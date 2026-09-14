@@ -34,27 +34,42 @@ start_service() {
 
 show_start_status() {
     echo
-    printf "%-10s %-8s %-8s %s\n" "Service" "Status" "PID" "Address"
+    echo "========================================"
+    echo "        Coin Catalog — START"
+    echo "========================================"
+    echo
 
     for name_port in "backend:8000" "frontend:5173"; do
         local name="${name_port%%:*}"
         local port="${name_port##*:}"
         local pid_file="$RUN_DIR/$name.pid"
 
+        echo "${name^}"
+
         if [[ -f "$pid_file" ]]; then
             local pid
             pid="$(cat "$pid_file")"
 
             if kill -0 "$pid" 2>/dev/null; then
-                printf "%-10s %-8s %-8s http://localhost:%s\n" \
-                    "$name" "OK" "$pid" "$port"
-                continue
+                echo "  [ OK ]  PID $pid"
+                echo "          http://localhost:$port"
+            else
+                echo "  [FAIL]  process not running"
+                echo "          http://localhost:$port"
             fi
+        else
+            echo "  [FAIL]  process not started"
+            echo "          http://localhost:$port"
         fi
 
-        printf "%-10s %-8s %-8s %s\n" \
-            "$name" "FAILED" "-" "http://localhost:$port"
+        echo
     done
+
+    echo "----------------------------------------"
+    echo "Logs"
+    echo "  backend   $RUN_DIR/backend.log"
+    echo "  frontend  $RUN_DIR/frontend.log"
+    echo "========================================"
 }
 
 start_service \
@@ -67,11 +82,5 @@ start_service \
     "$ROOT_DIR/frontend" \
     "exec npm run dev -- --host 0.0.0.0 --force"
 
-echo
-echo "Coin Catalog started."
 show_start_status
-echo
-echo "Logs:"
-echo "  backend  $RUN_DIR/backend.log"
-echo "  frontend $RUN_DIR/frontend.log"
 
