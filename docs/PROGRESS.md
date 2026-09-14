@@ -133,11 +133,10 @@ No coin-catalogue domain functionality has been implemented yet.
 - [x] Initial Alembic migration applied successfully with `uv run alembic upgrade head`.
 - [x] Alembic current revision verified as `e6df2f7c0c11 (head)`.
 - [x] Ruff linting and formatting checks pass for the backend after model cleanup.
-- [x] Backend pytest suite passes with 1 test.
+- [x] Focused database behavior tests added and verified; backend pytest suite passes with 5 tests.
 
 ### Planned
 
-- [ ] Add focused database tests for the initial schema and model relationships.
 - [ ] Review whether Phase 3 requires any additional database-foundation work before closing the phase.
 
 ---
@@ -291,7 +290,7 @@ Planned work:
 
 The next concrete task is:
 
-**Add focused database tests for the initial schema and model relationships.**
+**Review and close Phase 3 Database Foundation if no additional database-foundation work is required.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
@@ -310,7 +309,8 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Implemented the SQLAlchemy models for the initial schema.
 - Generated and reviewed Alembic revision `e6df2f7c0c11`.
 - Applied the initial migration successfully and verified it as the current Alembic head.
-- Verified Ruff and pytest after model cleanup; pytest reports 1 passing test.
+- Added focused database behavior tests using an isolated in-memory SQLite database.
+- Verified Ruff and pytest after test cleanup; pytest reports 5 passing tests.
 - Updated architecture, decision, development, and progress documentation to match the verified implementation.
 
 ### 2026-09-11
