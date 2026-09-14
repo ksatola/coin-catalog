@@ -21,12 +21,10 @@ const router = createRouter({
     {
       path: '/monety/:id',
       component: CoinDetailView,
-      props: true,
     },
     {
       path: '/monety/:id/edytuj',
       component: CoinEditView,
-      props: true,
     },
     {
       path: '/dodaj',
