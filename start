@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUN_DIR="/tmp/coin-catalog"
+mkdir -p "$RUN_DIR"
+
+start_service() {
+    local name="$1"
+    local workdir="$2"
+    local command="$3"
+    local pid_file="$RUN_DIR/$name.pid"
+    local log_file="$RUN_DIR/$name.log"
+
+    if [[ -f "$pid_file" ]]; then
+        local pid
+        pid="$(cat "$pid_file")"
+
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "$name already running (PID $pid)"
+            return
+        fi
+
+        rm -f "$pid_file"
+    fi
+
+    (
+        cd "$workdir"
+        exec bash -lc "$command"
+    ) >"$log_file" 2>&1 &
+
+    echo $! >"$pid_file"
+    echo "Started $name (PID $(cat "$pid_file"))"
+}
+
+start_service \
+    "backend" \
+    "$ROOT_DIR/backend" \
+    "uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000"
+
+start_service \
+    "frontend" \
+    "$ROOT_DIR/frontend" \
+    "npm run dev -- --host 0.0.0.0"
+
+echo
+echo "Coin Catalog started."
+echo "Frontend: http://localhost:5173/"
+echo "Backend:  http://localhost:8000/"
