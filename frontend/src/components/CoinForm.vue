@@ -229,12 +229,6 @@ function submitForm(): void {
     return
   }
 
-  if (form.from_year > form.to_year) {
-    validationMessage.value =
-      'Rok początkowy nie może być późniejszy niż końcowy.'
-    return
-  }
-
   if (!primaryImages.avers && !pendingFiles.avers) {
     validationMessage.value = 'Dodaj zdjęcie awersu.'
     return
