@@ -344,7 +344,24 @@ When the user explicitly changes a requirement or decision, update the project d
 
 When repository state conflicts with conversation context, the repository documentation and current user instructions should be reconciled explicitly rather than silently assuming one is correct.
 
-## 19. Current Development Stage
+## 19. Change Approval Before Repository Writes
+
+Before writing any change to the GitHub repository, the assistant must:
+
+1. Inspect the current repository state.
+2. Prepare the proposed change.
+3. Show the user what will be changed, preferably as a focused diff or complete replacement content when appropriate.
+4. Explain briefly why the change is needed.
+5. Wait for explicit user approval.
+6. Only after approval, write the change to the repository.
+
+The user's approval to continue working, proceed to the next step, or perform testing does not by itself constitute approval to write a specific change to the repository.
+
+No code, documentation, configuration, migration, or other repository content may be created, modified, deleted, committed, or otherwise written to GitHub without explicit approval of the proposed change.
+
+Verification commands may be proposed and, when appropriate, run without repository writes. Repository modifications remain subject to explicit approval.
+
+## 20. Current Development Stage
 
 The project is currently in:
 
