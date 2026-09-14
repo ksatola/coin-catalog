@@ -1,25 +1,59 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-const backendStatus = ref('Checking backend...')
+import CoinForm from './components/CoinForm.vue'
+import CoinList from './components/CoinList.vue'
+import type { Coin, CoinCreate } from './types'
 
-onMounted(async () => {
+const coins = ref<Coin[]>([])
+const errorMessage = ref('')
+
+async function loadCoins(): Promise<void> {
   try {
-    const response = await fetch('/api/health')
+    const response = await fetch('/api/coins')
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
 
-    const data: { status: string } = await response.json()
-    backendStatus.value = data.status
+    coins.value = await response.json() as Coin[]
+    errorMessage.value = ''
   } catch {
-    backendStatus.value = 'Backend unavailable'
+    errorMessage.value = 'Nie udało się pobrać monet.'
   }
-})
+}
+
+async function createCoin(coinData: CoinCreate): Promise<void> {
+  try {
+    const response = await fetch('/api/coins', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(coinData),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    await loadCoins()
+  } catch {
+    errorMessage.value = 'Nie udało się zapisać monety.'
+  }
+}
+
+onMounted(loadCoins)
 </script>
 
 <template>
-  <h1>Coin Catalog</h1>
-  <p>Backend status: {{ backendStatus }}</p>
+  <main>
+    <h1>Coin Catalog</h1>
+
+    <CoinForm @submit="createCoin" />
+
+    <p v-if="errorMessage">{{ errorMessage }}</p>
+
+    <CoinList :coins="coins" />
+  </main>
 </template>
