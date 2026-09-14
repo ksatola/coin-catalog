@@ -39,21 +39,27 @@ stop_service() {
 
 show_stop_status() {
     echo
-    printf "%-10s %-8s\n" "Service" "Status"
+    echo "========================================"
+    echo "        Coin Catalog — STOP"
+    echo "========================================"
+    echo
 
     for name in backend frontend; do
         if [[ -f "$RUN_DIR/$name.pid" ]]; then
-            printf "%-10s %-8s\n" "$name" "RUNNING"
+            echo "${name^}"
+            echo "  [WARN]  PID file still present"
         else
-            printf "%-10s %-8s\n" "$name" "STOPPED"
+            echo "${name^}"
+            echo "  [ OK ]  STOPPED"
         fi
+        echo
     done
+
+    echo "========================================"
 }
 
 stop_service "frontend"
 stop_service "backend"
 
-echo
-echo "Coin Catalog stopped."
 show_stop_status
 
