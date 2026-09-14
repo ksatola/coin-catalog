@@ -10,7 +10,7 @@ A task is marked complete only after it has been implemented and verified where 
 
 **Phase 3 — Database Foundation**
 
-Phase 1 — Development Environment and Phase 2 — Application Skeleton have been completed and verified. Phase 3 is in progress; the SQLite location, SQLAlchemy configuration and session handling, and Alembic migration tooling have been established and verified. The initial database schema remains to be designed.
+Phase 1 — Development Environment and Phase 2 — Application Skeleton have been completed and verified. Phase 3 is in progress; the SQLite location, SQLAlchemy configuration and session handling, Alembic migration tooling, initial SQLAlchemy models, and the first schema migration have been established and verified.
 
 ---
 
@@ -125,14 +125,20 @@ No coin-catalogue domain functionality has been implemented yet.
 - [x] Alembic selected and initialized for database schema migrations.
 - [x] Alembic configured to use the application's canonical `DATABASE_URL`.
 - [x] Alembic database connection verified with `uv run alembic current`.
-- [x] Ruff linting and formatting checks pass for the backend.
+- [x] Initial coin/reference database schema designed and accepted.
+- [x] SQLAlchemy models implemented for `coin`, `country`, `issuer`, `denomination`, `mint`, `material`, `state`, and `era`.
+- [x] `currency` explicitly excluded from the initial schema.
+- [x] Initial Alembic migration generated as revision `e6df2f7c0c11`.
+- [x] Initial Alembic migration reviewed against the accepted schema.
+- [x] Initial Alembic migration applied successfully with `uv run alembic upgrade head`.
+- [x] Alembic current revision verified as `e6df2f7c0c11 (head)`.
+- [x] Ruff linting and formatting checks pass for the backend after model cleanup.
 - [x] Backend pytest suite passes with 1 test.
 
 ### Planned
 
-- [ ] Create the initial database schema.
-- [ ] Generate and review the first Alembic migration.
-- [ ] Apply the initial migration and verify the resulting schema.
+- [ ] Add focused database tests for the initial schema and model relationships.
+- [ ] Review whether Phase 3 requires any additional database-foundation work before closing the phase.
 
 ---
 
@@ -285,13 +291,27 @@ Planned work:
 
 The next concrete task is:
 
-**Design the initial database schema before implementing the coin data model.**
+**Add focused database tests for the initial schema and model relationships.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
 ---
 
 ## Change Log
+
+### 2026-09-14
+
+- Finalized the initial database schema and explicitly removed `currency` from the initial design.
+- Accepted `NUMERIC` storage for weight (grams) and diameter (millimetres), with units fixed by convention rather than stored in separate columns.
+- Accepted a boolean `has_video` flag without direct video URLs at this stage.
+- Accepted a single optional `source` text field.
+- Accepted required UTC `created_at` and `updated_at` timestamps.
+- Accepted unique, non-null names for all initial reference tables.
+- Implemented the SQLAlchemy models for the initial schema.
+- Generated and reviewed Alembic revision `e6df2f7c0c11`.
+- Applied the initial migration successfully and verified it as the current Alembic head.
+- Verified Ruff and pytest after model cleanup; pytest reports 1 passing test.
+- Updated architecture, decision, development, and progress documentation to match the verified implementation.
 
 ### 2026-09-11
 
