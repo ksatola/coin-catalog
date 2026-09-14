@@ -1,26 +1,27 @@
 # Coin Catalog — Development Guide
 
-This document describes the current, verified development environment and the normal local development workflow.
+This document describes the current, verified development environment and normal local workflow.
 
-For coding style, quality, documentation, testing, and related conventions, see [`CODING_STANDARDS.md`](CODING_STANDARDS.md).
-For the development helper scripts, see [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md).
+For coding style and quality conventions, see [`CODING_STANDARDS.md`](CODING_STANDARDS.md).
+For helper scripts, see [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md).
 For branching and merge workflow, see [`GIT_WORKFLOW.md`](GIT_WORKFLOW.md).
+For image storage rules, see [`IMAGE_STORAGE_DECISION.md`](IMAGE_STORAGE_DECISION.md).
 
 ## Host Requirements
 
-The host machine is intentionally kept minimal. Install only:
+Install on the host:
 
 - GitHub Desktop
 - Visual Studio Code
 - Docker Desktop
 
-Python, Node.js, `uv`, and project-specific dependencies are provided by the Dev Container and do not need to be installed on the host.
+Python, Node.js, `uv`, and project dependencies are provided by the Dev Container.
 
 ## Git Branch Workflow
 
 `main` is the stable branch. Do not develop or commit directly on `main`.
 
-Development normally happens on a dedicated working branch using the pattern:
+Normal development uses a dedicated branch such as:
 
 ```text
 phase-N-short-description
@@ -28,12 +29,10 @@ phase-N-short-description
 
 For smaller independent changes, `feature/`, `fix/`, or `docs/` branches may be used.
 
-The complete branching procedure is documented in [`GIT_WORKFLOW.md`](GIT_WORKFLOW.md).
-
 Normal workflow:
 
 ```text
-update/synchronize branch
+synchronize branch
 → edit in VS Code
 → run inside Dev Container
 → verify in terminal/browser
@@ -43,34 +42,17 @@ update/synchronize branch
 → merge to main after verification
 ```
 
-The project intentionally does not use a permanent `develop` branch.
+The project does not use a permanent `develop` branch.
 
-## Open the Project in VS Code
+## Dev Container
 
-1. Start Docker Desktop and wait until Docker is running.
-2. Open Visual Studio Code.
-3. Open the local `coin-catalog` repository.
-4. Verify that the repository files are visible, including `.devcontainer`, `docs`, `AGENTS.md`, and `README.md`.
-
-## Reopen in the Dev Container
-
-Use the VS Code Command Palette:
-
-```text
-Dev Containers: Reopen in Container
-```
-
-The repository is mounted as the workspace:
+The repository is mounted at:
 
 ```text
 /workspaces/coin-catalog
 ```
 
-The entire Git repository is available inside the container.
-
-## Verify the Development Container
-
-Open the integrated terminal in VS Code and run:
+Verify the environment with:
 
 ```bash
 python --version
@@ -79,18 +61,11 @@ uv --version
 pwd
 ```
 
-The verified environment reports:
-
-```text
-Python 3.14.7
-v24.20.0
-uv 0.12.10
-/workspaces/coin-catalog
-```
+The verified environment reports Python 3.14.7, Node.js v24.20.0, uv 0.12.10, and the workspace path above.
 
 ## Development Helper Scripts
 
-The repository provides four local helper scripts from the repository root:
+From the repository root:
 
 ```text
 ./start
@@ -99,39 +74,26 @@ The repository provides four local helper scripts from the repository root:
 ./status
 ```
 
-`./start` starts the backend and frontend development services and records their managed process IDs.
+`./start` starts the backend and frontend development services.
 
-`./stop` stops the process groups managed by `./start`.
+`./stop` stops services managed by `./start`.
 
-`./restart` intentionally performs only:
+`./restart` is intentionally only `./stop` followed by `./start`.
 
-```text
-./stop
-./start
-```
+`./status` provides process and port diagnostics.
 
-`./status` provides more detailed process and port diagnostics.
-
-See [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md) for the exact behavior and troubleshooting notes.
+See [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md) for details.
 
 ## Current Development Services
-
-The application currently uses two development servers:
 
 ```text
 Frontend   http://localhost:5173
 Backend    http://localhost:8000
 ```
 
-The host browser uses the Vite frontend address:
-
-```text
-http://localhost:5173/
-```
+The host browser uses the Vite frontend at `http://localhost:5173/`.
 
 ## Backend Project
-
-The Python backend is located under `backend/`.
 
 Current structure:
 
@@ -154,10 +116,11 @@ backend/
         └── routes/
             ├── __init__.py
             ├── coins.py
-            └── dictionaries.py
+            ├── dictionaries.py
+            └── images.py
 ```
 
-Python project commands are run from:
+Backend commands run from:
 
 ```bash
 cd /workspaces/coin-catalog/backend
@@ -167,7 +130,7 @@ The backend uses FastAPI, SQLAlchemy, SQLite, and Alembic.
 
 ## Python Tests and Code Quality
 
-Run the complete backend verification set:
+Run:
 
 ```bash
 cd /workspaces/coin-catalog/backend
@@ -176,37 +139,28 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-The current backend test suite verifies coin persistence and API behavior including creation, retrieval, update, dictionary CRUD, archive, restore, and reference-protected dictionary deletion.
-
-The latest user-verified pytest result is:
-
-```text
-29 passed, 2 warnings
-```
-
-The two warnings are dependency deprecation warnings emitted by the installed FastAPI/Starlette/AnyIO test stack; they are not test failures.
+The backend suite covers coin persistence and API behavior, dictionary CRUD and reference protection, and archive/restore behavior.
 
 ## Database and Migrations
 
-The backend uses SQLite with SQLAlchemy. Alembic manages schema migrations.
-
-The development database is stored at:
+The development database is:
 
 ```text
 /workspaces/coin-catalog/data/coin-catalog.db
 ```
 
-The database file is not committed to Git.
+The database is not committed to Git.
 
 Run Alembic commands from the backend directory:
 
 ```bash
+cd /workspaces/coin-catalog/backend
 uv run alembic current
 uv run alembic history
 uv run alembic upgrade head
 ```
 
-After an approved model/schema change, create a migration with:
+After an approved schema change:
 
 ```bash
 uv run alembic revision --autogenerate -m "describe schema change"
@@ -214,21 +168,9 @@ uv run alembic revision --autogenerate -m "describe schema change"
 
 Always review generated migrations before applying them.
 
-The current schema contains the `coin` table and the reference tables:
+The schema includes the coin table, seven reference tables, category structures, and coin-image metadata. There is intentionally no `currency` table or `currency_id` column.
 
-```text
-country
-issuer
-denomination
-mint
-material
-state
-era
-```
-
-There is intentionally no `currency` table or `currency_id` column.
-
-The `coin` table includes the approved soft-delete flag `is_deleted`. Active coins use `is_deleted = false`; archived coins use `is_deleted = true`.
+Coins use `is_deleted` for soft archive/restore.
 
 ## FastAPI Application
 
@@ -238,16 +180,16 @@ The FastAPI application is defined in:
 backend/src/coin_catalog/main.py
 ```
 
-The current API provides:
+Current API:
 
 ```text
 GET  /health
 
 POST /coins
 GET  /coins
+GET  /coins/archived
 GET  /coins/{coin_id}
 PUT  /coins/{coin_id}
-GET  /coins/archived
 POST /coins/{coin_id}/archive
 POST /coins/{coin_id}/restore
 
@@ -255,11 +197,16 @@ GET    /dictionaries/{dictionary_name}
 POST   /dictionaries/{dictionary_name}
 PUT    /dictionaries/{dictionary_name}/{item_id}
 DELETE /dictionaries/{dictionary_name}/{item_id}
+
+GET    /coins/{coin_id}/images
+POST   /coins/{coin_id}/images
+DELETE /coins/{coin_id}/images/{image_id}
+GET    /coins/{coin_id}/images/{image_id}/file
 ```
 
-The coin archive model is soft deletion; there is no permanent coin DELETE endpoint.
+There is no permanent coin DELETE endpoint.
 
-The seven supported dictionaries are:
+The seven dictionaries are:
 
 ```text
 countries
@@ -273,28 +220,23 @@ eras
 
 Dictionary entries cannot be deleted while referenced by a coin. Era references are protected for both `from_era_id` and `to_era_id`.
 
-For direct backend inspection, the FastAPI interactive documentation is available at:
-
-```text
-http://localhost:8000/docs
-```
+Interactive API documentation is available at `http://localhost:8000/docs`.
 
 ## Frontend Project
 
-The Vue frontend is located under `frontend/`.
-
-The current stack is:
+The frontend is under `frontend/` and uses:
 
 ```text
 Vue 3
 TypeScript
 Vite
 Vue Router
+Playwright
 ```
 
-The frontend does not currently use Pinia or a UI component framework. Additional dependencies should be introduced only as part of an approved development step.
+There is no Pinia or UI component framework at this stage.
 
-Frontend commands are run from:
+Frontend commands run from:
 
 ```bash
 cd /workspaces/coin-catalog/frontend
@@ -302,22 +244,16 @@ cd /workspaces/coin-catalog/frontend
 
 ## Vite API Proxy
 
-During development, frontend requests use relative `/api/...` paths.
-
-Vite proxies those requests to FastAPI on port `8000` and removes the `/api` prefix.
-
-The request flow is:
+Frontend requests use relative `/api/...` paths. Vite proxies them to FastAPI on port `8000` and removes the `/api` prefix.
 
 ```text
 Browser → Vite :5173 → FastAPI :8000
 /api/health           /health
 ```
 
-Vite polling is enabled so source changes are detected reliably inside the Dev Container.
+Vite polling is enabled for reliable source-change detection inside the Dev Container.
 
 ## Current Frontend Routes
-
-The current application routes are:
 
 ```text
 /                         → redirect to /monety
@@ -329,79 +265,37 @@ The current application routes are:
 /slowniki                 → dictionary editor
 ```
 
-A fixed bottom navigation is always visible with:
+The fixed bottom navigation contains `Monety`, `Dodaj monetę`, `Archiwum`, and `Słowniki`.
+
+## Current Coin Browser and Entry Flow
+
+The browser supports Grid and List layouts. Grid is the default.
+
+Grid tiles open details. List rows are not clickable; actions are explicit buttons.
+
+Active coins provide `Szczegóły` and `Archiwizuj`. Archived coins provide `Szczegóły` and `Przywróć`.
+
+Coin details provide `Edytuj` and `Archiwizuj` for active coins, and `Przywróć` for archived coins.
+
+The coin form uses dictionary-backed selectors and supports the core coin fields, including country, issuer, denomination, year/era range, mint, material, state, description, weight, diameter, video flag, and source.
+
+Date endpoints contain both a numeric year and an era. Numeric years are not compared across eras, so a range such as `476 BC → 1 AD` is valid.
+
+## Coin Images
+
+Image management is implemented for primary and additional photographs.
+
+The accepted storage convention uses a top-level `images/` directory, ignored by Git, with flat six-digit filenames such as:
 
 ```text
-Monety
-Dodaj monetę
-Archiwum
-Słowniki
+000404 - awers.jpg
+000404 - rewers.jpg
+000404 - 01.jpg
 ```
 
-## Current Coin Browser
+The database stores image metadata; image contents are files, not SQLite BLOBs. Primary replacement requires explicit replacement confirmation.
 
-The active and archived coin browser supports two layouts:
-
-```text
-Grid
-List
-```
-
-Grid is the default view.
-
-In Grid view, selecting a coin tile opens its details.
-
-In List view, rows are not clickable. Actions are explicit buttons.
-
-Active coins provide:
-
-```text
-Szczegóły
-Archiwizuj
-```
-
-Archived coins provide:
-
-```text
-Szczegóły
-Przywróć
-```
-
-Coin details provide:
-
-```text
-Active:    Edytuj, Archiwizuj
-Archived:  Przywróć
-```
-
-## Current Coin Entry Flow
-
-The coin form uses dictionary-backed selectors rather than manual foreign-key entry.
-
-The current form supports the approved core coin fields, including:
-
-- country
-- issuer
-- denomination
-- date range and era
-- mint
-- material
-- state
-- description
-- weight
-- diameter
-- video flag
-- source
-
-Basic form validation is implemented for the current entry flow.
-
-## Current Dictionary Editor
-
-The dictionary editor is available at `/slowniki`.
-
-It supports add, edit, and delete operations for all seven reference dictionaries.
-
-Deletion errors are surfaced when a dictionary entry is referenced by a coin.
+See [`IMAGE_STORAGE_DECISION.md`](IMAGE_STORAGE_DECISION.md).
 
 ## Frontend Production Build
 
@@ -412,11 +306,26 @@ cd /workspaces/coin-catalog/frontend
 npm run build
 ```
 
-The frontend production build was previously verified successfully with Vite 8.2.2. A final Phase 4 verification run should repeat this command after the latest changes.
+## Playwright UI Tests
+
+The UI tests are located under:
+
+```text
+frontend/tests/ui/
+```
+
+Run the current coin UI suite with:
+
+```bash
+cd /workspaces/coin-catalog/frontend
+npm run test:ui -- tests/ui/coins.spec.ts
+```
+
+The current verified suite covers image replacement, cancellation, additional image upload, and cross-era date ranges.
 
 ## Recommended Local Verification
 
-For the current Phase 4 working branch, run:
+For the current Phase 4 branch:
 
 ```bash
 cd /workspaces/coin-catalog/backend
@@ -424,73 +333,48 @@ uv run pytest
 uv run ruff check .
 uv run ruff format --check .
 
-cd ../frontend
+cd /workspaces/coin-catalog/frontend
 npm run build
+npm run test:ui -- tests/ui/coins.spec.ts
 ```
 
-Then start the development services:
+Then:
 
 ```bash
 cd /workspaces/coin-catalog
 ./start
 ```
 
-Open:
+Open `http://localhost:5173/` and walk through the main coin workflow.
 
-```text
-http://localhost:5173/
-```
-
-and walk through the main flow:
-
-```text
-Monety
-→ Grid / List
-→ Szczegóły
-→ Edytuj
-→ Archiwizuj
-→ Archiwum
-→ Przywróć
-→ Dodaj monetę
-→ Słowniki
-```
-
-When the walkthrough is complete:
+When finished:
 
 ```bash
+cd /workspaces/coin-catalog
 ./status
 ./stop
 ```
 
 ## Current Scope
 
-Phase 4 is the current development phase and covers the first usable coin catalogue workflow:
+Phase 4 currently covers:
 
-- coin creation and persistence,
-- dictionary-backed coin entry,
-- coin browsing in Grid/List views,
-- coin details,
-- editing,
-- soft archive and restore,
-- dictionary management,
-- local development tooling.
+- coin creation and persistence;
+- dictionary-backed entry;
+- Grid/List browsing;
+- details and editing;
+- soft archive/restore;
+- dictionary management;
+- primary and additional coin images;
+- local development tooling;
+- automated UI coverage for the current workflows.
 
-The following work remains outside the current Phase 4 scope:
-
-- spreadsheet import,
-- image management,
-- advanced search and filtering,
-- collections/categories/tags,
-- pricing and valuation features,
-- OCR and image analysis,
-- advanced exports and deployment.
-
-Image handling remains an external-file concern. Coin photographs are not stored as database BLOBs; the database will store references/metadata when image management is implemented.
+Future work includes spreadsheet import, advanced search/filtering, richer collections/tags, backup/export, CI/CD, and deployment.
 
 ## Working Rules
 
 Keep implementation changes incremental and verify them at the smallest useful scope.
 
-Before making repository changes, follow the repository change-approval workflow documented in `AGENTS.md`: inspect the current state, show the proposed change, obtain explicit approval, then write the approved change.
+Before repository changes, follow the approval workflow in `AGENTS.md`: inspect the current state, show the proposed change, obtain explicit approval, then write the approved change.
 
 Keep documentation synchronized with the actual verified project state.
