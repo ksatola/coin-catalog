@@ -3,26 +3,6 @@ set -euo pipefail
 
 RUN_DIR="/tmp/coin-catalog"
 
-stop_process_tree() {
-    local pid="$1"
-    local children=""
-
-    if ! kill -0 "$pid" 2>/dev/null; then
-        return
-    fi
-
-    if [[ -r "/proc/$pid/task/$pid/children" ]]; then
-        children="$(cat "/proc/$pid/task/$pid/children" 2>/dev/null || true)"
-    fi
-
-    local child
-    for child in $children; do
-        stop_process_tree "$child"
-    done
-
-    kill "$pid" 2>/dev/null || true
-}
-
 stop_service() {
     local name="$1"
     local pid_file="$RUN_DIR/$name.pid"
@@ -36,7 +16,19 @@ stop_service() {
     pid="$(cat "$pid_file")"
 
     if kill -0 "$pid" 2>/dev/null; then
-        stop_process_tree "$pid"
+        kill -TERM -- "-$pid" 2>/dev/null || true
+
+        for _ in {1..20}; do
+            if ! kill -0 "$pid" 2>/dev/null; then
+                break
+            fi
+            sleep 0.1
+        done
+
+        if kill -0 "$pid" 2>/dev/null; then
+            kill -KILL -- "-$pid" 2>/dev/null || true
+        fi
+
         echo "Stopped $name (PID $pid)"
     else
         echo "$name was not running"
