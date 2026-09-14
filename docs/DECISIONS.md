@@ -557,7 +557,7 @@ The catalogue represents physical collection data. Accidental deletion should th
 
 ---
 
-## D-030 — Coin Image Storage and Naming
+## D-030 — Coin Image Storage, Naming, and Editing Workflow
 
 **Status:** Accepted  
 **Date:** 2026-09-14
@@ -578,15 +578,29 @@ The required filenames are:
 000404 - 03.jpg
 ```
 
-Each coin has exactly one `awers` image and exactly one `rewers` image. Additional images may be added without a fixed limit and are numbered sequentially as `01`, `02`, `03`, and so on. Additional images cover cases such as slab photographs, rim photographs, or additional views.
+Each coin must have one current `awers` image and one current `rewers` image when changes are saved. Additional images may be present without a fixed limit and are numbered sequentially as `01`, `02`, `03`, and so on. Additional images cover cases such as slab photographs, rim photographs, or additional views.
+
+Avers and rewers may be removed or replaced during editing, but a coin cannot be saved while either required image is missing. Replacing an image therefore means assigning another image of the same required type before saving the changes.
 
 The application database stores image metadata and references separately from the image file contents. Image files are never stored as SQLite BLOBs.
 
-When an image is imported through the application by drag-and-drop or paste, the application uses the selected or identified coin ID to construct the target filename and must never silently overwrite an existing image. If the target filename already exists, the user must be explicitly asked to confirm replacement before the existing file is overwritten.
+Coin images are added and replaced as part of the normal manual coin creation and editing workflow. There is no separate image-import workflow for bulk importing coins or photographs.
+
+In coin-edit mode, the frontend provides drag-and-drop areas for the `awers` and `rewers` images and a drag-and-drop area/list for additional images. A dropped image on `awers` or `rewers` adds the image if missing or replaces the current image of that type. Dropped images in the additional-images area are added as additional images.
+
+The same image-assignment workflow must support pasting an image from the clipboard, including images copied from a web browser. The active image area determines whether the pasted image becomes or replaces the `awers`, becomes or replaces the `rewers`, or is added as an additional image.
+
+The workflow should not require a separate generic `Dodaj zdjęcie` button for normal image entry.
+
+The application must never silently overwrite an existing image file. When an operation would replace an existing target image, the user must explicitly confirm the replacement before the file is overwritten.
 
 ### Rationale
 
 The collection already contains rectangular JPG photographs that are close to square, and the browser grid is therefore designed around square image cells. Direct flat storage in `images/` keeps the file collection simple and predictable; the six-digit coin ID provides stable lexical sorting and grouping without requiring per-coin directories.
+
+Requiring an awers and rewers at save time reflects the domain model: both sides are essential primary photographs of a coin. Allowing temporary removal during editing makes replacement practical without permitting an incomplete saved coin.
+
+Integrating drag-and-drop and clipboard paste into the coin editing workflow keeps manual entry fast and avoids unnecessary generic upload controls.
 
 Keeping image metadata in SQLite while retaining the actual JPG files on disk separates structured catalogue data from potentially large binary files and leaves room for future image metadata, serving, and thumbnail features.
 
@@ -595,7 +609,77 @@ Keeping image metadata in SQLite while retaining the actual JPG files on disk se
 - The repository uses a top-level `images/` directory alongside `data/` for application image data.
 - Git must ignore `/images/`.
 - Image filenames use the six-digit coin ID and the approved suffix format.
-- A coin has one primary obverse image and one primary reverse image.
+- A saved coin has one current primary obverse image and one current primary reverse image.
 - Additional images are represented as sequential numbered files for the same coin.
-- Future image-management implementation must preserve the no-silent-overwrite rule.
-- The exact SQLite image metadata schema and import workflow will be implemented after this storage and naming decision.
+- Coin creation and editing, rather than a separate import tool, are the source of image assignment.
+- Future image-management implementation must support drag-and-drop and clipboard paste and must preserve the no-silent-overwrite rule.
+
+---
+
+## D-031 — Flexible Many-to-Many Category Graph
+
+**Status:** Accepted  
+**Date:** 2026-09-14
+
+The catalogue uses user-defined categories as a flexible classification system separate from the fixed domain dictionaries such as country, issuer, denomination, material, and era.
+
+Categories are represented by a `category` entity and explicit parent-child relationships. The category hierarchy is not a single tree. A category may have multiple parents and multiple children, allowing a directed acyclic graph (DAG) instead of a strict one-parent hierarchy.
+
+The conceptual schema is:
+
+```text
+category
+--------
+id
+name
+description
+created_at
+updated_at
+```
+
+```text
+category_relation
+-----------------
+parent_id
+child_id
+```
+
+A category may therefore participate in structures such as:
+
+```text
+A → B
+A → C
+B → D
+C → D
+```
+
+where `D` has more than one parent.
+
+Category relationships must remain acyclic. A category cannot be its own ancestor through any chain of parent-child relationships.
+
+Coins are related to categories through a many-to-many association:
+
+```text
+coin_category
+-------------
+coin_id
+category_id
+```
+
+A single coin may therefore belong to multiple categories, and a single category may contain multiple coins.
+
+Categories are not used as replacements for fixed descriptive fields. A country remains a country, material remains a material, and so on; categories provide an additional user-defined classification layer.
+
+### Rationale
+
+A strict tree would force every category to have at most one parent and would make it difficult to express overlapping classifications. A many-to-many category graph allows the project owner to build and evolve several related classification schemes without restructuring the database when a category belongs naturally in more than one place.
+
+Separating categories from fixed dictionaries keeps the semantic meaning of those dictionaries stable while allowing the user-defined classification layer to remain intentionally flexible.
+
+### Consequences
+
+- Category data requires a dedicated model and database tables.
+- Category-to-category relations are many-to-many and must be validated to prevent cycles.
+- Coin-to-category assignment is many-to-many.
+- Future category UI should allow creating, editing, connecting, and browsing parent-child relationships.
+- Future implementation should preserve the distinction between categories and fixed domain dictionaries.
