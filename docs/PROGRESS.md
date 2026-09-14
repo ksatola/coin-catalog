@@ -8,9 +8,9 @@ A task is marked complete only after it has been implemented and verified where 
 
 ## Current Phase
 
-**Phase 2 — Application Skeleton**
+**Phase 4 — Coin Entry and Browser**
 
-Phase 1 — Development Environment has been completed and verified. Phase 2 is implementing and verifying the minimal runnable backend/frontend application skeleton.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, and Phase 3 — Database Foundation have been completed and verified. Phase 4 begins the first simple user-facing application flow: coin entry, SQLite persistence, coin list, and coin details.
 
 ---
 
@@ -52,6 +52,7 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 - [x] `docs/ROADMAP.md` established as the roadmap.
 - [x] `README.md` established as the human-facing project documentation.
 - [x] `docs/DEVELOPMENT.md` established as the detailed development-environment documentation.
+- [x] `docs/GIT_WORKFLOW.md` established as the practical Git branching and merge workflow documentation.
 - [x] Host development software requirements documented: GitHub Desktop, VS Code, Docker Desktop.
 - [x] Docker Desktop host configuration verified through successful Dev Container build and startup.
 - [x] VS Code / Dev Containers configuration verified through successful container connection and development workflow.
@@ -77,10 +78,6 @@ Phase 1 — Development Environment has been completed and verified. Phase 2 is 
 - [x] Host-browser access to `http://localhost:5173/` verified successfully.
 - [x] Initial frontend checkpoint committed and pushed to GitHub by the user.
 - [x] Detailed frontend development instructions added to `docs/DEVELOPMENT.md`.
-
-### Remaining / carried into Phase 2
-
-- [ ] Perform broader end-to-end development-environment verification after the application skeleton is runnable.
 
 ---
 
@@ -112,31 +109,51 @@ No coin-catalogue domain functionality has been implemented yet.
 
 ## Phase 3 — Database Foundation
 
-**Status:** Not started
+**Status:** Complete
 
-Planned work:
+### Completed
 
-- [ ] Establish SQLite database location.
-- [ ] Establish SQLAlchemy configuration.
-- [ ] Establish database session handling.
-- [ ] Establish migration strategy.
-- [ ] Create initial database schema.
-- [ ] Add database tests.
+- [x] Stable `main` and phase-based working-branch strategy accepted and recorded as D-023.
+- [x] `phase-3-database-foundation` branch created and published to `origin`.
+- [x] Practical Git branching and merge workflow documented in `docs/GIT_WORKFLOW.md`.
+- [x] Branching instructions added to `AGENTS.md` and `docs/DEVELOPMENT.md`.
+- [x] Phase 3 working branch synchronized with the latest stable `main` and pushed to `origin`.
+- [x] Phase 3 documentation review completed; no architecture change was required before database design.
+- [x] SQLite database location established as `/workspaces/coin-catalog/data/coin-catalog.db`.
+- [x] SQLAlchemy database engine and session configuration established.
+- [x] Database session test added and verified.
+- [x] Alembic selected and initialized for database schema migrations.
+- [x] Alembic configured to use the application's canonical `DATABASE_URL`.
+- [x] Alembic database connection verified with `uv run alembic current`.
+- [x] Initial coin/reference database schema designed and accepted.
+- [x] SQLAlchemy models implemented for `coin`, `country`, `issuer`, `denomination`, `mint`, `material`, `state`, and `era`.
+- [x] `currency` explicitly excluded from the initial schema.
+- [x] Initial Alembic migration generated as revision `e6df2f7c0c11`.
+- [x] Initial Alembic migration reviewed against the accepted schema.
+- [x] Initial Alembic migration applied successfully with `uv run alembic upgrade head`.
+- [x] Alembic current revision verified as `e6df2f7c0c11 (head)`.
+- [x] Ruff linting and formatting checks pass for the backend after model cleanup.
+- [x] Focused database behavior tests added and verified; backend pytest suite passes with 5 tests.
+
+No additional database-foundation work is currently planned for this phase.
 
 ---
 
-## Phase 4 — Coin Data Model
+## Phase 4 — Coin Entry and Browser
 
-**Status:** Not started
+**Status:** In progress
 
 Planned work:
 
-- [ ] Define the initial coin data model.
-- [ ] Define required and optional fields.
-- [ ] Define identifiers.
-- [ ] Define relationships required by the initial catalogue.
-- [ ] Implement database models.
-- [ ] Add model/database tests.
+- [ ] Design a simple coin-entry form.
+- [ ] Allow creation of a new coin using the existing data model.
+- [ ] Add basic form validation.
+- [ ] Build a simple browser for coins stored in the database.
+- [ ] Display basic coin data in the browser.
+- [ ] Add a basic detail view for a selected coin.
+- [ ] Verify the complete flow: form → SQLite persistence → coin list → coin details.
+
+This phase intentionally does not include spreadsheet import, image management, search/filtering, collections/tags, or other advanced functionality.
 
 ---
 
@@ -274,13 +291,40 @@ Planned work:
 
 The next concrete task is:
 
-**Review the Phase 3 — Database Foundation documentation and decide the database location, configuration, session, and migration approach before implementing database code.**
+**Design the simple coin-entry interface and coin browser for Phase 4.**
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md` and stop for discussion if the review identifies a direction or architecture change.
 
 ---
 
 ## Change Log
+
+### 2026-09-14
+
+- Finalized the initial database schema and explicitly removed `currency` from the initial design.
+- Accepted `NUMERIC` storage for weight (grams) and diameter (millimetres), with units fixed by convention rather than stored in separate columns.
+- Accepted a boolean `has_video` flag without direct video URLs at this stage.
+- Accepted a single optional `source` text field.
+- Accepted required UTC `created_at` and `updated_at` timestamps.
+- Accepted unique, non-null names for all initial reference tables.
+- Implemented the SQLAlchemy models for the initial schema.
+- Generated and reviewed Alembic revision `e6df2f7c0c11`.
+- Applied the initial migration successfully and verified it as the current Alembic head.
+- Added focused database behavior tests using an isolated in-memory SQLite database.
+- Verified Ruff and pytest after test cleanup; pytest reports 5 passing tests.
+- Closed Phase 3 Database Foundation and defined Phase 4 as the first simple user-facing coin entry and browser flow.
+- Updated the roadmap to reflect the completed database foundation and the new Phase 4 scope.
+
+### 2026-09-11
+
+- Established the SQLite database location at `/workspaces/coin-catalog/data/coin-catalog.db`.
+- Established SQLAlchemy engine and session configuration and verified the database session test.
+- Added and initialized Alembic for database schema migrations.
+- Configured Alembic to use the application's canonical `DATABASE_URL`.
+- Verified `uv run alembic current` can connect to the SQLite database.
+- Verified backend Ruff linting and formatting checks pass.
+- Verified the backend pytest suite passes with 1 test.
+- Updated the Phase 3 documentation to reflect the verified database-foundation state.
 
 ### 2026-09-09
 
@@ -319,6 +363,11 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Reviewed basic application configuration and decided not to introduce configuration infrastructure at this stage.
 - Performed broader end-to-end environment verification successfully with FastAPI and Vite running together and the host browser displaying the backend health status.
 - User committed and pushed the frontend health-status change to GitHub.
+- Accepted D-023 establishing stable `main` and phase-based working branches.
+- Created and published `phase-3-database-foundation`.
+- Added `docs/GIT_WORKFLOW.md` and updated `AGENTS.md` and `docs/DEVELOPMENT.md` with the branching workflow.
+- Synchronized the Phase 3 branch with the latest stable `main` and pushed the merge to `origin`.
+- Reviewed the Phase 3 documentation set and confirmed no architecture change was required before database design.
 
 ### 2026-09-07
 

@@ -45,19 +45,37 @@ Remaining environment checklist items that require explicit host-level verificat
 
 ## Phase 2 — Application Skeleton
 
-**Status:** Next
+**Status:** Complete
 
 Create the minimal backend/frontend application structure and establish communication between the Vue frontend and FastAPI backend.
 
-The phase will begin with another documentation review before implementation. The exact backend structure, initial health/status endpoint, frontend/backend development workflow, and configuration approach will be discussed and agreed before code is added.
+Completed work includes the minimal FastAPI application and health endpoint, separate frontend/backend development servers, the Vite `/api` development proxy, and the frontend health-status display. The complete frontend-to-backend development flow was verified in the host browser.
 
 ## Phase 3 — Database Foundation
 
-Introduce SQLite and SQLAlchemy and establish the application's database infrastructure, configuration, and initial migration strategy.
+**Status:** Complete
 
-## Phase 4 — Coin Data Model
+Establish SQLite and SQLAlchemy as the database foundation, configure database sessions, introduce Alembic migrations, and implement the initial coin catalogue data model.
 
-Design and implement the core domain model for coins and related metadata.
+Completed work includes the initial schema design, SQLAlchemy models for `coin` and its reference tables, the first Alembic migration, and focused database behavior tests. The initial model includes the required coin metadata and relationships accepted for the catalogue foundation.
+
+## Phase 4 — Coin Entry and Browser
+
+**Status:** Current
+
+Build the first simple user-facing slice of the application using the existing database model.
+
+Planned work:
+
+- Design a simple coin-entry form.
+- Allow creation of a new coin using the existing data model.
+- Add basic form validation.
+- Build a simple browser for coins stored in the database.
+- Display basic coin data in the browser.
+- Add a basic detail view for a selected coin.
+- Verify the complete flow: form → SQLite persistence → coin list → coin details.
+
+The phase intentionally does not include spreadsheet import, image management, search/filtering, collections/tags, or other advanced functionality.
 
 ## Phase 5 — Import Existing Data
 

@@ -2,6 +2,8 @@
 
 This document contains the detailed, verified instructions for opening and using the Coin Catalog development environment.
 
+For coding style, quality, documentation, testing, and related development conventions, see [`CODING_STANDARDS.md`](CODING_STANDARDS.md).
+
 ## Host Requirements
 
 The host machine is intentionally kept minimal. The following software is required on the host:
@@ -11,6 +13,66 @@ The host machine is intentionally kept minimal. The following software is requir
 - Docker Desktop
 
 Python, Node.js, `uv`, and project-specific application dependencies are provided by the Dev Container and do not need to be installed directly on the host.
+
+## Git Branch Workflow
+
+`main` is the stable branch. Do not develop or commit directly on `main`.
+
+Development normally happens on a dedicated working branch. For a development phase, use the naming pattern:
+
+```text
+phase-N-short-description
+```
+
+For example:
+
+```text
+phase-3-database-foundation
+```
+
+For smaller independent changes, `feature/`, `fix/`, or `docs/` branches may be used.
+
+The complete branching strategy is documented in:
+
+```text
+docs/GIT_WORKFLOW.md
+```
+
+### Recommended GitHub Desktop procedure
+
+1. Open the `coin-catalog` repository in GitHub Desktop.
+2. Fetch/pull the latest changes from `origin`.
+3. Make sure the current branch is `main`.
+4. Create a new branch from the current `main` using **Branch → New Branch**.
+5. Give the branch a descriptive phase or working-branch name.
+6. Publish the branch to `origin`.
+7. Switch to that branch and continue development there.
+
+Before starting substantial work, verify that the working branch contains the latest stable `main`. If `main` has advanced since the branch was created, synchronize the branch before proceeding.
+
+### Working in VS Code
+
+The current Git branch is shown in the lower-left corner of VS Code. You can use the branch control to switch branches and, where appropriate, create a branch.
+
+Development and application execution work normally from a working branch. The Dev Container uses the checked-out repository workspace, so it is not tied to `main`.
+
+A normal workflow is therefore:
+
+```text
+working branch
+→ edit in VS Code
+→ run inside Dev Container
+→ test in browser / terminal
+→ commit
+→ push branch
+→ continue
+```
+
+When the work is complete, test and document it, push the branch, and open a pull request to `main`. Merge only after the relevant implementation, tests, documentation, and verification are complete.
+
+After a phase is merged, update local `main` and create the next phase branch from the updated stable branch.
+
+The project intentionally does not use a permanent `develop` branch.
 
 ## Open the Project in VS Code
 
@@ -80,9 +142,16 @@ The current Python project structure is:
 backend/
 ├── .python-version
 ├── pyproject.toml
+├── alembic.ini
+├── migrations/
+│   └── versions/
+├── tests/
+│   └── test_database.py
 └── src/
     └── coin_catalog/
         ├── __init__.py
+        ├── database.py
+        ├── models.py
         └── main.py
 ```
 
@@ -111,6 +180,92 @@ The command completed successfully and produced:
 ```text
 backend import OK
 ```
+
+### Python tests and code quality
+
+Run Python project quality checks from the backend directory:
+
+```bash
+cd /workspaces/coin-catalog/backend
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+```
+
+`pytest` runs the backend test suite. `ruff check .` runs Ruff lint checks, and `ruff format --check .` verifies that Python files are formatted according to the project's Ruff configuration.
+
+When adding or updating Python development dependencies, use `uv` from the backend directory. For example:
+
+```bash
+cd /workspaces/coin-catalog/backend
+uv add --dev pytest ruff
+```
+
+After dependency changes, commit the corresponding `pyproject.toml` and `uv.lock` changes together when they belong to the same dependency update.
+
+The initial database session test was verified on 2026-09-11 with:
+
+```text
+1 passed
+```
+
+### Database and migrations
+
+The backend uses SQLite with SQLAlchemy. Alembic manages database schema migrations.
+
+The database is stored at:
+
+```text
+/workspaces/coin-catalog/data/coin-catalog.db
+```
+
+Run Alembic commands from the backend project directory:
+
+```bash
+cd /workspaces/coin-catalog/backend
+```
+
+Check the current database migration revision:
+
+```bash
+uv run alembic current
+```
+
+Create a new migration revision after a model/schema change:
+
+```bash
+uv run alembic revision --autogenerate -m "describe schema change"
+```
+
+Review the generated migration before applying it. The assistant should inspect pushed migration files directly in GitHub rather than asking the user to copy or print their contents when the files are already available in the repository.
+
+Apply pending migrations:
+
+```bash
+uv run alembic upgrade head
+```
+
+Show the migration history:
+
+```bash
+uv run alembic history
+```
+
+Alembic uses the database URL configured by the backend's `coin_catalog.database.DATABASE_URL`. The Alembic environment therefore uses the same canonical database location as the application.
+
+Migration files are version-controlled under:
+
+```text
+backend/migrations/versions/
+```
+
+The SQLite database itself remains under the Git-ignored `data/` directory.
+
+The initial schema migration has been generated and applied successfully. Its revision is `e6df2f7c0c11`.
+
+The initial schema contains the `coin` table and the reference tables `country`, `issuer`, `denomination`, `mint`, `material`, `state`, and `era`. There is intentionally no `currency` table or `currency_id` column.
+
+The `coin` table uses `from_year`/`from_era_id` and `to_year`/`to_era_id` for the date interval. `weight` is stored as `NUMERIC` grams, `diameter` as `NUMERIC` millimetres, `has_video` as a boolean flag, and `source` as one optional text field. `created_at` and `updated_at` are required UTC timestamps.
 
 ### FastAPI application
 
@@ -206,7 +361,7 @@ npm create vue@latest frontend
 
 If the scaffolding wizard presents a prompt that has not yet been documented or agreed, stop and review the prompt before selecting an option.
 
-### Install frontend dependencies
+## Install frontend dependencies
 
 After scaffolding completed, dependencies were installed from the frontend project directory:
 
@@ -314,7 +469,7 @@ Host-browser access and frontend-to-backend communication were successfully veri
 
 ## Current Scope
 
-At this stage, the development environment, initial Python backend project, FastAPI application skeleton, and initial Vue frontend project have been established. The FastAPI `/health` endpoint, Vite API proxy, and frontend-to-backend health display have all been verified.
+At this stage, the development environment, initial Python backend project, FastAPI application skeleton, initial Vue frontend project, and initial database foundation have been established. The FastAPI `/health` endpoint, Vite API proxy, frontend-to-backend health display, SQLAlchemy database session, initial database session test, SQLAlchemy coin/reference models, and Alembic initial migration have been verified.
 
 The approved Phase 2 development-server arrangement is:
 
@@ -322,6 +477,6 @@ The approved Phase 2 development-server arrangement is:
 - FastAPI on port `8000`
 - Vite `/api` proxy forwarding to FastAPI and removing the `/api` prefix
 
-The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, testing, database integration, and other application functionality will be introduced in later agreed steps.
+The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, API contracts, image management, and other application functionality will be introduced in later agreed steps.
 
 Do not install project dependencies manually before the corresponding development step is agreed and documented.

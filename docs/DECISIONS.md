@@ -88,7 +88,7 @@ SQLAlchemy is the database abstraction/ORM layer. Database models and database a
 ## D-009 — Web Application UI
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 The primary UI is a web application accessed through a browser on the host. A native desktop GUI is not the current UI architecture. Frontend and backend communicate over HTTP.
 
@@ -97,7 +97,7 @@ The primary UI is a web application accessed through a browser on the host. A na
 ## D-010 — Vue 3 Frontend
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Vue 3 is the frontend framework. Frontend functionality is organized primarily into Vue components.
 
@@ -106,7 +106,7 @@ Vue 3 is the frontend framework. Frontend functionality is organized primarily i
 ## D-011 — TypeScript
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 TypeScript is used for frontend development to improve maintainability and provide static typing for the growing frontend codebase.
 
@@ -115,7 +115,7 @@ TypeScript is used for frontend development to improve maintainability and provi
 ## D-012 — Vite
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Vite is the frontend development and build tool for the Vue/TypeScript application.
 
@@ -124,7 +124,7 @@ Vite is the frontend development and build tool for the Vue/TypeScript applicati
 ## D-013 — Coin Photographs Stored as Files
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Original coin photographs are stored as external files rather than SQLite BLOBs. The database stores references and metadata. Exact storage layout and backup strategy will be decided during image management implementation.
 
@@ -133,7 +133,7 @@ Original coin photographs are stored as external files rather than SQLite BLOBs.
 ## D-014 — Existing XLS/XLSX Data as Import Source
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Existing XLS/XLSX data will be imported into the application database. Exact spreadsheet structure, mappings, validation, and duplicate handling will be determined during the import phase.
 
@@ -142,7 +142,7 @@ Existing XLS/XLSX data will be imported into the application database. Exact spr
 ## D-015 — Current Development Priority
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Development begins with the development environment rather than application features. The first implementation phase is **Phase 1 — Development Environment**.
 
@@ -151,7 +151,7 @@ Development begins with the development environment rather than application feat
 ## D-016 — Development Container Runtime Versions
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The Dev Container uses:
 
@@ -166,7 +166,7 @@ These tools are provided inside the container rather than installed on the host.
 ## D-017 — Stable and Pinned Dependency Policy
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 Development tools and project dependencies use explicitly selected and pinned versions wherever supported. Stable production-quality releases are preferred; prerelease and experimental releases are not used by default. Dependency upgrades are deliberate and tested changes.
 
@@ -175,7 +175,7 @@ Development tools and project dependencies use explicitly selected and pinned ve
 ## D-018 — Verified State / Fact-Based Development
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 Current project state, completed work, configuration, and test results must be based on facts and verified whenever possible. Assumptions and plans must not be presented as facts. Failures, incomplete work, and unverifiable states must be stated clearly. `docs/PROGRESS.md` records only verified current state.
 
@@ -184,7 +184,7 @@ Current project state, completed work, configuration, and test results must be b
 ## D-019 — Separate Backend and Frontend Source Trees
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The repository uses separate top-level `backend/` and `frontend/` project directories.
 
@@ -217,13 +217,11 @@ Separate source trees prevent Python and frontend `src/` directories from being 
 ## D-020 — Vite Development Proxy for Backend API
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 During development, the Vue frontend communicates with the FastAPI backend through relative `/api/...` paths. Vite proxies these requests to the FastAPI development server on port 8000.
 
 The frontend therefore does not directly address the backend development origin from browser JavaScript, avoiding the need for CORS configuration for the initial development workflow.
-
-### Rationale
 
 The proxy keeps the browser-facing development application on a single origin while allowing the frontend and backend to remain independently runnable. It reduces unnecessary configuration at the application-skeleton stage and avoids coupling frontend code to a development-specific backend URL.
 
@@ -239,7 +237,7 @@ The proxy keeps the browser-facing development application on a single origin wh
 ## D-021 — Separate Frontend and Backend Development Servers
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The frontend and backend run as separate development servers inside the Dev Container:
 
@@ -263,7 +261,7 @@ Keeping the servers independent preserves clear frontend/backend boundaries and 
 ## D-022 — Minimal Backend Application Structure
 
 **Status:** Accepted  
-**Date:** 2026-09-09
+**Date: 2026-09-09
 
 The initial FastAPI backend uses the following minimal structure:
 
@@ -288,3 +286,224 @@ The application skeleton should establish a runnable backend without prematurely
 - `main.py` is the initial FastAPI application entry point.
 - The first backend functionality is a health/status endpoint.
 - Database and broader application structure remain outside the initial skeleton and will be designed in their respective phases.
+
+---
+
+## D-023 — Stable `main` and Phase-Based Working Branches
+
+**Status:** Accepted  
+**Date: 2026-09-09
+
+`main` is the project's stable branch. Development and experimentation must take place on dedicated working branches and must not be committed directly to `main`.
+
+The normal branch for a development phase uses the naming pattern:
+
+```text
+phase-N-short-description
+```
+
+For example:
+
+```text
+phase-3-database-foundation
+```
+
+Smaller independent work may use descriptive `feature/`, `fix/`, or `docs/` branches.
+
+Working branches are developed, run, tested, and documented normally. A branch is merged into `main` only after the relevant implementation, tests, documentation, and verification are complete, preferably through a pull request.
+
+The project does not use a permanent `develop` branch.
+
+### Rationale
+
+This provides a simple separation between stable project state and work in progress without introducing the additional complexity of a long-lived integration branch. The existing Docker/Dev Container workflow is independent of Git branch choice, so the application can be developed and run normally from a working branch.
+
+### Consequences
+
+- `main` remains the stable integration point.
+- Incomplete phase work can remain isolated on its working branch without destabilizing `main`.
+- The next phase should normally be branched from the latest stable `main`.
+- Working branches can contain multiple small logical commits.
+- Pull requests provide a natural final review and verification point before merging.
+- A more complex release or integration branching model will require a separate project decision.
+
+---
+
+## D-024 — Application Data Directory Inside Repository Working Tree
+
+**Status:** Accepted  
+**Date: 2026-09-09
+
+Persistent application data is stored in a top-level `data/` directory inside the repository working tree. The `data/` directory is ignored by Git and is not part of the repository's versioned source or documentation.
+
+The initial SQLite database is:
+
+```text
+/workspaces/coin-catalog/data/coin-catalog.db
+```
+
+### Rationale
+
+Keeping application data under the Dev Container workspace simplifies the development environment and avoids a separate persistent `/data` mount. Git provides the source-control boundary, while `.gitignore` ensures runtime data is not committed.
+
+### Consequences
+
+- The database and future local application data can use a simple repository-relative `data/` path.
+- Git will not track files under `data/`.
+- Branch changes do not alter the local database because the database is not version-controlled.
+- Backup and portability of application data remain separate concerns and will be addressed later.
+
+---
+
+## D-025 — Project Coding Standards
+
+**Status:** Accepted  
+**Date: 2026-09-09
+
+The project follows the coding conventions documented in [`docs/CODING_STANDARDS.md`](CODING_STANDARDS.md).
+
+The standard establishes a deliberately small professional baseline, including:
+
+- PEP 8 and modern Python conventions,
+- Ruff for Python formatting and linting,
+- type hints and Pyright for static type checking,
+- Google-style docstrings for public Python code where useful,
+- pytest for Python testing,
+- Vue 3 and TypeScript conventions for frontend code,
+- explicit error-handling and security practices,
+- focused commits and synchronized documentation.
+
+Tools are introduced and configured when the corresponding development step requires them; listing a tool in the standard does not imply that it has already been installed or configured.
+
+### Rationale
+
+A concise, explicit coding standard provides consistent professional practices without adding unnecessary tooling or process. Keeping detailed standards in a dedicated document prevents `AGENTS.md` and `docs/DEVELOPMENT.md` from becoming overloaded with style rules.
+
+### Consequences
+
+- Contributors and AI agents should follow `docs/CODING_STANDARDS.md`.
+- Changes to coding conventions should be made deliberately and reflected in that document.
+- New tooling should still be justified and introduced incrementally.
+
+---
+
+## D-026 — Alembic for Database Migrations
+
+**Status:** Accepted  
+**Date: 2026-09-11
+
+Alembic is used for versioning and applying database schema changes. SQLAlchemy models define the application's database structure, while Alembic migration revisions record and apply transitions between schema versions.
+
+### Rationale
+
+The coin catalogue database will evolve as new fields, relationships, and features are introduced. Versioned migrations provide a reproducible and reviewable way to create and change the database schema while preserving existing application data.
+
+Alembic integrates directly with SQLAlchemy and fits the project's Git-based development workflow.
+
+### Consequences
+
+- Migration revisions are stored under `backend/migrations/versions/`.
+- Database schema changes must be represented by migration revisions.
+- Alembic's autogeneration may be used as a starting point, but generated migrations must be reviewed before being applied.
+- Database migration state is separate from application/coin data.
+
+---
+
+## D-027 — Singular Database Table Names
+
+**Status:** Accepted  
+**Date: 2026-09-14
+
+Database table names use the singular form. The initial domain tables are:
+
+```text
+coin
+country
+issuer
+denomination
+mint
+material
+state
+era
+```
+
+SQLAlchemy model class names use the corresponding singular PascalCase form, for example `Coin`, `Country`, and `Issuer`.
+
+### Rationale
+
+The project owner selected singular table names as the preferred naming convention for consistency between database tables and their corresponding domain models.
+
+### Consequences
+
+- New database tables should use singular names unless a later decision supersedes this convention.
+- Foreign-key columns follow the corresponding singular entity name, for example `country_id`, `issuer_id`, and `state_id`.
+
+---
+
+## D-028 — Initial Coin Schema
+
+**Status:** Accepted  
+**Date: 2026-09-14
+
+The initial database schema models one `coin` row as one concrete physical coin in the collection. Multiple physically identical coins may therefore have separate `coin` rows.
+
+The `coin` table contains:
+
+```text
+id
+country_id
+issuer_id
+denomination_id
+from_year
+from_era_id
+to_year
+to_era_id
+mint_id
+material_id
+state_id
+description
+weight
+diameter
+has_video
+source
+created_at
+updated_at
+```
+
+Reference tables are:
+
+```text
+country
+issuer
+denomination
+mint
+material
+state
+era
+```
+
+All reference tables contain `id` and a unique, non-null `name`.
+
+`currency` is intentionally not part of the initial schema. `denomination` is the field used to identify the specific denomination of a coin; a separate currency field is not required for the initial catalogue.
+
+The date range is represented by `from_year`/`from_era_id` and `to_year`/`to_era_id`. A single-year coin uses the same value for both endpoints. No database range constraints are imposed on the year values.
+
+`weight` is stored as `NUMERIC` in grams and `diameter` as `NUMERIC` in millimetres. Units are not stored separately.
+
+`has_video` is a non-null boolean with a default of `FALSE`. Direct video URLs are not stored at this stage.
+
+`source` is a single optional `TEXT` field that may contain a URL or free text.
+
+`created_at` and `updated_at` are required UTC timestamps. `updated_at` changes when the record is updated.
+
+Optional coin metadata may be `NULL`; unknown values are not represented by artificial `Unknown` dictionary rows.
+
+### Rationale
+
+The schema is intentionally small while covering the information currently available in the collection. Separate reference tables provide consistent reusable values without introducing speculative attributes. Removing `currency` avoids duplicating or ambiguously defining monetary-system information that is not currently needed.
+
+### Consequences
+
+- The initial Alembic migration creates the schema described above.
+- Future schema changes must use new Alembic migration revisions.
+- Additional fields or reference entities require an explicit design decision when a real requirement appears.
