@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 const coinId = 404
 const oldImage = {
@@ -46,9 +46,13 @@ const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
   eras: [{ id: 1, name: 'Współczesna' }],
 }
 
-async function mockCommonApi(page: Parameters<typeof test>[0]['page']) {
-  let avers = oldImage
-  const uploaded: Array<{ kind: string; replace: boolean; filename: string }> = []
+type UploadCall = {
+  kind: string
+  replace: boolean
+}
+
+async function mockCommonApi(page: Page) {
+  const uploaded: UploadCall[] = []
 
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = route.request().url().split('/').pop() ?? ''
@@ -71,7 +75,7 @@ async function mockCommonApi(page: Parameters<typeof test>[0]['page']) {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([avers, rewersImage]),
+      body: JSON.stringify([oldImage, rewersImage]),
     })
   })
 
@@ -84,27 +88,16 @@ async function mockCommonApi(page: Parameters<typeof test>[0]['page']) {
   })
 
   await page.route(`**/api/coins/${coinId}/images?*`, async (route) => {
-    const request = route.request()
-    const url = new URL(request.url())
-    const kind = url.searchParams.get('kind') ?? ''
-    const replace = url.searchParams.get('replace') === 'true'
-    const filename = request.postData()?.includes('nowy-awers')
-      ? 'nowy-awers.jpg'
-      : 'uploaded.jpg'
-
-    uploaded.push({ kind, replace, filename })
-    if (kind === 'avers') {
-      avers = { ...avers, filename: '000404 - awers.jpg' }
-    }
+    const url = new URL(route.request().url())
+    uploaded.push({
+      kind: url.searchParams.get('kind') ?? '',
+      replace: url.searchParams.get('replace') === 'true',
+    })
 
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
-        ...avers,
-        filename: '000404 - awers.jpg',
-        kind,
-      }),
+      body: JSON.stringify(oldImage),
     })
   })
 
@@ -119,7 +112,7 @@ async function mockCommonApi(page: Parameters<typeof test>[0]['page']) {
   return { uploaded }
 }
 
-async function dropJpeg(page: Parameters<typeof test>[0]['page'], filename: string) {
+async function dropJpeg(page: Page, filename: string): Promise<void> {
   await page.locator('.image-drop-zone').first().evaluate((element, name) => {
     const dataTransfer = new DataTransfer()
     dataTransfer.items.add(new File(['test-image'], name, { type: 'image/jpeg' }))
@@ -133,6 +126,25 @@ async function dropJpeg(page: Parameters<typeof test>[0]['page'], filename: stri
 
 test('podmiana awersu zostaje zapisana i widoczna po powrocie do listy', async ({ page }) => {
   const { uploaded } = await mockCommonApi(page)
+  let coinUpdates = 0
+
+  await page.route(`**/api/coins/${coinId}`, async (route) => {
+    if (route.request().method() === 'PUT') {
+      coinUpdates += 1
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(coin),
+      })
+      return
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(coin),
+    })
+  })
 
   await page.goto(`/monety/${coinId}/edytuj`)
   await expect(page.getByRole('heading', { name: 'Edytuj monetę' })).toBeVisible()
@@ -151,8 +163,9 @@ test('podmiana awersu zostaje zapisana i widoczna po powrocie do listy', async (
   await expect(page.getByText(`#${coinId}`)).toBeVisible()
   await expect(page.getByAltText(`Awers monety #${coinId}`)).toBeVisible()
 
+  expect(coinUpdates).toBe(1)
   expect(uploaded).toEqual([
-    { kind: 'avers', replace: true, filename: 'uploaded.jpg' },
+    { kind: 'avers', replace: true },
   ])
 })
 
@@ -163,12 +176,6 @@ test('anulowanie edycji nie zapisuje podmiany awersu', async ({ page }) => {
   await page.route(`**/api/coins/${coinId}`, async (route) => {
     if (route.request().method() === 'PUT') {
       updates += 1
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(coin),
-      })
-      return
     }
 
     await route.fulfill({
