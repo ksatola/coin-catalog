@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 
-import type { CoinCreate } from '../types'
+import type { Coin, CoinCreate } from '../types'
 
 type DictionaryItem = {
   id: number
@@ -18,11 +18,16 @@ type Dictionaries = {
   eras: DictionaryItem[]
 }
 
-const emit = defineEmits<{
-  submit: [coin: CoinCreate]
+const props = defineProps<{
+  coin?: Coin | null
 }>()
 
-const form = reactive<CoinCreate>({
+const emit = defineEmits<{
+  submit: [coin: CoinCreate]
+  cancel: []
+}>()
+
+const emptyForm: CoinCreate = {
   country_id: 0,
   issuer_id: null,
   denomination_id: 0,
@@ -38,7 +43,9 @@ const form = reactive<CoinCreate>({
   diameter: null,
   has_video: false,
   source: null,
-})
+}
+
+const form = reactive<CoinCreate>({ ...emptyForm })
 
 const dictionaries = reactive<Dictionaries>({
   countries: [],
@@ -52,6 +59,13 @@ const dictionaries = reactive<Dictionaries>({
 
 const validationMessage = ref('')
 const loadErrorMessage = ref('')
+
+const isEditing = () => props.coin !== null && props.coin !== undefined
+
+function loadCoinIntoForm(coin: Coin | null | undefined): void {
+  Object.assign(form, coin ? { ...coin } : { ...emptyForm })
+  validationMessage.value = ''
+}
 
 async function loadDictionary(
   dictionaryName: keyof Dictionaries,
@@ -119,12 +133,14 @@ function submitForm(): void {
   emit('submit', { ...form })
 }
 
+watch(() => props.coin, loadCoinIntoForm, { immediate: true })
+
 onMounted(loadDictionaries)
 </script>
 
 <template>
   <form @submit.prevent="submitForm">
-    <h2>Dodaj monetę</h2>
+    <h2>{{ isEditing() ? 'Edytuj monetę' : 'Dodaj monetę' }}</h2>
 
     <p v-if="loadErrorMessage">{{ loadErrorMessage }}</p>
 
@@ -285,7 +301,13 @@ onMounted(loadDictionaries)
       Ma wideo
     </label>
 
-    <button type="submit">Dodaj monetę</button>
+    <button type="submit">
+      {{ isEditing() ? 'Zapisz zmiany' : 'Dodaj monetę' }}
+    </button>
+
+    <button v-if="isEditing()" type="button" @click="emit('cancel')">
+      Anuluj
+    </button>
 
     <p v-if="validationMessage">{{ validationMessage }}</p>
   </form>
