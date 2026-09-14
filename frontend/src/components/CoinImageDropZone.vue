@@ -14,7 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const isDragging = ref(false)
-const localPreviewUrl = ref<string | null>(props.previewUrl ?? null)
+const localPreviewUrl = ref<string | null>(props.multiple ? null : (props.previewUrl ?? null))
 
 function revokeLocalPreview(): void {
   if (localPreviewUrl.value?.startsWith('blob:')) {
@@ -25,6 +25,10 @@ function revokeLocalPreview(): void {
 watch(
   () => props.previewUrl,
   (previewUrl) => {
+    if (props.multiple) {
+      return
+    }
+
     revokeLocalPreview()
     localPreviewUrl.value = previewUrl ?? null
   },
@@ -40,6 +44,11 @@ function acceptFiles(files: File[]): void {
     return
   }
 
+  if (props.multiple) {
+    emit('files', validFiles)
+    return
+  }
+
   const firstFile = validFiles.at(0)
   if (!firstFile) {
     return
@@ -50,7 +59,7 @@ function acceptFiles(files: File[]): void {
   }
 
   localPreviewUrl.value = URL.createObjectURL(firstFile)
-  emit('files', props.multiple ? validFiles : [firstFile])
+  emit('files', [firstFile])
 }
 
 function handleDrop(event: DragEvent): void {
@@ -68,6 +77,10 @@ function handlePaste(event: ClipboardEvent): void {
 }
 
 function clearImage(): void {
+  if (props.multiple) {
+    return
+  }
+
   revokeLocalPreview()
   localPreviewUrl.value = null
   emit('clear')
