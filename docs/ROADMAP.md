@@ -53,15 +53,29 @@ Completed work includes the minimal FastAPI application and health endpoint, sep
 
 ## Phase 3 — Database Foundation
 
+**Status:** Complete
+
+Establish SQLite and SQLAlchemy as the database foundation, configure database sessions, introduce Alembic migrations, and implement the initial coin catalogue data model.
+
+Completed work includes the initial schema design, SQLAlchemy models for `coin` and its reference tables, the first Alembic migration, and focused database behavior tests. The initial model includes the required coin metadata and relationships accepted for the catalogue foundation.
+
+## Phase 4 — Coin Entry and Browser
+
 **Status:** Current
 
-Introduce SQLite and SQLAlchemy and establish the application's database infrastructure, configuration, session handling, initial migration strategy, initial schema scope, and database testing approach.
+Build the first simple user-facing slice of the application using the existing database model.
 
-Phase 3 begins with design decisions before implementation. The exact database location, configuration, session handling, migration approach, schema scope, and testing approach will be agreed and documented before database code is added.
+Planned work:
 
-## Phase 4 — Coin Data Model
+- Design a simple coin-entry form.
+- Allow creation of a new coin using the existing data model.
+- Add basic form validation.
+- Build a simple browser for coins stored in the database.
+- Display basic coin data in the browser.
+- Add a basic detail view for a selected coin.
+- Verify the complete flow: form → SQLite persistence → coin list → coin details.
 
-Design and implement the core domain model for coins and related metadata.
+The phase intentionally does not include spreadsheet import, image management, search/filtering, collections/tags, or other advanced functionality.
 
 ## Phase 5 — Import Existing Data
 
