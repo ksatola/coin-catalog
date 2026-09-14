@@ -8,7 +8,16 @@ from sqlalchemy.pool import StaticPool
 
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
-from coin_catalog.models import Coin, Country, Denomination, Era, Issuer, Material, Mint, State
+from coin_catalog.models import (
+    Coin,
+    Country,
+    Denomination,
+    Era,
+    Issuer,
+    Material,
+    Mint,
+    State,
+)
 
 
 DICTIONARY_NAMES = (
@@ -322,7 +331,9 @@ def test_dictionary_crud(
 
     assert response.status_code == 200
     items = response.json()
-    assert any(item["id"] == item_id and item["name"] == "Created Item" for item in items)
+    assert any(
+        item["id"] == item_id and item["name"] == "Created Item" for item in items
+    )
 
     response = client.put(
         f"/dictionaries/{dictionary_name}/{item_id}",
