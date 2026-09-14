@@ -88,7 +88,7 @@ onMounted(loadDictionaries)
 
 <template>
   <section>
-    <h2>Szczegóły monety #{{ coin.id }}</h2>
+    <h1>Szczegóły monety #{{ coin.id }}</h1>
 
     <dl>
       <dt>Kraj</dt>
