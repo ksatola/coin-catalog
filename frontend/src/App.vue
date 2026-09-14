@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
+import CoinArchive from './components/CoinArchive.vue'
 import CoinDetail from './components/CoinDetail.vue'
 import CoinForm from './components/CoinForm.vue'
 import CoinList from './components/CoinList.vue'
@@ -8,6 +9,7 @@ import DictionaryEditor from './components/DictionaryEditor.vue'
 import type { Coin, CoinCreate } from './types'
 
 const coins = ref<Coin[]>([])
+const archivedCoins = ref<Coin[]>([])
 const selectedCoin = ref<Coin | null>(null)
 const editingCoin = ref<Coin | null>(null)
 const errorMessage = ref('')
@@ -25,6 +27,24 @@ async function loadCoins(): Promise<void> {
   } catch {
     errorMessage.value = 'Nie udało się pobrać monet.'
   }
+}
+
+async function loadArchivedCoins(): Promise<void> {
+  try {
+    const response = await fetch('/api/coins/archived')
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    archivedCoins.value = await response.json() as Coin[]
+  } catch {
+    errorMessage.value = 'Nie udało się pobrać archiwum.'
+  }
+}
+
+async function loadAllCoins(): Promise<void> {
+  await Promise.all([loadCoins(), loadArchivedCoins()])
 }
 
 function selectCoin(coin: Coin): void {
@@ -63,7 +83,7 @@ async function saveCoin(coinData: CoinCreate): Promise<void> {
     const savedCoin = await response.json() as Coin
     editingCoin.value = null
     selectedCoin.value = savedCoin
-    await loadCoins()
+    await loadAllCoins()
   } catch {
     errorMessage.value = coin
       ? 'Nie udało się zapisać zmian monety.'
@@ -89,13 +109,30 @@ async function archiveCoin(coin: Coin): Promise<void> {
       editingCoin.value = null
     }
 
-    await loadCoins()
+    await loadAllCoins()
   } catch {
     errorMessage.value = 'Nie udało się zarchiwizować monety.'
   }
 }
 
-onMounted(loadCoins)
+async function restoreCoin(coin: Coin): Promise<void> {
+  try {
+    const response = await fetch(`/api/coins/${coin.id}/restore`, {
+      method: 'POST',
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    selectedCoin.value = null
+    await loadAllCoins()
+  } catch {
+    errorMessage.value = 'Nie udało się przywrócić monety.'
+  }
+}
+
+onMounted(loadAllCoins)
 </script>
 
 <template>
@@ -120,6 +157,12 @@ onMounted(loadCoins)
       @details="selectCoin"
       @edit="startEditing"
       @archive="archiveCoin"
+    />
+
+    <CoinArchive
+      :coins="archivedCoins"
+      @details="selectCoin"
+      @restore="restoreCoin"
     />
 
     <CoinDetail v-if="selectedCoin" :coin="selectedCoin" />
