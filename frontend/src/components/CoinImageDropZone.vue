@@ -79,32 +79,103 @@ onBeforeUnmount(revokeLocalPreview)
 <template>
   <section
     class="image-drop-zone"
-    :class="{ dragging: isDragging }"
+    :class="{ dragging: isDragging, 'has-image': localPreviewUrl }"
     tabindex="0"
     @dragover.prevent="isDragging = true"
     @dragleave.prevent="isDragging = false"
     @drop="handleDrop"
     @paste="handlePaste"
   >
-    <h3>{{ title }}</h3>
+    <div v-if="localPreviewUrl" class="image-preview-wrapper">
+      <img
+        class="image-preview"
+        :src="localPreviewUrl"
+        :alt="title"
+      />
 
-    <img
-      v-if="localPreviewUrl"
-      class="image-preview"
-      :src="localPreviewUrl"
-      :alt="title"
-    />
+      <button type="button" @click="clearImage">
+        Usuń zdjęcie
+      </button>
+    </div>
 
-    <p v-else>
-      Przeciągnij JPG tutaj lub kliknij obszar i wklej przez Ctrl+V.
-    </p>
+    <div v-else class="drop-content">
+      <strong>{{ title }}</strong>
+      <span>Przeciągnij JPG lub wklej Ctrl+V</span>
 
-    <p v-if="multiple && pendingCount">
-      Wybrano dodatkowych zdjęć: {{ pendingCount }}
-    </p>
-
-    <button v-if="localPreviewUrl" type="button" @click="clearImage">
-      Usuń zdjęcie
-    </button>
+      <span v-if="multiple && pendingCount">
+        Wybrano zdjęć: {{ pendingCount }}
+      </span>
+    </div>
   </section>
 </template>
+
+<style scoped>
+.image-drop-zone {
+  width: 100%;
+  min-height: 280px;
+  aspect-ratio: 4 / 3;
+  border: 2px dashed #9ca3af;
+  border-radius: 12px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: default;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+  outline: none;
+}
+
+.image-drop-zone:focus-visible {
+  border-color: #2563eb;
+}
+
+.image-drop-zone.dragging {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.image-drop-zone.has-image {
+  border-style: solid;
+  background: #111827;
+}
+
+.drop-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.drop-content strong {
+  font-size: 1.1rem;
+}
+
+.drop-content span {
+  color: #4b5563;
+}
+
+.image-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.image-preview-wrapper button {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+}
+</style>
