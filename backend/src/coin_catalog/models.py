@@ -129,5 +129,5 @@ class Coin(Base):
         foreign_keys=[to_era_id],
     )
     mint: Mapped[Mint | None] = relationship(back_populates="coins")
-    material: Mapped[Material | None] = relationship(back_populates="material")
-    state: Mapped[State | None] = relationship(back_populates="state")
+    material: Mapped[Material | None] = relationship(back_populates="coins")
+    state: Mapped[State | None] = relationship(back_populates="coins")
