@@ -114,13 +114,18 @@ def delete_category(category_id: int, session: Session = Depends(get_db)) -> Non
     category = get_category(category_id, session)
 
     coin_usage = session.scalar(
-        select(Coin.id).join(Coin.categories).where(Category.id == category_id).limit(1)
+        select(Coin.id)
+        .join(Coin.categories)
+        .where(Category.id == category_id)
+        .limit(1)
     )
     relation_usage = session.scalar(
-        select(CategoryRelation.parent_id).where(
+        select(CategoryRelation.parent_id)
+        .where(
             (CategoryRelation.parent_id == category_id)
             | (CategoryRelation.child_id == category_id),
-        ).limit(1)
+        )
+        .limit(1)
     )
 
     if coin_usage is not None or relation_usage is not None:
@@ -203,7 +208,10 @@ def list_children(
     session: Session = Depends(get_db),
 ) -> list[CategoryResponse]:
     category = get_category(category_id, session)
-    return [CategoryResponse.model_validate(child) for child in sorted(category.children, key=lambda item: item.name)]
+    return [
+        CategoryResponse.model_validate(child)
+        for child in sorted(category.children, key=lambda item: item.name)
+    ]
 
 
 @router.get("/{category_id}/parents", response_model=list[CategoryResponse])
@@ -212,4 +220,7 @@ def list_parents(
     session: Session = Depends(get_db),
 ) -> list[CategoryResponse]:
     category = get_category(category_id, session)
-    return [CategoryResponse.model_validate(parent) for parent in sorted(category.parents, key=lambda item: item.name)]
+    return [
+        CategoryResponse.model_validate(parent)
+        for parent in sorted(category.parents, key=lambda item: item.name)
+    ]
