@@ -13,7 +13,9 @@ const viewMode = ref<'grid' | 'list'>('grid')
 
 async function loadCoins(): Promise<void> {
   try {
-    const response = await fetch('/api/coins')
+    const response = await fetch('/api/coins', {
+      cache: 'no-store',
+    })
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
