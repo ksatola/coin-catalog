@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, Text
@@ -98,8 +98,17 @@ class Coin(Base):
     diameter: Mapped[Decimal | None] = mapped_column(Numeric)
     has_video: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     source: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     country: Mapped[Country] = relationship(back_populates="coins")
     issuer: Mapped[Issuer | None] = relationship(back_populates="coins")
