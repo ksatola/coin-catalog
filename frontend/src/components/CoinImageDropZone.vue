@@ -40,11 +40,15 @@ function acceptFiles(files: File[]): void {
     return
   }
 
+  const firstFile = validFiles.at(0)
+  if (!firstFile) {
+    return
+  }
+
   if (localPreviewUrl.value?.startsWith('blob:')) {
     revokeLocalPreview()
   }
 
-  const firstFile = validFiles[0]
   localPreviewUrl.value = URL.createObjectURL(firstFile)
   emit('files', props.multiple ? validFiles : [firstFile])
 }
