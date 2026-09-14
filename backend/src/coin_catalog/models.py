@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -58,7 +60,7 @@ class State(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list[Coin]] = relationship(back_populates="state")
+    coins: Mapped[list[Coin]] = relationship(back_populates="coins")
 
 
 class Era(Base):
