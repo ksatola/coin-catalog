@@ -379,6 +379,24 @@ The preferred workflow is:
 
 The project owner is responsible for reviewing and approving the proposed result; the assistant should minimize manual file-editing work required from the project owner.
 
+### 19.2 GitHub Write Safety
+
+Before updating an existing repository file, the assistant must re-fetch the file from the exact target branch immediately before the write and use the returned **Git blob SHA** for that file update.
+
+A Git blob SHA must never be treated as a commit SHA. Commit SHAs identify commits; blob SHAs identify file contents.
+
+After any GitHub write failure, including `409 Conflict`, `422 Unprocessable Entity`, or an equivalent connector error, the assistant must not retry blindly and must not change repository structure merely to work around the failure.
+
+Instead:
+
+1. Re-read the target branch reference.
+2. Confirm the current branch HEAD commit SHA.
+3. Re-fetch the affected file from that exact branch.
+4. Distinguish the file's blob SHA from the branch's commit SHA.
+5. Diagnose the mismatch or connector problem before attempting another write.
+
+If the connector continues to return contradictory results, report the exact error and stop modifying the repository until the problem is understood or a safe, equivalent write path is established.
+
 ## 20. Current Development Stage
 
 The project is currently in:
