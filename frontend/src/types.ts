@@ -15,6 +15,7 @@ export interface CoinFormSubmit {
     avers: File | null
     rewers: File | null
     additional: File[]
+    additionalDeletes: CoinImage[]
   }
 }
 
