@@ -22,6 +22,10 @@ class CoinCreate(BaseModel):
     source: str | None = None
 
 
+class CoinUpdate(CoinCreate):
+    pass
+
+
 class CoinResponse(CoinCreate):
     model_config = ConfigDict(from_attributes=True)
 
