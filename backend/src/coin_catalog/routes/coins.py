@@ -35,6 +35,16 @@ def list_coins(session: Session = Depends(get_db)) -> list[Coin]:
     return list(session.scalars(statement).all())
 
 
+@router.get("/archived", response_model=list[CoinResponse])
+def list_archived_coins(session: Session = Depends(get_db)) -> list[Coin]:
+    statement = (
+        select(Coin)
+        .where(Coin.is_deleted.is_(True))
+        .order_by(Coin.id)
+    )
+    return list(session.scalars(statement).all())
+
+
 @router.get("/{coin_id}", response_model=CoinResponse)
 def get_coin(
     coin_id: int,
