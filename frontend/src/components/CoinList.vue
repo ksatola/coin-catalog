@@ -25,7 +25,9 @@ async function loadAversImages(): Promise<void> {
   const results = await Promise.all(
     props.coins.map(async (coin) => {
       try {
-        const response = await fetch(`/api/coins/${coin.id}/images`)
+        const response = await fetch(`/api/coins/${coin.id}/images`, {
+          cache: 'no-store',
+        })
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`)
         }
