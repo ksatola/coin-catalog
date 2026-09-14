@@ -151,6 +151,7 @@ backend/
     └── coin_catalog/
         ├── __init__.py
         ├── database.py
+        ├── models.py
         └── main.py
 ```
 
@@ -236,7 +237,7 @@ Create a new migration revision after a model/schema change:
 uv run alembic revision --autogenerate -m "describe schema change"
 ```
 
-Review the generated migration before applying it.
+Review the generated migration before applying it. The assistant should inspect pushed migration files directly in GitHub rather than asking the user to copy or print their contents when the files are already available in the repository.
 
 Apply pending migrations:
 
@@ -259,6 +260,12 @@ backend/migrations/versions/
 ```
 
 The SQLite database itself remains under the Git-ignored `data/` directory.
+
+The initial schema migration has been generated and applied successfully. Its revision is `e6df2f7c0c11`.
+
+The initial schema contains the `coin` table and the reference tables `country`, `issuer`, `denomination`, `mint`, `material`, `state`, and `era`. There is intentionally no `currency` table or `currency_id` column.
+
+The `coin` table uses `from_year`/`from_era_id` and `to_year`/`to_era_id` for the date interval. `weight` is stored as `NUMERIC` grams, `diameter` as `NUMERIC` millimetres, `has_video` as a boolean flag, and `source` as one optional text field. `created_at` and `updated_at` are required UTC timestamps.
 
 ### FastAPI application
 
@@ -354,7 +361,7 @@ npm create vue@latest frontend
 
 If the scaffolding wizard presents a prompt that has not yet been documented or agreed, stop and review the prompt before selecting an option.
 
-### Install frontend dependencies
+## Install frontend dependencies
 
 After scaffolding completed, dependencies were installed from the frontend project directory:
 
@@ -462,7 +469,7 @@ Host-browser access and frontend-to-backend communication were successfully veri
 
 ## Current Scope
 
-At this stage, the development environment, initial Python backend project, FastAPI application skeleton, initial Vue frontend project, and initial database foundation have been established. The FastAPI `/health` endpoint, Vite API proxy, frontend-to-backend health display, SQLAlchemy database session, initial database session test, and Alembic migration tooling have been verified.
+At this stage, the development environment, initial Python backend project, FastAPI application skeleton, initial Vue frontend project, and initial database foundation have been established. The FastAPI `/health` endpoint, Vite API proxy, frontend-to-backend health display, SQLAlchemy database session, initial database session test, SQLAlchemy coin/reference models, and Alembic initial migration have been verified.
 
 The approved Phase 2 development-server arrangement is:
 
@@ -470,6 +477,6 @@ The approved Phase 2 development-server arrangement is:
 - FastAPI on port `8000`
 - Vite `/api` proxy forwarding to FastAPI and removing the `/api` prefix
 
-The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, database schema, and other application functionality will be introduced in later agreed steps.
+The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, API contracts, image management, and other application functionality will be introduced in later agreed steps.
 
 Do not install project dependencies manually before the corresponding development step is agreed and documented.
