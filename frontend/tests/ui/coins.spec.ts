@@ -43,7 +43,10 @@ const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
   mints: [],
   materials: [],
   states: [],
-  eras: [{ id: 1, name: 'Współczesna' }],
+  eras: [
+    { id: 1, name: 'Współczesna' },
+    { id: 2, name: 'AD' },
+  ],
 }
 
 type UploadCall = {
@@ -262,4 +265,35 @@ test('dodanie zdjęcia dodatkowego zostaje wysłane bez zastępowania', async ({
   expect(uploaded).toEqual([
     { kind: 'additional', replace: false },
   ])
+})
+
+test('przedział między erą BC i AD nie jest blokowany przez kolejność wartości roku', async ({ page }) => {
+  const { uploaded } = await mockCommonApi(page)
+  let updates = 0
+
+  await page.route(`**/api/coins/${coinId}`, async (route) => {
+    if (route.request().method() === 'PUT') {
+      updates += 1
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(coin),
+    })
+  })
+
+  await page.goto(`/monety/${coinId}/edytuj`)
+  await expect(page.getByRole('heading', { name: 'Edytuj monetę' })).toBeVisible()
+
+  await page.getByLabel('Era od').selectOption('1')
+  await page.getByLabel('Rok od').fill('476')
+  await page.getByLabel('Era do').selectOption('2')
+  await page.getByLabel('Rok do').fill('1')
+
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+  await page.waitForURL(`/monety/${coinId}`)
+
+  expect(updates).toBe(1)
+  expect(uploaded).toHaveLength(0)
 })
