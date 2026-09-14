@@ -4,17 +4,22 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
+import coin_catalog.database as database
+
 
 def test_categories_and_images_migration_upgrade_and_downgrade(
     tmp_path: Path,
+    monkeypatch,
 ) -> None:
     database_path = tmp_path / "migration.db"
-    engine = create_engine(f"sqlite:///{database_path}")
+    database_url = f"sqlite:///{database_path}"
+    engine = create_engine(database_url)
+
+    monkeypatch.setattr(database, "DATABASE_URL", database_url)
 
     config = Config(
         str(Path(__file__).parents[1] / "alembic.ini"),
     )
-    config.set_main_option("sqlalchemy.url", f"sqlite:///{database_path}")
 
     command.upgrade(config, "7a1b2c3d4e5f")
 
