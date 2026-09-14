@@ -111,11 +111,12 @@ onBeforeUnmount(revokeLocalPreview)
 
 <style scoped>
 .image-drop-zone {
-  width: 100%;
-  min-height: 280px;
-  aspect-ratio: 4 / 3;
+  width: 100px;
+  height: 100px;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
   border: 2px dashed #9ca3af;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f8fafc;
   display: flex;
   align-items: center;
@@ -143,17 +144,18 @@ onBeforeUnmount(revokeLocalPreview)
 }
 
 .drop-content {
-  padding: 24px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 4px;
   text-align: center;
+  font-size: 0.75rem;
 }
 
 .drop-content strong {
-  font-size: 1.1rem;
+  font-size: 0.8rem;
 }
 
 .drop-content span {
@@ -175,7 +177,9 @@ onBeforeUnmount(revokeLocalPreview)
 
 .image-preview-wrapper button {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  right: 4px;
+  bottom: 4px;
+  font-size: 0.7rem;
+  padding: 3px 5px;
 }
 </style>
