@@ -114,10 +114,7 @@ def delete_category(category_id: int, session: Session = Depends(get_db)) -> Non
     category = get_category(category_id, session)
 
     coin_usage = session.scalar(
-        select(Coin.id)
-        .join(Coin.categories)
-        .where(Category.id == category_id)
-        .limit(1)
+        select(Coin.id).join(Coin.categories).where(Category.id == category_id).limit(1)
     )
     relation_usage = session.scalar(
         select(CategoryRelation.parent_id)
