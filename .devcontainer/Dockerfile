@@ -14,6 +14,9 @@ RUN apt-get update \
         git \
         build-essential \
         xz-utils \
+        procps \
+        iproute2 \
+        psmisc \
     && case "$(dpkg --print-architecture)" in \
         amd64) NODE_ARCH="x64" ;; \
         arm64) NODE_ARCH="arm64" ;; \
