@@ -81,6 +81,7 @@ coin-catalog/
 │       └── coin_catalog/
 │           ├── __init__.py
 │           ├── database.py
+│           ├── models.py
 │           └── main.py
 └── frontend/
     ├── package.json
@@ -144,6 +145,29 @@ SQLAlchemy provides the application's database abstraction and ORM layer.
 
 Alembic provides database schema migration and versioning. Migration revisions are stored under `backend/migrations/versions/` and are used to create and evolve the database schema.
 
+The initial schema has been implemented and its first Alembic migration has been generated and applied. The initial domain tables are:
+
+```text
+coin
+country
+issuer
+denomination
+mint
+material
+state
+era
+```
+
+The `coin` table represents one concrete physical coin in the collection. Reference tables provide reusable values for country, issuer, denomination, mint, material, state, and era.
+
+`currency` is not part of the initial schema. `denomination` identifies the specific denomination of a coin.
+
+The initial `coin` date representation uses `from_year`/`from_era_id` and `to_year`/`to_era_id`. A single-year coin uses identical endpoints. No database range constraints are imposed on the year values.
+
+`weight` is stored as `NUMERIC` in grams and `diameter` as `NUMERIC` in millimetres. `has_video` is a boolean flag; direct video URLs are not stored at this stage. `source` is a single optional text field.
+
+`created_at` and `updated_at` are required UTC timestamps.
+
 Conceptually:
 
 ```text
@@ -159,7 +183,7 @@ SQLAlchemy ─────► Alembic
 SQLite         Schema Migrations
 ```
 
-The detailed database schema will be designed in a later development phase.
+The current database foundation has been verified with the backend test suite and Alembic migration commands. Further schema changes should be introduced through new reviewed migration revisions.
 
 ---
 
@@ -345,9 +369,7 @@ A production/deployment architecture will be defined separately when the applica
 
 The following are intentionally **not yet fully specified**:
 
-- detailed database schema,
-- coin entity model,
-- API contract,
+- detailed API contract,
 - frontend component hierarchy,
 - image directory structure,
 - spreadsheet import mapping,
@@ -356,6 +378,6 @@ The following are intentionally **not yet fully specified**:
 - backup mechanism,
 - production deployment,
 - CI/CD pipeline,
-- testing framework details.
+- testing framework details beyond the currently established backend pytest checks.
 
-These should be decided when their respective implementation phases are reached rather than being designed speculatively.
+The initial database schema and coin data model have now been specified and implemented as part of Phase 3. Future changes should be introduced when justified by actual requirements.
