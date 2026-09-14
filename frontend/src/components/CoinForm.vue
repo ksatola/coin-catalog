@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 import CoinImageDropZone from './CoinImageDropZone.vue'
 import type { Coin, CoinCreate, CoinFormSubmit, CoinImage } from '../types'
@@ -26,6 +26,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   submit: [payload: CoinFormSubmit]
   cancel: []
+  deleteAdditional: [image: CoinImage]
 }>()
 
 const emptyForm: CoinCreate = {
@@ -66,6 +67,7 @@ const primaryImages = reactive<{
   rewers: null,
 })
 
+const additionalImages = ref<CoinImage[]>([])
 const pendingFiles = reactive<{
   avers: File | null
   rewers: File | null
@@ -75,6 +77,7 @@ const pendingFiles = reactive<{
   rewers: null,
   additional: [],
 })
+const pendingAdditionalPreviewUrls = ref<string[]>([])
 
 const validationMessage = ref('')
 const loadErrorMessage = ref('')
@@ -82,12 +85,28 @@ const imageErrorMessage = ref('')
 
 const isEditing = () => props.coin !== null && props.coin !== undefined
 
+function revokePendingAdditionalPreviewUrls(): void {
+  for (const url of pendingAdditionalPreviewUrls.value) {
+    URL.revokeObjectURL(url)
+  }
+  pendingAdditionalPreviewUrls.value = []
+}
+
+function rebuildPendingAdditionalPreviewUrls(): void {
+  revokePendingAdditionalPreviewUrls()
+  pendingAdditionalPreviewUrls.value = pendingFiles.additional.map((file) =>
+    URL.createObjectURL(file),
+  )
+}
+
 function clearImages(): void {
   primaryImages.avers = null
   primaryImages.rewers = null
+  additionalImages.value = []
   pendingFiles.avers = null
   pendingFiles.rewers = null
   pendingFiles.additional = []
+  revokePendingAdditionalPreviewUrls()
   imageErrorMessage.value = ''
 }
 
@@ -106,6 +125,7 @@ async function loadCoinImages(coin: Coin | null | undefined): Promise<void> {
     const images = await response.json() as CoinImage[]
     primaryImages.avers = images.find((image) => image.kind === 'avers') ?? null
     primaryImages.rewers = images.find((image) => image.kind === 'rewers') ?? null
+    additionalImages.value = images.filter((image) => image.kind === 'additional')
   } catch {
     imageErrorMessage.value = 'Nie udało się pobrać zdjęć monety.'
   }
@@ -132,10 +152,21 @@ function clearPrimary(kind: 'avers' | 'rewers'): void {
 
 function addAdditionalFiles(files: File[]): void {
   pendingFiles.additional.push(...files)
+  rebuildPendingAdditionalPreviewUrls()
+}
+
+function removePendingAdditional(index: number): void {
+  pendingFiles.additional.splice(index, 1)
+  rebuildPendingAdditionalPreviewUrls()
+}
+
+function removeAdditionalImage(image: CoinImage): void {
+  emit('deleteAdditional', image)
 }
 
 function clearAdditionalFiles(): void {
   pendingFiles.additional = []
+  revokePendingAdditionalPreviewUrls()
 }
 
 async function loadDictionary(
@@ -233,6 +264,7 @@ function loadCoinIntoForm(coin: Coin | null | undefined): void {
 watch(() => props.coin, loadCoinIntoForm, { immediate: true })
 
 onMounted(loadDictionaries)
+onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 </script>
 
 <template>
@@ -242,7 +274,7 @@ onMounted(loadDictionaries)
     <p v-if="loadErrorMessage">{{ loadErrorMessage }}</p>
     <p v-if="imageErrorMessage">{{ imageErrorMessage }}</p>
 
-    <div>
+    <div class="primary-image-fields">
       <CoinImageDropZone
         title="Awers"
         :preview-url="imageUrl(primaryImages.avers)"
@@ -256,14 +288,58 @@ onMounted(loadDictionaries)
         @files="setPrimaryFile('rewers', $event)"
         @clear="clearPrimary('rewers')"
       />
+    </div>
 
-      <CoinImageDropZone
-        title="Zdjęcia dodatkowe"
-        multiple
-        :pending-count="pendingFiles.additional.length"
-        @files="addAdditionalFiles"
-        @clear="clearAdditionalFiles"
-      />
+    <div class="additional-image-section">
+      <h3>Zdjęcia dodatkowe</h3>
+
+      <div class="additional-image-controls">
+        <CoinImageDropZone
+          title="Dodaj zdjęcia"
+          multiple
+          :pending-count="pendingFiles.additional.length"
+          @files="addAdditionalFiles"
+          @clear="clearAdditionalFiles"
+        />
+
+        <div
+          v-if="additionalImages.length || pendingAdditionalPreviewUrls.length"
+          class="additional-image-list"
+        >
+          <figure
+            v-for="image in additionalImages"
+            :key="`existing-${image.id}`"
+            class="additional-image-card"
+          >
+            <img
+              :src="imageUrl(image) ?? undefined"
+              :alt="image.filename"
+            />
+            <figcaption>{{ image.filename }}</figcaption>
+            <button
+              type="button"
+              @click="removeAdditionalImage(image)"
+            >
+              Usuń
+            </button>
+          </figure>
+
+          <figure
+            v-for="(url, index) in pendingAdditionalPreviewUrls"
+            :key="`pending-${index}`"
+            class="additional-image-card"
+          >
+            <img :src="url" :alt="pendingFiles.additional[index]?.name" />
+            <figcaption>{{ pendingFiles.additional[index]?.name }}</figcaption>
+            <button
+              type="button"
+              @click="removePendingAdditional(index)"
+            >
+              Usuń
+            </button>
+          </figure>
+        </div>
+      </div>
     </div>
 
     <label>
@@ -434,3 +510,56 @@ onMounted(loadDictionaries)
     <p v-if="validationMessage">{{ validationMessage }}</p>
   </form>
 </template>
+
+<style scoped>
+.primary-image-fields {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.additional-image-section {
+  margin-bottom: 24px;
+}
+
+.additional-image-controls {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.additional-image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.additional-image-card {
+  width: 140px;
+  margin: 0;
+}
+
+.additional-image-card img {
+  display: block;
+  width: 100%;
+  height: 100px;
+  object-fit: contain;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.additional-image-card figcaption {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.additional-image-card button {
+  margin-top: 6px;
+}
+</style>
