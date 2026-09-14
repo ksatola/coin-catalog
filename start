@@ -30,7 +30,31 @@ start_service() {
     ) >"$log_file" 2>&1 &
 
     echo $! >"$pid_file"
-    echo "Started $name (PID $(cat "$pid_file"))"
+}
+
+show_start_status() {
+    echo
+    printf "%-10s %-8s %-8s %s\n" "Service" "Status" "PID" "Address"
+
+    for name_port in "backend:8000" "frontend:5173"; do
+        local name="${name_port%%:*}"
+        local port="${name_port##*:}"
+        local pid_file="$RUN_DIR/$name.pid"
+
+        if [[ -f "$pid_file" ]]; then
+            local pid
+            pid="$(cat "$pid_file")"
+
+            if kill -0 "$pid" 2>/dev/null; then
+                printf "%-10s %-8s %-8s http://localhost:%s\n" \
+                    "$name" "OK" "$pid" "$port"
+                continue
+            fi
+        fi
+
+        printf "%-10s %-8s %-8s %s\n" \
+            "$name" "FAILED" "-" "http://localhost:$port"
+    done
 }
 
 start_service \
@@ -45,5 +69,8 @@ start_service \
 
 echo
 echo "Coin Catalog started."
-echo "Frontend: http://localhost:5173/"
-echo "Backend:  http://localhost:8000/"
+show_start_status
+echo
+echo "Logs:"
+echo "  backend  $RUN_DIR/backend.log"
+echo "  frontend $RUN_DIR/frontend.log"
