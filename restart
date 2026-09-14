@@ -6,3 +6,4 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 "$ROOT_DIR/stop"
 echo
 "$ROOT_DIR/start"
+
