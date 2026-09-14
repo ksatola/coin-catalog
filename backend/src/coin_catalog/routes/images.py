@@ -1,6 +1,15 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -28,7 +37,11 @@ def get_coin(coin_id: int, session: Session) -> Coin:
 def validate_jpeg(upload: UploadFile) -> None:
     filename = (upload.filename or "").lower()
     content_type = (upload.content_type or "").lower()
-    if not filename.endswith(".jpg") or content_type not in {"image/jpeg", "image/jpg", ""}:
+    if not filename.endswith(".jpg") or content_type not in {
+        "image/jpeg",
+        "image/jpg",
+        "",
+    }:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only JPG images are supported",
@@ -55,7 +68,7 @@ def list_images(
     session: Session = Depends(get_db),
 ) -> list[CoinImage]:
     coin = get_coin(coin_id, session)
-    return list(sorted(coin.images, key=lambda image: image.sort_order))
+    return sorted(coin.images, key=lambda image: image.sort_order)
 
 
 @router.get("/{image_id}/file")
