@@ -13,7 +13,9 @@ const errorMessage = ref('')
 
 async function loadCoin(): Promise<void> {
   try {
-    const response = await fetch(`/api/coins/${route.params.id}`)
+    const response = await fetch(`/api/coins/${route.params.id}`, {
+      cache: 'no-store',
+    })
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
