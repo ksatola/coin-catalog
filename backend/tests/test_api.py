@@ -19,7 +19,6 @@ from coin_catalog.models import (
     State,
 )
 
-
 DICTIONARY_NAMES = (
     "countries",
     "issuers",
