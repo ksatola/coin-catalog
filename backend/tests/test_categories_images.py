@@ -113,8 +113,11 @@ def test_image_upload_uses_six_digit_filename(
     client: TestClient,
     coin: Coin,
     tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    images.IMAGES_DIR = tmp_path
+    image_dir = tmp_path / "images"
+    image_dir.mkdir()
+    monkeypatch.setattr(images, "IMAGES_DIR", image_dir)
 
     response = client.post(
         f"/coins/{coin.id}/images",
@@ -124,15 +127,18 @@ def test_image_upload_uses_six_digit_filename(
 
     assert response.status_code == 201
     assert response.json()["filename"] == f"{coin.id:06d} - 01.jpg"
-    assert (tmp_path / f"{coin.id:06d} - 01.jpg").read_bytes() == b"jpg-data"
+    assert (image_dir / f"{coin.id:06d} - 01.jpg").read_bytes() == b"jpg-data"
 
 
 def test_primary_image_requires_explicit_replace(
     client: TestClient,
     coin: Coin,
     tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    images.IMAGES_DIR = tmp_path
+    image_dir = tmp_path / "images"
+    image_dir.mkdir()
+    monkeypatch.setattr(images, "IMAGES_DIR", image_dir)
 
     first = client.post(
         f"/coins/{coin.id}/images",
@@ -154,7 +160,7 @@ def test_primary_image_requires_explicit_replace(
         files={"upload": ("source.jpg", b"second", "image/jpeg")},
     )
     assert replacement.status_code == 200
-    assert (tmp_path / f"{coin.id:06d} - avers.jpg").read_bytes() == b"second"
+    assert (image_dir / f"{coin.id:06d} - avers.jpg").read_bytes() == b"second"
 
 
 @pytest.mark.parametrize("kind", ["avers", "rewers"])
@@ -163,8 +169,12 @@ def test_primary_image_cannot_be_deleted(
     coin: Coin,
     kind: str,
     tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    images.IMAGES_DIR = tmp_path
+    image_dir = tmp_path / "images"
+    image_dir.mkdir()
+    monkeypatch.setattr(images, "IMAGES_DIR", image_dir)
+
     created = client.post(
         f"/coins/{coin.id}/images",
         params={"kind": kind},
