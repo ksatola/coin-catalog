@@ -1,0 +1,24 @@
+export interface CoinCreate {
+  country_id: number
+  issuer_id: number | null
+  denomination_id: number
+  from_year: number
+  from_era_id: number
+  to_year: number
+  to_era_id: number
+  mint_id: number | null
+  material_id: number | null
+  state_id: number | null
+  description: string | null
+  weight: number | null
+  diameter: number | null
+  has_video: boolean
+  source: string | null
+}
+
+export interface Coin extends CoinCreate {
+  id: number
+  is_deleted: boolean
+  created_at: string
+  updated_at: string
+}
