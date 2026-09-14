@@ -143,12 +143,28 @@ No additional database-foundation work is currently planned for this phase.
 
 **Status:** In progress
 
-Planned work:
+Implemented and verified so far:
 
-- [ ] Design a simple coin-entry form.
-- [ ] Allow creation of a new coin using the existing data model.
-- [ ] Add basic form validation.
-- [ ] Build a simple browser for coins stored in the database.
+- [x] Initial coin creation API implemented.
+- [x] Coin list API implemented.
+- [x] Coin detail API implemented.
+- [x] Dictionary list API implemented for all seven reference dictionaries.
+- [x] Dictionary create API implemented for all seven reference dictionaries.
+- [x] Dictionary update API implemented for all seven reference dictionaries.
+- [x] Dictionary delete API implemented for all seven reference dictionaries.
+- [x] Dictionary deletion is blocked with HTTP 409 when the item is referenced by a coin.
+- [x] Era deletion protection covers both `from_era_id` and `to_era_id`.
+- [x] Dictionary editor UI implemented for all seven dictionaries.
+- [x] Dictionary editor supports add, edit, and delete operations.
+- [x] Dev Container/Vite file watching issue diagnosed and resolved with Vite polling.
+- [x] Backend CRUD behavior verified with pytest; current result: 25 passing tests.
+
+Remaining Phase 4 work:
+
+- [ ] Replace manual coin foreign-key ID entry with dictionary-backed selectors in the coin-entry form.
+- [ ] Complete basic coin-form validation.
+- [ ] Complete the user-facing coin creation flow.
+- [ ] Build the coin browser UI.
 - [ ] Display basic coin data in the browser.
 - [ ] Add a basic detail view for a selected coin.
 - [ ] Verify the complete flow: form → SQLite persistence → coin list → coin details.
@@ -314,6 +330,12 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Verified Ruff and pytest after test cleanup; pytest reports 5 passing tests.
 - Closed Phase 3 Database Foundation and defined Phase 4 as the first simple user-facing coin entry and browser flow.
 - Updated the roadmap to reflect the completed database foundation and the new Phase 4 scope.
+- Implemented CRUD operations for all seven reference dictionaries.
+- Implemented safe hard deletion of dictionary entries, blocked with HTTP 409 when an entry is referenced by a coin.
+- Added dictionary editor UI with add, edit, and delete actions.
+- Added tests covering dictionary CRUD and reference-protected deletion.
+- Diagnosed a Dev Container/Vite file-watching issue and enabled Vite polling to ensure source changes are reflected in the development UI.
+- Added the accepted soft-delete decision for coins.
 
 ### 2026-09-11
 

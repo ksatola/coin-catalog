@@ -88,7 +88,7 @@ SQLAlchemy is the database abstraction/ORM layer. Database models and database a
 ## D-009 — Web Application UI
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 The primary UI is a web application accessed through a browser on the host. A native desktop GUI is not the current UI architecture. Frontend and backend communicate over HTTP.
 
@@ -97,7 +97,7 @@ The primary UI is a web application accessed through a browser on the host. A na
 ## D-010 — Vue 3 Frontend
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Vue 3 is the frontend framework. Frontend functionality is organized primarily into Vue components.
 
@@ -106,7 +106,7 @@ Vue 3 is the frontend framework. Frontend functionality is organized primarily i
 ## D-011 — TypeScript
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 TypeScript is used for frontend development to improve maintainability and provide static typing for the growing frontend codebase.
 
@@ -115,7 +115,7 @@ TypeScript is used for frontend development to improve maintainability and provi
 ## D-012 — Vite
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Vite is the frontend development and build tool for the Vue/TypeScript application.
 
@@ -124,7 +124,7 @@ Vite is the frontend development and build tool for the Vue/TypeScript applicati
 ## D-013 — Coin Photographs Stored as Files
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Original coin photographs are stored as external files rather than SQLite BLOBs. The database stores references and metadata. Exact storage layout and backup strategy will be decided during image management implementation.
 
@@ -133,7 +133,7 @@ Original coin photographs are stored as external files rather than SQLite BLOBs.
 ## D-014 — Existing XLS/XLSX Data as Import Source
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Existing XLS/XLSX data will be imported into the application database. Exact spreadsheet structure, mappings, validation, and duplicate handling will be determined during the import phase.
 
@@ -142,7 +142,7 @@ Existing XLS/XLSX data will be imported into the application database. Exact spr
 ## D-015 — Current Development Priority
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Development begins with the development environment rather than application features. The first implementation phase is **Phase 1 — Development Environment**.
 
@@ -151,7 +151,7 @@ Development begins with the development environment rather than application feat
 ## D-016 — Development Container Runtime Versions
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The Dev Container uses:
 
@@ -166,7 +166,7 @@ These tools are provided inside the container rather than installed on the host.
 ## D-017 — Stable and Pinned Dependency Policy
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 Development tools and project dependencies use explicitly selected and pinned versions wherever supported. Stable production-quality releases are preferred; prerelease and experimental releases are not used by default. Dependency upgrades are deliberate and tested changes.
 
@@ -175,7 +175,7 @@ Development tools and project dependencies use explicitly selected and pinned ve
 ## D-018 — Verified State / Fact-Based Development
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 Current project state, completed work, configuration, and test results must be based on facts and verified whenever possible. Assumptions and plans must not be presented as facts. Failures, incomplete work, and unverifiable states must be stated clearly. `docs/PROGRESS.md` records only verified current state.
 
@@ -184,7 +184,7 @@ Current project state, completed work, configuration, and test results must be b
 ## D-019 — Separate Backend and Frontend Source Trees
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The repository uses separate top-level `backend/` and `frontend/` project directories.
 
@@ -217,7 +217,7 @@ Separate source trees prevent Python and frontend `src/` directories from being 
 ## D-020 — Vite Development Proxy for Backend API
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 During development, the Vue frontend communicates with the FastAPI backend through relative `/api/...` paths. Vite proxies these requests to the FastAPI development server on port 8000.
 
@@ -237,7 +237,7 @@ The proxy keeps the browser-facing development application on a single origin wh
 ## D-021 — Separate Frontend and Backend Development Servers
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The frontend and backend run as separate development servers inside the Dev Container:
 
@@ -261,7 +261,7 @@ Keeping the servers independent preserves clear frontend/backend boundaries and 
 ## D-022 — Minimal Backend Application Structure
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The initial FastAPI backend uses the following minimal structure:
 
@@ -292,7 +292,7 @@ The application skeleton should establish a runnable backend without prematurely
 ## D-023 — Stable `main` and Phase-Based Working Branches
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 `main` is the project's stable branch. Development and experimentation must take place on dedicated working branches and must not be committed directly to `main`.
 
@@ -332,7 +332,7 @@ This provides a simple separation between stable project state and work in progr
 ## D-024 — Application Data Directory Inside Repository Working Tree
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 Persistent application data is stored in a top-level `data/` directory inside the repository working tree. The `data/` directory is ignored by Git and is not part of the repository's versioned source or documentation.
 
@@ -358,7 +358,7 @@ Keeping application data under the Dev Container workspace simplifies the develo
 ## D-025 — Project Coding Standards
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The project follows the coding conventions documented in [`docs/CODING_STANDARDS.md`](CODING_STANDARDS.md).
 
@@ -390,7 +390,7 @@ A concise, explicit coding standard provides consistent professional practices w
 ## D-026 — Alembic for Database Migrations
 
 **Status:** Accepted  
-**Date: 2026-09-11
+**Date:** 2026-09-11
 
 Alembic is used for versioning and applying database schema changes. SQLAlchemy models define the application's database structure, while Alembic migration revisions record and apply transitions between schema versions.
 
@@ -412,7 +412,7 @@ Alembic integrates directly with SQLAlchemy and fits the project's Git-based dev
 ## D-027 — Singular Database Table Names
 
 **Status:** Accepted  
-**Date: 2026-09-14
+**Date:** 2026-09-14
 
 Database table names use the singular form. The initial domain tables are:
 
@@ -443,7 +443,7 @@ The project owner selected singular table names as the preferred naming conventi
 ## D-028 — Initial Coin Schema
 
 **Status:** Accepted  
-**Date: 2026-09-14
+**Date:** 2026-09-14
 
 The initial database schema models one `coin` row as one concrete physical coin in the collection. Multiple physically identical coins may therefore have separate `coin` rows.
 
@@ -507,3 +507,50 @@ The schema is intentionally small while covering the information currently avail
 - The initial Alembic migration creates the schema described above.
 - Future schema changes must use new Alembic migration revisions.
 - Additional fields or reference entities require an explicit design decision when a real requirement appears.
+
+---
+
+## D-029 — Soft Delete for Coins
+
+**Status:** Accepted  
+**Date:** 2026-09-14
+
+Coins are never permanently deleted through normal application functionality.
+
+The `coin` table contains:
+
+```text
+is_deleted
+```
+
+The field is a non-null boolean with a default value of `FALSE`.
+
+Semantics:
+
+- `FALSE` — active coin
+- `TRUE` — deleted/archived coin
+
+Normal coin-list operations return active coins only unless a future feature explicitly requests deleted coins.
+
+The application uses archival operations rather than permanent deletion:
+
+```text
+POST /api/coins/{id}/archive
+POST /api/coins/{id}/restore
+```
+
+A future UI delete action therefore archives the coin by setting `is_deleted = TRUE`.
+
+Permanent database deletion of coins is not part of the normal application workflow.
+
+### Rationale
+
+The catalogue represents physical collection data. Accidental deletion should therefore be reversible, while the database should retain the historical record.
+
+### Consequences
+
+- New coins are created with `is_deleted = FALSE`.
+- Normal coin browsing excludes deleted coins.
+- Archive and restore are explicit operations.
+- No normal application endpoint performs a hard `DELETE` on a coin.
+- Future UI work must preserve this behavior.
