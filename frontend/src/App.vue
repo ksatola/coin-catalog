@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
+import CoinDetail from './components/CoinDetail.vue'
 import CoinForm from './components/CoinForm.vue'
 import CoinList from './components/CoinList.vue'
 import DictionaryEditor from './components/DictionaryEditor.vue'
 import type { Coin, CoinCreate } from './types'
 
 const coins = ref<Coin[]>([])
+const selectedCoin = ref<Coin | null>(null)
+const editingCoin = ref<Coin | null>(null)
 const errorMessage = ref('')
 
 async function loadCoins(): Promise<void> {
@@ -24,23 +27,71 @@ async function loadCoins(): Promise<void> {
   }
 }
 
-async function createCoin(coinData: CoinCreate): Promise<void> {
+function selectCoin(coin: Coin): void {
+  selectedCoin.value = coin
+  editingCoin.value = null
+}
+
+function startEditing(coin: Coin): void {
+  editingCoin.value = coin
+  selectedCoin.value = null
+}
+
+function cancelEditing(): void {
+  editingCoin.value = null
+}
+
+async function saveCoin(coinData: CoinCreate): Promise<void> {
+  const coin = editingCoin.value
+
   try {
-    const response = await fetch('/api/coins', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      coin ? `/api/coins/${coin.id}` : '/api/coins',
+      {
+        method: coin ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(coinData),
       },
-      body: JSON.stringify(coinData),
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const savedCoin = await response.json() as Coin
+    editingCoin.value = null
+    selectedCoin.value = savedCoin
+    await loadCoins()
+  } catch {
+    errorMessage.value = coin
+      ? 'Nie udało się zapisać zmian monety.'
+      : 'Nie udało się zapisać monety.'
+  }
+}
+
+async function archiveCoin(coin: Coin): Promise<void> {
+  try {
+    const response = await fetch(`/api/coins/${coin.id}/archive`, {
+      method: 'POST',
     })
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
 
+    if (selectedCoin.value?.id === coin.id) {
+      selectedCoin.value = null
+    }
+
+    if (editingCoin.value?.id === coin.id) {
+      editingCoin.value = null
+    }
+
     await loadCoins()
   } catch {
-    errorMessage.value = 'Nie udało się zapisać monety.'
+    errorMessage.value = 'Nie udało się zarchiwizować monety.'
   }
 }
 
@@ -53,10 +104,24 @@ onMounted(loadCoins)
 
     <DictionaryEditor />
 
-    <CoinForm @submit="createCoin" />
+    <CoinForm
+      v-if="editingCoin"
+      :coin="editingCoin"
+      @submit="saveCoin"
+      @cancel="cancelEditing"
+    />
+
+    <CoinForm v-else @submit="saveCoin" />
 
     <p v-if="errorMessage">{{ errorMessage }}</p>
 
-    <CoinList :coins="coins" />
+    <CoinList
+      :coins="coins"
+      @details="selectCoin"
+      @edit="startEditing"
+      @archive="archiveCoin"
+    />
+
+    <CoinDetail v-if="selectedCoin" :coin="selectedCoin" />
   </main>
 </template>
