@@ -34,3 +34,4 @@ for name_port in "backend:8000" "frontend:5173"; do
     echo "  URL:     http://localhost:$port"
     echo
 done
+
