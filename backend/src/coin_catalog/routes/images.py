@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -55,6 +56,35 @@ def list_images(
 ) -> list[CoinImage]:
     coin = get_coin(coin_id, session)
     return list(sorted(coin.images, key=lambda image: image.sort_order))
+
+
+@router.get("/{image_id}/file")
+def get_image_file(
+    coin_id: int,
+    image_id: int,
+    session: Session = Depends(get_db),
+) -> FileResponse:
+    get_coin(coin_id, session)
+    image = session.scalar(
+        select(CoinImage).where(
+            CoinImage.id == image_id,
+            CoinImage.coin_id == coin_id,
+        )
+    )
+    if image is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found",
+        )
+
+    target = IMAGES_DIR / image.filename
+    if not target.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image file not found",
+        )
+
+    return FileResponse(target, media_type="image/jpeg")
 
 
 @router.post("", response_model=CoinImageResponse, status_code=status.HTTP_201_CREATED)

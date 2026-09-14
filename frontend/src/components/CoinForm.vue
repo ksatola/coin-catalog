@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue'
 
-import type { Coin, CoinCreate } from '../types'
+import CoinImageDropZone from './CoinImageDropZone.vue'
+import type { Coin, CoinCreate, CoinFormSubmit, CoinImage } from '../types'
 
 type DictionaryItem = {
   id: number
@@ -23,7 +24,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  submit: [coin: CoinCreate]
+  submit: [payload: CoinFormSubmit]
   cancel: []
 }>()
 
@@ -57,14 +58,84 @@ const dictionaries = reactive<Dictionaries>({
   eras: [],
 })
 
+const primaryImages = reactive<{
+  avers: CoinImage | null
+  rewers: CoinImage | null
+}>({
+  avers: null,
+  rewers: null,
+})
+
+const pendingFiles = reactive<{
+  avers: File | null
+  rewers: File | null
+  additional: File[]
+}>({
+  avers: null,
+  rewers: null,
+  additional: [],
+})
+
 const validationMessage = ref('')
 const loadErrorMessage = ref('')
+const imageErrorMessage = ref('')
 
 const isEditing = () => props.coin !== null && props.coin !== undefined
 
-function loadCoinIntoForm(coin: Coin | null | undefined): void {
-  Object.assign(form, coin ? { ...coin } : { ...emptyForm })
-  validationMessage.value = ''
+function clearImages(): void {
+  primaryImages.avers = null
+  primaryImages.rewers = null
+  pendingFiles.avers = null
+  pendingFiles.rewers = null
+  pendingFiles.additional = []
+  imageErrorMessage.value = ''
+}
+
+async function loadCoinImages(coin: Coin | null | undefined): Promise<void> {
+  clearImages()
+  if (!coin) {
+    return
+  }
+
+  try {
+    const response = await fetch(`/api/coins/${coin.id}/images`)
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const images = await response.json() as CoinImage[]
+    primaryImages.avers = images.find((image) => image.kind === 'avers') ?? null
+    primaryImages.rewers = images.find((image) => image.kind === 'rewers') ?? null
+  } catch {
+    imageErrorMessage.value = 'Nie udało się pobrać zdjęć monety.'
+  }
+}
+
+function imageUrl(image: CoinImage | null): string | null {
+  if (!image || !props.coin) {
+    return null
+  }
+
+  return `/api/coins/${props.coin.id}/images/${image.id}/file`
+}
+
+function setPrimaryFile(kind: 'avers' | 'rewers', files: File[]): void {
+  const file = files[0] ?? null
+  pendingFiles[kind] = file
+  primaryImages[kind] = null
+}
+
+function clearPrimary(kind: 'avers' | 'rewers'): void {
+  pendingFiles[kind] = null
+  primaryImages[kind] = null
+}
+
+function addAdditionalFiles(files: File[]): void {
+  pendingFiles.additional.push(...files)
+}
+
+function clearAdditionalFiles(): void {
+  pendingFiles.additional = []
 }
 
 async function loadDictionary(
@@ -129,8 +200,34 @@ function submitForm(): void {
     return
   }
 
+  if (!primaryImages.avers && !pendingFiles.avers) {
+    validationMessage.value = 'Dodaj zdjęcie awersu.'
+    return
+  }
+
+  if (!primaryImages.rewers && !pendingFiles.rewers) {
+    validationMessage.value = 'Dodaj zdjęcie rewersu.'
+    return
+  }
+
   validationMessage.value = ''
-  emit('submit', { ...form })
+
+  const payload: CoinFormSubmit = {
+    coin: { ...form },
+    images: {
+      avers: pendingFiles.avers,
+      rewers: pendingFiles.rewers,
+      additional: [...pendingFiles.additional],
+    },
+  }
+
+  emit('submit', payload)
+}
+
+function loadCoinIntoForm(coin: Coin | null | undefined): void {
+  Object.assign(form, coin ? { ...coin } : { ...emptyForm })
+  validationMessage.value = ''
+  void loadCoinImages(coin)
 }
 
 watch(() => props.coin, loadCoinIntoForm, { immediate: true })
@@ -143,6 +240,31 @@ onMounted(loadDictionaries)
     <h2>{{ isEditing() ? 'Edytuj monetę' : 'Dodaj monetę' }}</h2>
 
     <p v-if="loadErrorMessage">{{ loadErrorMessage }}</p>
+    <p v-if="imageErrorMessage">{{ imageErrorMessage }}</p>
+
+    <div>
+      <CoinImageDropZone
+        title="Awers"
+        :preview-url="imageUrl(primaryImages.avers)"
+        @files="setPrimaryFile('avers', $event)"
+        @clear="clearPrimary('avers')"
+      />
+
+      <CoinImageDropZone
+        title="Rewers"
+        :preview-url="imageUrl(primaryImages.rewers)"
+        @files="setPrimaryFile('rewers', $event)"
+        @clear="clearPrimary('rewers')"
+      />
+
+      <CoinImageDropZone
+        title="Zdjęcia dodatkowe"
+        multiple
+        :pending-count="pendingFiles.additional.length"
+        @files="addAdditionalFiles"
+        @clear="clearAdditionalFiles"
+      />
+    </div>
 
     <label>
       Kraj

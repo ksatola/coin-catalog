@@ -1,3 +1,23 @@
+export type CoinImageKind = 'avers' | 'rewers' | 'additional'
+
+export interface CoinImage {
+  id: number
+  coin_id: number
+  filename: string
+  kind: CoinImageKind
+  sort_order: number
+  created_at: string
+}
+
+export interface CoinFormSubmit {
+  coin: CoinCreate
+  images: {
+    avers: File | null
+    rewers: File | null
+    additional: File[]
+  }
+}
+
 export interface CoinCreate {
   country_id: number
   issuer_id: number | null

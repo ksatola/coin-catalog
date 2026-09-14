@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CoinForm from '../components/CoinForm.vue'
-import type { Coin, CoinCreate } from '../types'
+import type { Coin, CoinFormSubmit } from '../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,7 +26,34 @@ async function loadCoin(): Promise<void> {
   }
 }
 
-async function saveCoin(coinData: CoinCreate): Promise<void> {
+async function uploadFile(
+  coinId: number,
+  file: File,
+  kind: 'avers' | 'rewers' | 'additional',
+  replace = false,
+): Promise<void> {
+  const formData = new FormData()
+  formData.append('upload', file)
+
+  const params = new URLSearchParams({ kind })
+  if (replace) {
+    params.set('replace', 'true')
+  }
+
+  const response = await fetch(
+    `/api/coins/${coinId}/images?${params.toString()}`,
+    {
+      method: 'POST',
+      body: formData,
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`)
+  }
+}
+
+async function saveCoin(payload: CoinFormSubmit): Promise<void> {
   if (!coin.value) return
 
   try {
@@ -35,16 +62,28 @@ async function saveCoin(coinData: CoinCreate): Promise<void> {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(coinData),
+      body: JSON.stringify(payload.coin),
     })
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
 
+    if (payload.images.avers) {
+      await uploadFile(coin.value.id, payload.images.avers, 'avers', true)
+    }
+
+    if (payload.images.rewers) {
+      await uploadFile(coin.value.id, payload.images.rewers, 'rewers', true)
+    }
+
+    for (const file of payload.images.additional) {
+      await uploadFile(coin.value.id, file, 'additional')
+    }
+
     await router.push(`/monety/${coin.value.id}`)
   } catch {
-    errorMessage.value = 'Nie udało się zapisać zmian monety.'
+    errorMessage.value = 'Nie udało się zapisać zmian monety lub jej zdjęć.'
   }
 }
 
