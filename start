@@ -74,3 +74,4 @@ echo
 echo "Logs:"
 echo "  backend  $RUN_DIR/backend.log"
 echo "  frontend $RUN_DIR/frontend.log"
+
