@@ -25,20 +25,22 @@ Each coin has exactly one `awers` image and exactly one `rewers` image. Addition
 
 The application database stores image metadata and references separately from the image file contents. Image files are never stored as SQLite BLOBs.
 
-When an image is imported through the application by drag-and-drop or paste, the application uses the selected or identified coin ID to construct the target filename and must never silently overwrite an existing image. If the target filename already exists, the user must be explicitly asked to confirm replacement before the existing file is overwritten.
+The current implementation already stores image metadata in SQLite and exposes image association, serving, replacement, and additional-image operations through the application API and UI.
+
+When an image is imported through the application by drag-and-drop or paste, the application uses the selected or identified coin ID to construct the target filename and must never silently overwrite an existing image. If the target filename already exists, the user must explicitly confirm replacement before the existing file is overwritten.
 
 ### Rationale
 
-The collection already contains rectangular JPG photographs that are close to square, and the browser grid is therefore designed around square image cells. Direct flat storage in `images/` keeps the file collection simple and predictable; the six-digit coin ID provides stable lexical sorting and grouping without requiring per-coin directories.
+The collection contains rectangular JPG photographs that are close to square, and the browser grid is designed around square image cells. Direct flat storage in `images/` keeps the file collection simple and predictable; the six-digit coin ID provides stable lexical sorting and grouping without requiring per-coin directories.
 
-Keeping image metadata in SQLite while retaining the actual JPG files on disk separates structured catalogue data from potentially large binary files and leaves room for future image metadata, serving, and thumbnail features.
+Keeping image metadata in SQLite while retaining the actual JPG files on disk separates structured catalogue data from potentially large binary files and leaves room for future metadata, serving, and thumbnail features.
 
 ### Consequences
 
 - The repository uses a top-level `images/` directory alongside `data/` for application image data.
 - Git must ignore `/images/`.
-- Image filenames use the six-digit coin ID and the approved suffix format.
+- Image filenames use the six-digit coin ID and approved suffix format.
 - A coin has one primary obverse image and one primary reverse image.
 - Additional images are represented as sequential numbered files for the same coin.
-- Future image-management implementation must preserve the no-silent-overwrite rule.
-- The exact SQLite image metadata schema and import workflow will be implemented after this storage and naming decision.
+- Image metadata is stored in SQLite in the current implementation.
+- Future image-management work must preserve the no-silent-overwrite rule.
