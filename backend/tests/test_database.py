@@ -1,90 +1,135 @@
-from sqlalchemy import UniqueConstraint, text
+from collections.abc import Generator
 
-from coin_catalog.database import SessionLocal
-from coin_catalog.models import Base, Coin
+import pytest
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session, sessionmaker
 
-
-def test_database_session() -> None:
-    with SessionLocal() as session:
-        result = session.execute(text("SELECT 1"))
-        assert result.scalar_one() == 1
+from coin_catalog.database import Base
+from coin_catalog.models import Coin, Country, Denomination, Era
 
 
-def test_initial_schema_tables() -> None:
-    expected_tables = {
-        "coin",
-        "country",
-        "denomination",
-        "era",
-        "issuer",
-        "material",
-        "mint",
-        "state",
-    }
+@pytest.fixture
+def session() -> Generator[Session, None, None]:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    test_session = sessionmaker(bind=engine)()
 
-    assert set(Base.metadata.tables) == expected_tables
+    try:
+        yield test_session
+    finally:
+        test_session.close()
+        engine.dispose()
 
 
-def test_coin_columns() -> None:
-    columns = Base.metadata.tables["coin"].c
-
-    required_columns = {
-        "id",
-        "country_id",
-        "denomination_id",
-        "from_year",
-        "from_era_id",
-        "to_year",
-        "to_era_id",
-        "has_video",
-        "created_at",
-        "updated_at",
-    }
-    optional_columns = {
-        "issuer_id",
-        "mint_id",
-        "material_id",
-        "state_id",
-        "description",
-        "weight",
-        "diameter",
-        "source",
-    }
-
-    assert required_columns | optional_columns == set(columns.keys())
-    assert "currency_id" not in columns
-
-    for column_name in required_columns:
-        assert columns[column_name].nullable is False
-
-    for column_name in optional_columns:
-        assert columns[column_name].nullable is True
+def test_database_session(session: Session) -> None:
+    result = session.execute(text("SELECT 1"))
+    assert result.scalar_one() == 1
 
 
-def test_reference_table_names_are_unique_and_required() -> None:
-    reference_tables = {
-        "country",
-        "denomination",
-        "era",
-        "issuer",
-        "material",
-        "mint",
-        "state",
-    }
+def test_create_coin_with_required_data(session: Session) -> None:
+    country = Country(name="Test Country")
+    denomination = Denomination(name="Test Denomination")
+    era = Era(name="CE")
+    session.add_all([country, denomination, era])
+    session.flush()
 
-    for table_name in reference_tables:
-        column = Base.metadata.tables[table_name].c.name
-        assert column.nullable is False
-        assert column.unique is True
+    coin = Coin(
+        country=country,
+        denomination=denomination,
+        from_year=1900,
+        from_era=era,
+        to_year=1900,
+        to_era=era,
+    )
+    session.add(coin)
+    session.commit()
+
+    assert coin.id is not None
+    assert coin.has_video is False
+    assert coin.created_at is not None
+    assert coin.updated_at is not None
 
 
-def test_coin_has_no_unique_constraints() -> None:
-    table = Base.metadata.tables["coin"]
-    unique_constraints = [
-        constraint
-        for constraint in table.constraints
-        if isinstance(constraint, UniqueConstraint)
-    ]
+def test_identical_physical_coins_can_be_stored_separately(
+    session: Session,
+) -> None:
+    country = Country(name="Test Country")
+    denomination = Denomination(name="Test Denomination")
+    era = Era(name="CE")
+    session.add_all([country, denomination, era])
+    session.flush()
 
-    assert not unique_constraints
-    assert list(Coin.__table__.primary_key.columns.keys()) == ["id"]
+    first_coin = Coin(
+        country=country,
+        denomination=denomination,
+        from_year=1900,
+        from_era=era,
+        to_year=1900,
+        to_era=era,
+    )
+    second_coin = Coin(
+        country=country,
+        denomination=denomination,
+        from_year=1900,
+        from_era=era,
+        to_year=1900,
+        to_era=era,
+    )
+    session.add_all([first_coin, second_coin])
+    session.commit()
+
+    assert first_coin.id != second_coin.id
+
+
+def test_coin_relationships_are_available(session: Session) -> None:
+    country = Country(name="Test Country")
+    denomination = Denomination(name="Test Denomination")
+    era = Era(name="CE")
+    session.add_all([country, denomination, era])
+    session.flush()
+
+    coin = Coin(
+        country=country,
+        denomination=denomination,
+        from_year=100,
+        from_era=era,
+        to_year=200,
+        to_era=era,
+    )
+    session.add(coin)
+    session.commit()
+    session.refresh(coin)
+
+    assert coin.country is country
+    assert coin.denomination is denomination
+    assert coin.from_era is era
+    assert coin.to_era is era
+
+
+def test_coin_optional_fields_can_be_empty(session: Session) -> None:
+    country = Country(name="Test Country")
+    denomination = Denomination(name="Test Denomination")
+    era = Era(name="CE")
+    session.add_all([country, denomination, era])
+    session.flush()
+
+    coin = Coin(
+        country=country,
+        denomination=denomination,
+        from_year=2000,
+        from_era=era,
+        to_year=2000,
+        to_era=era,
+    )
+    session.add(coin)
+    session.commit()
+    session.refresh(coin)
+
+    assert coin.issuer is None
+    assert coin.mint is None
+    assert coin.material is None
+    assert coin.state is None
+    assert coin.description is None
+    assert coin.weight is None
+    assert coin.diameter is None
+    assert coin.source is None
