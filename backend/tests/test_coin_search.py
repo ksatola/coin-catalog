@@ -69,6 +69,7 @@ def data(session: Session) -> dict[str, Coin | Category]:
     )
 
     coin = Coin(
+        collection_number="KC-001",
         country_id=country.id,
         denomination_id=denomination.id,
         from_year=1900,
@@ -122,6 +123,17 @@ def test_search_is_tokenized_and_order_independent(
 
     assert ids(client.get("/coins?search=polska+grosz")) == [coin.id]
     assert ids(client.get("/coins?search=grosz+polska")) == [coin.id]
+
+
+def test_search_matches_collection_number(
+    client: TestClient,
+    data: dict[str, Coin | Category],
+) -> None:
+    coin = data["coin"]
+
+    assert ids(client.get("/coins?search=KC-001")) == [coin.id]
+    assert ids(client.get("/coins?search=001")) == [coin.id]
+    assert ids(client.get("/coins?search=KC-00")) == [coin.id]
 
 
 def test_search_returns_each_coin_only_once(
