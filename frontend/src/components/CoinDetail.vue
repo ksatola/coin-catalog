@@ -422,7 +422,7 @@ onMounted(() => {
   min-height: 300px;
   object-fit: contain;
   border-radius: 8px;
-  background: #f8fafc;
+  background: #ffffff;
 }
 
 .primary-image-card .image-placeholder {
