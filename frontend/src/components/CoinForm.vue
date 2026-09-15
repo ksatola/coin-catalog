@@ -237,7 +237,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     </div>
 
     <label>Kraj
-      <select v-model.number="form.country_id" required>
+      <select v-model.number="form.country_id" required @click.stop>
         <option :value="0">Wybierz kraj</option>
         <option v-for="item in dictionaries.countries" :key="item.id" :value="item.id">{{ item.name }}</option>
       </select>
@@ -245,41 +245,41 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     </label>
 
     <label>Emitent
-      <select v-model="form.issuer_id"><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <select v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" />
     </label>
 
     <label>Nominał
-      <select v-model.number="form.denomination_id" required><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <select v-model.number="form.denomination_id" required @click.stop><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <InlineDictionaryCreate dictionary-name="denominations" label="nominał" @created="addDictionaryItem('denominations', $event)" />
     </label>
 
     <label>Era od
-      <select v-model.number="form.from_era_id" required><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <select v-model.number="form.from_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" />
     </label>
 
     <label>Rok od <input v-model.number="form.from_year" type="number" required /></label>
 
     <label>Era do
-      <select v-model.number="form.to_era_id" required><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <select v-model.number="form.to_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" />
     </label>
 
     <label>Rok do <input v-model.number="form.to_year" type="number" required /></label>
 
     <label>Mennica
-      <select v-model="form.mint_id"><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <select v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" />
     </label>
 
     <label>Materiał
-      <select v-model="form.material_id"><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <select v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" />
     </label>
 
     <label>Stan zachowania
-      <select v-model="form.state_id"><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select>
+      <select v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select>
       <InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" />
     </label>
 
