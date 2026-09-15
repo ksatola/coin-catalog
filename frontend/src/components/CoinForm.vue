@@ -290,7 +290,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     <label><input v-model="form.has_video" type="checkbox" /> Ma wideo</label>
 
     <button type="submit">{{ isEditing() ? 'Zapisz zmiany' : 'Dodaj monetę' }}</button>
-    <button v-if="isEditing()" type="button" @click="emit('cancel')">Anuluj</button>
+    <button type="button" @click="emit('cancel')">Anuluj</button>
     <p v-if="validationMessage">{{ validationMessage }}</p>
   </form>
 </template>
