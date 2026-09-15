@@ -246,7 +246,6 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     <section class="form-section image-section">
       <div class="section-heading">
         <h3>Zdjęcia</h3>
-        <span>Zdjęcia awersu i rewersu</span>
       </div>
 
       <div class="primary-image-fields">
