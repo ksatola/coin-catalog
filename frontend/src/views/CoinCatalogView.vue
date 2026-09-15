@@ -59,9 +59,21 @@ watch(galleryColumns, (columns) => {
   localStorage.setItem(galleryColumnsStorageKey, String(columns))
 })
 
+function isSearchReady(): boolean {
+  const search = filters.search.trim()
+  if (!search) return true
+
+  return !search.split(/\s+/).some((token) => token.length < 3)
+}
+
 watch(() => filters.search, () => {
   if (searchTimer !== undefined) {
     clearTimeout(searchTimer)
+  }
+
+  if (!isSearchReady()) {
+    errorMessage.value = ''
+    return
   }
 
   searchTimer = setTimeout(() => {
@@ -70,6 +82,10 @@ watch(() => filters.search, () => {
 })
 
 async function loadCoins(): Promise<void> {
+  if (!isSearchReady()) {
+    return
+  }
+
   try {
     const query = buildCoinFilterQuery(filters)
     const response = await fetch(`/api/coins${query ? `?${query}` : ''}`, { cache: 'no-store' })
