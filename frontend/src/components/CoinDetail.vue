@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 
+import CategoryAssignment from './CategoryAssignment.vue'
 import type { Coin, CoinImage } from '../types'
 
 type DictionaryItem = {
@@ -167,6 +168,8 @@ onMounted(() => {
         </figure>
       </div>
     </div>
+
+    <CategoryAssignment :coin-id="coin.id" />
 
     <dl>
       <dt>Kraj</dt>
