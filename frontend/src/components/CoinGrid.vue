@@ -8,8 +8,10 @@ const props = defineProps<{
 }>()
 
 const aversImages = reactive<Record<number, CoinImage | null>>({})
+let loadGeneration = 0
 
 async function loadAversImages(): Promise<void> {
+  const generation = ++loadGeneration
   const coinIds = new Set(props.coins.map((coin) => coin.id))
 
   for (const coinId of Object.keys(aversImages)) {
@@ -39,6 +41,10 @@ async function loadAversImages(): Promise<void> {
       }
     }),
   )
+
+  if (generation !== loadGeneration) {
+    return
+  }
 
   for (const [coinId, image] of results) {
     if (coinIds.has(coinId)) {
