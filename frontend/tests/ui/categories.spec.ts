@@ -306,8 +306,13 @@ test('utworzenie relacji pośrednio tworzącej cykl jest odrzucane przez aplikac
 
   await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
   await page.locator('.relation-controls select').nth(0).selectOption('4')
+  const cycleResponsePromise = page.waitForResponse((response) => (
+    response.url().endsWith('/api/categories/1/parents/4') && response.request().method() === 'POST'
+  ))
   await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
+  const cycleResponse = await cycleResponsePromise
 
+  await expect(cycleResponse.status()).toBe(409)
   await expect(page.getByText('Nie można dodać rodzica, ponieważ relacja utworzyłaby cykl.')).toBeVisible()
   await expectRelations(page, 'Polska', 'PRL', 'II RP')
   await expectRelations(page, 'PRL', 'III RP', 'Polska')
@@ -317,9 +322,10 @@ test('utworzenie relacji pośrednio tworzącej cykl jest odrzucane przez aplikac
 test('kategoria posiadająca relacje nie może zostać usunięta', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
+  const selectedCategory = categoryItem(page, 'Polska')
+  await selectedCategory.getByRole('button', { name: 'Polska', exact: true }).click()
   page.on('dialog', (dialog) => dialog.accept())
-  await page.getByRole('button', { name: 'Usuń', exact: true }).click()
+  await selectedCategory.locator('.editor').getByRole('button', { name: 'Usuń', exact: true }).click()
   await expect(page.getByText('Nie można usunąć kategorii, ponieważ jest używana.')).toBeVisible()
   await expect(categoryItem(page, 'Polska')).toBeVisible()
 })
@@ -327,9 +333,10 @@ test('kategoria posiadająca relacje nie może zostać usunięta', async ({ page
 test('kategoria przypisana do monety nie może zostać usunięta', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await categoryItem(page, 'II RP').getByRole('button', { name: 'II RP', exact: true }).click()
+  const selectedCategory = categoryItem(page, 'II RP')
+  await selectedCategory.getByRole('button', { name: 'II RP', exact: true }).click()
   page.on('dialog', (dialog) => dialog.accept())
-  await page.getByRole('button', { name: 'Usuń', exact: true }).click()
+  await selectedCategory.locator('.editor').getByRole('button', { name: 'Usuń', exact: true }).click()
   await expect(page.getByText('Nie można usunąć kategorii, ponieważ jest używana.')).toBeVisible()
   await expect(categoryItem(page, 'II RP')).toBeVisible()
 })
