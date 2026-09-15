@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import Select, and_, exists, func, or_, select
+from sqlalchemy import Select, exists, func, or_, select
 
 from coin_catalog.models import (
     Category,
@@ -55,9 +55,9 @@ def _category_exists_for_coin(
     )
 
 
-def _category_search_exists_for_coin(token: str):
+def _category_search_exists_for_coin(token: str, include_children: bool):
     pattern = f"%{token}%"
-    closure = _category_descendants([], True, pattern)
+    closure = _category_descendants([], include_children, pattern)
     return exists(
         select(CoinCategory.coin_id)
         .join(closure, CoinCategory.category_id == closure.c.category_id)
@@ -65,7 +65,7 @@ def _category_search_exists_for_coin(token: str):
     )
 
 
-def _text_search_condition(token: str):
+def _text_search_condition(token: str, include_category_children: bool):
     pattern = f"%{token}%"
     return or_(
         Country.name.ilike(pattern),
@@ -79,7 +79,7 @@ def _text_search_condition(token: str):
         Coin.source.ilike(pattern),
         func.cast(Coin.from_year, str).ilike(pattern),
         func.cast(Coin.to_year, str).ilike(pattern),
-        _category_search_exists_for_coin(token),
+        _category_search_exists_for_coin(token, include_category_children),
     )
 
 
@@ -113,7 +113,9 @@ def build_coin_query(
     if search:
         tokens = [token for token in search.split() if token]
         for token in tokens:
-            statement = statement.where(_text_search_condition(token))
+            statement = statement.where(
+                _text_search_condition(token, include_category_children)
+            )
 
     id_filters = (
         (Coin.country_id, country_ids),
