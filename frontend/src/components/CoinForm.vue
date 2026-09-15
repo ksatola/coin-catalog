@@ -346,6 +346,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .info-grid > .field-card:nth-child(1),.info-grid > .field-card:nth-child(2) { grid-column: span 3; }
 .info-grid > .denomination-field { grid-column: span 2; }
 .info-grid > .field-card-wide { grid-column: span 2; }
+.info-grid > .field-card:nth-child(6),.info-grid > .field-card:nth-child(7) { grid-column: span 3; }
+.info-grid > .field-card:nth-child(8),.info-grid > .field-card:nth-child(9),.info-grid > .field-card:nth-child(10) { grid-column: span 2; }
 .field-card input,.field-card select,.field-card textarea { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
 .field-card textarea { min-height: 160px; resize: vertical; }
 .select-with-add { display: grid; grid-template-columns: minmax(0,1fr) 32px; gap: 8px; align-items: start; }
