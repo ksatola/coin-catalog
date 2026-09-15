@@ -21,6 +21,8 @@ const categories = [
   { id: 11, name: 'Polska', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' },
 ]
 
+const assignedCategories = [categories[1]]
+
 const coin = {
   id: 1,
   country_id: 1,
@@ -57,7 +59,7 @@ async function mockEditApis(page: Page): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
   })
   await page.route('**/api/coins/1/categories', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(assignedCategories) })
   })
   await page.route('**/api/coins/1', async (route) => {
     if (route.request().method() === 'GET') {
@@ -73,8 +75,9 @@ test('Edytuj monetę: dropdowny działają od razu po wejściu bez dodawania zdj
   await page.goto('/monety/1/edytuj')
   await expect(page.getByRole('heading', { name: 'Edytuj monetę' })).toBeVisible()
 
-  const country = page.getByLabel('Kraj').locator('select')
-  const denomination = page.getByLabel('Nominał').locator('select')
+  const selects = page.locator('select')
+  const country = selects.nth(0)
+  const denomination = selects.nth(2)
 
   await expect(country.locator('option')).toHaveCount(3)
   await expect(denomination.locator('option')).toHaveCount(3)
@@ -85,11 +88,16 @@ test('Edytuj monetę: dropdowny działają od razu po wejściu bez dodawania zdj
   await expect(denomination).toHaveValue('3')
 })
 
-test('Widok monety: nie pozwala zmieniać ani dodawać kategorii', async ({ page }) => {
+test('Widok monety: pokazuje kategorie bez możliwości ich zmiany', async ({ page }) => {
   await mockEditApis(page)
   await page.goto('/monety/1')
   await expect(page.getByRole('heading', { name: 'Szczegóły monety #1' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Kategorie' })).not.toBeVisible()
+
+  const categoriesSection = page.locator('.coin-categories')
+  await expect(categoriesSection.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
+  await expect(categoriesSection.getByText('Polska', { exact: true })).toBeVisible()
+  await expect(categoriesSection.locator('select')).toHaveCount(0)
+  await expect(categoriesSection.getByRole('button')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Edytuj' })).toBeVisible()
 })
 
@@ -100,4 +108,5 @@ test('Edytuj monetę: udostępnia zarządzanie kategoriami', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
   await expect(page.getByLabel('Wybierz kategorie')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Dodaj kategorie' })).toBeDisabled()
+  await expect(page.locator('.category-list li').filter({ hasText: 'Polska' })).toBeVisible()
 })
