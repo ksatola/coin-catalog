@@ -403,8 +403,8 @@ If the connector continues to return contradictory results, report the exact err
 
 The project is currently in:
 
-**Phase 5 — Search and Filtering**
+**Phase 7 — Collection Number**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, and Phase 4 — Coin Entry and Browser have been completed and verified.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, and Phase 6 — UI Foundation have been completed and verified.
 
-Phase 5 provides user-facing search and filtering for the coin browser, including tokenized text search, dictionary and category filters, recursive category filtering, date-range filtering, media-presence filters, status filtering, and deterministic sorting.
+Phase 7 adds an optional collection number to coins across the database, API, frontend forms and views, and search. The feature is covered by backend and frontend tests, and the catalog search flow preserves the user's scroll position while results refresh.
