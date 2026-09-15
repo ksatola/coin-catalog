@@ -149,9 +149,7 @@ def build_coin_query(
         statement = statement.where(Coin.has_video.is_(has_video))
 
     if has_image is not None:
-        image_exists = exists(
-            select(CoinImage.id).where(CoinImage.coin_id == Coin.id)
-        )
+        image_exists = exists(select(CoinImage.id).where(CoinImage.coin_id == Coin.id))
         statement = statement.where(image_exists if has_image else ~image_exists)
 
     sort_columns = {
