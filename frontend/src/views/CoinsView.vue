@@ -279,7 +279,6 @@ onMounted(async () => {
     <CoinList
       v-else
       :coins="coins"
-      :archived="statusFilter === 'archived'"
       @details="(coin) => router.push(`/monety/${coin.id}`)"
       @archive="archiveCoin"
       @restore="restoreCoin"
