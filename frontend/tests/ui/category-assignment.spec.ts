@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('moneta pozwala przypisać i usunąć kategorię', async ({ page }) => {
+test('moneta pozwala przypisać i usunąć wiele kategorii', async ({ page }) => {
   const coin = {
     id: 404,
     country_id: 1,
@@ -29,11 +29,20 @@ test('moneta pozwala przypisać i usunąć kategorię', async ({ page }) => {
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
       parent_ids: [],
-      child_ids: [],
+      child_ids: [2, 3],
     },
     {
       id: 2,
       name: 'II RP',
+      description: null,
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+      parent_ids: [1],
+      child_ids: [],
+    },
+    {
+      id: 3,
+      name: 'PRL',
       description: null,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
@@ -131,18 +140,20 @@ test('moneta pozwala przypisać i usunąć kategorię', async ({ page }) => {
   await expect(assignment.getByText('Polska', { exact: true })).toBeVisible()
   await expect(assignment.locator('select option[value="1"]')).toHaveCount(0)
   await expect(assignment.locator('select option[value="2"]')).toHaveCount(1)
+  await expect(assignment.locator('select option[value="3"]')).toHaveCount(1)
 
-  await assignment.locator('select').selectOption('2')
-  await assignment.getByRole('button', { name: 'Dodaj kategorię' }).click()
+  await assignment.locator('select').selectOption(['2', '3'])
+  await assignment.getByRole('button', { name: 'Dodaj kategorie' }).click()
 
-  const categoryItem = assignment
-    .locator('.category-list li')
-    .filter({ hasText: 'II RP' })
-  await expect(categoryItem).toBeVisible()
+  await expect(assignment.locator('.category-list li').filter({ hasText: 'II RP' })).toBeVisible()
+  await expect(assignment.locator('.category-list li').filter({ hasText: 'PRL' })).toBeVisible()
   await expect(assignment.locator('select option[value="2"]')).toHaveCount(0)
+  await expect(assignment.locator('select option[value="3"]')).toHaveCount(0)
 
-  await categoryItem.getByRole('button', { name: 'Usuń', exact: true }).click()
+  const iiRpItem = assignment.locator('.category-list li').filter({ hasText: 'II RP' })
+  await iiRpItem.getByRole('button', { name: 'Usuń', exact: true }).click()
 
-  await expect(categoryItem).not.toBeVisible()
+  await expect(iiRpItem).not.toBeVisible()
+  await expect(assignment.locator('.category-list li').filter({ hasText: 'PRL' })).toBeVisible()
   await expect(assignment.locator('select option[value="2"]')).toHaveCount(1)
 })
