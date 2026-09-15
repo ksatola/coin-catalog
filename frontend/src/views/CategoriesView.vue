@@ -221,12 +221,28 @@ onMounted(loadCategories)
         <button type="button" @click="resetForm">+ Nowa kategoria</button>
         <ul class="category-list">
           <li v-for="category in categories" :key="category.id">
-            <button type="button" @click="selectCategory(category)">
-              {{ category.name }}
-            </button>
-            <small v-if="category.child_ids.length">
-              ({{ category.child_ids.length }} dzieci)
-            </small>
+            <div class="category-entry">
+              <button type="button" @click="selectCategory(category)">
+                {{ category.name }}
+              </button>
+
+              <div class="category-relations">
+                <div>
+                  <strong>Parents:</strong>
+                  <span v-if="category.parent_ids.length">
+                    {{ category.parent_ids.map(categoryName).join(', ') }}
+                  </span>
+                  <span v-else>—</span>
+                </div>
+                <div>
+                  <strong>Children:</strong>
+                  <span v-if="category.child_ids.length">
+                    {{ category.child_ids.map(categoryName).join(', ') }}
+                  </span>
+                  <span v-else>—</span>
+                </div>
+              </div>
+            </div>
           </li>
         </ul>
       </div>
@@ -323,10 +339,24 @@ onMounted(loadCategories)
 }
 
 .category-list li {
+  margin: 10px 0;
+}
+
+.category-entry {
+  display: grid;
+  gap: 4px;
+}
+
+.category-relations {
+  display: grid;
+  gap: 2px;
+  margin-left: 8px;
+  font-size: 0.9rem;
+}
+
+.category-relations div {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  margin: 6px 0;
+  gap: 6px;
 }
 
 .editor {
