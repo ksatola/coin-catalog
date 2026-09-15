@@ -31,6 +31,11 @@ const coin = {
   is_deleted: false,
 }
 
+const images = [
+  { id: 10, kind: 'avers', filename: 'avers.jpg' },
+  { id: 11, kind: 'rewers', filename: 'rewers.jpg' },
+]
+
 async function mockDictionaries(page: Page): Promise<void> {
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
@@ -44,7 +49,7 @@ async function mockDictionaries(page: Page): Promise<void> {
 
 test('Dodaj monetę: pole numeru kolekcji przyjmuje wartość', async ({ page }) => {
   await mockDictionaries(page)
-  await page.goto('/monety/nowa')
+  await page.goto('/dodaj')
   await expect(page.getByRole('heading', { name: 'Dodaj monetę' })).toBeVisible()
 
   const collectionNumber = page.getByLabel('Numer kolekcji')
@@ -57,19 +62,38 @@ test('Edytuj monetę: ładuje i wysyła zmieniony numer kolekcji', async ({ page
   let requestBody: Record<string, unknown> | null = null
 
   await page.route('**/api/coins/1/images', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(images),
+    })
   })
+
   await page.route('**/api/coins/1', async (route) => {
     if (route.request().method() === 'GET') {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coin) })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(coin),
+      })
       return
     }
+
     if (route.request().method() === 'PUT') {
       requestBody = JSON.parse(route.request().postData() ?? '{}') as Record<string, unknown>
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...coin, collection_number: 'KC-002' }) })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ...coin, collection_number: 'KC-002' }),
+      })
       return
     }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coin) })
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(coin),
+    })
   })
 
   await page.goto('/monety/1/edytuj')
