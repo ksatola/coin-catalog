@@ -194,6 +194,7 @@ class Coin(Base):
     __tablename__ = "coin"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    collection_number: Mapped[str | None] = mapped_column(Text)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
