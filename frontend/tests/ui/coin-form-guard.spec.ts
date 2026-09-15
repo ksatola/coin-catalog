@@ -73,7 +73,7 @@ test.describe('guard niezapisanych zmian formularza monety', () => {
       expect(dialog.type()).toBe('confirm')
       await dialog.accept()
     })
-    await page.getByRole('link', { name: 'Monety' }).click()
+    await page.getByRole('link', { name: 'Monety' }).click({ force: true })
     await expect(page).toHaveURL(/\/monety$/)
   })
 
@@ -103,6 +103,13 @@ test.describe('guard niezapisanych zmian formularza monety', () => {
       await dialog.dismiss()
     })
     await page.getByRole('link', { name: 'Monety' }).click()
+    await expect(page).toHaveURL(/\/monety\/1\/edytuj$/)
+
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm')
+      await dialog.accept()
+    })
+    await page.getByRole('link', { name: 'Monety' }).click({ force: true })
     await expect(page).toHaveURL(/\/monety$/)
   })
 
