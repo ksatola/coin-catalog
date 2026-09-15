@@ -123,7 +123,8 @@ watch(() => props.coins, () => {
 .coin-side {
   display: grid;
   min-width: 0;
-  min-height: 200px;
+  min-height: 240px;
+  padding: 20px 0;
   place-items: center;
   background: #ffffff;
 }
