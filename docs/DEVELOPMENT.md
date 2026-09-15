@@ -1,118 +1,58 @@
-# Coin Catalog — Development Environment
+# Coin Catalog — Development Guide
 
-This document contains the detailed, verified instructions for opening and using the Coin Catalog development environment.
+This document describes the current, verified development environment and normal local workflow.
 
-For coding style, quality, documentation, testing, and related development conventions, see [`CODING_STANDARDS.md`](CODING_STANDARDS.md).
+For coding style and quality conventions, see [`CODING_STANDARDS.md`](CODING_STANDARDS.md).
+For helper scripts, see [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md).
+For branching and merge workflow, see [`GIT_WORKFLOW.md`](GIT_WORKFLOW.md).
+For image storage rules, see [`IMAGE_STORAGE_DECISION.md`](IMAGE_STORAGE_DECISION.md).
 
 ## Host Requirements
 
-The host machine is intentionally kept minimal. The following software is required on the host:
+Install on the host:
 
 - GitHub Desktop
 - Visual Studio Code
 - Docker Desktop
 
-Python, Node.js, `uv`, and project-specific application dependencies are provided by the Dev Container and do not need to be installed directly on the host.
+Python, Node.js, `uv`, and project dependencies are provided by the Dev Container.
 
 ## Git Branch Workflow
 
 `main` is the stable branch. Do not develop or commit directly on `main`.
 
-Development normally happens on a dedicated working branch. For a development phase, use the naming pattern:
+Normal development uses a dedicated branch such as:
 
 ```text
 phase-N-short-description
 ```
 
-For example:
-
-```text
-phase-3-database-foundation
-```
-
 For smaller independent changes, `feature/`, `fix/`, or `docs/` branches may be used.
 
-The complete branching strategy is documented in:
+Normal workflow:
 
 ```text
-docs/GIT_WORKFLOW.md
-```
-
-### Recommended GitHub Desktop procedure
-
-1. Open the `coin-catalog` repository in GitHub Desktop.
-2. Fetch/pull the latest changes from `origin`.
-3. Make sure the current branch is `main`.
-4. Create a new branch from the current `main` using **Branch → New Branch**.
-5. Give the branch a descriptive phase or working-branch name.
-6. Publish the branch to `origin`.
-7. Switch to that branch and continue development there.
-
-Before starting substantial work, verify that the working branch contains the latest stable `main`. If `main` has advanced since the branch was created, synchronize the branch before proceeding.
-
-### Working in VS Code
-
-The current Git branch is shown in the lower-left corner of VS Code. You can use the branch control to switch branches and, where appropriate, create a branch.
-
-Development and application execution work normally from a working branch. The Dev Container uses the checked-out repository workspace, so it is not tied to `main`.
-
-A normal workflow is therefore:
-
-```text
-working branch
+synchronize branch
 → edit in VS Code
 → run inside Dev Container
-→ test in browser / terminal
+→ verify in terminal/browser
 → commit
 → push branch
-→ continue
+→ open/update pull request
+→ merge to main after verification
 ```
 
-When the work is complete, test and document it, push the branch, and open a pull request to `main`. Merge only after the relevant implementation, tests, documentation, and verification are complete.
+The project does not use a permanent `develop` branch.
 
-After a phase is merged, update local `main` and create the next phase branch from the updated stable branch.
+## Dev Container
 
-The project intentionally does not use a permanent `develop` branch.
-
-## Open the Project in VS Code
-
-1. Start Docker Desktop and wait until Docker is running.
-2. Open Visual Studio Code.
-3. Open the local `coin-catalog` repository:
-   - **Windows:** press `Ctrl+O`.
-   - **macOS:** press `Cmd+O`.
-4. Select the local `coin-catalog` folder and open it.
-5. In the VS Code Explorer, verify that the repository files are visible, including `.devcontainer`, `docs`, `AGENTS.md`, and `README.md`.
-
-## Reopen the Project in the Dev Container
-
-1. Open the VS Code Command Palette:
-   - **Windows:** press `Ctrl+Shift+P`.
-   - **macOS:** press `Cmd+Shift+P`.
-2. Type:
-
-   `Dev Containers: Reopen in Container`
-
-3. Select **Dev Containers: Reopen in Container** and press `Enter`.
-4. VS Code will build the development container the first time and then reopen the project inside the container.
-5. Wait until the container has finished building and VS Code has reconnected to it.
-
-The repository is mounted as the complete workspace at:
+The repository is mounted at:
 
 ```text
 /workspaces/coin-catalog
 ```
 
-The entire repository is available inside the container, including Git metadata, development configuration, documentation, and application source files.
-
-## Verify the Development Container
-
-Open the integrated terminal in VS Code:
-
-- **Windows:** press `Ctrl+``.
-- **macOS:** press `Cmd+``.
-
-Run the following commands individually:
+Verify the environment with:
 
 ```bash
 python --version
@@ -121,69 +61,78 @@ uv --version
 pwd
 ```
 
-The verified development environment currently reports:
+The verified environment reports Python 3.14.7, Node.js v24.20.0, uv 0.12.10, and the workspace path above.
+
+## Development Helper Scripts
+
+From the repository root:
 
 ```text
-Python 3.14.7
-v24.20.0
-uv 0.12.10
-/workspaces/coin-catalog
+./start
+./stop
+./restart
+./status
 ```
 
-These commands and the repository workspace path were successfully verified inside the Dev Container on 2026-09-09.
+`./start` starts the backend and frontend development services.
 
-## Python Project
+`./stop` stops services managed by `./start`.
 
-The Python backend is located under `backend/`.
+`./restart` is intentionally only `./stop` followed by `./start`.
 
-The current Python project structure is:
+`./status` provides process and port diagnostics.
+
+See [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md) for details.
+
+## Current Development Services
+
+```text
+Frontend   http://localhost:5173
+Backend    http://localhost:8000
+```
+
+The host browser uses the Vite frontend at `http://localhost:5173/`.
+
+## Backend Project
+
+Current structure:
 
 ```text
 backend/
 ├── .python-version
 ├── pyproject.toml
+├── uv.lock
 ├── alembic.ini
 ├── migrations/
 │   └── versions/
 ├── tests/
-│   └── test_database.py
 └── src/
     └── coin_catalog/
         ├── __init__.py
         ├── database.py
+        ├── main.py
         ├── models.py
-        └── main.py
+        ├── schemas.py
+        └── routes/
+            ├── __init__.py
+            ├── categories.py
+            ├── coin_categories.py
+            ├── coins.py
+            ├── dictionaries.py
+            └── images.py
 ```
 
-`backend/.python-version` currently contains:
-
-```text
-3.14
-```
-
-`backend/pyproject.toml` declares Python `>=3.14`, uses the `uv_build` build backend, and includes the FastAPI standard extra used by the development CLI. Python project commands should be run from the backend project directory:
+Backend commands run from:
 
 ```bash
 cd /workspaces/coin-catalog/backend
 ```
 
-The original Python project was initialized with `uv init --python 3.14` and was subsequently reorganized into the `backend/` directory so that backend and frontend source trees remain clearly separated.
+The backend uses FastAPI, SQLAlchemy, SQLite, and Alembic.
 
-The Python project reorganization was successfully committed to the repository on 2026-09-09. The reorganized project was subsequently verified inside the user's local Dev Container by running:
+## Python Tests and Code Quality
 
-```bash
-uv run python -c "import coin_catalog; print('backend import OK')"
-```
-
-The command completed successfully and produced:
-
-```text
-backend import OK
-```
-
-### Python tests and code quality
-
-Run Python project quality checks from the backend directory:
+Run:
 
 ```bash
 cd /workspaces/coin-catalog/backend
@@ -192,193 +141,192 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-`pytest` runs the backend test suite. `ruff check .` runs Ruff lint checks, and `ruff format --check .` verifies that Python files are formatted according to the project's Ruff configuration.
+The backend suite covers coin persistence and API behavior, dictionary CRUD and reference protection, archive/restore behavior, and category/image behavior.
 
-When adding or updating Python development dependencies, use `uv` from the backend directory. For example:
+## Database and Migrations
 
-```bash
-cd /workspaces/coin-catalog/backend
-uv add --dev pytest ruff
-```
-
-After dependency changes, commit the corresponding `pyproject.toml` and `uv.lock` changes together when they belong to the same dependency update.
-
-The initial database session test was verified on 2026-09-11 with:
-
-```text
-1 passed
-```
-
-### Database and migrations
-
-The backend uses SQLite with SQLAlchemy. Alembic manages database schema migrations.
-
-The database is stored at:
+The development database is:
 
 ```text
 /workspaces/coin-catalog/data/coin-catalog.db
 ```
 
-Run Alembic commands from the backend project directory:
+The database is not committed to Git.
+
+Run Alembic commands from the backend directory:
 
 ```bash
 cd /workspaces/coin-catalog/backend
-```
-
-Check the current database migration revision:
-
-```bash
 uv run alembic current
+uv run alembic history
+uv run alembic upgrade head
 ```
 
-Create a new migration revision after a model/schema change:
+After an approved schema change:
 
 ```bash
 uv run alembic revision --autogenerate -m "describe schema change"
 ```
 
-Review the generated migration before applying it. The assistant should inspect pushed migration files directly in GitHub rather than asking the user to copy or print their contents when the files are already available in the repository.
+Always review generated migrations before applying them.
 
-Apply pending migrations:
+The schema includes the coin table, seven reference tables, category structures, and coin-image metadata. There is intentionally no `currency` table or `currency_id` column.
 
-```bash
-uv run alembic upgrade head
-```
+Coins use `is_deleted` for soft archive/restore.
 
-Show the migration history:
+## FastAPI Application
 
-```bash
-uv run alembic history
-```
-
-Alembic uses the database URL configured by the backend's `coin_catalog.database.DATABASE_URL`. The Alembic environment therefore uses the same canonical database location as the application.
-
-Migration files are version-controlled under:
-
-```text
-backend/migrations/versions/
-```
-
-The SQLite database itself remains under the Git-ignored `data/` directory.
-
-The initial schema migration has been generated and applied successfully. Its revision is `e6df2f7c0c11`.
-
-The initial schema contains the `coin` table and the reference tables `country`, `issuer`, `denomination`, `mint`, `material`, `state`, and `era`. There is intentionally no `currency` table or `currency_id` column.
-
-The `coin` table uses `from_year`/`from_era_id` and `to_year`/`to_era_id` for the date interval. `weight` is stored as `NUMERIC` grams, `diameter` as `NUMERIC` millimetres, `has_video` as a boolean flag, and `source` as one optional text field. `created_at` and `updated_at` are required UTC timestamps.
-
-### FastAPI application
-
-The initial FastAPI application is defined in:
+The FastAPI application is defined in:
 
 ```text
 backend/src/coin_catalog/main.py
 ```
 
-It currently provides a single health endpoint:
+Current API:
 
 ```text
-GET /health
+GET  /health
+
+POST /coins
+GET  /coins
+GET  /coins/archived
+GET  /coins/{coin_id}
+PUT  /coins/{coin_id}
+POST /coins/{coin_id}/archive
+POST /coins/{coin_id}/restore
+
+GET    /dictionaries/{dictionary_name}
+POST   /dictionaries/{dictionary_name}
+PUT    /dictionaries/{dictionary_name}/{item_id}
+DELETE /dictionaries/{dictionary_name}/{item_id}
+
+GET    /categories
+POST   /categories
+GET    /categories/{category_id}
+PUT    /categories/{category_id}
+DELETE /categories/{category_id}
+POST   /categories/{category_id}/parents/{parent_id}
+DELETE /categories/{category_id}/parents/{parent_id}
+GET    /categories/{category_id}/children
+GET    /categories/{category_id}/parents
+
+GET    /coins/{coin_id}/categories
+POST   /coins/{coin_id}/categories/{category_id}
+DELETE /coins/{coin_id}/categories/{category_id}
+
+GET    /coins/{coin_id}/images
+POST   /coins/{coin_id}/images
+DELETE /coins/{coin_id}/images/{image_id}
+GET    /coins/{coin_id}/images/{image_id}/file
 ```
 
-FastAPI was added with `uv` using:
+There is no permanent coin DELETE endpoint.
 
-```bash
-uv add fastapi
-uv add "fastapi[standard]"
-```
-
-The FastAPI import and CLI were verified successfully. The development server was also verified successfully with:
-
-```bash
-uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000
-```
-
-The server started on port `8000`, completed application startup, and responded successfully to:
-
-```bash
-curl http://localhost:8000/health
-```
-
-with:
-
-```json
-{"status":"ok"}
-```
-
-### FastAPI development server
-
-Run from the backend directory:
-
-```bash
-cd /workspaces/coin-catalog/backend
-uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000
-```
-
-The Dev Container forwards port `8000` for the backend.
-
-For direct browser or HTTP access during development:
-
-- `http://localhost:8000/health` — backend health endpoint; expected response is `{"status":"ok"}`.
-- `http://localhost:8000/docs` — FastAPI interactive API documentation.
-- `http://localhost:8000/` — no application route is currently defined, so `404 Not Found` is expected.
-
-When finished with the development server, return to the terminal running FastAPI and press:
+The seven dictionaries are:
 
 ```text
-Ctrl+C
+countries
+issuers
+denominations
+mints
+materials
+states
+eras
 ```
+
+Dictionary entries cannot be deleted while referenced by a coin. Era references are protected for both `from_era_id` and `to_era_id`.
+
+Category relationships are checked to prevent cycles. Categories cannot be deleted while they are used by a coin or participate in a category relationship.
+
+Interactive API documentation is available at `http://localhost:8000/docs`.
 
 ## Frontend Project
 
-The Vue frontend is located under `frontend/`.
+The frontend is under `frontend/` and uses:
 
-The frontend was created as a standard Vue 3 + TypeScript + Vite project using the official Vue scaffolding tool. The project was intentionally created as a blank Vue project rather than retaining the scaffold's example application code.
-
-The initial scaffolding choices were:
-
-- TypeScript: **Yes**
-- JSX support: **No**
-- Vue Router: **No**
-- Pinia: **No**
-- Vitest: **No**
-- End-to-end testing solution: **No**
-- ESLint: **No**
-- Prettier: **No**
-- Vue DevTools extension: **No**, where prompted
-- Skip example code / start with a blank Vue project: **Yes**
-
-No frontend UI framework, state-management library, router, or testing framework was added at this stage. These should be introduced only when an agreed development step requires them.
-
-### Create the frontend from scratch
-
-From the repository root inside the Dev Container, the scaffolding command used was:
-
-```bash
-cd /workspaces/coin-catalog
-npm create vue@latest frontend
+```text
+Vue 3
+TypeScript
+Vite
+Vue Router
+Playwright
 ```
 
-If the scaffolding wizard presents a prompt that has not yet been documented or agreed, stop and review the prompt before selecting an option.
+There is no Pinia or UI component framework at this stage.
 
-## Install frontend dependencies
-
-After scaffolding completed, dependencies were installed from the frontend project directory:
+Frontend commands run from:
 
 ```bash
 cd /workspaces/coin-catalog/frontend
-npm install
 ```
 
-The installation completed successfully on 2026-09-09. It added 151 packages, audited 152 packages, and reported:
+## Vite API Proxy
+
+Frontend requests use relative `/api/...` paths. Vite proxies them to FastAPI on port `8000` and removes the `/api` prefix.
 
 ```text
-found 0 vulnerabilities
+Browser → Vite :5173 → FastAPI :8000
+/api/health           /health
 ```
 
-The npm client also displayed a notice about a newer major npm version. This was informational and no npm upgrade was performed.
+Vite polling is enabled for reliable source-change detection inside the Dev Container.
 
-### Verify the production build
+## Current Frontend Routes
+
+```text
+/                         → redirect to /monety
+/monety                   → active coin browser
+/monety/:id               → coin details
+/monety/:id/edytuj        → coin editing
+/dodaj                    → add coin
+/archiwum                 → archived coins
+/slowniki                 → dictionary editor
+/kategorie                → category management
+```
+
+The fixed bottom navigation contains `Monety`, `Dodaj monetę`, `Archiwum`, and `Słowniki`.
+
+## Current Coin Browser and Entry Flow
+
+The browser supports Grid and List layouts. Grid is the default.
+
+Grid tiles open details. List rows are not clickable; actions are explicit buttons.
+
+Active coins provide `Szczegóły` and `Archiwizuj`. Archived coins provide `Szczegóły` and `Przywróć`.
+
+Coin details provide `Edytuj` and `Archiwizuj` for active coins, and `Przywróć` for archived coins.
+
+The coin form uses dictionary-backed selectors and supports the core coin fields, including country, issuer, denomination, year/era range, mint, material, state, description, weight, diameter, video flag, and source.
+
+Date endpoints contain both a numeric year and an era. Numeric years are not compared across eras, so a range such as `476 BC → 1 AD` is valid.
+
+## Categories
+
+The frontend exposes category management at `/kategorie`. It supports category creation and editing, multiple parent and child relationships, relation removal, cycle-error handling, and deletion protection when a category is still related or assigned to a coin.
+
+Coin-category assignment/removal is implemented in the coin workflow. Assigned categories can be added and removed through the nested coin-category API.
+
+## Coin Images
+
+Image management is implemented for primary and additional photographs.
+
+The accepted storage convention uses a top-level `images/` directory, ignored by Git, with flat six-digit filenames such as:
+
+```text
+000404 - awers.jpg
+000404 - rewers.jpg
+000404 - 01.jpg
+```
+
+The database stores image metadata; image contents are files, not SQLite BLOBs. Primary replacement requires explicit replacement confirmation.
+
+See [`IMAGE_STORAGE_DECISION.md`](IMAGE_STORAGE_DECISION.md).
+
+## Manual Data Entry
+
+Collection metadata is entered manually through the application. There is currently no XLS/XLSX import mechanism and no spreadsheet-import phase in the current roadmap.
+
+## Frontend Production Build
 
 Run:
 
@@ -387,96 +335,77 @@ cd /workspaces/coin-catalog/frontend
 npm run build
 ```
 
-The production build was successfully verified on 2026-09-09 using Vite 8.2.2. The build transformed 11 modules and generated the `dist/` output directory.
+## Playwright UI Tests
 
-### Run the frontend development server
+The UI tests are located under:
 
-To make the Vite development server accessible through the Dev Container's forwarded port, run:
+```text
+frontend/tests/ui/
+```
+
+Run the complete current category and coin UI coverage with:
 
 ```bash
 cd /workspaces/coin-catalog/frontend
-npm run dev -- --host 0.0.0.0
+npx playwright test tests/ui/categories.spec.ts tests/ui/category-assignment.spec.ts tests/ui/coins.spec.ts
 ```
 
-The verified server output included:
+The verified UI coverage includes image replacement, cancellation, additional-image upload, cross-era date ranges, category CRUD and relations, cycle prevention behavior, deletion protection, and coin-category assignment/removal.
 
-```text
-Local:   http://localhost:5173/
-Network: http://172.17.0.2:5173/
-```
+## Recommended Local Verification
 
-The Dev Container forwards port `5173` for the frontend.
-
-For host-browser access during development, use:
-
-```text
-http://localhost:5173/
-```
-
-### Vite API proxy
-
-During development, frontend API requests use relative `/api/...` paths. Vite proxies these requests to the FastAPI server on port `8000` and removes the `/api` prefix before forwarding.
-
-The configured request flow is:
-
-```text
-Browser → Vite :5173 → FastAPI :8000
-/api/health           /health
-```
-
-The proxy was verified successfully on 2026-09-09 with:
+For the current Phase 4 branch:
 
 ```bash
-curl http://localhost:5173/api/health
+cd /workspaces/coin-catalog/backend
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+
+cd /workspaces/coin-catalog/frontend
+npm run build
+npx playwright test tests/ui/categories.spec.ts tests/ui/category-assignment.spec.ts tests/ui/coins.spec.ts
 ```
 
-which returned:
+Then:
 
-```json
-{"status":"ok"}
+```bash
+cd /workspaces/coin-catalog
+./start
 ```
 
-### Verify frontend-to-backend communication
+Open `http://localhost:5173/` and walk through the main coin workflow.
 
-With both development servers running:
+When finished:
 
-1. Start FastAPI on port `8000`.
-2. Start Vite on port `5173`.
-3. Open:
-
-   ```text
-   http://localhost:5173/
-   ```
-
-4. The Vue application should display:
-
-   ```text
-   # Coin Catalog
-   Backend status: ok
-   ```
-
-This frontend-to-backend health check was successfully verified on 2026-09-09. The Vue application requests `/api/health`; Vite proxies the request to FastAPI `/health`; the returned status is displayed by the frontend.
-
-### Verify host-browser access
-
-With the Vite development server running inside the Dev Container, open the following address in a browser on the host machine:
-
-```text
-http://localhost:5173/
+```bash
+cd /workspaces/coin-catalog
+./status
+./stop
 ```
-
-Host-browser access and frontend-to-backend communication were successfully verified on 2026-09-09.
 
 ## Current Scope
 
-At this stage, the development environment, initial Python backend project, FastAPI application skeleton, initial Vue frontend project, and initial database foundation have been established. The FastAPI `/health` endpoint, Vite API proxy, frontend-to-backend health display, SQLAlchemy database session, initial database session test, SQLAlchemy coin/reference models, and Alembic initial migration have been verified.
+Phase 4 is complete and currently covers:
 
-The approved Phase 2 development-server arrangement is:
+- coin creation and persistence;
+- dictionary-backed entry;
+- Grid/List browsing;
+- details and editing;
+- soft archive/restore;
+- dictionary management;
+- primary and additional coin images;
+- category management and category relationships;
+- coin-category assignment/removal;
+- local development tooling;
+- automated UI coverage for the current workflows.
 
-- Vue/Vite on port `5173`
-- FastAPI on port `8000`
-- Vite `/api` proxy forwarding to FastAPI and removing the `/api` prefix
+Future work includes advanced search/filtering, richer collections/tags, backup/export, CI/CD, and deployment.
 
-The frontend currently uses the Vue 3 + TypeScript + Vite foundation and displays the backend health status. Application components, routing, state management, UI libraries, API contracts, image management, and other application functionality will be introduced in later agreed steps.
+## Working Rules
 
-Do not install project dependencies manually before the corresponding development step is agreed and documented.
+Keep implementation changes incremental and verify them at the smallest useful scope.
+
+Before repository changes, follow the approval workflow in `AGENTS.md`: inspect the current state, show the proposed change, obtain explicit approval, then write the approved change.
+
+Keep documentation synchronized with the actual verified project state.

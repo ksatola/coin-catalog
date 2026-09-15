@@ -2,155 +2,180 @@
 
 ## Purpose
 
-This roadmap defines the planned development path for the coin catalog application. It provides a shared sequence of work and a way to track the project at a high level.
+This roadmap defines the planned development path for the coin catalogue and is maintained against the verified implementation state.
 
-A roadmap item is not, by itself, an architectural commitment. Significant architectural decisions must also be explicitly accepted and recorded in `docs/DECISIONS.md`.
-
-The roadmap may change as the project develops and new information becomes available.
+A roadmap item is not, by itself, an architectural commitment. Significant architectural decisions are explicitly accepted and recorded in `docs/DECISIONS.md`.
 
 ## Development Principles
 
 - Work incrementally in small, verifiable steps.
-- Keep documentation synchronized with the actual state of the project.
+- Keep documentation synchronized with actual implementation.
 - Prefer simple solutions over premature complexity.
-- Avoid implementing speculative functionality before it is needed.
-- Review the project documentation before starting each major development phase to confirm that the architecture, decisions, roadmap, and progress are still aligned.
-- Do not treat a proposed change as an accepted decision until it has been explicitly reviewed and approved.
+- Avoid speculative functionality before it is needed.
+- Review the project documentation before each major phase.
+- Do not treat a proposed change as accepted until it has been explicitly reviewed and approved.
 
 ## Phase 1 — Development Environment
 
 **Status:** Complete
 
-Establish a reproducible, cross-platform development environment based on Docker Dev Containers.
-
-The repository now contains separate `backend/` and `frontend/` project directories. The backend Python project and the Vue frontend foundation have both been created and verified inside the Dev Container. Host-browser access to the Vite development server has also been verified.
-
-Completed work:
-
-- Configure Docker.
-- Configure VS Code and Dev Containers.
-- Select and configure the Python version.
-- Configure Python and `uv` inside the Dev Container.
-- Select and configure the Node.js version.
-- Configure Vue 3, TypeScript, and Vite.
-- Build and verify the Dev Container.
-- Verify Python tooling.
-- Verify frontend tooling.
-- Verify browser access from the host system.
-- Create the initial frontend foundation.
-- Document the verified development environment and frontend workflow.
-- Create the frontend development checkpoint.
-
-Remaining environment checklist items that require explicit host-level verification are tracked in `docs/PROGRESS.md` and will not block discussion of the application skeleton.
+Established the Docker Dev Container, Python/uv environment, Node.js/Vue/Vite environment, host-browser access, and repository development workflow.
 
 ## Phase 2 — Application Skeleton
 
 **Status:** Complete
 
-Create the minimal backend/frontend application structure and establish communication between the Vue frontend and FastAPI backend.
-
-Completed work includes the minimal FastAPI application and health endpoint, separate frontend/backend development servers, the Vite `/api` development proxy, and the frontend health-status display. The complete frontend-to-backend development flow was verified in the host browser.
+Established the FastAPI application, health endpoint, separate development servers, Vite `/api` proxy, and verified frontend-to-backend development flow.
 
 ## Phase 3 — Database Foundation
 
 **Status:** Complete
 
-Establish SQLite and SQLAlchemy as the database foundation, configure database sessions, introduce Alembic migrations, and implement the initial coin catalogue data model.
-
-Completed work includes the initial schema design, SQLAlchemy models for `coin` and its reference tables, the first Alembic migration, and focused database behavior tests. The initial model includes the required coin metadata and relationships accepted for the catalogue foundation.
+Established SQLite, SQLAlchemy, Alembic, the initial coin/reference schema, database behavior tests, and the accepted core coin data model.
 
 ## Phase 4 — Coin Entry and Browser
 
-**Status:** Current
+**Status:** Complete
 
-Build the first simple user-facing slice of the application using the existing database model.
+Phase 4 has grown into the first usable catalogue slice and now includes functionality originally planned for later phases because it was required to make the workflow useful and verifiable.
+
+Implemented:
+
+- coin creation, retrieval, update, archive, and restore;
+- soft deletion for archived coins;
+- seven reference dictionaries with CRUD UI/API;
+- dictionary-reference deletion protection;
+- coin entry form with dictionary-backed selectors;
+- Grid and List coin browsing;
+- coin details;
+- editing;
+- fixed bottom navigation;
+- coin image association and serving;
+- primary awers/rewers image replacement;
+- additional image upload/deletion;
+- accepted external-file image storage convention;
+- category data structures and backend category APIs;
+- category management UI and parent/child relation management;
+- cycle prevention and category deletion protection;
+- coin-category assignment/removal UI;
+- Playwright UI coverage for coin/image and category workflows;
+- cross-era date-range behavior where numeric years are not compared across BC/AD eras.
+
+Final verification is complete: the backend tests passed with 62 tests, Ruff checks passed, the frontend production build passed, the coin/image Playwright suite passed with 5 tests, the category and coin-category Playwright suite passed with 15 tests, manual cross-era entry was verified, and the final local working tree was clean.
+
+## Historical Scope Adjustment
+
+The original roadmap placed image management, the full coin browser, and editing in later phases. During implementation these capabilities were pulled into Phase 4 because the first usable catalogue workflow required them.
+
+Category management and coin-category assignment were also completed as part of Phase 4. The historical Phase 8 placeholder therefore no longer represents missing category-management UI; it remains only for broader collection/tag capabilities.
+
+Those original phase numbers are retained below as historical roadmap placeholders rather than representing unimplemented work.
+
+## Phase 5 — Search and Filtering
+
+**Status:** Not started
 
 Planned work:
 
-- Design a simple coin-entry form.
-- Allow creation of a new coin using the existing data model.
-- Add basic form validation.
-- Build a simple browser for coins stored in the database.
-- Display basic coin data in the browser.
-- Add a basic detail view for a selected coin.
-- Verify the complete flow: form → SQLite persistence → coin list → coin details.
-
-The phase intentionally does not include spreadsheet import, image management, search/filtering, collections/tags, or other advanced functionality.
-
-## Phase 5 — Import Existing Data
-
-Import existing XLS/XLSX descriptions and metadata into the application using an explicit, documented mapping process.
+- define searchable fields;
+- implement basic search;
+- implement filtering;
+- evaluate sorting;
+- optimize queries if required.
 
 ## Phase 6 — Image Management
 
-Integrate the existing JPG coin photographs as external files referenced by application data and establish the initial image organization strategy.
+**Status:** Partially absorbed into Phase 4
+
+The initial image-management capability is implemented. The remaining future work may include richer image workflows, thumbnail generation, bulk operations, and further image metadata if justified.
+
+The accepted storage and naming rules are documented in `docs/IMAGE_STORAGE_DECISION.md`.
 
 ## Phase 7 — Coin Browser
 
-Build the main web interface for browsing the coin collection, including gallery/list presentation and coin detail views.
+**Status:** Partially absorbed into Phase 4
 
-## Phase 8 — Search and Filtering
+The basic Grid/List browser, details, active/archived views, and navigation are implemented. Pagination or other large-collection optimization remains future work if required.
 
-Add search, filtering, sorting, and other mechanisms for finding coins efficiently.
+## Phase 8 — Collections, Categories and Tags
 
-## Phase 9 — Collections, Categories and Tags
+**Status:** Partially absorbed into Phase 4 / future expansion
 
-Introduce user-defined organization mechanisms such as collections, categories, and tags.
+The category data model, backend APIs, category-management UI, parent/child relations, cycle prevention, deletion protection, and coin-category assignment/removal are implemented. Broader collection/tag organization and related filtering remain future work.
 
-## Phase 10 — Editing and Data Management
+## Phase 9 — Editing and Data Management
 
-Add controlled editing of coin metadata and related collection information.
+**Status:** Partially absorbed into Phase 4
 
-## Phase 11 — Backup and Export
+Coin metadata editing is implemented. Future work may extend editing to additional organization and collection-management features.
 
-Provide mechanisms for backing up application data and exporting useful collection information.
+## Phase 10 — Backup and Export
 
-## Phase 12 — Testing and Quality
+**Status:** Not started
 
-Expand automated testing, validation, error handling, documentation, and quality checks appropriate to the application's maturity.
+Planned work:
 
-## Phase 13 — Packaging and Deployment
+- define backup strategy;
+- define database backup process;
+- define image backup process;
+- evaluate metadata export;
+- evaluate full catalogue export.
 
-Define and implement a practical deployment/distribution model for the completed application while preserving the cross-platform requirements.
+## Phase 11 — Testing and Quality
+
+**Status:** In progress as an ongoing concern
+
+Automated backend and Playwright UI testing already exists. Future work includes broader integration coverage, CI checks, and additional quality automation.
+
+## Phase 12 — Packaging and Deployment
+
+**Status:** Not started
+
+Planned work:
+
+- define supported deployment model;
+- prepare production runtime;
+- document deployment;
+- document backup and recovery;
+- verify supported host platforms.
 
 ## Future / Optional Areas
 
-The following areas are possible future extensions but are not committed development phases:
+Possible future extensions include:
 
-- OCR.
-- Automated image analysis.
-- Numismatic image recognition.
-- Price/value tracking.
-- Market data integration.
-- Advanced statistics.
-- Reporting.
-- Advanced collection analytics.
-- Additional import/export formats.
-- Mobile-oriented interface.
-- Multi-user support.
-- Authentication and authorization.
-- External catalogue integrations.
+- OCR;
+- automated image analysis;
+- numismatic image recognition;
+- price/value tracking;
+- market data integration;
+- advanced statistics and reporting;
+- advanced collection analytics;
+- additional import/export formats;
+- mobile-oriented interface;
+- multi-user support;
+- authentication and authorization;
+- external catalogue integrations.
 
-These items should be evaluated when the core application is mature enough to justify them.
+These are not committed until justified by actual requirements.
 
-## Documentation Review Before Each Phase
+## Documentation Review Before Each Major Phase
 
-Before beginning each major phase, perform a short documentation review covering at least:
+Before each major phase, review:
 
-1. `AGENTS.md` — confirm the collaboration and development rules.
-2. `docs/ARCHITECTURE.md` — confirm the current technical architecture.
-3. `docs/DECISIONS.md` — confirm accepted decisions and identify any decisions that need reconsideration.
-4. `docs/PROGRESS.md` — confirm the actual current state of implementation.
-5. `docs/ROADMAP.md` — confirm that the planned next phase is still appropriate.
+1. `AGENTS.md`;
+2. `docs/ARCHITECTURE.md`;
+3. `docs/DECISIONS.md`;
+4. `docs/PROGRESS.md`;
+5. `docs/ROADMAP.md`.
 
-If the review reveals that the project direction, architecture, or assumptions should change, stop before implementation and discuss the change explicitly. Once agreed, update the relevant documentation before proceeding with code changes.
+If the review reveals a direction or architecture change, stop before implementation and discuss it explicitly. Once agreed, update the relevant documentation before proceeding.
 
 ## Roadmap Maintenance
 
 When the project evolves:
 
-- Update `docs/PROGRESS.md` to reflect verified implementation status.
-- Update this roadmap if the development sequence or scope changes.
-- Record significant architectural decisions in `docs/DECISIONS.md` after explicit approval.
-- Update `docs/ARCHITECTURE.md` when the actual technical architecture changes.
-- Keep documentation changes close to the implementation changes they describe.
+- update `docs/PROGRESS.md` with verified implementation status;
+- update this roadmap when sequence or scope changes;
+- record significant architectural decisions in `docs/DECISIONS.md` after explicit approval;
+- update `docs/ARCHITECTURE.md` when technical architecture changes;
+- keep documentation changes close to the implementation changes they describe.

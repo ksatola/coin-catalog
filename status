@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RUN_DIR="/tmp/coin-catalog"
+
+echo "========================================"
+echo "        Coin Catalog — STATUS"
+echo "========================================"
+echo
+
+for name_port in "backend:8000" "frontend:5173"; do
+    name="${name_port%%:*}"
+    port="${name_port##*:}"
+    pid_file="$RUN_DIR/$name.pid"
+
+    echo "${name^}"
+
+    if [[ -f "$pid_file" ]]; then
+        pid="$(cat "$pid_file")"
+
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "  Process  [ OK ]  PID $pid"
+        else
+            echo "  Process  [FAIL]  NOT RUNNING (stale PID $pid)"
+        fi
+    else
+        echo "  Process  [FAIL]  NOT RUNNING"
+    fi
+
+    if ss -ltn 2>/dev/null | grep ":$port " >/dev/null; then
+        echo "  Port     [ OK ]  LISTEN :$port"
+    else
+        echo "  Port     [WARN]  FREE :$port"
+    fi
+
+    echo "  URL              http://localhost:$port"
+    echo
+
+done
+
+echo "========================================"
+

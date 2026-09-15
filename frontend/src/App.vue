@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-
-const backendStatus = ref('Checking backend...')
-
-onMounted(async () => {
-  try {
-    const response = await fetch('/api/health')
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
-    }
-
-    const data: { status: string } = await response.json()
-    backendStatus.value = data.status
-  } catch {
-    backendStatus.value = 'Backend unavailable'
-  }
-})
+import AppNavigation from './components/AppNavigation.vue'
 </script>
 
 <template>
-  <h1>Coin Catalog</h1>
-  <p>Backend status: {{ backendStatus }}</p>
+  <div class="app">
+    <main class="app-content">
+      <RouterView :key="$route.fullPath" />
+    </main>
+
+    <AppNavigation />
+  </div>
 </template>
+
+<style>
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  padding-bottom: 72px;
+}
+
+* {
+  box-sizing: border-box;
+}
+</style>

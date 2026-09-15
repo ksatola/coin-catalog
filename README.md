@@ -1,29 +1,51 @@
 # Coin Catalog
 
-Personal application for managing and browsing a collection of coins.
+Personal web application for managing and browsing a collection of coins.
 
-The project is designed to provide a simple foundation that can be extended over time with features such as search, collections, image management, data import, statistics, and other numismatic functionality.
+The project is developed incrementally, with the repository documentation serving as the persistent technical context and source of truth for the current implementation state.
 
 ## Project Status
 
-**Current phase:** Phase 1 — Development Environment
+**Current phase:** Phase 4 is complete; the next development step has not yet been started.
 
-The project is currently focused on establishing a reproducible, cross-platform development environment before application implementation begins.
+The application now provides a usable first catalogue workflow: coin creation, coin browsing, coin details, editing, soft archive/restore, dictionary management, coin photograph management, category management, and coin-category assignment. The backend and frontend category workflows are implemented and verified.
+
+Phase 4 is complete. Automated and manual verification has been completed. The previously planned spreadsheet-import phase is no longer the next development step because collection data will be entered manually through the application. Later planned areas include search/filtering, richer collection features, backup/export, testing/quality expansion, and deployment.
 
 ## Architecture
 
-The current planned technology stack is:
+The current stack is:
 
 - **Development environment:** Docker + VS Code Dev Containers
 - **Backend:** Python + FastAPI
 - **Python project management:** `uv`
-- **Database:** SQLite + SQLAlchemy
-- **Frontend:** Vue 3 + TypeScript + Vite
+- **Database:** SQLite + SQLAlchemy + Alembic
+- **Frontend:** Vue 3 + TypeScript + Vite + Vue Router
+- **End-to-end UI tests:** Playwright
 - **Source control:** Git + GitHub
 
-The application is intended to run inside the development container while being accessed through a web browser on the host system.
+The application runs inside the development container and is accessed through a browser on the host system.
 
 The primary host platforms are Windows 11 and macOS.
+
+## Current Application
+
+The frontend provides:
+
+- active and archived coin browsers,
+- Grid and List views,
+- coin detail views,
+- coin creation and editing,
+- soft archive and restore,
+- dictionary management,
+- primary and additional coin photographs,
+- category management,
+- category parent/child relationship management,
+- coin-category assignment and removal.
+
+The backend provides the corresponding FastAPI endpoints and persists structured catalogue data in SQLite. Coin photographs are stored as external JPG files with metadata in SQLite rather than as database BLOBs.
+
+Coin dates are represented by a year together with an era for each endpoint. The application does not compare the numeric year values across eras, so ranges such as `476 BC → 1 AD` are valid.
 
 ## Documentation
 
@@ -34,9 +56,10 @@ The repository contains the project's persistent technical and development conte
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — accepted architectural decisions
 - [`docs/PROGRESS.md`](docs/PROGRESS.md) — current implementation progress
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — planned development path
-- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — detailed development environment and Dev Container instructions
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — development environment and local workflow
+- [`docs/IMAGE_STORAGE_DECISION.md`](docs/IMAGE_STORAGE_DECISION.md) — accepted coin-image storage and naming rules
 
-These documents are treated as the project's primary persistent source of truth.
+These documents are kept synchronized with verified implementation changes.
 
 ## Development Approach
 
@@ -49,20 +72,30 @@ Each major development phase begins with a documentation review to verify that:
 3. actual progress matches the documented state,
 4. the roadmap is still pointing in the right direction.
 
-If a significant architectural or technical change is identified, it is discussed and approved before implementation.
+Significant architectural or technical changes are discussed and approved before implementation.
 
 Development should favor small, verifiable changes over large speculative implementations.
 
 ## Data and Images
 
-The application will work with existing coin photographs and existing data stored in XLS/XLSX files.
+Collection metadata is entered manually through the application. XLS/XLSX import is not part of the current workflow.
 
-Original photographs are treated as external collection data rather than source-code assets. The application will store references and metadata rather than requiring the original photographs to be committed to Git.
+Coin photographs are not committed to Git. The accepted storage convention uses a top-level `images/` directory alongside `data/`, flat six-digit coin IDs, and filenames such as:
 
-Detailed data models, image organization, and import mappings will be defined in later development phases.
+```text
+000404 - awers.jpg
+000404 - rewers.jpg
+000404 - 01.jpg
+```
+
+The database stores image metadata and references; image contents remain files on disk.
 
 ## Development Setup
 
-Detailed development environment and Dev Container instructions are maintained separately in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+Detailed development environment and Dev Container instructions are maintained in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-The current Dev Container environment has been successfully verified on 2026-09-09.
+The verified Dev Container workspace is:
+
+```text
+/workspaces/coin-catalog
+```

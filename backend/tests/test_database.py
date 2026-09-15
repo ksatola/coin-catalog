@@ -45,6 +45,7 @@ def test_create_coin_with_required_data(session: Session) -> None:
     session.commit()
 
     assert coin.id is not None
+    assert coin.is_deleted is False
     assert coin.has_video is False
     assert coin.created_at is not None
     assert coin.updated_at is not None
@@ -133,3 +134,38 @@ def test_coin_optional_fields_can_be_empty(session: Session) -> None:
     assert coin.weight is None
     assert coin.diameter is None
     assert coin.source is None
+
+
+def test_coin_can_be_marked_deleted_and_restored(
+    session: Session,
+) -> None:
+    country = Country(name="Test Country")
+    denomination = Denomination(name="Test Denomination")
+    era = Era(name="CE")
+    session.add_all([country, denomination, era])
+    session.flush()
+
+    coin = Coin(
+        country=country,
+        denomination=denomination,
+        from_year=1900,
+        from_era=era,
+        to_year=1900,
+        to_era=era,
+    )
+    session.add(coin)
+    session.commit()
+
+    assert coin.is_deleted is False
+
+    coin.is_deleted = True
+    session.commit()
+    session.refresh(coin)
+
+    assert coin.is_deleted is True
+
+    coin.is_deleted = False
+    session.commit()
+    session.refresh(coin)
+
+    assert coin.is_deleted is False

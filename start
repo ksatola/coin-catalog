@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUN_DIR="/tmp/coin-catalog"
+mkdir -p "$RUN_DIR"
+
+start_service() {
+    local name="$1"
+    local workdir="$2"
+    local command="$3"
+    local pid_file="$RUN_DIR/$name.pid"
+    local log_file="$RUN_DIR/$name.log"
+
+    if [[ -f "$pid_file" ]]; then
+        local pid
+        pid="$(cat "$pid_file")"
+
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "$name already running (PID $pid)"
+            return
+        fi
+
+        rm -f "$pid_file"
+    fi
+
+    (
+        cd "$workdir"
+        exec setsid bash -lc "$command"
+    ) >"$log_file" 2>&1 &
+
+    echo $! >"$pid_file"
+}
+
+show_start_status() {
+    echo
+    echo "========================================"
+    echo "        Coin Catalog — START"
+    echo "========================================"
+    echo
+
+    for name_port in "backend:8000" "frontend:5173"; do
+        local name="${name_port%%:*}"
+        local port="${name_port##*:}"
+        local pid_file="$RUN_DIR/$name.pid"
+
+        echo "${name^}"
+
+        if [[ -f "$pid_file" ]]; then
+            local pid
+            pid="$(cat "$pid_file")"
+
+            if kill -0 "$pid" 2>/dev/null; then
+                echo "  [ OK ]  PID $pid"
+                echo "          http://localhost:$port"
+            else
+                echo "  [FAIL]  process not running"
+                echo "          http://localhost:$port"
+            fi
+        else
+            echo "  [FAIL]  process not started"
+            echo "          http://localhost:$port"
+        fi
+
+        echo
+    done
+
+    echo "----------------------------------------"
+    echo "Logs"
+    echo "  backend   $RUN_DIR/backend.log"
+    echo "  frontend  $RUN_DIR/frontend.log"
+    echo "========================================"
+}
+
+start_service \
+    "backend" \
+    "$ROOT_DIR/backend" \
+    "exec uv run fastapi dev src/coin_catalog/main.py --host 0.0.0.0 --port 8000"
+
+start_service \
+    "frontend" \
+    "$ROOT_DIR/frontend" \
+    "exec npm run dev -- --host 0.0.0.0 --force"
+
+show_start_status
+

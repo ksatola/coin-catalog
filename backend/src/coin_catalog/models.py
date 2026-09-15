@@ -3,7 +3,16 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from coin_catalog.database import Base
@@ -79,10 +88,117 @@ class Era(Base):
     )
 
 
+class Category(Base):
+    __tablename__ = "category"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    parents: Mapped[list[Category]] = relationship(
+        "Category",
+        secondary="category_relation",
+        primaryjoin="Category.id == CategoryRelation.child_id",
+        secondaryjoin="Category.id == CategoryRelation.parent_id",
+        back_populates="children",
+    )
+    children: Mapped[list[Category]] = relationship(
+        "Category",
+        secondary="category_relation",
+        primaryjoin="Category.id == CategoryRelation.parent_id",
+        secondaryjoin="Category.id == CategoryRelation.child_id",
+        back_populates="parents",
+    )
+    coins: Mapped[list[Coin]] = relationship(
+        "Coin",
+        secondary="coin_category",
+        back_populates="categories",
+    )
+
+
+class CategoryRelation(Base):
+    __tablename__ = "category_relation"
+
+    parent_id: Mapped[int] = mapped_column(
+        ForeignKey("category.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    child_id: Mapped[int] = mapped_column(
+        ForeignKey("category.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    __table_args__ = (
+        CheckConstraint("parent_id <> child_id", name="ck_category_relation_not_self"),
+    )
+
+
+class CoinCategory(Base):
+    __tablename__ = "coin_category"
+
+    coin_id: Mapped[int] = mapped_column(
+        ForeignKey("coin.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey("category.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+
+class CoinImage(Base):
+    __tablename__ = "coin_image"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    coin_id: Mapped[int] = mapped_column(
+        ForeignKey("coin.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    filename: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('avers', 'rewers', 'additional')",
+            name="ck_coin_image_kind",
+        ),
+        UniqueConstraint(
+            "coin_id",
+            "kind",
+            "sort_order",
+            name="uq_coin_image_order",
+        ),
+    )
+
+    coin: Mapped[Coin] = relationship(back_populates="images")
+
+
 class Coin(Base):
     __tablename__ = "coin"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
     country_id: Mapped[int] = mapped_column(ForeignKey("country.id"), nullable=False)
     issuer_id: Mapped[int | None] = mapped_column(ForeignKey("issuer.id"))
     denomination_id: Mapped[int] = mapped_column(
@@ -126,3 +242,13 @@ class Coin(Base):
     mint: Mapped[Mint | None] = relationship(back_populates="coins")
     material: Mapped[Material | None] = relationship(back_populates="coins")
     state: Mapped[State | None] = relationship(back_populates="coins")
+    categories: Mapped[list[Category]] = relationship(
+        "Category",
+        secondary="coin_category",
+        back_populates="coins",
+    )
+    images: Mapped[list[CoinImage]] = relationship(
+        back_populates="coin",
+        cascade="all, delete-orphan",
+        order_by="CoinImage.sort_order",
+    )

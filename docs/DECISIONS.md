@@ -88,7 +88,7 @@ SQLAlchemy is the database abstraction/ORM layer. Database models and database a
 ## D-009 — Web Application UI
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 The primary UI is a web application accessed through a browser on the host. A native desktop GUI is not the current UI architecture. Frontend and backend communicate over HTTP.
 
@@ -97,7 +97,7 @@ The primary UI is a web application accessed through a browser on the host. A na
 ## D-010 — Vue 3 Frontend
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Vue 3 is the frontend framework. Frontend functionality is organized primarily into Vue components.
 
@@ -106,7 +106,7 @@ Vue 3 is the frontend framework. Frontend functionality is organized primarily i
 ## D-011 — TypeScript
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 TypeScript is used for frontend development to improve maintainability and provide static typing for the growing frontend codebase.
 
@@ -115,7 +115,7 @@ TypeScript is used for frontend development to improve maintainability and provi
 ## D-012 — Vite
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Vite is the frontend development and build tool for the Vue/TypeScript application.
 
@@ -124,7 +124,7 @@ Vite is the frontend development and build tool for the Vue/TypeScript applicati
 ## D-013 — Coin Photographs Stored as Files
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Original coin photographs are stored as external files rather than SQLite BLOBs. The database stores references and metadata. Exact storage layout and backup strategy will be decided during image management implementation.
 
@@ -133,7 +133,7 @@ Original coin photographs are stored as external files rather than SQLite BLOBs.
 ## D-014 — Existing XLS/XLSX Data as Import Source
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Existing XLS/XLSX data will be imported into the application database. Exact spreadsheet structure, mappings, validation, and duplicate handling will be determined during the import phase.
 
@@ -142,7 +142,7 @@ Existing XLS/XLSX data will be imported into the application database. Exact spr
 ## D-015 — Current Development Priority
 
 **Status:** Accepted  
-**Date: 2026-09-07
+**Date:** 2026-09-07
 
 Development begins with the development environment rather than application features. The first implementation phase is **Phase 1 — Development Environment**.
 
@@ -151,7 +151,7 @@ Development begins with the development environment rather than application feat
 ## D-016 — Development Container Runtime Versions
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The Dev Container uses:
 
@@ -166,7 +166,7 @@ These tools are provided inside the container rather than installed on the host.
 ## D-017 — Stable and Pinned Dependency Policy
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 Development tools and project dependencies use explicitly selected and pinned versions wherever supported. Stable production-quality releases are preferred; prerelease and experimental releases are not used by default. Dependency upgrades are deliberate and tested changes.
 
@@ -175,7 +175,7 @@ Development tools and project dependencies use explicitly selected and pinned ve
 ## D-018 — Verified State / Fact-Based Development
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 Current project state, completed work, configuration, and test results must be based on facts and verified whenever possible. Assumptions and plans must not be presented as facts. Failures, incomplete work, and unverifiable states must be stated clearly. `docs/PROGRESS.md` records only verified current state.
 
@@ -184,7 +184,7 @@ Current project state, completed work, configuration, and test results must be b
 ## D-019 — Separate Backend and Frontend Source Trees
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The repository uses separate top-level `backend/` and `frontend/` project directories.
 
@@ -217,7 +217,7 @@ Separate source trees prevent Python and frontend `src/` directories from being 
 ## D-020 — Vite Development Proxy for Backend API
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 During development, the Vue frontend communicates with the FastAPI backend through relative `/api/...` paths. Vite proxies these requests to the FastAPI development server on port 8000.
 
@@ -237,7 +237,7 @@ The proxy keeps the browser-facing development application on a single origin wh
 ## D-021 — Separate Frontend and Backend Development Servers
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The frontend and backend run as separate development servers inside the Dev Container:
 
@@ -261,7 +261,7 @@ Keeping the servers independent preserves clear frontend/backend boundaries and 
 ## D-022 — Minimal Backend Application Structure
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The initial FastAPI backend uses the following minimal structure:
 
@@ -292,7 +292,7 @@ The application skeleton should establish a runnable backend without prematurely
 ## D-023 — Stable `main` and Phase-Based Working Branches
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 `main` is the project's stable branch. Development and experimentation must take place on dedicated working branches and must not be committed directly to `main`.
 
@@ -332,7 +332,7 @@ This provides a simple separation between stable project state and work in progr
 ## D-024 — Application Data Directory Inside Repository Working Tree
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 Persistent application data is stored in a top-level `data/` directory inside the repository working tree. The `data/` directory is ignored by Git and is not part of the repository's versioned source or documentation.
 
@@ -358,7 +358,7 @@ Keeping application data under the Dev Container workspace simplifies the develo
 ## D-025 — Project Coding Standards
 
 **Status:** Accepted  
-**Date: 2026-09-09
+**Date:** 2026-09-09
 
 The project follows the coding conventions documented in [`docs/CODING_STANDARDS.md`](CODING_STANDARDS.md).
 
@@ -390,7 +390,7 @@ A concise, explicit coding standard provides consistent professional practices w
 ## D-026 — Alembic for Database Migrations
 
 **Status:** Accepted  
-**Date: 2026-09-11
+**Date:** 2026-09-11
 
 Alembic is used for versioning and applying database schema changes. SQLAlchemy models define the application's database structure, while Alembic migration revisions record and apply transitions between schema versions.
 
@@ -412,7 +412,7 @@ Alembic integrates directly with SQLAlchemy and fits the project's Git-based dev
 ## D-027 — Singular Database Table Names
 
 **Status:** Accepted  
-**Date: 2026-09-14
+**Date:** 2026-09-14
 
 Database table names use the singular form. The initial domain tables are:
 
@@ -443,7 +443,7 @@ The project owner selected singular table names as the preferred naming conventi
 ## D-028 — Initial Coin Schema
 
 **Status:** Accepted  
-**Date: 2026-09-14
+**Date:** 2026-09-14
 
 The initial database schema models one `coin` row as one concrete physical coin in the collection. Multiple physically identical coins may therefore have separate `coin` rows.
 
@@ -507,3 +507,179 @@ The schema is intentionally small while covering the information currently avail
 - The initial Alembic migration creates the schema described above.
 - Future schema changes must use new Alembic migration revisions.
 - Additional fields or reference entities require an explicit design decision when a real requirement appears.
+
+---
+
+## D-029 — Soft Delete for Coins
+
+**Status:** Accepted  
+**Date:** 2026-09-14
+
+Coins are never permanently deleted through normal application functionality.
+
+The `coin` table contains:
+
+```text
+is_deleted
+```
+
+The field is a non-null boolean with a default value of `FALSE`.
+
+Semantics:
+
+- `FALSE` — active coin
+- `TRUE` — deleted/archived coin
+
+Normal coin-list operations return active coins only unless a future feature explicitly requests deleted coins.
+
+The application uses archival operations rather than permanent deletion:
+
+```text
+POST /api/coins/{id}/archive
+POST /api/coins/{id}/restore
+```
+
+A future UI delete action therefore archives the coin by setting `is_deleted = TRUE`.
+
+Permanent database deletion of coins is not part of the normal application workflow.
+
+### Rationale
+
+The catalogue represents physical collection data. Accidental deletion should therefore be reversible, while the database should retain the historical record.
+
+### Consequences
+
+- New coins are created with `is_deleted = FALSE`.
+- Normal coin browsing excludes deleted coins.
+- Archive and restore are explicit operations.
+- No normal application endpoint performs a hard `DELETE` on a coin.
+- Future UI work must preserve this behavior.
+
+---
+
+## D-030 — Coin Image Storage, Naming, and Editing Workflow
+
+**Status:** Accepted  
+**Date:** 2026-09-14
+
+Original coin photographs are stored as external JPG files in a top-level `images/` directory at the same repository level as `data/`. The `images/` directory is ignored by Git and is not version-controlled.
+
+All image files are stored directly inside `images/`; separate per-coin subdirectories are not used.
+
+A coin ID is represented in image filenames as exactly six decimal digits with leading zeroes. For example, coin ID `404` is represented as `000404`.
+
+The required filenames are:
+
+```text
+000404 - awers.jpg
+000404 - rewers.jpg
+000404 - 01.jpg
+000404 - 02.jpg
+000404 - 03.jpg
+```
+
+Each coin must have one current `awers` image and one current `rewers` image when changes are saved. Additional images may be present without a fixed limit and are numbered sequentially as `01`, `02`, `03`, and so on. Additional images cover cases such as slab photographs, rim photographs, or additional views.
+
+Avers and rewers may be removed or replaced during editing, but a coin cannot be saved while either required image is missing. Replacing an image therefore means assigning another image of the same required type before saving the changes.
+
+The application database stores image metadata and references separately from the image file contents. Image files are never stored as SQLite BLOBs.
+
+Coin images are added and replaced as part of the normal manual coin creation and editing workflow. There is no separate image-import workflow for bulk importing coins or photographs.
+
+In coin-edit mode, the frontend provides drag-and-drop areas for the `awers` and `rewers` images and a drag-and-drop area/list for additional images. A dropped image on `awers` or `rewers` adds the image if missing or replaces the current image of that type. Dropped images in the additional-images area are added as additional images.
+
+The same image-assignment workflow must support pasting an image from the clipboard, including images copied from a web browser. The active image area determines whether the pasted image becomes or replaces the `awers`, becomes or replaces the `rewers`, or is added as an additional image.
+
+The workflow should not require a separate generic `Dodaj zdjęcie` button for normal image entry.
+
+The application must never silently overwrite an existing image file. When an operation would replace an existing target image, the user must explicitly confirm the replacement before the file is overwritten.
+
+### Rationale
+
+The collection already contains rectangular JPG photographs that are close to square, and the browser grid is therefore designed around square image cells. Direct flat storage in `images/` keeps the file collection simple and predictable; the six-digit coin ID provides stable lexical sorting and grouping without requiring per-coin directories.
+
+Requiring an awers and rewers at save time reflects the domain model: both sides are essential primary photographs of a coin. Allowing temporary removal during editing makes replacement practical without permitting an incomplete saved coin.
+
+Integrating drag-and-drop and clipboard paste into the coin editing workflow keeps manual entry fast and avoids unnecessary generic upload controls.
+
+Keeping image metadata in SQLite while retaining the actual JPG files on disk separates structured catalogue data from potentially large binary files and leaves room for future image metadata, serving, and thumbnail features.
+
+### Consequences
+
+- The repository uses a top-level `images/` directory alongside `data/` for application image data.
+- Git must ignore `/images/`.
+- Image filenames use the six-digit coin ID and the approved suffix format.
+- A saved coin has one current primary obverse image and one current primary reverse image.
+- Additional images are represented as sequential numbered files for the same coin.
+- Coin creation and editing, rather than a separate import tool, are the source of image assignment.
+- Future image-management implementation must support drag-and-drop and clipboard paste and must preserve the no-silent-overwrite rule.
+
+---
+
+## D-031 — Flexible Many-to-Many Category Graph
+
+**Status:** Accepted  
+**Date:** 2026-09-14
+
+The catalogue uses user-defined categories as a flexible classification system separate from the fixed domain dictionaries such as country, issuer, denomination, material, and era.
+
+Categories are represented by a `category` entity and explicit parent-child relationships. The category hierarchy is not a single tree. A category may have multiple parents and multiple children, allowing a directed acyclic graph (DAG) instead of a strict one-parent hierarchy.
+
+The conceptual schema is:
+
+```text
+category
+--------
+id
+name
+description
+created_at
+updated_at
+```
+
+```text
+category_relation
+-----------------
+parent_id
+child_id
+```
+
+A category may therefore participate in structures such as:
+
+```text
+A → B
+A → C
+B → D
+C → D
+```
+
+where `D` has more than one parent.
+
+Category relationships must remain acyclic. A category cannot be its own ancestor through any chain of parent-child relationships.
+
+Coins are related to categories through a many-to-many association:
+
+```text
+coin_category
+-------------
+coin_id
+category_id
+```
+
+A single coin may therefore belong to multiple categories, and a single category may contain multiple coins.
+
+Categories are not used as replacements for fixed descriptive fields. A country remains a country, material remains a material, and so on; categories provide an additional user-defined classification layer.
+
+### Rationale
+
+A strict tree would force every category to have at most one parent and would make it difficult to express overlapping classifications. A many-to-many category graph allows the project owner to build and evolve several related classification schemes without restructuring the database when a category belongs naturally in more than one place.
+
+Separating categories from fixed dictionaries keeps the semantic meaning of those dictionaries stable while allowing the user-defined classification layer to remain intentionally flexible.
+
+### Consequences
+
+- Category data requires a dedicated model and database tables.
+- Category-to-category relations are many-to-many and must be validated to prevent cycles.
+- Coin-to-category assignment is many-to-many.
+- Future category UI should allow creating, editing, connecting, and browsing parent-child relationships.
+- Future implementation should preserve the distinction between categories and fixed domain dictionaries.

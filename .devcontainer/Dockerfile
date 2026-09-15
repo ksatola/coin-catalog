@@ -2,6 +2,7 @@ FROM python:3.14.7-slim
 
 ARG UV_VERSION=0.12.10
 ARG NODE_VERSION=24.20.0
+ARG PLAYWRIGHT_VERSION=1.63.0
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -27,6 +28,7 @@ RUN apt-get update \
     && rm -f "${NODE_TARBALL}" SHASUMS256.txt \
     && node --version \
     && npm --version \
+    && npm exec --yes "playwright@${PLAYWRIGHT_VERSION}" -- install --with-deps chromium \
     && curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh \
     && mv /root/.local/bin/uv /usr/local/bin/uv \
     && mv /root/.local/bin/uvx /usr/local/bin/uvx \

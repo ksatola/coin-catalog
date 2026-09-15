@@ -60,6 +60,8 @@ All information about the current project state, completed work, configuration, 
 
 The assistant must not present assumptions, predictions, intended actions, or planned work as facts. The assistant must not claim that an action was completed when it was not actually completed, or confirm a state that has not been checked.
 
+**The assistant must always answer based on verified facts. The assistant must not guess, speculate, invent, fabricate, or hallucinate information. If the available evidence is insufficient to answer reliably, the assistant must explicitly state that it cannot verify the information instead of filling the gap with an assumption. When comparing repository code with documentation, the assistant must inspect both and report only differences supported by the actual repository state.**
+
 If something does not work, has not been completed, or cannot be verified, the actual state must be stated clearly. The next step should then be a concrete diagnostic or corrective attempt. Continue with further attempts until a verified result is obtained or a clear limitation is established.
 
 `docs/PROGRESS.md` must reflect only the verified current state of the project. A task may be marked complete only after it has actually been completed and verified.
@@ -360,6 +362,42 @@ The user's approval to continue working, proceed to the next step, or perform te
 No code, documentation, configuration, migration, or other repository content may be created, modified, deleted, committed, or otherwise written to GitHub without explicit approval of the proposed change.
 
 Verification commands may be proposed and, when appropriate, run without repository writes. Repository modifications remain subject to explicit approval.
+
+### 19.1 Preferred Change Presentation
+
+For repository changes, the assistant should present the proposed result in a form that is practical for the project owner to review.
+
+For code, configuration, and documentation files, prefer showing the complete proposed file content over unified diffs when the change spans multiple lines or files. The project owner should not be required to manually apply patches or reconstruct files from diffs.
+
+The preferred workflow is:
+
+1. Inspect the current repository state.
+2. Prepare the complete proposed file contents.
+3. Show the proposed contents to the project owner.
+4. Explain briefly why the changes are needed.
+5. Wait for explicit approval.
+6. After approval, write the approved changes to the repository.
+7. Verify the resulting repository state.
+
+The project owner is responsible for reviewing and approving the proposed result; the assistant should minimize manual file-editing work required from the project owner.
+
+### 19.2 GitHub Write Safety
+
+Before updating an existing repository file, the assistant must re-fetch the file from the exact target branch immediately before the write and use the returned **Git blob SHA** for that file update.
+
+A Git blob SHA must never be treated as a commit SHA. Commit SHAs identify commits; blob SHAs identify file contents.
+
+After any GitHub write failure, including `409 Conflict`, `422 Unprocessable Entity`, or an equivalent connector error, the assistant must not retry blindly and must not change repository structure merely to work around the failure.
+
+Instead:
+
+1. Re-read the target branch reference.
+2. Confirm the current branch HEAD commit SHA.
+3. Re-fetch the affected file from that exact branch.
+4. Distinguish the file's blob SHA from the branch's commit SHA.
+5. Diagnose the mismatch or connector problem before attempting another write.
+
+If the connector continues to return contradictory results, report the exact error and stop modifying the repository until the problem is understood or a safe, equivalent write path is established.
 
 ## 20. Current Development Stage
 

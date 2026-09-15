@@ -1,2 +1,7 @@
 # Application runtime data
 /data/
+/images/
+
+# Playwright test artifacts
+/frontend/test-results/
+/frontend/playwright-report/
