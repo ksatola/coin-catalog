@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinForm from '../components/CoinForm.vue'
 import InlineCategoryCreate from '../components/InlineCategoryCreate.vue'
 import type { CategoryGraphItem, CoinFormSubmit } from '../types'
+import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = useRouter()
+const { markClean, markDirty } = useUnsavedCoinForm()
 const errorMessage = ref('')
 const categories = ref<CategoryGraphItem[]>([])
 const selectedCategoryIds = ref<number[]>([])
@@ -26,6 +28,7 @@ async function loadCategories(): Promise<void> {
 function addCreatedCategory(category: CategoryGraphItem): void {
   categories.value.push(category)
   selectedCategoryIds.value.push(category.id)
+  markDirty()
 }
 
 async function uploadFile(coinId: number, file: File, kind: 'avers' | 'rewers' | 'additional'): Promise<void> {
@@ -57,6 +60,7 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
     for (const file of payload.images.additional) await uploadFile(coin.id, file, 'additional')
     await assignCategories(coin.id)
 
+    markClean()
     errorMessage.value = ''
     await router.push(`/monety/${coin.id}`)
   } catch {
@@ -64,7 +68,14 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
   }
 }
 
-onMounted(loadCategories)
+watch(selectedCategoryIds, () => {
+  markDirty()
+}, { deep: true })
+
+onMounted(() => {
+  markClean()
+  void loadCategories()
+})
 </script>
 
 <template>
