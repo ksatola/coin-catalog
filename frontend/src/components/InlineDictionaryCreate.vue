@@ -83,9 +83,9 @@ async function create(): Promise<void> {
           @keydown.enter.prevent="create"
         />
       </div>
-      <div>
-        <button type="button" :disabled="saving" @click="create">Dodaj</button>
-        <button type="button" :disabled="saving" @click="cancel">Anuluj</button>
+      <div class="editor-actions">
+        <button type="button" class="editor-primary" :disabled="saving" @click="create">Dodaj</button>
+        <button type="button" class="editor-secondary" :disabled="saving" @click="cancel">Anuluj</button>
       </div>
       <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
@@ -125,39 +125,72 @@ async function create(): Promise<void> {
   z-index: 1000;
   display: grid;
   width: min(280px, calc(100vw - 32px));
-  gap: 8px;
-  padding: 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 .editor-field {
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .editor-field span {
   color: #334155;
-  font-size: .85rem;
+  font-size: .875rem;
   font-weight: 600;
 }
 
 .editor input {
   box-sizing: border-box;
   width: 100%;
-  min-height: 36px;
-  padding: 7px 9px;
+  min-height: 44px;
+  padding: 10px 12px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 7px;
   background: #ffffff;
   color: #0f172a;
   font: inherit;
 }
 
+.editor input:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, .25);
+  outline-offset: 2px;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .editor button {
-  margin-right: 8px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.editor-primary {
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.editor-secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.editor button:disabled {
+  cursor: default;
+  opacity: .6;
 }
 
 .editor p {
