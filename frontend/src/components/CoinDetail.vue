@@ -337,7 +337,11 @@ onMounted(() => {
       </button>
 
       <figure class="viewer-content">
-        <img :src="imageUrl(selectedImage)" :alt="selectedImage.filename" />
+        <img
+          :key="selectedImage.id"
+          :src="imageUrl(selectedImage)"
+          :alt="selectedImage.filename"
+        />
         <figcaption>
           <span>{{ selectedImage.filename }}</span>
           <span v-if="allImages.length > 1">{{ (selectedImageIndex ?? 0) + 1 }} / {{ allImages.length }}</span>
@@ -549,23 +553,29 @@ onMounted(() => {
 }
 
 .viewer-content {
-  display: grid;
-  width: min(100%, 1200px);
-  height: min(100%, 900px);
+  display: flex;
+  width: min(100%, 1400px);
+  max-height: calc(100vh - 96px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   margin: 0;
-  place-items: center;
 }
 
 .viewer-content img {
   display: block;
-  max-width: 100%;
-  max-height: calc(100% - 40px);
+  width: auto;
+  height: auto;
+  max-width: calc(100vw - 144px);
+  max-height: calc(100vh - 156px);
   object-fit: contain;
 }
 
 .viewer-content figcaption {
   display: flex;
   width: min(100%, 900px);
+  flex: 0 0 auto;
   justify-content: space-between;
   gap: 16px;
   color: #e2e8f0;
@@ -637,6 +647,15 @@ onMounted(() => {
 
   .image-viewer {
     padding: 48px 16px 32px;
+  }
+
+  .viewer-content {
+    max-height: calc(100vh - 80px);
+  }
+
+  .viewer-content img {
+    max-width: calc(100vw - 72px);
+    max-height: calc(100vh - 136px);
   }
 
   .viewer-nav {
