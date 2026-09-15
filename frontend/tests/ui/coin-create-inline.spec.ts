@@ -60,7 +60,7 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   await page.getByLabel('Nazwa nowej kategorii').fill('Kategoria testowa')
   await page.getByRole('button', { name: 'Dodaj' }).last().click()
 
-  await expect(page.getByLabel('Wybierz kategorie')).toHaveValue(['200'])
+  await expect(page.getByLabel('Wybierz kategorie')).toHaveValues(['200'])
   await expect(page.getByLabel('Rok od')).toHaveValue('1900')
   await expect(page.getByLabel('Opis')).toHaveValue('Dane wpisane przed utworzeniem słownika')
 })
