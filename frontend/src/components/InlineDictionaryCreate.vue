@@ -60,10 +60,16 @@ async function create(): Promise<void> {
     <button type="button" @click="open">+ Dodaj {{ label.toLowerCase() }}</button>
 
     <div v-if="isOpen" class="editor">
-      <label>
-        Nowy wpis w {{ label.toLowerCase() }}
-        <input v-model="name" type="text" autocomplete="off" @keydown.enter.prevent="create" />
-      </label>
+      <div class="editor-field">
+        <span>Nowy wpis w {{ label.toLowerCase() }}</span>
+        <input
+          v-model="name"
+          type="text"
+          autocomplete="off"
+          :aria-label="`Nowy wpis w ${label.toLowerCase()}`"
+          @keydown.enter.prevent="create"
+        />
+      </div>
       <div>
         <button type="button" :disabled="saving" @click="create">Dodaj</button>
         <button type="button" :disabled="saving" @click="cancel">Anuluj</button>
@@ -87,7 +93,7 @@ async function create(): Promise<void> {
   border: 1px solid #ddd;
 }
 
-.editor label {
+.editor-field {
   display: grid;
   gap: 4px;
 }
