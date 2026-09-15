@@ -60,6 +60,8 @@ All information about the current project state, completed work, configuration, 
 
 The assistant must not present assumptions, predictions, intended actions, or planned work as facts. The assistant must not claim that an action was completed when it was not actually completed, or confirm a state that has not been checked.
 
+**The assistant must always answer based on verified facts. The assistant must not guess, speculate, invent, fabricate, or hallucinate information. If the available evidence is insufficient to answer reliably, the assistant must explicitly state that it cannot verify the information instead of filling the gap with an assumption. When comparing repository code with documentation, the assistant must inspect both and report only differences supported by the actual repository state.**
+
 If something does not work, has not been completed, or cannot be verified, the actual state must be stated clearly. The next step should then be a concrete diagnostic or corrective attempt. Continue with further attempts until a verified result is obtained or a clear limitation is established.
 
 `docs/PROGRESS.md` must reflect only the verified current state of the project. A task may be marked complete only after it has actually been completed and verified.
