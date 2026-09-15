@@ -55,16 +55,21 @@ Implemented:
 - additional image upload/deletion;
 - accepted external-file image storage convention;
 - category data structures and backend category APIs;
-- Playwright UI coverage for current coin/image workflows;
+- category management UI and parent/child relation management;
+- cycle prevention and category deletion protection;
+- coin-category assignment/removal UI;
+- Playwright UI coverage for coin/image and category workflows;
 - cross-era date-range behavior where numeric years are not compared across BC/AD eras.
 
-Final verification is complete: the backend tests and Ruff checks passed, the frontend production build passed, the current Playwright coin suite passed with 5 tests, manual cross-era entry was verified, and the final working tree was clean.
+Final verification is complete: the backend tests passed with 62 tests, Ruff checks passed, the frontend production build passed, the coin/image Playwright suite passed with 5 tests, the category and coin-category Playwright suite passed with 15 tests, manual cross-era entry was verified, and the final local working tree was clean.
 
 ## Historical Scope Adjustment
 
 The original roadmap placed image management, the full coin browser, and editing in later phases. During implementation these capabilities were pulled into Phase 4 because the first usable catalogue workflow required them.
 
-Those original phase numbers are therefore retained below as historical roadmap placeholders rather than representing unimplemented work.
+Category management and coin-category assignment were also completed as part of Phase 4. The historical Phase 8 placeholder therefore no longer represents missing category-management UI; it remains only for broader collection/tag capabilities.
+
+Those original phase numbers are retained below as historical roadmap placeholders rather than representing unimplemented work.
 
 ## Phase 5 — Search and Filtering
 
@@ -94,9 +99,9 @@ The basic Grid/List browser, details, active/archived views, and navigation are 
 
 ## Phase 8 — Collections, Categories and Tags
 
-**Status:** Partially implemented / future expansion
+**Status:** Partially absorbed into Phase 4 / future expansion
 
-Category data structures and backend APIs are already present in the current application. A user-facing category-management and coin-category assignment workflow, broader collection/tag model, and filtering workflow remain future work.
+The category data model, backend APIs, category-management UI, parent/child relations, cycle prevention, deletion protection, and coin-category assignment/removal are implemented. Broader collection/tag organization and related filtering remain future work.
 
 ## Phase 9 — Editing and Data Management
 
