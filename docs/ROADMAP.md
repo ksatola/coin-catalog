@@ -35,7 +35,7 @@ Established SQLite, SQLAlchemy, Alembic, the initial coin/reference schema, data
 
 ## Phase 4 — Coin Entry and Browser
 
-**Status:** Current / final verification
+**Status:** Complete
 
 Phase 4 has grown into the first usable catalogue slice and now includes functionality originally planned for later phases because it was required to make the workflow useful and verifiable.
 
@@ -57,7 +57,7 @@ Implemented:
 - Playwright UI coverage for current coin/image workflows;
 - cross-era date-range behavior where numeric years are not compared across BC/AD eras.
 
-The remaining Phase 4 work is final verification and cleanup only.
+Final verification is complete: the backend tests and Ruff checks passed, the frontend production build passed, the current Playwright coin suite passed with 5 tests, manual cross-era entry was verified, and the final working tree was clean.
 
 ## Historical Scope Adjustment
 
