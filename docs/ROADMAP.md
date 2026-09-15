@@ -15,132 +15,74 @@ This roadmap defines the planned development path for the coin catalogue and is 
 
 **Status:** Complete
 
-Established the Docker Dev Container, Python/uv environment, Node.js/Vue/Vite environment, host-browser access, and repository development workflow.
+Docker Dev Container, Python/uv, Node.js/Vue/Vite, host-browser access, and repository development workflow are established and verified.
 
 ## Phase 2 — Application Skeleton
 
 **Status:** Complete
 
-Established the FastAPI application, health endpoint, separate development servers, Vite `/api` proxy, and verified frontend-to-backend development flow.
+FastAPI, health endpoint, separate development servers, Vite `/api` proxy, and frontend-to-backend development flow are established and verified.
 
 ## Phase 3 — Database Foundation
 
 **Status:** Complete
 
-Established SQLite, SQLAlchemy, Alembic, the initial coin/reference schema, database behavior tests, and the accepted core coin data model.
+SQLite, SQLAlchemy, Alembic, the initial coin/reference schema, database behavior tests, and the accepted core coin data model are established and verified.
 
 ## Phase 4 — Coin Entry and Browser
 
 **Status:** Complete
 
-Phase 4 grew into the first usable catalogue slice and absorbed functionality originally planned for later phases where it was required by the usable workflow.
-
-Implemented and verified:
-
-- coin creation, retrieval, update, archive, and restore;
-- soft deletion and active/archived separation;
-- seven reference dictionaries with CRUD UI/API and deletion protection;
-- dictionary-backed coin entry and editing;
-- Grid/List browser, details, navigation and archive/restore actions;
-- coin image association, serving, primary-image replacement, and additional image management;
-- category data structures, APIs, management UI, parent/child relations, cycle prevention, and deletion protection;
-- coin-category assignment/removal;
-- cross-era date-range behavior.
-
-The final Phase 4 verification included backend tests, Ruff checks, frontend production build, Playwright coin/image and category coverage, manual cross-era entry, and a clean working tree.
+The first usable catalogue workflow is implemented and verified, including coin CRUD/archive/restore, dictionaries, browser views, images, categories, coin-category assignment, and cross-era date ranges.
 
 ## Historical Scope Adjustment
 
-The original roadmap placed image management, the full coin browser, and editing in later phases. These capabilities were pulled into Phase 4 because the first usable catalogue workflow required them.
-
-Category management and coin-category assignment were also completed as part of Phase 4. The historical Phase 8 placeholder therefore represents only broader collection/tag capabilities.
+Image management, the full coin browser, editing, category management, and coin-category assignment were absorbed into Phase 4 where required by the usable workflow. Broader collection/tag organization remains future work.
 
 ## Phase 5 — Search and Filtering
 
 **Status:** Complete
 
-Implemented and verified:
-
-- tokenized text search with normalized whitespace and order-independent AND matching;
-- search across coin fields, related reference/category names, descriptions, sources, eras, and years;
-- dictionary, era, year-range, image, video, status, and category filters;
-- recursive category filtering with optional subcategory inclusion;
-- OR semantics within filter types and AND semantics between different filter types;
-- deterministic sorting with ID tie-breaking;
-- duplicate-result protection;
-- user-facing search/filter workflow and reset behavior;
-- Playwright coverage.
-
-Final local validation passed: backend pytest, Ruff lint, Ruff format check, frontend production build, and the full Playwright UI suite.
+Search, dictionary/era/year/media/status/category filters, recursive category filtering, deterministic sorting, duplicate-result protection, reset behavior, and Playwright coverage are implemented and verified.
 
 ## Phase 6 — UI Foundation and Visual System
 
-**Status:** Implemented; final verification pending
+**Status:** Complete
 
-Implemented:
+The application layout, shared visual foundation, catalogue presentation modes, responsive gallery, image viewer, redesigned forms and management interfaces, and corresponding Playwright coverage are implemented and verified.
 
-- consistent application layout and main navigation;
-- shared visual foundation for typography, spacing, cards, forms, buttons, messages, focus states, and responsive layouts;
-- reusable catalogue presentation components;
-- shared active/archive catalogue view structure;
-- Gallery, Grid, and List presentation modes;
-- persistent view-mode and gallery-column preferences using localStorage;
-- responsive coin image gallery with configurable column count;
-- consistent coin information presentation across Grid, List, and Detail;
-- image viewer with keyboard navigation;
-- redesigned coin creation and editing interfaces;
-- preserved inline dictionary and category creation workflows;
-- redesigned category and dictionary management interfaces;
-- updated Playwright UI tests to match the implemented UI;
-- automated coverage for the coin image viewer.
+The original Phase 6 image-management focus was reduced because initial image management was already implemented in Phase 4. Further image-management extensions remain optional future work.
 
-Phase 6 does not introduce new domain functionality, database-model changes, or API changes.
+## Phase 7 — Collection Number
 
-The latest verified Playwright result before the final inline-category fix was **39 passed, 1 failed**. The remaining failure was addressed in the inline category creation flow, but the resulting test run has not yet been independently verified.
+**Status:** Complete
 
-### Historical Scope Adjustment
+The collection number is an optional user-facing text value independent from the technical database ID.
 
-The original Phase 6 scope focused on image management. Initial image-management capability was implemented during Phase 4. Further image-management extensions remain optional future work.
+Implemented and verified:
 
-## Next Step — Collection Number
+- database field and Alembic migration;
+- API/model/schema support;
+- creation and editing;
+- catalogue display;
+- search support;
+- backend automated coverage;
+- Playwright create/edit coverage;
+- catalogue scroll-position preservation during search refreshes.
 
-**Status:** Planned
+The collection number has no uniqueness rule or restrictive format at this stage.
 
-After final verification of Phase 6, introduce a dedicated collection number for each coin.
+## Phase 8 — Coin Browser Optimization
 
-The collection number will be a user-facing text value independent from the technical database ID.
+**Status:** Future / conditional
 
-Planned work:
+The basic browser is already implemented. Pagination or other large-collection optimization should be introduced only if actual collection size or performance requirements justify it.
 
-- add the collection-number field to the coin data model;
-- define semantics, allowed format, and uniqueness rules;
-- add the field to the backend API and validation;
-- add collection-number input to creation and editing;
-- include the collection number in coin search;
-- display both technical ID and collection number where appropriate;
-- preserve the technical database ID separately;
-- add the database migration;
-- add automated backend and UI tests.
+## Phase 9 — Broader Collections, Categories and Tags
 
-This work will use a separate feature branch.
+**Status:** Future expansion
 
-## Phase 7 — Coin Browser
-
-**Status:** Partially absorbed into Phase 4
-
-The basic Grid/List browser, details, active/archived views, and navigation are implemented. Pagination or other large-collection optimization remains future work if required.
-
-## Phase 8 — Collections, Categories and Tags
-
-**Status:** Partially absorbed into Phase 4 / future expansion
-
-The category data model, backend APIs, management UI, parent/child relations, cycle prevention, deletion protection, and coin-category assignment/removal are implemented. Broader collection/tag organization remains future work.
-
-## Phase 9 — Editing and Data Management
-
-**Status:** Partially absorbed into Phase 4
-
-Coin metadata editing is implemented. Future work may extend editing to additional organization and collection-management features.
+Current category functionality is implemented. Broader collection/tag organization remains future work.
 
 ## Phase 10 — Backup and Export
 
@@ -150,9 +92,9 @@ Planned: database/image backup strategy, metadata export, and full catalogue exp
 
 ## Phase 11 — Testing and Quality
 
-**Status:** In progress as an ongoing concern
+**Status:** Ongoing
 
-Automated backend and Playwright UI testing exists. Broader integration coverage, CI checks, and additional quality automation remain future work.
+Backend and Playwright automation exists. Broader integration coverage, CI checks, and additional quality automation remain future work.
 
 ## Phase 12 — Packaging and Deployment
 
