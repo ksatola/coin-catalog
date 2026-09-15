@@ -67,7 +67,9 @@ def _category_search_exists_for_coin(token: str, include_children: bool):
 
 def _dictionary_search_exists_for_coin(model, coin_column, pattern: str):
     return exists(
-        select(1).select_from(model).where(
+        select(1)
+        .select_from(model)
+        .where(
             model.name.ilike(pattern),
             model.id == coin_column,
         )
@@ -76,7 +78,9 @@ def _dictionary_search_exists_for_coin(model, coin_column, pattern: str):
 
 def _era_search_exists_for_coin(coin_column, pattern: str):
     return exists(
-        select(1).select_from(Era).where(
+        select(1)
+        .select_from(Era)
+        .where(
             Era.name.ilike(pattern),
             Era.id == coin_column,
         )
