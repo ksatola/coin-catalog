@@ -134,7 +134,16 @@ def test_search_supports_three_character_fragments(
     assert ids(client.get("/coins?search=ros")) == [coin.id]
 
 
-def test_search_matches_category_ancestors(
+def test_search_rejects_fragments_shorter_than_three_characters(
+    client: TestClient,
+) -> None:
+    response = client.get("/coins?search=ab")
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Search terms must contain at least 3 characters"
+
+
+def test_search_matches_category_ancestors_and_exact_scope(
     client: TestClient,
     data: dict[str, Coin | Category],
 ) -> None:
@@ -146,6 +155,11 @@ def test_search_matches_category_ancestors(
     assert ids(client.get(f"/coins?search={root.name}")) == [coin.id]
     assert ids(client.get(f"/coins?search={parent.name}")) == [coin.id]
     assert ids(client.get(f"/coins?search={child.name}")) == [coin.id]
+    assert ids(
+        client.get(
+            f"/coins?search={root.name}&include_category_children=false"
+        )
+    ) == []
 
 
 def test_category_filter_can_include_or_exclude_children(
