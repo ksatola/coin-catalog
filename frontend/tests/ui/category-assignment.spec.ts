@@ -106,10 +106,12 @@ test('moneta pozwala przypisać i usunąć kategorię', async ({ page }) => {
   await page.locator('.category-form select').selectOption('2')
   await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
 
-  const categoryItem = page.locator('.category-list li').filter({ hasText: 'II RP' })
+  const categoryItem = page
+    .locator('.category-list li')
+    .filter({ has: page.getByRole('button', { name: 'II RP', exact: true }) })
   await expect(categoryItem).toBeVisible()
 
-  await categoryItem.getByRole('button', { name: 'Usuń' }).click()
+  await categoryItem.getByRole('button', { name: 'Usuń', exact: true }).click()
 
   await expect(categoryItem).not.toBeVisible()
 })
