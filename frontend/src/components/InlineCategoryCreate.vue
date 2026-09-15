@@ -18,7 +18,11 @@ const parentIds = ref<number[]>([])
 const errorMessage = ref('')
 const saving = ref(false)
 
-function open(): void {
+function toggle(): void {
+  if (isOpen.value) {
+    cancel()
+    return
+  }
   isOpen.value = true
   errorMessage.value = ''
 }
@@ -78,22 +82,29 @@ async function create(): Promise<void> {
 </script>
 
 <template>
-  <div class="inline-create">
-    <button type="button" @click="open">+ Dodaj kategorię</button>
+  <div class="inline-create" :class="{ 'is-open': isOpen }">
+    <button
+      type="button"
+      class="open-button"
+      :aria-expanded="isOpen"
+      @click="toggle"
+    >
+      + Dodaj kategorię
+    </button>
 
     <div v-if="isOpen" class="editor">
-      <label>
-        Nazwa nowej kategorii
+      <label class="editor-field">
+        <span>Nazwa nowej kategorii</span>
         <input v-model="name" type="text" autocomplete="off" />
       </label>
 
-      <label>
-        Opis
+      <label class="editor-field">
+        <span>Opis</span>
         <textarea v-model="description" rows="3" />
       </label>
 
-      <label>
-        Rodzice
+      <label class="editor-field">
+        <span>Rodzice</span>
         <select v-model="parentIds" multiple size="4">
           <option v-for="category in props.categories" :key="category.id" :value="category.id">
             {{ category.name }}
@@ -101,9 +112,9 @@ async function create(): Promise<void> {
         </select>
       </label>
 
-      <div>
-        <button type="button" :disabled="saving" @click="create">Dodaj</button>
-        <button type="button" :disabled="saving" @click="cancel">Anuluj</button>
+      <div class="editor-actions">
+        <button type="button" class="editor-primary" :disabled="saving" @click="create">Dodaj</button>
+        <button type="button" class="editor-secondary" :disabled="saving" @click="cancel">Anuluj</button>
       </div>
       <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
@@ -112,24 +123,128 @@ async function create(): Promise<void> {
 
 <style scoped>
 .inline-create {
+  position: relative;
   display: grid;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 2px;
+  z-index: 30;
+}
+
+.inline-create.is-open {
+  z-index: 1000;
+}
+
+.open-button {
+  justify-self: start;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #0f172a;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .editor {
+  position: relative;
+  z-index: 1000;
   display: grid;
-  gap: 8px;
+  gap: 12px;
+  width: min(420px, 100%);
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.editor-field {
+  display: grid;
+  gap: 6px;
+}
+
+.editor-field span {
+  color: #0f172a;
+  font-size: .875rem;
+  font-weight: 600;
+}
+
+.editor input,
+.editor textarea,
+.editor select {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+}
+
+.editor input,
+.editor textarea {
+  padding: 10px 12px;
+}
+
+.editor input {
+  min-height: 44px;
+}
+
+.editor textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.editor select {
+  min-height: 120px;
   padding: 8px;
-  border: 1px solid #ddd;
 }
 
-.editor label {
-  display: grid;
-  gap: 4px;
+.editor input:focus-visible,
+.editor textarea:focus-visible,
+.editor select:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, .25);
+  outline-offset: 2px;
 }
 
-.editor button {
-  margin-right: 8px;
+.editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.editor-actions button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.editor-primary {
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.editor-secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.editor-actions button:disabled {
+  cursor: default;
+  opacity: .6;
+}
+
+.editor p {
+  margin: 0;
+  color: #991b1b;
+  font-size: .8rem;
 }
 </style>
