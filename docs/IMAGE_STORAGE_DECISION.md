@@ -29,11 +29,21 @@ The current implementation already stores image metadata in SQLite and exposes i
 
 When an image is imported through the application by drag-and-drop or paste, the application uses the selected or identified coin ID to construct the target filename and must never silently overwrite an existing image. If the target filename already exists, the user must explicitly confirm replacement before the existing file is overwritten.
 
+### Original JPG quality
+
+The image upload path is **byte-preserving**. The backend reads the uploaded file bytes directly and writes those same bytes to the target JPG file. It does not decode and re-encode the JPEG, use a JPEG `quality` setting, resize the image, or otherwise perform lossy image processing during storage.
+
+This means that uploading an existing JPG does not introduce an additional JPEG compression step and does not reduce its original encoded image quality. The stored file is the same JPEG byte stream supplied by the upload.
+
+This property is covered by backend image tests that compare the uploaded source bytes with the bytes written to the `images/` directory. Any future image-processing feature must preserve the original uploaded file separately and must not replace it with a recompressed version.
+
 ### Rationale
 
 The collection contains rectangular JPG photographs that are close to square, and the browser grid is designed around square image cells. Direct flat storage in `images/` keeps the file collection simple and predictable; the six-digit coin ID provides stable lexical sorting and grouping without requiring per-coin directories.
 
 Keeping image metadata in SQLite while retaining the actual JPG files on disk separates structured catalogue data from potentially large binary files and leaves room for future metadata, serving, and thumbnail features.
+
+Preserving the uploaded JPEG byte stream avoids unnecessary generation loss and keeps the stored original suitable as the authoritative photograph for the collection.
 
 ### Consequences
 
@@ -43,4 +53,5 @@ Keeping image metadata in SQLite while retaining the actual JPG files on disk se
 - A coin has one primary obverse image and one primary reverse image.
 - Additional images are represented as sequential numbered files for the same coin.
 - Image metadata is stored in SQLite in the current implementation.
-- Future image-management work must preserve the no-silent-overwrite rule.
+- Uploaded JPG bytes are stored without JPEG re-encoding or quality reduction.
+- Future image-management work must preserve the no-silent-overwrite rule and the byte-preserving original-image rule.
