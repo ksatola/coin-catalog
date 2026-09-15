@@ -1,14 +1,14 @@
 """add collection number to coins
 
 Revision ID: 9c7e1a2b4d6f
-Revises: 7b2e4c1d9a60
+Revises: 7a1b2c3d4e5f
 """
 
 import sqlalchemy as sa
 from alembic import op
 
 revision = "9c7e1a2b4d6f"
-down_revision = "7b2e4c1d9a60"
+down_revision = "7a1b2c3d4e5f"
 branch_labels = None
 depends_on = None
 
