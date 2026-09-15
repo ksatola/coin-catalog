@@ -8,8 +8,6 @@ const coin = {
   from_year: 1900,
   from_era_id: 1,
   to_year: 1901,
-  from_era_id: 1,
-  to_year: 1901,
   to_era_id: 1,
   mint_id: null,
   material_id: null,
