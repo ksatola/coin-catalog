@@ -18,39 +18,70 @@ const initialCategories: Category[] = [
 ]
 
 function cloneCategories(): Category[] {
-  return initialCategories.map((category) => ({ ...category, parent_ids: [...category.parent_ids], child_ids: [...category.child_ids] }))
+  return initialCategories.map((category) => ({
+    ...category,
+    parent_ids: [...category.parent_ids],
+    child_ids: [...category.child_ids],
+  }))
 }
 
 function hasPath(state: Category[], fromId: number, toId: number): boolean {
   const visited = new Set<number>()
   const stack = [fromId]
+
   while (stack.length) {
     const currentId = stack.pop()!
     if (currentId === toId) return true
     if (visited.has(currentId)) continue
     visited.add(currentId)
+
     const current = state.find((category) => category.id === currentId)
     if (current) stack.push(...current.child_ids)
   }
+
   return false
 }
 
 async function mockCategoryApi(page: Page): Promise<void> {
   const state = cloneCategories()
+  const coinCategoryIds = new Set([2])
   let nextId = 5
+  let categoryCreateRequests = 0
 
   await page.route('**/api/categories', async (route) => {
     if (route.request().method() === 'GET') {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(state) })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(state),
+      })
       return
     }
+
     if (route.request().method() === 'POST') {
-      const body = route.request().postDataJSON() as { name: string; description: string | null }
-      const category: Category = { id: nextId++, name: body.name, description: body.description, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', parent_ids: [], child_ids: [] }
+      categoryCreateRequests += 1
+      const body = route.request().postDataJSON() as {
+        name: string
+        description: string | null
+      }
+      const category: Category = {
+        id: nextId++,
+        name: body.name.trim(),
+        description: body.description,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+        parent_ids: [],
+        child_ids: [],
+      }
       state.push(category)
-      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(category) })
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify(category),
+      })
       return
     }
+
     await route.fallback()
   })
 
@@ -63,12 +94,14 @@ async function mockCategoryApi(page: Page): Promise<void> {
       const parentId = Number(parts[4])
       const child = state.find((category) => category.id === childId)
       const parent = state.find((category) => category.id === parentId)
+
       if (!child || !parent) {
         await route.fulfill({ status: 404, body: '' })
         return
       }
+
       if (method === 'POST') {
-        if (childId === parentId || hasPath(state, childId, parentId)) {
+        if (hasPath(state, childId, parentId)) {
           await route.fulfill({ status: 409, body: '' })
           return
         }
@@ -77,7 +110,13 @@ async function mockCategoryApi(page: Page): Promise<void> {
         await route.fulfill({ status: 201, body: '' })
         return
       }
+
       if (method === 'DELETE') {
+        const relationExists = child.parent_ids.includes(parentId)
+        if (!relationExists) {
+          await route.fulfill({ status: 404, body: '' })
+          return
+        }
         child.parent_ids = child.parent_ids.filter((id) => id !== parentId)
         parent.child_ids = parent.child_ids.filter((id) => id !== childId)
         await route.fulfill({ status: 204, body: '' })
@@ -91,15 +130,26 @@ async function mockCategoryApi(page: Page): Promise<void> {
       await route.fulfill({ status: 404, body: '' })
       return
     }
+
     if (method === 'PUT') {
-      const body = route.request().postDataJSON() as { name: string; description: string | null }
-      category.name = body.name
+      const body = route.request().postDataJSON() as {
+        name: string
+        description: string | null
+      }
+      category.name = body.name.trim()
       category.description = body.description
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(category) })
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(category),
+      })
       return
     }
+
     if (method === 'DELETE') {
-      if (categoryId === 2 || category.parent_ids.length > 0 || category.child_ids.length > 0) {
+      const hasRelations = category.parent_ids.length > 0 || category.child_ids.length > 0
+      const isUsedByCoin = coinCategoryIds.has(categoryId)
+      if (hasRelations || isUsedByCoin) {
         await route.fulfill({ status: 409, body: '' })
         return
       }
@@ -107,19 +157,47 @@ async function mockCategoryApi(page: Page): Promise<void> {
       await route.fulfill({ status: 204, body: '' })
       return
     }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(category) })
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(category),
+    })
   })
+
+  await page.route('**/api/categories', async (route) => {
+    if (route.request().method() === 'POST') {
+      categoryCreateRequests += 1
+    }
+    await route.fallback()
+  })
+
+  await page.addInitScript(() => {
+    Object.defineProperty(window, '__categoryCreateRequests', {
+      configurable: true,
+      get: () => undefined,
+    })
+  })
+
+  void categoryCreateRequests
 }
 
 function categoryItem(page: Page, name: string) {
-  return page.locator('.category-list li').filter({ has: page.getByRole('button', { name, exact: true }) })
+  return page.locator('.category-list li').filter({
+    has: page.getByRole('button', { name, exact: true }),
+  })
 }
 
 function relationLine(page: Page, name: string, index: number) {
   return categoryItem(page, name).locator('.category-relations > div').nth(index)
 }
 
-async function expectRelations(page: Page, name: string, parents: string, children: string): Promise<void> {
+async function expectRelations(
+  page: Page,
+  name: string,
+  parents: string,
+  children: string,
+): Promise<void> {
   await expect(relationLine(page, name, 0)).toHaveText(`Parents:${parents}`)
   await expect(relationLine(page, name, 1)).toHaveText(`Children:${children}`)
 }
@@ -164,12 +242,14 @@ test('utworzenie kategorii pozwala od razu przypisać wielu rodziców', async ({
   await expectRelations(page, 'PRL', '—', 'Monety okolicznościowe')
 })
 
-test('pusta nazwa kategorii jest odrzucana przez walidację formularza', async ({ page }) => {
+test('pusta lub biała nazwa kategorii nie jest zapisywana', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
   await page.getByRole('button', { name: '+ Nowa kategoria' }).click()
-  await expect(page.getByLabel('Nazwa')).toHaveAttribute('required', '')
-  await expect(categoryItem(page, 'Monety obiegowe')).not.toBeVisible()
+  await page.getByLabel('Nazwa').fill('   ')
+  await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
+  await expect(page.getByText('Nazwa nie może być pusta.')).toBeVisible()
+  await expect(categoryItem(page, '   ')).not.toBeVisible()
 })
 
 test('edycja kategorii aktualizuje nazwę i opis', async ({ page }) => {
@@ -231,16 +311,26 @@ test('usunięcie dziecka aktualizuje relacje w widoku kategorii', async ({ page 
   await expectRelations(page, 'II RP', '—', '—')
 })
 
-test('widok kategorii blokuje utworzenie cyklu przez niedostępnego potomka', async ({ page }) => {
+test('utworzenie relacji pośrednio tworzącej cykl jest odrzucane', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
+
   await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
   await page.locator('.relation-controls select').nth(0).selectOption('3')
   await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
+
   await categoryItem(page, 'PRL').getByRole('button', { name: 'PRL', exact: true }).click()
-  await expect(page.locator('.relation-controls select').nth(0).locator('option[value="1"]')).toHaveCount(0)
+  await page.locator('.relation-controls select').nth(0).selectOption('4')
+  await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
+
+  await categoryItem(page, 'III RP').getByRole('button', { name: 'III RP', exact: true }).click()
+  await page.locator('.relation-controls select').nth(0).selectOption('1')
+  await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
+
+  await expect(page.getByText('Nie można dodać rodzica, ponieważ relacja utworzyłaby cykl.')).toBeVisible()
   await expectRelations(page, 'Polska', 'PRL', 'II RP')
-  await expectRelations(page, 'PRL', '—', 'Polska')
+  await expectRelations(page, 'PRL', 'III RP', 'Polska')
+  await expectRelations(page, 'III RP', '—', 'PRL')
 })
 
 test('kategoria posiadająca relacje nie może zostać usunięta', async ({ page }) => {
@@ -253,7 +343,7 @@ test('kategoria posiadająca relacje nie może zostać usunięta', async ({ page
   await expect(categoryItem(page, 'Polska')).toBeVisible()
 })
 
-test('kategoria używana przez monetę nie może zostać usunięta', async ({ page }) => {
+test('kategoria przypisana do monety nie może zostać usunięta', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
   await categoryItem(page, 'II RP').getByRole('button', { name: 'II RP', exact: true }).click()
