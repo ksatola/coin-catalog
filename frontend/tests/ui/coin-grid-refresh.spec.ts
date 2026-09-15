@@ -39,7 +39,7 @@ test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page
   await expect(page.getByAltText('Awers monety #2')).toBeVisible()
 
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
-  await page.getByLabel('Szukaj').fill('test')
+  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
