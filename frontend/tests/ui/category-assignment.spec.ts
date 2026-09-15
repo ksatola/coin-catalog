@@ -101,14 +101,14 @@ test('moneta pozwala przypisać i usunąć kategorię', async ({ page }) => {
   await page.goto('/monety/404')
 
   await expect(page.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
-  await expect(page.getByText('Polska', { exact: true })).toBeVisible()
+  await expect(page.locator('.category-assignment').getByText('Polska', { exact: true })).toBeVisible()
 
   await page.locator('.category-form select').selectOption('2')
   await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
 
   const categoryItem = page
-    .locator('.category-list li')
-    .filter({ has: page.getByRole('button', { name: 'II RP', exact: true }) })
+    .locator('.category-assignment .category-list li')
+    .filter({ hasText: 'II RP' })
   await expect(categoryItem).toBeVisible()
 
   await categoryItem.getByRole('button', { name: 'Usuń', exact: true }).click()
