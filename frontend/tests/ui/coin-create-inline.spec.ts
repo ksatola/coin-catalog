@@ -34,7 +34,7 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   await page.route('**/api/categories', async (route) => {
     if (route.request().method() === 'POST') {
       const body = route.request().postDataJSON() as { name: string; description: string | null }
-      const category = { id: nextCategoryId++, name: body.name, description: body.description, parent_ids: [], child_ids: [], created_at: '', updated_at: '' }
+      const category = { id: nextCategoryId++, name: body.name, description: body.description, parent_ids: [], child_ids: [], created_at: '', updated_at: '', }
       categories.push(category)
       await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(category) })
       return
@@ -52,7 +52,7 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   await page.getByRole('textbox', { name: 'Nowy wpis w kraj' }).fill('Czechy')
   await page.getByRole('button', { name: 'Dodaj' }).first().click()
 
-  await expect(page.getByRole('combobox', { name: 'Kraj', exact: true })).toHaveValue('100')
+  await expect(page.getByLabel('Kraj', { exact: true })).toHaveValue('100')
   await expect(page.getByLabel('Rok od')).toHaveValue('1900')
   await expect(page.getByLabel('Rok do')).toHaveValue('1901')
   await expect(page.getByLabel('Opis')).toHaveValue('Dane wpisane przed utworzeniem słownika')
