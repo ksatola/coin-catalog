@@ -3,15 +3,9 @@ import { onMounted, reactive } from 'vue'
 
 import type { Coin, CoinImage } from '../types'
 
-const props = withDefaults(
-  defineProps<{
-    coins: Coin[]
-    archived?: boolean
-  }>(),
-  {
-    archived: false,
-  },
-)
+const props = defineProps<{
+  coins: Coin[]
+}>()
 
 const emit = defineEmits<{
   details: [coin: Coin]
@@ -81,7 +75,7 @@ onMounted(() => {
       </button>
 
       <button
-        v-if="!archived"
+        v-if="!coin.is_deleted"
         type="button"
         @click="emit('archive', coin)"
       >

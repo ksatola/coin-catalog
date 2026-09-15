@@ -6,11 +6,11 @@ This document records the current, verified state of the project. A task is mark
 
 ## Current Phase
 
-**Phase 4 — Coin Entry and Browser is complete.**
+**Phase 5 — Search and Filtering is complete.**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, and Phase 4 — Coin Entry and Browser are complete. Phase 4 provides the first usable catalogue workflow: coin entry, SQLite persistence, browsing, details, editing, archive/restore, dictionary management, image management, category management, and coin-category assignment.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, and Phase 5 — Search and Filtering are complete. Phase 5 adds user-facing search and filtering to the catalogue, including recursive category filtering and sorting.
 
-No new development phase has been started after Phase 4.
+No new development phase has been started after Phase 5.
 
 ---
 
@@ -141,6 +141,55 @@ Phase 4 is therefore complete.
 
 ---
 
+## Phase 5 — Search and Filtering
+
+**Status:** Complete
+
+### Backend
+
+- [x] Dedicated coin-query builder for search, filtering, status, and sorting.
+- [x] Tokenized text search with normalized whitespace.
+- [x] Text-search tokens are combined with AND semantics and are independent of word order.
+- [x] Search covers country, issuer, denomination, mint, material, state, era, description, source, year endpoints, and category names.
+- [x] Dictionary filters for the supported coin reference fields.
+- [x] Era filtering.
+- [x] Year-range overlap filtering.
+- [x] Image and video presence filters.
+- [x] Active, archived, and all status filtering.
+- [x] Category filtering with optional recursive inclusion of subcategories.
+- [x] Multiple selected categories use OR semantics within the category filter.
+- [x] Different filter types combine with AND semantics.
+- [x] Sorting by coin ID and year endpoints in ascending or descending order.
+- [x] Stable sorting with coin ID as a tie-breaker.
+- [x] Defensive distinct handling to prevent duplicate coins in query results.
+
+### Frontend
+
+- [x] User-facing `Wyszukiwanie i filtrowanie monet` workflow.
+- [x] Search input with minimum three-character validation per search token.
+- [x] Dictionary filter controls.
+- [x] Era, year, image, video, and status filters.
+- [x] Category filter with `Uwzględniaj podkategorie` enabled by default.
+- [x] Direct-category filtering when subcategory inclusion is disabled.
+- [x] Sort controls.
+- [x] Filter reset behavior.
+
+### Automated verification
+
+Verified:
+
+- backend pytest suite passes;
+- Ruff lint passes;
+- Ruff format check passes;
+- frontend production build passes;
+- all Playwright UI tests pass.
+
+Playwright runs with both the frontend development server and FastAPI backend available, so the verified browser run does not depend on an unavailable backend proxy target.
+
+Phase 5 is therefore complete.
+
+---
+
 ## Image Management
 
 **Status:** Initial implementation complete
@@ -191,11 +240,11 @@ The application has no XLS/XLSX import implementation. Collection metadata will 
 
 ---
 
-## Search and Filtering
+## Search and Filtering — Historical Summary
 
-**Status:** Not started
+The Phase 5 implementation is recorded above. Search and filtering are now part of the verified catalogue workflow.
 
-Planned: searchable fields, basic search, filtering, sorting, and query optimization where required.
+Broader collection/tag organization and related filtering remain future work.
 
 ---
 
@@ -219,7 +268,7 @@ Planned: database/image backup strategy and useful metadata/catalogue export.
 
 **Status:** Ongoing
 
-Backend pytest and Ruff checks and Playwright UI coverage are established. Current Phase 4 UI scenarios are verified. Broader integration tests, CI checks, and further quality automation remain future work.
+Backend pytest and Ruff checks and Playwright UI coverage are established. Phase 5 search/filtering verification is complete. Broader integration tests, CI checks, and further quality automation remain future work.
 
 ---
 
@@ -233,7 +282,7 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-No new development phase has been started after Phase 4. The next implementation task has not been approved yet.
+No new development phase has been started after Phase 5. The next implementation task has not been approved yet.
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md`. Stop for discussion if the review identifies a direction or architecture change.
 
@@ -242,6 +291,14 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 ## Change Log
 
 ### 2026-09-15
+
+- Completed and verified Phase 5 — Search and Filtering.
+- Recorded the implemented search, filtering, recursive category filtering, and sorting behavior.
+- Recorded passing backend pytest, Ruff lint, Ruff format, frontend production build, and Playwright verification.
+- Updated the current phase from Phase 4 to Phase 5.
+- Synchronized the progress record with the verified Phase 5 implementation.
+
+### 2026-09-15 — Phase 4
 
 - Closed Phase 4 after the final local verification pass.
 - Recorded passing backend tests, Ruff checks, frontend production build, and the 5-scenario Playwright coin suite.

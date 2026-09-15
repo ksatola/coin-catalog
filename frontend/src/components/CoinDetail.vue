@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 
-import CategoryAssignment from './CategoryAssignment.vue'
+import CoinCategoriesReadOnly from './CoinCategoriesReadOnly.vue'
 import type { Coin, CoinImage } from '../types'
 
 type DictionaryItem = {
@@ -169,8 +169,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <CategoryAssignment :coin-id="coin.id" />
-
     <dl>
       <dt>Kraj</dt>
       <dd>{{ dictionaryName(dictionaries.countries, coin.country_id) }}</dd>
@@ -222,6 +220,8 @@ onMounted(() => {
       <dt>Status</dt>
       <dd>{{ coin.is_deleted ? 'Zarchiwizowana' : 'Aktywna' }}</dd>
     </dl>
+
+    <CoinCategoriesReadOnly :coin-id="coin.id" />
   </section>
 </template>
 

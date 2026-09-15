@@ -104,7 +104,7 @@ async function mockCommonApi(page: Page) {
     })
   })
 
-  await page.route('**/api/coins', async (route) => {
+  await page.route('**/api/coins*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -196,6 +196,10 @@ test('anulowanie edycji nie zapisuje podmiany awersu', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Edytuj monetę' })).toBeVisible()
 
   await dropJpeg(page, 'nowy-awers.jpg')
+  page.once('dialog', async (dialog) => {
+    expect(dialog.type()).toBe('confirm')
+    await dialog.accept()
+  })
   await page.getByRole('button', { name: 'Anuluj' }).click()
   await page.waitForURL(`/monety/${coinId}`)
 
