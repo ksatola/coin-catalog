@@ -50,7 +50,7 @@ async function mockDictionaries(page: Page): Promise<void> {
 test('Dodaj monetę: pole numeru kolekcji przyjmuje wartość', async ({ page }) => {
   await mockDictionaries(page)
   await page.goto('/dodaj')
-  await expect(page.getByRole('heading', { name: 'Dodaj monetę' })).toBeVisible()
+  await expect(page.locator('h1')).toHaveText('Dodaj monetę')
 
   const collectionNumber = page.getByLabel('Numer kolekcji')
   await collectionNumber.fill('KC-001')
