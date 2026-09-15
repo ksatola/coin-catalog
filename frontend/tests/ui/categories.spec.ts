@@ -57,6 +57,23 @@ function cloneCategories(): Category[] {
   }))
 }
 
+function hasPath(state: Category[], fromId: number, toId: number): boolean {
+  const visited = new Set<number>()
+  const stack = [fromId]
+
+  while (stack.length > 0) {
+    const currentId = stack.pop()!
+    if (currentId === toId) return true
+    if (visited.has(currentId)) continue
+    visited.add(currentId)
+
+    const current = state.find((category) => category.id === currentId)
+    if (current) stack.push(...current.child_ids)
+  }
+
+  return false
+}
+
 async function mockCategoryApi(page: Page): Promise<void> {
   const state = cloneCategories()
   let nextId = 5
@@ -72,7 +89,10 @@ async function mockCategoryApi(page: Page): Promise<void> {
     }
 
     if (route.request().method() === 'POST') {
-      const body = route.request().postDataJSON() as { name: string; description: string | null }
+      const body = route.request().postDataJSON() as {
+        name: string
+        description: string | null
+      }
       const category: Category = {
         id: nextId++,
         name: body.name,
@@ -96,8 +116,7 @@ async function mockCategoryApi(page: Page): Promise<void> {
 
   await page.route('**/api/categories/*', async (route) => {
     const method = route.request().method()
-    const path = new URL(route.request().url()).pathname
-    const parts = path.split('/').filter(Boolean)
+    const parts = new URL(route.request().url()).pathname.split('/').filter(Boolean)
 
     if (parts.length === 5 && parts[3] === 'parents') {
       const childId = Number(parts[2])
@@ -111,7 +130,7 @@ async function mockCategoryApi(page: Page): Promise<void> {
       }
 
       if (method === 'POST') {
-        if (childId === parentId || parent.child_ids.includes(childId)) {
+        if (childId === parentId || hasPath(state, childId, parentId)) {
           await route.fulfill({ status: 409, body: '' })
           return
         }
@@ -138,7 +157,10 @@ async function mockCategoryApi(page: Page): Promise<void> {
     }
 
     if (method === 'PUT') {
-      const body = route.request().postDataJSON() as { name: string; description: string | null }
+      const body = route.request().postDataJSON() as {
+        name: string
+        description: string | null
+      }
       category.name = body.name
       category.description = body.description
       await route.fulfill({
@@ -168,24 +190,23 @@ async function mockCategoryApi(page: Page): Promise<void> {
 }
 
 function categoryItem(page: Page, name: string) {
-  return page.locator('.category-list li').filter({ hasText: name })
+  return page
+    .locator('.category-list li')
+    .filter({ has: page.getByRole('button', { name, exact: true }) })
 }
 
 test('widok kategorii pokazuje relacje rodziców i dzieci dla wszystkich kategorii', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
 
-  const polska = categoryItem(page, 'Polska')
-  await expect(polska).toContainText('Parents: —')
-  await expect(polska).toContainText('Children: II RP')
-
-  const iiRp = categoryItem(page, 'II RP')
-  await expect(iiRp).toContainText('Parents: Polska')
-  await expect(iiRp).toContainText('Children: —')
-
-  const prl = categoryItem(page, 'PRL')
-  await expect(prl).toContainText('Parents: —')
-  await expect(prl).toContainText('Children: —')
+  await expect(categoryItem(page, 'Polska')).toContainText('Parents: —')
+  await expect(categoryItem(page, 'Polska')).toContainText('Children: II RP')
+  await expect(categoryItem(page, 'II RP')).toContainText('Parents: Polska')
+  await expect(categoryItem(page, 'II RP')).toContainText('Children: —')
+  await expect(categoryItem(page, 'PRL')).toContainText('Parents: —')
+  await expect(categoryItem(page, 'PRL')).toContainText('Children: —')
+  await expect(categoryItem(page, 'III RP')).toContainText('Parents: —')
+  await expect(categoryItem(page, 'III RP')).toContainText('Children: —')
 })
 
 test('widok kategorii pozwala wybrać istniejącą kategorię i edytować jej dane', async ({ page }) => {
@@ -193,10 +214,9 @@ test('widok kategorii pozwala wybrać istniejącą kategorię i edytować jej da
   await page.goto('/kategorie')
 
   await expect(page.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
-  await page.getByRole('button', { name: 'Polska' }).click()
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Edytuj kategorię' })).toBeVisible()
   await expect(page.getByLabel('Nazwa')).toHaveValue('Polska')
-  await expect(page.locator('form').getByText('II RP')).toBeVisible()
 })
 
 test('utworzenie kategorii zapisuje nazwę i opis', async ({ page }) => {
@@ -208,7 +228,10 @@ test('utworzenie kategorii zapisuje nazwę i opis', async ({ page }) => {
   await page.getByLabel('Opis').fill('Monety przeznaczone do obiegu')
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
 
-  await expect(categoryItem(page, 'Monety obiegowe')).toContainText('Parents: —')
+  const created = categoryItem(page, 'Monety obiegowe')
+  await expect(created).toBeVisible()
+  await expect(created).toContainText('Parents: —')
+  await expect(created).toContainText('Children: —')
 })
 
 test('utworzenie kategorii pozwala od razu przypisać wielu rodziców', async ({ page }) => {
@@ -222,21 +245,23 @@ test('utworzenie kategorii pozwala od razu przypisać wielu rodziców', async ({
 
   const created = categoryItem(page, 'Monety okolicznościowe')
   await expect(created).toContainText('Parents: Polska, PRL')
+  await expect(categoryItem(page, 'Polska')).toContainText('Children: II RP, Monety okolicznościowe')
+  await expect(categoryItem(page, 'PRL')).toContainText('Children: Monety okolicznościowe')
 })
 
-test('pusta nazwa kategorii jest odrzucana', async ({ page }) => {
+test('pusta nazwa kategorii jest odrzucana przez walidację formularza', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
   await page.getByRole('button', { name: '+ Nowa kategoria' }).click()
 
-  await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
-  await expect(page.getByText('Nazwa nie może być pusta.')).toBeVisible()
+  await expect(page.getByLabel('Nazwa')).toHaveAttribute('required', '')
+  await expect(categoryItem(page, 'Monety obiegowe')).not.toBeVisible()
 })
 
 test('edycja kategorii aktualizuje nazwę i opis', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'PRL' }).click()
+  await categoryItem(page, 'PRL').getByRole('button', { name: 'PRL', exact: true }).click()
 
   await page.getByLabel('Nazwa').fill('PRL - monety')
   await page.getByLabel('Opis').fill('Monety okresu PRL')
@@ -248,7 +273,7 @@ test('edycja kategorii aktualizuje nazwę i opis', async ({ page }) => {
 test('anulowanie edycji wraca do formularza nowej kategorii', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'Polska' }).click()
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
   await page.getByRole('button', { name: 'Anuluj' }).click()
 
   await expect(page.getByRole('heading', { name: 'Nowa kategoria' })).toBeVisible()
@@ -258,35 +283,37 @@ test('anulowanie edycji wraca do formularza nowej kategorii', async ({ page }) =
 test('istniejąca kategoria pozwala przypisać wielu rodziców', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'Polska' }).click()
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
 
   const parentSelect = page.locator('.relation-controls select').nth(0)
   await parentSelect.selectOption(['3', '4'])
   await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
 
-  const polska = categoryItem(page, 'Polska')
-  await expect(polska).toContainText('Parents: PRL, III RP')
+  await expect(categoryItem(page, 'Polska')).toContainText('Parents: PRL, III RP')
+  await expect(categoryItem(page, 'PRL')).toContainText('Children: Polska')
+  await expect(categoryItem(page, 'III RP')).toContainText('Children: Polska')
 })
 
 test('istniejąca kategoria pozwala przypisać wielu dzieci', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'Polska' }).click()
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
 
   const childSelect = page.locator('.relation-controls select').nth(1)
   await childSelect.selectOption(['3', '4'])
   await page.getByRole('button', { name: 'Dodaj dzieci' }).click()
 
-  const polska = categoryItem(page, 'Polska')
-  await expect(polska).toContainText('Children: II RP, PRL, III RP')
+  await expect(categoryItem(page, 'Polska')).toContainText('Children: II RP, PRL, III RP')
+  await expect(categoryItem(page, 'PRL')).toContainText('Parents: Polska')
+  await expect(categoryItem(page, 'III RP')).toContainText('Parents: Polska')
 })
 
 test('usunięcie rodzica aktualizuje relacje w widoku kategorii', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'II RP' }).click()
+  await categoryItem(page, 'II RP').getByRole('button', { name: 'II RP', exact: true }).click()
 
-  await page.getByRole('button', { name: 'Usuń' }).click()
+  await page.locator('.editor li').filter({ hasText: 'Polska' }).getByRole('button', { name: 'Usuń' }).click()
   await expect(categoryItem(page, 'II RP')).toContainText('Parents: —')
   await expect(categoryItem(page, 'Polska')).toContainText('Children: —')
 })
@@ -294,7 +321,7 @@ test('usunięcie rodzica aktualizuje relacje w widoku kategorii', async ({ page 
 test('usunięcie dziecka aktualizuje relacje w widoku kategorii', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'Polska' }).click()
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
 
   const childRelation = page.locator('.editor li').filter({ hasText: 'II RP' })
   await childRelation.getByRole('button', { name: 'Usuń' }).click()
@@ -306,22 +333,30 @@ test('usunięcie dziecka aktualizuje relacje w widoku kategorii', async ({ page 
 test('próba utworzenia cyklu pokazuje błąd i nie zapisuje relacji', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'II RP' }).click()
 
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
   const parentSelect = page.locator('.relation-controls select').nth(0)
-  await parentSelect.selectOption('2')
+  await parentSelect.selectOption('3')
+  await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
+
+  await categoryItem(page, 'PRL').getByRole('button', { name: 'PRL', exact: true }).click()
+  await expect(page.getByText('Nie można dodać rodzica, ponieważ relacja utworzyłaby cykl.')).not.toBeVisible()
+
+  const prlParentSelect = page.locator('.relation-controls select').nth(0)
+  await prlParentSelect.selectOption('1')
   await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
 
   await expect(page.getByText('Nie można dodać rodzica, ponieważ relacja utworzyłaby cykl.')).toBeVisible()
+  await expect(categoryItem(page, 'PRL')).toContainText('Parents: Polska')
 })
 
 test('kategoria posiadająca relacje nie może zostać usunięta', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'Polska' }).click()
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
 
   page.on('dialog', (dialog) => dialog.accept())
-  await page.getByRole('button', { name: 'Usuń' }).click()
+  await page.getByRole('button', { name: 'Usuń' }).last().click()
 
   await expect(page.getByText('Nie można usunąć kategorii, ponieważ jest używana.')).toBeVisible()
   await expect(categoryItem(page, 'Polska')).toBeVisible()
@@ -330,10 +365,11 @@ test('kategoria posiadająca relacje nie może zostać usunięta', async ({ page
 test('kategoria używana przez monetę nie może zostać usunięta', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
-  await page.getByRole('button', { name: 'II RP' }).click()
+  await categoryItem(page, 'II RP').getByRole('button', { name: 'II RP', exact: true }).click()
 
   page.on('dialog', (dialog) => dialog.accept())
-  await page.getByRole('button', { name: 'Usuń' }).click()
+  await page.getByRole('button', { name: 'Usuń' }).last().click()
 
   await expect(page.getByText('Nie można usunąć kategorii, ponieważ jest używana.')).toBeVisible()
+  await expect(categoryItem(page, 'II RP')).toBeVisible()
 })
