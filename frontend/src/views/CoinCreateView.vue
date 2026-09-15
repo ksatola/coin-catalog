@@ -68,6 +68,10 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
   }
 }
 
+function cancelCreating(): void {
+  void router.push('/monety')
+}
+
 watch(selectedCategoryIds, () => {
   markDirty()
 }, { deep: true })
@@ -98,7 +102,7 @@ onMounted(() => {
       <InlineCategoryCreate :categories="categories" @created="addCreatedCategory" />
     </div>
 
-    <CoinForm @submit="createCoin" />
+    <CoinForm @submit="createCoin" @cancel="cancelCreating" />
   </section>
 </template>
 
