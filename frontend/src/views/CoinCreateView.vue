@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinForm from '../components/CoinForm.vue'
-import type { CoinFormSubmit } from '../types'
+import type { Category, CoinFormSubmit } from '../types'
 
 const router = useRouter()
 const errorMessage = ref('')
+const categories = ref<Category[]>([])
+const selectedCategoryIds = ref<number[]>([])
+const categoriesErrorMessage = ref('')
+
+async function loadCategories(): Promise<void> {
+  try {
+    const response = await fetch('/api/categories')
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    categories.value = await response.json() as Category[]
+    categoriesErrorMessage.value = ''
+  } catch {
+    categoriesErrorMessage.value = 'Nie udało się pobrać kategorii.'
+  }
+}
 
 async function uploadFile(
   coinId: number,
@@ -26,6 +40,18 @@ async function uploadFile(
 
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`)
+  }
+}
+
+async function assignCategories(coinId: number): Promise<void> {
+  for (const categoryId of selectedCategoryIds.value) {
+    const response = await fetch(`/api/coins/${coinId}/categories/${categoryId}`, {
+      method: 'POST',
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
   }
 }
 
@@ -52,18 +78,54 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
       await uploadFile(coin.id, file, 'additional')
     }
 
+    await assignCategories(coin.id)
+
     errorMessage.value = ''
     await router.push(`/monety/${coin.id}`)
   } catch {
-    errorMessage.value = 'Nie udało się zapisać monety lub jej zdjęć.'
+    errorMessage.value = 'Nie udało się zapisać monety, jej zdjęć lub kategorii.'
   }
 }
+
+onMounted(loadCategories)
 </script>
 
 <template>
   <section>
     <h1>Dodaj monetę</h1>
     <p v-if="errorMessage">{{ errorMessage }}</p>
+    <p v-if="categoriesErrorMessage">{{ categoriesErrorMessage }}</p>
+
+    <div class="category-assignment">
+      <h2>Kategorie</h2>
+      <label>
+        Wybierz kategorie
+        <select v-model="selectedCategoryIds" multiple size="5">
+          <option v-for="category in categories" :key="category.id" :value="category.id">
+            {{ category.name }}
+          </option>
+        </select>
+      </label>
+      <small>Możesz wybrać więcej niż jedną kategorię, także parenta i childa.</small>
+    </div>
+
     <CoinForm @submit="createCoin" />
   </section>
 </template>
+
+<style scoped>
+.category-assignment {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.category-assignment label {
+  display: grid;
+  gap: 4px;
+}
+
+.category-assignment select {
+  min-width: 220px;
+}
+</style>
