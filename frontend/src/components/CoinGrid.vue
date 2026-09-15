@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { reactive, watch } from 'vue'
 
 import type { Coin, CoinImage } from '../types'
 
@@ -10,6 +10,18 @@ const props = defineProps<{
 const aversImages = reactive<Record<number, CoinImage | null>>({})
 
 async function loadAversImages(): Promise<void> {
+  const coinIds = new Set(props.coins.map((coin) => coin.id))
+
+  for (const coinId of Object.keys(aversImages)) {
+    if (!coinIds.has(Number(coinId))) {
+      delete aversImages[Number(coinId)]
+    }
+  }
+
+  for (const coin of props.coins) {
+    delete aversImages[coin.id]
+  }
+
   const results = await Promise.all(
     props.coins.map(async (coin) => {
       try {
@@ -29,7 +41,9 @@ async function loadAversImages(): Promise<void> {
   )
 
   for (const [coinId, image] of results) {
-    aversImages[coinId] = image
+    if (coinIds.has(coinId)) {
+      aversImages[coinId] = image
+    }
   }
 }
 
@@ -42,9 +56,9 @@ function imageUrl(coin: Coin): string | undefined {
   return `/api/coins/${coin.id}/images/${image.id}/file`
 }
 
-onMounted(() => {
+watch(() => props.coins, () => {
   void loadAversImages()
-})
+}, { immediate: true })
 </script>
 
 <template>
