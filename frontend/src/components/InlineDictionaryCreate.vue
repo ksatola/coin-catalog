@@ -15,7 +15,11 @@ const name = ref('')
 const errorMessage = ref('')
 const saving = ref(false)
 
-function open(): void {
+function toggle(): void {
+  if (isOpen.value) {
+    cancel()
+    return
+  }
   isOpen.value = true
   errorMessage.value = ''
 }
@@ -62,7 +66,8 @@ async function create(): Promise<void> {
       class="add-button"
       :aria-label="`Dodaj ${label.toLowerCase()}`"
       :title="`Dodaj ${label.toLowerCase()}`"
-      @click="open"
+      :aria-expanded="isOpen"
+      @click="toggle"
     >
       +
     </button>
@@ -89,9 +94,11 @@ async function create(): Promise<void> {
 
 <style scoped>
 .inline-create {
+  position: relative;
   display: grid;
   gap: 6px;
   margin-top: 4px;
+  z-index: 30;
 }
 
 .add-button {
@@ -112,11 +119,18 @@ async function create(): Promise<void> {
 }
 
 .editor {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  z-index: 1000;
   display: grid;
-  gap: 6px;
-  padding: 8px;
-  border: 1px solid #ddd;
+  width: min(280px, calc(100vw - 32px));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
   background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
 }
 
 .editor-field {
@@ -124,7 +138,31 @@ async function create(): Promise<void> {
   gap: 4px;
 }
 
+.editor-field span {
+  color: #334155;
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.editor input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 9px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+}
+
 .editor button {
   margin-right: 8px;
+}
+
+.editor p {
+  margin: 0;
+  color: #991b1b;
+  font-size: .8rem;
 }
 </style>
