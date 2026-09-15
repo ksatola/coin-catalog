@@ -160,7 +160,7 @@ def build_coin_query(
         "to_year": Coin.to_year,
     }
     sort_column = sort_columns.get(sort_by, Coin.id)
-    statement = statement.order_by(
+    statement = statement.distinct().order_by(
         sort_column.desc() if sort_order == "desc" else sort_column.asc(),
         Coin.id.asc(),
     )
