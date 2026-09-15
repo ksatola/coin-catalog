@@ -12,45 +12,22 @@ import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
-      path: '/',
-      redirect: '/monety',
-    },
-    {
-      path: '/monety',
-      component: CoinsView,
-    },
-    {
-      path: '/monety/:id',
-      component: CoinDetailView,
-    },
-    {
-      path: '/monety/:id/edytuj',
-      component: CoinEditView,
-    },
-    {
-      path: '/dodaj',
-      component: CoinCreateView,
-    },
-    {
-      path: '/archiwum',
-      component: ArchiveView,
-    },
-    {
-      path: '/slowniki',
-      component: DictionariesView,
-    },
-    {
-      path: '/kategorie',
-      component: CategoriesView,
-    },
+    { path: '/', redirect: '/monety' },
+    { path: '/monety', component: CoinsView },
+    { path: '/monety/:id', component: CoinDetailView },
+    { path: '/monety/:id/edytuj', component: CoinEditView },
+    { path: '/dodaj', component: CoinCreateView },
+    { path: '/archiwum', component: ArchiveView },
+    { path: '/slowniki', component: DictionariesView },
+    { path: '/kategorie', component: CategoriesView },
   ],
 })
 
 router.beforeEach((to, from) => {
   const { isDirty, markClean } = useUnsavedCoinForm()
+  const isCoinForm = from.path === '/dodaj' || /^\/monety\/[^/]+\/edytuj$/.test(from.path)
 
-  if (from.path === '/dodaj' && isDirty.value && to.path !== from.path) {
+  if (isCoinForm && isDirty.value && to.path !== from.path) {
     const shouldLeave = window.confirm(
       'Masz niezapisane dane formularza. Czy na pewno chcesz opuścić stronę i je utracić?',
     )
