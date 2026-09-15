@@ -8,9 +8,9 @@ This document records the current, verified state of the project. A task is mark
 
 **Phase 5 — Search and Filtering is complete.**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, and Phase 5 — Search and Filtering are complete. Phase 5 adds user-facing search and filtering to the catalogue, including recursive category filtering and sorting.
+**Phase 6 — UI Foundation and Visual System is planned but has not yet been implemented.**
 
-No new development phase has been started after Phase 5.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, and Phase 5 — Search and Filtering are complete. Phase 5 adds user-facing search and filtering to the catalogue, including recursive category filtering and sorting.
 
 ---
 
@@ -282,13 +282,20 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-No new development phase has been started after Phase 5. The next implementation task has not been approved yet.
+Phase 6 — UI Foundation and Visual System is the next approved implementation phase. Implementation has not yet started.
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md`. Stop for discussion if the review identifies a direction or architecture change.
 
 ---
 
 ## Change Log
+
+### 2026-09-15 — Phase 6 Roadmap Change
+
+- Approved Phase 6 as UI Foundation and Visual System.
+- Replaced the original Phase 6 image-management focus with UI foundation and visual-system work.
+- Kept further image-management extensions as optional future work.
+- Recorded that Phase 6 implementation has not yet started.
 
 ### 2026-09-15
 
