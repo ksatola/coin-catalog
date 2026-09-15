@@ -71,7 +71,7 @@ test('widok kategorii pozwala wybrać istniejącą kategorię i edytować jej da
 
   await expect(page.getByRole('heading', { name: 'Edytuj kategorię' })).toBeVisible()
   await expect(page.getByLabel('Nazwa')).toHaveValue('Polska')
-  await expect(page.getByText('II RP')).toBeVisible()
+  await expect(page.locator('form').getByText('II RP')).toBeVisible()
 })
 
 test('widok kategorii pozwala rozpocząć tworzenie nowej kategorii', async ({ page }) => {
