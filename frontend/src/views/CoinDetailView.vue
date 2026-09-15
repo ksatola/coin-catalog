@@ -74,24 +74,75 @@ onMounted(loadCoin)
     <template v-if="coin">
       <CoinDetail :coin="coin" />
 
-      <div>
+      <div class="detail-actions">
         <template v-if="!coin.is_deleted">
           <button
             type="button"
+            class="button button-primary"
             @click="router.push(`/monety/${coin.id}/edytuj`)"
           >
             Edytuj
           </button>
 
-          <button type="button" @click="archiveCoin">
+          <button type="button" class="button" @click="archiveCoin">
             Archiwizuj
           </button>
         </template>
 
-        <button v-else type="button" @click="restoreCoin">
+        <button v-else type="button" class="button" @click="restoreCoin">
           Przywróć
         </button>
       </div>
     </template>
   </section>
 </template>
+
+<style scoped>
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.button-primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.button-primary:hover {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+}
+
+@media (max-width: 600px) {
+  .detail-actions {
+    justify-content: stretch;
+  }
+
+  .detail-actions .button {
+    flex: 1;
+  }
+}
+</style>
