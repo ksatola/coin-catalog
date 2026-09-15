@@ -83,14 +83,14 @@ test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączy�
   })
 
   await page.goto('/monety')
-  await page.getByLabel('Kategorie').selectOption('1')
+  await page.locator('label').filter({ hasText: 'Kategorie' }).locator('select').first().selectOption('1')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   let requestUrl = coinRequests.at(-1)
   expect(requestUrl?.searchParams.getAll('category_id')).toEqual(['1'])
   expect(requestUrl?.searchParams.get('include_category_children')).toBe('true')
 
-  await page.getByLabel('Uwzględniaj podkategorie').uncheck()
+  await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   requestUrl = coinRequests.at(-1)
