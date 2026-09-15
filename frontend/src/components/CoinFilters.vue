@@ -117,7 +117,10 @@ onMounted(loadFilters)
 
 .coin-filters input,
 .coin-filters select {
-  min-height: 42px;
+  min-height: 48px;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .filter-grid {
@@ -139,6 +142,7 @@ onMounted(loadFilters)
 
 .filter-grid option {
   padding: 5px 4px;
+  font: inherit;
 }
 
 .checkbox-field {
@@ -170,7 +174,7 @@ onMounted(loadFilters)
 }
 
 .filter-row select {
-  min-height: 42px;
+  min-height: 48px;
 }
 
 .submit-button {
