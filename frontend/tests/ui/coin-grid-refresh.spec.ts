@@ -94,7 +94,9 @@ test('wyczyszczenie filtrów odświeża zdjęcia monet w gridzie', async ({ page
 
   await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
 
+  await expect(page.getByText('#1')).toBeVisible()
   await expect(page.getByText('#2')).toBeVisible()
+  await expect(page.getByAltText('Awers monety #1')).toBeVisible()
   await expect(page.getByAltText('Awers monety #2')).toBeVisible()
   await expect(page.getByText('Brak zdjęcia')).toHaveCount(0)
 })
