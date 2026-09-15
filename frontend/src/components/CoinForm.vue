@@ -168,7 +168,7 @@ async function loadDictionaries(): Promise<void> {
   }
 }
 
-function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem): void {
+async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem): Promise<void> {
   locallyCreatedDictionaryItems[name].add(item.id)
   if (!dictionaries[name].some((existingItem) => existingItem.id === item.id)) dictionaries[name].push(item)
   if (name === 'countries') form.country_id = item.id
@@ -181,19 +181,17 @@ function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem): void
     if (!form.from_era_id) form.from_era_id = item.id
     else form.to_era_id = item.id
   }
-  void nextTick().then(() => {
-    if (name === 'countries') form.country_id = item.id
-    if (name === 'issuers') form.issuer_id = item.id
-    if (name === 'denominations') form.denomination_id = item.id
-    if (name === 'mints') form.mint_id = item.id
-    if (name === 'materials') form.material_id = item.id
-    if (name === 'states') form.state_id = item.id
-    if (name === 'eras') {
-      if (!form.from_era_id) form.from_era_id = item.id
-      else form.to_era_id = item.id
-    }
-    markDirty()
-  })
+  await nextTick()
+  if (name === 'countries') form.country_id = item.id
+  if (name === 'issuers') form.issuer_id = item.id
+  if (name === 'denominations') form.denomination_id = item.id
+  if (name === 'mints') form.mint_id = item.id
+  if (name === 'materials') form.material_id = item.id
+  if (name === 'states') form.state_id = item.id
+  if (name === 'eras') {
+    if (!form.from_era_id) form.from_era_id = item.id
+    else form.to_era_id = item.id
+  }
   markDirty()
 }
 
