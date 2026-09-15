@@ -278,21 +278,18 @@ watch(() => props.coins, () => {
 .image-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   min-width: 0;
 }
 
 .coin-image {
   display: grid;
-  width: 88px;
+  width: auto;
   height: 88px;
   min-width: 0;
   place-items: center;
   background: #ffffff;
   overflow: hidden;
-}
-
-.coin-image + .coin-image {
-  border-left: 1px solid #e2e8f0;
 }
 
 .coin-image img {
@@ -390,7 +387,7 @@ watch(() => props.coins, () => {
   }
 
   .coin-image {
-    width: 72px;
+    width: auto;
     height: 72px;
   }
 
