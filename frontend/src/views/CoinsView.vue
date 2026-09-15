@@ -53,16 +53,6 @@ const dictionaryLabels: Record<string, string> = {
   eras: 'Era',
 }
 
-const dictionaryQueryNames: Record<string, string> = {
-  countries: 'country_id',
-  issuers: 'issuer_id',
-  denominations: 'denomination_id',
-  mints: 'mint_id',
-  materials: 'material_id',
-  states: 'state_id',
-  eras: 'era_id',
-}
-
 function validateSearch(): boolean {
   const tokens = search.value.trim().split(/\s+/).filter(Boolean)
   if (tokens.some((token) => token.length < 3)) {
@@ -73,15 +63,22 @@ function validateSearch(): boolean {
   return true
 }
 
+function appendIds(params: URLSearchParams, name: string, ids: number[]): void {
+  for (const id of ids) params.append(name, String(id))
+}
+
 function buildQuery(): string {
   const params = new URLSearchParams()
   if (search.value.trim()) params.set('search', search.value.trim())
 
-  for (const [name, ids] of Object.entries(dictionarySelections)) {
-    const queryName = dictionaryQueryNames[name]
-    for (const id of ids) params.append(queryName, String(id))
-  }
-  for (const id of categoryIds.value) params.append('category_id', String(id))
+  appendIds(params, 'country_id', dictionarySelections.countries)
+  appendIds(params, 'issuer_id', dictionarySelections.issuers)
+  appendIds(params, 'denomination_id', dictionarySelections.denominations)
+  appendIds(params, 'mint_id', dictionarySelections.mints)
+  appendIds(params, 'material_id', dictionarySelections.materials)
+  appendIds(params, 'state_id', dictionarySelections.states)
+  appendIds(params, 'era_id', dictionarySelections.eras)
+  appendIds(params, 'category_id', categoryIds.value)
 
   params.set('include_category_children', String(includeCategoryChildren.value))
   if (fromYear.value !== null) params.set('from_year', String(fromYear.value))
