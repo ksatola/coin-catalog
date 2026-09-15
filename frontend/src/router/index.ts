@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import ArchiveView from '../views/ArchiveView.vue'
+import CategoriesView from '../views/CategoriesView.vue'
 import CoinCreateView from '../views/CoinCreateView.vue'
 import CoinDetailView from '../views/CoinDetailView.vue'
 import CoinEditView from '../views/CoinEditView.vue'
@@ -37,6 +38,10 @@ const router = createRouter({
     {
       path: '/slowniki',
       component: DictionariesView,
+    },
+    {
+      path: '/kategorie',
+      component: CategoriesView,
     },
   ],
 })
