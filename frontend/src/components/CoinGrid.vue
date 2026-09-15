@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 
 import type { Coin, CoinImage } from '../types'
 
@@ -8,12 +8,92 @@ type CoinImages = {
   rewers: CoinImage | null
 }
 
+type DictionaryItem = {
+  id: number
+  name: string
+}
+
+type Dictionaries = {
+  countries: DictionaryItem[]
+  issuers: DictionaryItem[]
+  denominations: DictionaryItem[]
+  mints: DictionaryItem[]
+  materials: DictionaryItem[]
+  states: DictionaryItem[]
+  eras: DictionaryItem[]
+}
+
 const props = defineProps<{
   coins: Coin[]
 }>()
 
 const imagesByCoin = reactive<Record<number, CoinImages>>({})
+const dictionaries = ref<Dictionaries>({
+  countries: [],
+  issuers: [],
+  denominations: [],
+  mints: [],
+  materials: [],
+  states: [],
+  eras: [],
+})
 let loadGeneration = 0
+
+function dictionaryName(items: DictionaryItem[], id: number | null): string | null {
+  if (id === null) {
+    return null
+  }
+
+  return items.find((item) => item.id === id)?.name ?? null
+}
+
+function formatYear(year: number, eraId: number): string {
+  const era = dictionaryName(dictionaries.value.eras, eraId)
+  return era ? `${year} ${era}` : `${year}`
+}
+
+function formatRange(coin: Coin): string {
+  return `${formatYear(coin.from_year, coin.from_era_id)} – ${formatYear(coin.to_year, coin.to_era_id)}`
+}
+
+function formatDetails(coin: Coin): string[] {
+  return [
+    dictionaryName(dictionaries.value.materials, coin.material_id),
+    dictionaryName(dictionaries.value.states, coin.state_id),
+    coin.weight !== null ? `${coin.weight} g` : null,
+    coin.diameter !== null ? `${coin.diameter} mm` : null,
+  ].filter((value): value is string => Boolean(value))
+}
+
+async function loadDictionaries(): Promise<void> {
+  const names: Array<keyof Dictionaries> = [
+    'countries',
+    'issuers',
+    'denominations',
+    'mints',
+    'materials',
+    'states',
+    'eras',
+  ]
+
+  try {
+    const results = await Promise.all(
+      names.map(async (name) => {
+        const response = await fetch(`/api/dictionaries/${name}`, { cache: 'no-store' })
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+        return [name, await response.json() as DictionaryItem[]] as const
+      }),
+    )
+
+    for (const [name, items] of results) {
+      dictionaries.value[name] = items
+    }
+  } catch {
+    // The grid remains usable with IDs/years if dictionary data is unavailable.
+  }
+}
 
 async function loadImages(): Promise<void> {
   const generation = ++loadGeneration
@@ -69,6 +149,10 @@ function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
   return `/api/coins/${coin.id}/images/${image.id}/file`
 }
 
+onMounted(() => {
+  void loadDictionaries()
+})
+
 watch(() => props.coins, () => {
   void loadImages()
 }, { immediate: true })
@@ -105,9 +189,38 @@ watch(() => props.coins, () => {
       <div class="coin-info">
         <div class="coin-meta">
           <strong>#{{ coin.id }}</strong>
-          <span>{{ coin.from_year }}–{{ coin.to_year }}</span>
+          <span>{{ formatRange(coin) }}</span>
         </div>
-        <p v-if="coin.description">{{ coin.description }}</p>
+        <div class="coin-line">
+          <span>{{ dictionaryName(dictionaries.countries, coin.country_id) }}</span>
+          <span v-if="dictionaryName(dictionaries.issuers, coin.issuer_id)">
+            {{ dictionaryName(dictionaries.issuers, coin.issuer_id) }}
+          </span>
+        </div>
+        <div class="coin-line">
+          <span>{{ dictionaryName(dictionaries.denominations, coin.denomination_id) }}</span>
+          <span v-if="dictionaryName(dictionaries.mints, coin.mint_id)">
+            {{ dictionaryName(dictionaries.mints, coin.mint_id) }}
+          </span>
+        </div>
+        <div class="coin-details">
+          <span v-for="(detail, index) in formatDetails(coin)" :key="`${coin.id}-${index}`">
+            {{ detail }}
+          </span>
+          <svg
+            v-if="coin.has_video"
+            class="video-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-label="Video"
+            role="img"
+          >
+            <rect x="3" y="6" width="13" height="12" rx="2" />
+            <path d="m16 10 5-3v10l-5-3z" />
+          </svg>
+        </div>
       </div>
     </RouterLink>
   </div>
@@ -167,7 +280,7 @@ watch(() => props.coins, () => {
 .coin-info {
   display: grid;
   gap: 6px;
-  min-height: 92px;
+  min-height: 128px;
   padding: 14px 16px 16px;
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
@@ -188,13 +301,36 @@ watch(() => props.coins, () => {
 .coin-meta span {
   color: #64748b;
   font-size: 14px;
+  white-space: nowrap;
 }
 
-.coin-info p {
-  margin: 0;
+.coin-line,
+.coin-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
   color: #475569;
   font-size: 14px;
   line-height: 1.45;
+}
+
+.coin-line span + span::before,
+.coin-details span + span::before {
+  content: ' · ';
+  color: #94a3b8;
+}
+
+.coin-details {
+  align-items: center;
+  color: #64748b;
+}
+
+.video-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  color: #64748b;
+  flex: 0 0 auto;
 }
 
 .card:hover {
@@ -205,6 +341,11 @@ watch(() => props.coins, () => {
 @media (max-width: 600px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .coin-meta span {
+    white-space: normal;
+    text-align: right;
   }
 }
 </style>
