@@ -41,6 +41,15 @@ const emptyForm: CoinCreate = {
 
 const form = reactive<CoinCreate>({ ...emptyForm })
 const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
+const locallyCreatedDictionaryItems: Record<keyof Dictionaries, Set<number>> = {
+  countries: new Set(),
+  issuers: new Set(),
+  denominations: new Set(),
+  mints: new Set(),
+  materials: new Set(),
+  states: new Set(),
+  eras: new Set(),
+}
 const primaryImages = reactive<{ avers: CoinImage | null; rewers: CoinImage | null }>({ avers: null, rewers: null })
 const additionalImages = ref<CoinImage[]>([])
 const pendingDeletedImages = ref<CoinImage[]>([])
@@ -132,19 +141,26 @@ async function loadDictionary(dictionaryName: keyof Dictionaries): Promise<Dicti
   return await response.json() as DictionaryItem[]
 }
 
+function mergeLoadedDictionaryItems(name: keyof Dictionaries, loadedItems: DictionaryItem[]): void {
+  const createdItems = dictionaries[name].filter((item) => locallyCreatedDictionaryItems[name].has(item.id))
+  const itemsById = new Map(loadedItems.map((item) => [item.id, item]))
+  for (const item of createdItems) itemsById.set(item.id, item)
+  dictionaries[name] = [...itemsById.values()]
+}
+
 async function loadDictionaries(): Promise<void> {
   try {
     const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all([
       loadDictionary('countries'), loadDictionary('issuers'), loadDictionary('denominations'),
       loadDictionary('mints'), loadDictionary('materials'), loadDictionary('states'), loadDictionary('eras'),
     ])
-    dictionaries.countries = countries
-    dictionaries.issuers = issuers
-    dictionaries.denominations = denominations
-    dictionaries.mints = mints
-    dictionaries.materials = materials
-    dictionaries.states = states
-    dictionaries.eras = eras
+    mergeLoadedDictionaryItems('countries', countries)
+    mergeLoadedDictionaryItems('issuers', issuers)
+    mergeLoadedDictionaryItems('denominations', denominations)
+    mergeLoadedDictionaryItems('mints', mints)
+    mergeLoadedDictionaryItems('materials', materials)
+    mergeLoadedDictionaryItems('states', states)
+    mergeLoadedDictionaryItems('eras', eras)
     loadErrorMessage.value = ''
   } catch {
     loadErrorMessage.value = 'Nie udało się pobrać słowników.'
@@ -152,7 +168,8 @@ async function loadDictionaries(): Promise<void> {
 }
 
 function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem): void {
-  dictionaries[name].push(item)
+  locallyCreatedDictionaryItems[name].add(item.id)
+  if (!dictionaries[name].some((existingItem) => existingItem.id === item.id)) dictionaries[name].push(item)
   if (name === 'countries') form.country_id = item.id
   if (name === 'issuers') form.issuer_id = item.id
   if (name === 'denominations') form.denomination_id = item.id
