@@ -94,13 +94,29 @@ Implemented and verified:
 
 Final local validation passed: backend pytest, Ruff lint, Ruff format check, frontend production build, and the full Playwright UI suite.
 
-## Phase 6 — Image Management
+Phase 5 is therefore complete.
 
-**Status:** Partially absorbed into Phase 4
+## Phase 6 — UI Foundation and Visual System
 
-The initial image-management capability is implemented. The remaining future work may include richer image workflows, thumbnail generation, bulk operations, and further image metadata if justified.
+**Status:** Planned
 
-The accepted storage and naming rules are documented in `docs/IMAGE_STORAGE_DECISION.md`.
+The goal of this phase is to establish a consistent UI foundation for the continued development of Coin Catalog.
+
+Planned scope:
+
+- consistent application layout and main navigation structure;
+- a basic visual system covering typography, spacing, columns, forms, buttons, messages, and UI states;
+- a small set of reusable Vue components;
+- visual consistency across existing application screens;
+- improved responsiveness and usability;
+- preservation of existing backend and API behavior;
+- automated and manual verification of affected UI workflows.
+
+This phase does not introduce new domain functionality, database-model changes, or API changes unless separately proposed and explicitly approved.
+
+### Historical Scope Adjustment
+
+The original Phase 6 scope focused on image management. The initial image-management capability was implemented during Phase 4 because it was required by the first usable catalogue workflow. Further image-management extensions remain optional future work and are not the focus of the current Phase 6.
 
 ## Phase 7 — Coin Browser
 
