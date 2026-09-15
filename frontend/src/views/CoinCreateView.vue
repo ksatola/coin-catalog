@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinForm from '../components/CoinForm.vue'
@@ -25,9 +25,10 @@ async function loadCategories(): Promise<void> {
   }
 }
 
-function addCreatedCategory(category: CategoryGraphItem): void {
+async function addCreatedCategory(category: CategoryGraphItem): Promise<void> {
   categories.value.push(category)
-  selectedCategoryIds.value.push(category.id)
+  await nextTick()
+  selectedCategoryIds.value = [...selectedCategoryIds.value, category.id]
   markDirty()
 }
 
