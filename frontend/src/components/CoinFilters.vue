@@ -2,10 +2,7 @@
 import { onMounted, ref } from 'vue'
 
 import type { Category, CategoryGraphItem } from '../types'
-import {
-  validateCoinSearch,
-  type CoinFilterState,
-} from '../composables/useCoinFilters'
+import { validateCoinSearch, type CoinFilterState } from '../composables/useCoinFilters'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = Record<string, DictionaryItem[]>
@@ -13,27 +10,10 @@ type Dictionaries = Record<string, DictionaryItem[]>
 const props = defineProps<{ filters: CoinFilterState; showStatus?: boolean }>()
 const emit = defineEmits<{ submit: [] }>()
 
-const dictionaries = ref<Dictionaries>({
-  countries: [],
-  issuers: [],
-  denominations: [],
-  mints: [],
-  materials: [],
-  states: [],
-  eras: [],
-})
+const dictionaries = ref<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
 const categories = ref<Category[]>([])
 const errorMessage = ref('')
-
-const dictionaryLabels: Record<string, string> = {
-  countries: 'Kraj',
-  issuers: 'Emitent',
-  denominations: 'Nominał',
-  mints: 'Mennica',
-  materials: 'Materiał',
-  states: 'Stan',
-  eras: 'Era',
-}
+const dictionaryLabels: Record<string, string> = { countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica', materials: 'Materiał', states: 'Stan', eras: 'Era' }
 
 function submit(): void {
   const validationError = validateCoinSearch(props.filters.search)
@@ -67,8 +47,7 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
-    <label>
-      Szukaj
+    <label>Szukaj
       <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" />
     </label>
 
@@ -79,19 +58,14 @@ onMounted(loadFilters)
           <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
         </select>
       </label>
-
-      <label>
-        Kategorie
+      <label>Kategorie
         <select v-model="props.filters.categoryIds" multiple size="4">
           <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
         </select>
       </label>
     </div>
 
-    <label>
-      <input v-model="props.filters.includeCategoryChildren" type="checkbox" />
-      Uwzględniaj podkategorie
-    </label>
+    <label><input v-model="props.filters.includeCategoryChildren" type="checkbox" /> Uwzględniaj podkategorie</label>
 
     <div class="range-filter">
       <label>Rok od <input v-model.number="props.filters.fromYear" type="number" /></label>
@@ -105,7 +79,7 @@ onMounted(loadFilters)
       <label>Wideo
         <select v-model="props.filters.hasVideo"><option value="">Dowolne</option><option value="true">Ma wideo</option><option value="false">Brak wideo</option></select>
       </label>
-      <label v-if="showStatus">Status
+      <label v-if="props.showStatus">Status
         <select v-model="props.filters.statusFilter"><option value="active">Aktywne</option><option value="archived">Archiwalne</option><option value="all">Wszystkie</option></select>
       </label>
       <label>Sortuj po
