@@ -89,7 +89,7 @@ async function create(): Promise<void> {
       :aria-expanded="isOpen"
       @click="toggle"
     >
-      + Dodaj kategorię
+      Dodaj kategorię
     </button>
 
     <div v-if="isOpen" class="editor">
