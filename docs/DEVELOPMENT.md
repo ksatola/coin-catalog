@@ -281,6 +281,7 @@ Vite polling is enabled for reliable source-change detection inside the Dev Cont
 /dodaj                    → add coin
 /archiwum                 → archived coins
 /slowniki                 → dictionary editor
+/kategorie                → category management
 ```
 
 The fixed bottom navigation contains `Monety`, `Dodaj monetę`, `Archiwum`, and `Słowniki`.
@@ -301,9 +302,9 @@ Date endpoints contain both a numeric year and an era. Numeric years are not com
 
 ## Categories
 
-The backend implements a flexible category graph and coin-category many-to-many relationship. Category CRUD, parent/child relationships, cycle prevention, and coin-category assignment/removal are available through the API.
+The frontend exposes category management at `/kategorie`. It supports category creation and editing, multiple parent and child relationships, relation removal, cycle-error handling, and deletion protection when a category is still related or assigned to a coin.
 
-The current frontend does not provide a user-facing category-management or coin-category assignment workflow.
+Coin-category assignment/removal is implemented in the coin workflow. Assigned categories can be added and removed through the nested coin-category API.
 
 ## Coin Images
 
@@ -342,14 +343,14 @@ The UI tests are located under:
 frontend/tests/ui/
 ```
 
-Run the current coin UI suite with:
+Run the complete current category and coin UI coverage with:
 
 ```bash
 cd /workspaces/coin-catalog/frontend
-npm run test:ui -- tests/ui/coins.spec.ts
+npx playwright test tests/ui/categories.spec.ts tests/ui/category-assignment.spec.ts tests/ui/coins.spec.ts
 ```
 
-The current verified suite covers image replacement, cancellation, additional image upload, and cross-era date ranges.
+The verified UI coverage includes image replacement, cancellation, additional-image upload, cross-era date ranges, category CRUD and relations, cycle prevention behavior, deletion protection, and coin-category assignment/removal.
 
 ## Recommended Local Verification
 
@@ -363,7 +364,7 @@ uv run ruff format --check .
 
 cd /workspaces/coin-catalog/frontend
 npm run build
-npm run test:ui -- tests/ui/coins.spec.ts
+npx playwright test tests/ui/categories.spec.ts tests/ui/category-assignment.spec.ts tests/ui/coins.spec.ts
 ```
 
 Then:
@@ -394,11 +395,12 @@ Phase 4 is complete and currently covers:
 - soft archive/restore;
 - dictionary management;
 - primary and additional coin images;
-- backend category structures and APIs;
+- category management and category relationships;
+- coin-category assignment/removal;
 - local development tooling;
 - automated UI coverage for the current workflows.
 
-Future work includes advanced search/filtering, user-facing category management, richer collections/tags, backup/export, CI/CD, and deployment.
+Future work includes advanced search/filtering, richer collections/tags, backup/export, CI/CD, and deployment.
 
 ## Working Rules
 
