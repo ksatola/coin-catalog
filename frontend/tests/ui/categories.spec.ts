@@ -46,7 +46,6 @@ async function mockCategoryApi(page: Page): Promise<void> {
   const state = cloneCategories()
   const coinCategoryIds = new Set([2])
   let nextId = 5
-  let categoryCreateRequests = 0
 
   await page.route('**/api/categories', async (route) => {
     if (route.request().method() === 'GET') {
@@ -59,7 +58,6 @@ async function mockCategoryApi(page: Page): Promise<void> {
     }
 
     if (route.request().method() === 'POST') {
-      categoryCreateRequests += 1
       const body = route.request().postDataJSON() as {
         name: string
         description: string | null
@@ -112,8 +110,7 @@ async function mockCategoryApi(page: Page): Promise<void> {
       }
 
       if (method === 'DELETE') {
-        const relationExists = child.parent_ids.includes(parentId)
-        if (!relationExists) {
+        if (!child.parent_ids.includes(parentId)) {
           await route.fulfill({ status: 404, body: '' })
           return
         }
@@ -164,22 +161,6 @@ async function mockCategoryApi(page: Page): Promise<void> {
       body: JSON.stringify(category),
     })
   })
-
-  await page.route('**/api/categories', async (route) => {
-    if (route.request().method() === 'POST') {
-      categoryCreateRequests += 1
-    }
-    await route.fallback()
-  })
-
-  await page.addInitScript(() => {
-    Object.defineProperty(window, '__categoryCreateRequests', {
-      configurable: true,
-      get: () => undefined,
-    })
-  })
-
-  void categoryCreateRequests
 }
 
 function categoryItem(page: Page, name: string) {
@@ -311,7 +292,7 @@ test('usunięcie dziecka aktualizuje relacje w widoku kategorii', async ({ page 
   await expectRelations(page, 'II RP', '—', '—')
 })
 
-test('utworzenie relacji pośrednio tworzącej cykl jest odrzucane', async ({ page }) => {
+test('utworzenie relacji pośrednio tworzącej cykl jest odrzucane przez aplikację', async ({ page }) => {
   await mockCategoryApi(page)
   await page.goto('/kategorie')
 
@@ -323,8 +304,8 @@ test('utworzenie relacji pośrednio tworzącej cykl jest odrzucane', async ({ pa
   await page.locator('.relation-controls select').nth(0).selectOption('4')
   await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
 
-  await categoryItem(page, 'III RP').getByRole('button', { name: 'III RP', exact: true }).click()
-  await page.locator('.relation-controls select').nth(0).selectOption('1')
+  await categoryItem(page, 'Polska').getByRole('button', { name: 'Polska', exact: true }).click()
+  await page.locator('.relation-controls select').nth(0).selectOption('4')
   await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
 
   await expect(page.getByText('Nie można dodać rodzica, ponieważ relacja utworzyłaby cykl.')).toBeVisible()
