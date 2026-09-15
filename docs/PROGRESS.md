@@ -62,7 +62,7 @@ Verified:
 
 ## Phase 4 — Coin Entry and Browser
 
-**Status:** Final verification / ready to close
+**Status:** Complete
 
 ### Backend
 
@@ -93,7 +93,7 @@ Verified:
 
 ### Automated UI verification
 
-The current Playwright coin suite passes:
+The Playwright coin suite passes:
 
 ```text
 5 passed
@@ -107,26 +107,27 @@ Covered scenarios include:
 - additional image upload;
 - cross-era date range such as `476 BC → 1 AD`.
 
-### Manual verification
+The frontend production build also passed.
 
-The cross-era coin-entry scenario was also verified manually in the browser and saved successfully.
+### Backend verification
 
-### Remaining Phase 4 verification
+The backend test suite passed with:
 
-The previously planned final checks remain to be run as a complete final pass if they have not already been executed in the current container state:
-
-```bash
-cd /workspaces/coin-catalog/backend
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
-
-cd /workspaces/coin-catalog/frontend
-npm run build
-npm run test:ui -- tests/ui/coins.spec.ts
+```text
+62 passed, 2 warnings
 ```
 
-After that pass, Phase 4 can be formally closed unless a small cleanup is identified.
+Ruff lint and format checks also passed after the final formatting fixes.
+
+### Manual verification
+
+The cross-era coin-entry scenario was verified manually in the browser and saved successfully.
+
+### Repository state
+
+The final local verification reported a clean working tree.
+
+Phase 4 is therefore complete.
 
 ---
 
@@ -224,13 +225,20 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-Run the final Phase 4 verification commands, close Phase 4, and then begin the next approved development task.
+Begin the next approved development task, with Phase 5 — Spreadsheet Import currently first in the roadmap.
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md`. Stop for discussion if the review identifies a direction or architecture change.
 
 ---
 
 ## Change Log
+
+### 2026-09-15
+
+- Closed Phase 4 after the final local verification pass.
+- Recorded passing backend tests, Ruff checks, frontend production build, and the 5-scenario Playwright coin suite.
+- Recorded the clean final working tree.
+- Updated the next step to Phase 5 — Spreadsheet Import.
 
 ### 2026-09-14
 
