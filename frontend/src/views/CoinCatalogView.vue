@@ -11,6 +11,7 @@ import type { Coin } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
 type ViewMode = 'image-grid' | 'grid' | 'list'
+type GalleryColumns = 1 | 2 | 3 | 4
 
 const props = defineProps<{
   scope: CatalogScope
@@ -30,6 +31,7 @@ const emptyDescription = isArchive
   ? 'Nie znaleziono monet spełniających kryteria archiwum.'
   : 'Nie znaleziono monet spełniających kryteria.'
 const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
+const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 
 function loadViewMode(): ViewMode {
   const stored = localStorage.getItem(viewModeStorageKey)
@@ -38,10 +40,22 @@ function loadViewMode(): ViewMode {
     : 'image-grid'
 }
 
+function loadGalleryColumns(): GalleryColumns {
+  const stored = Number(localStorage.getItem(galleryColumnsStorageKey))
+  return stored === 1 || stored === 2 || stored === 3 || stored === 4
+    ? stored
+    : 2
+}
+
 const viewMode = ref<ViewMode>(loadViewMode())
+const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
 
 watch(viewMode, (mode) => {
   localStorage.setItem(viewModeStorageKey, mode)
+})
+
+watch(galleryColumns, (columns) => {
+  localStorage.setItem(galleryColumnsStorageKey, String(columns))
 })
 
 async function loadCoins(): Promise<void> {
@@ -102,16 +116,33 @@ onMounted(loadCoins)
         <p class="page-subtitle">{{ pageSubtitle }}</p>
       </div>
 
-      <div class="view-switcher" aria-label="Sposób wyświetlania monet">
-        <button type="button" :class="{ active: viewMode === 'image-grid' }" :disabled="viewMode === 'image-grid'" @click="viewMode = 'image-grid'">
-          ▦ Galeria
-        </button>
-        <button type="button" :class="{ active: viewMode === 'grid' }" :disabled="viewMode === 'grid'" @click="viewMode = 'grid'">
-          ▦ Grid
-        </button>
-        <button type="button" :class="{ active: viewMode === 'list' }" :disabled="viewMode === 'list'" @click="viewMode = 'list'">
-          ☷ Lista
-        </button>
+      <div class="header-controls">
+        <div class="view-switcher" aria-label="Sposób wyświetlania monet">
+          <button type="button" :class="{ active: viewMode === 'image-grid' }" :disabled="viewMode === 'image-grid'" @click="viewMode = 'image-grid'">
+            ▦ Galeria
+          </button>
+          <button type="button" :class="{ active: viewMode === 'grid' }" :disabled="viewMode === 'grid'" @click="viewMode = 'grid'">
+            ▦ Grid
+          </button>
+          <button type="button" :class="{ active: viewMode === 'list' }" :disabled="viewMode === 'list'" @click="viewMode = 'list'">
+            ☷ Lista
+          </button>
+        </div>
+
+        <div v-if="viewMode === 'image-grid'" class="gallery-columns" aria-label="Liczba monet w wierszu">
+          <span>Monet w wierszu:</span>
+          <button
+            v-for="columns in [1, 2, 3, 4] as GalleryColumns[]"
+            :key="columns"
+            type="button"
+            :class="{ active: galleryColumns === columns }"
+            :aria-label="`${columns} monet w wierszu`"
+            :aria-pressed="galleryColumns === columns"
+            @click="galleryColumns = columns"
+          >
+            {{ columns }}
+          </button>
+        </div>
       </div>
     </header>
 
@@ -161,7 +192,11 @@ onMounted(loadCoins)
         <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
       </div>
 
-      <CoinImageGrid v-if="viewMode === 'image-grid'" :coins="coins" />
+      <CoinImageGrid
+        v-if="viewMode === 'image-grid'"
+        :coins="coins"
+        :columns="galleryColumns"
+      />
       <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" />
 
       <CoinList
@@ -202,7 +237,14 @@ onMounted(loadCoins)
   font-size: 14px;
 }
 
-.view-switcher {
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-switcher,
+.gallery-columns {
   display: flex;
   gap: 4px;
   padding: 4px;
@@ -211,7 +253,8 @@ onMounted(loadCoins)
   background: #ffffff;
 }
 
-.view-switcher button {
+.view-switcher button,
+.gallery-columns button {
   min-height: 34px;
   padding: 6px 10px;
   border: 0;
@@ -222,9 +265,22 @@ onMounted(loadCoins)
   font-weight: 600;
 }
 
-.view-switcher button.active {
+.view-switcher button.active,
+.gallery-columns button.active {
   background: #e2e8f0;
   color: #0f172a;
+}
+
+.gallery-columns {
+  align-items: center;
+}
+
+.gallery-columns span {
+  padding: 0 5px 0 3px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .simple-search {
@@ -370,18 +426,36 @@ onMounted(loadCoins)
   font-size: 18px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .page-header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .view-switcher {
-    align-self: stretch;
+  .header-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-controls {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
-  .view-switcher button {
+  .view-switcher,
+  .gallery-columns {
+    width: 100%;
+  }
+
+  .view-switcher button,
+  .gallery-columns button {
     flex: 1;
+  }
+
+  .gallery-columns span {
+    flex: 0 0 auto;
   }
 
   .simple-search {
