@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinForm from '../components/CoinForm.vue'
@@ -25,9 +25,10 @@ async function loadCategories(): Promise<void> {
   }
 }
 
-function addCreatedCategory(category: CategoryGraphItem): void {
+async function addCreatedCategory(category: CategoryGraphItem): Promise<void> {
   categories.value.push(category)
-  selectedCategoryIds.value.push(category.id)
+  await nextTick()
+  selectedCategoryIds.value = [...selectedCategoryIds.value, category.id]
   markDirty()
 }
 
@@ -88,10 +89,10 @@ onMounted(() => {
     <p v-if="errorMessage">{{ errorMessage }}</p>
     <p v-if="categoriesErrorMessage">{{ categoriesErrorMessage }}</p>
 
-    <div class="category-assignment">
+    <section class="category-card">
       <h2>Kategorie</h2>
-      <label>
-        Wybierz kategorie
+      <label class="category-field">
+        <span>Wybierz kategorie</span>
         <select v-model="selectedCategoryIds" multiple size="5">
           <option v-for="category in categories" :key="category.id" :value="category.id">
             {{ category.name }}
@@ -100,14 +101,61 @@ onMounted(() => {
       </label>
       <small>Możesz wybrać więcej niż jedną kategorię, także parenta i childa.</small>
       <InlineCategoryCreate :categories="categories" @created="addCreatedCategory" />
-    </div>
+    </section>
 
     <CoinForm @submit="createCoin" @cancel="cancelCreating" />
   </section>
 </template>
 
 <style scoped>
-.category-assignment { display: grid; gap: 8px; margin-bottom: 24px; }
-.category-assignment label { display: grid; gap: 4px; }
-.category-assignment select { min-width: 220px; }
+.category-card {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 24px 26px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.category-card h2 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 1.1rem;
+}
+
+.category-field {
+  display: grid;
+  gap: 6px;
+}
+
+.category-field span {
+  color: #0f172a;
+  font-size: .875rem;
+  font-weight: 600;
+}
+
+.category-field select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 132px;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 1rem;
+}
+
+.category-field select:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, .25);
+  outline-offset: 2px;
+}
+
+.category-card small {
+  color: #475569;
+  font-size: .8rem;
+}
 </style>

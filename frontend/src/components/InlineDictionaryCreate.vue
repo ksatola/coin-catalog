@@ -15,7 +15,11 @@ const name = ref('')
 const errorMessage = ref('')
 const saving = ref(false)
 
-function open(): void {
+function toggle(): void {
+  if (isOpen.value) {
+    cancel()
+    return
+  }
   isOpen.value = true
   errorMessage.value = ''
 }
@@ -56,8 +60,17 @@ async function create(): Promise<void> {
 </script>
 
 <template>
-  <div class="inline-create">
-    <button type="button" @click="open">+ Dodaj {{ label.toLowerCase() }}</button>
+  <div class="inline-create" :class="{ 'is-open': isOpen }">
+    <button
+      type="button"
+      class="add-button"
+      :aria-label="`Dodaj ${label.toLowerCase()}`"
+      :title="`Dodaj ${label.toLowerCase()}`"
+      :aria-expanded="isOpen"
+      @click="toggle"
+    >
+      +
+    </button>
 
     <div v-if="isOpen" class="editor">
       <div class="editor-field">
@@ -70,9 +83,9 @@ async function create(): Promise<void> {
           @keydown.enter.prevent="create"
         />
       </div>
-      <div>
-        <button type="button" :disabled="saving" @click="create">Dodaj</button>
-        <button type="button" :disabled="saving" @click="cancel">Anuluj</button>
+      <div class="editor-actions">
+        <button type="button" class="editor-primary" :disabled="saving" @click="create">Dodaj</button>
+        <button type="button" class="editor-secondary" :disabled="saving" @click="cancel">Anuluj</button>
       </div>
       <p v-if="errorMessage">{{ errorMessage }}</p>
     </div>
@@ -81,24 +94,112 @@ async function create(): Promise<void> {
 
 <style scoped>
 .inline-create {
+  position: relative;
   display: grid;
   gap: 6px;
   margin-top: 4px;
+  z-index: 30;
+}
+
+.inline-create.is-open {
+  z-index: 1000;
+}
+
+.add-button {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .editor {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  z-index: 1000;
   display: grid;
-  gap: 6px;
-  padding: 8px;
-  border: 1px solid #ddd;
+  width: min(280px, calc(100vw - 32px));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 .editor-field {
   display: grid;
-  gap: 4px;
+  gap: 6px;
+}
+
+.editor-field span {
+  color: #334155;
+  font-size: .875rem;
+  font-weight: 600;
+}
+
+.editor input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+}
+
+.editor input:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, .25);
+  outline-offset: 2px;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .editor button {
-  margin-right: 8px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.editor-primary {
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.editor-secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.editor button:disabled {
+  cursor: default;
+  opacity: .6;
+}
+
+.editor p {
+  margin: 0;
+  color: #991b1b;
+  font-size: .8rem;
 }
 </style>

@@ -13,26 +13,39 @@ async function mockCatalog(page: Page): Promise<void> {
   await page.route('**/api/coins*', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([coin]) }))
 }
 
+async function openAdvancedFilters(page: Page): Promise<void> {
+  const toggle = page.getByRole('button', { name: '⚙ Filtry' })
+  if (await toggle.isVisible()) await toggle.click()
+}
+
+async function advancedSearch(page: Page): Promise<import('@playwright/test').Locator> {
+  return page.getByRole('searchbox', { name: 'Szukaj', exact: true })
+}
+
 test('zachowuje filtry Monety po przejściu do Dodaj monetę i z powrotem', async ({ page }) => {
   await mockCatalog(page)
   await page.goto('/monety')
-  await page.getByLabel('Szukaj').fill('polska grosz')
+  await openAdvancedFilters(page)
+  await (await advancedSearch(page)).fill('polska grosz')
   await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await page.getByRole('link', { name: 'Dodaj monetę' }).click()
   await page.getByRole('link', { name: 'Monety' }).click()
-  await expect(page.getByLabel('Szukaj')).toHaveValue('polska grosz')
+  await openAdvancedFilters(page)
+  await expect(await advancedSearch(page)).toHaveValue('polska grosz')
   await expect(page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' })).not.toBeChecked()
 })
 
 test('zachowuje filtry Archiwum po przejściu do Dodaj monetę i z powrotem', async ({ page }) => {
   await mockCatalog(page)
   await page.goto('/archiwum')
-  await page.getByLabel('Szukaj').fill('polska grosz')
+  await openAdvancedFilters(page)
+  await (await advancedSearch(page)).fill('polska grosz')
   await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await page.getByRole('link', { name: 'Dodaj monetę' }).click()
   await page.getByRole('link', { name: 'Archiwum' }).click()
-  await expect(page.getByLabel('Szukaj')).toHaveValue('polska grosz')
+  await openAdvancedFilters(page)
+  await expect(await advancedSearch(page)).toHaveValue('polska grosz')
   await expect(page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' })).not.toBeChecked()
 })

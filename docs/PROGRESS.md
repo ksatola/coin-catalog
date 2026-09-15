@@ -6,11 +6,11 @@ This document records the current, verified state of the project. A task is mark
 
 ## Current Phase
 
-**Phase 5 — Search and Filtering is complete.**
+**Phase 6 — UI Foundation and Visual System is implemented; final verification is pending.**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, and Phase 5 — Search and Filtering are complete. Phase 5 adds user-facing search and filtering to the catalogue, including recursive category filtering and sorting.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, and Phase 5 — Search and Filtering are complete and verified.
 
-No new development phase has been started after Phase 5.
+The final Playwright result verified before the last inline-category fix was **39 passed, 1 failed**. The remaining failure was addressed in the inline category creation flow, but the resulting test run has not yet been independently verified.
 
 ---
 
@@ -66,78 +66,22 @@ Verified:
 
 **Status:** Complete
 
-### Backend
+Implemented and verified:
 
-- [x] Coin create, list, detail, update, archive, and restore APIs.
-- [x] Soft-delete behavior through `is_deleted`.
-- [x] Active and archived coin list separation.
-- [x] Seven dictionary list/create/update/delete APIs.
-- [x] Reference-protected dictionary deletion.
-- [x] Era deletion protection for both date endpoints.
-- [x] Category and coin-category data structures.
-- [x] Category management and coin-category backend APIs.
-- [x] Coin-image metadata and image APIs.
+- coin create, list, detail, update, archive, and restore APIs;
+- soft-delete behavior and active/archived separation;
+- seven reference dictionaries with CRUD UI/API and deletion protection;
+- dictionary-backed coin selectors and coin creation/editing forms;
+- Grid/List browser, details, active/archived navigation and actions;
+- fixed bottom navigation;
+- primary awers/rewers image handling and replacement;
+- additional image upload/deletion;
+- accepted external-file image storage convention;
+- category data structures, backend APIs, category management UI, parent/child relations, cycle prevention, and deletion protection;
+- coin-category assignment/removal UI;
+- cross-era date-range behavior without comparing numeric years across eras.
 
-### Frontend
-
-- [x] Dictionary editor for all seven dictionaries.
-- [x] Dictionary-backed coin selectors.
-- [x] Coin creation form.
-- [x] Coin editing form.
-- [x] Basic form validation.
-- [x] Grid/List coin browser.
-- [x] Coin details.
-- [x] Active/archived navigation and actions.
-- [x] Fixed bottom navigation.
-- [x] Primary awers/rewers image handling.
-- [x] Additional image upload and deletion.
-- [x] Explicit primary-image replacement behavior.
-- [x] Cross-era date ranges are accepted without comparing numeric years across eras.
-- [x] Category management UI.
-- [x] Multiple parent/child category relationships and relation removal.
-- [x] Category cycle-error handling and deletion protection UI.
-- [x] Coin-category assignment and removal UI.
-
-### Automated UI verification
-
-The verified Playwright coverage passes:
-
-```text
-5 coin/image scenarios
-15 category and coin-category scenarios
-```
-
-The coin/image suite covers:
-
-- awers replacement;
-- cancelling an awers replacement;
-- rewers replacement;
-- additional image upload;
-- cross-era date range such as `476 BC → 1 AD`.
-
-The category suite covers category CRUD, multiple parent/child relations, relation removal, cycle prevention behavior, deletion protection, and coin-category assignment/removal.
-
-The frontend production build also passed.
-
-### Backend verification
-
-The backend test suite passed with:
-
-```text
-62 passed, 2 warnings
-```
-
-Ruff lint and format checks also passed after the final formatting fixes.
-
-### Manual verification
-
-The cross-era coin-entry scenario was verified manually in the browser and saved successfully.
-
-### Repository state
-
-The final local verification reported a clean working tree.
-
-Phase 4 is therefore complete.
+Verified UI coverage included 5 coin/image scenarios and 15 category and coin-category scenarios. Backend verification passed with 62 tests; Ruff lint/format and the frontend production build passed. Manual cross-era entry was verified and the final local working tree was clean.
 
 ---
 
@@ -145,48 +89,51 @@ Phase 4 is therefore complete.
 
 **Status:** Complete
 
-### Backend
+Implemented and verified:
 
-- [x] Dedicated coin-query builder for search, filtering, status, and sorting.
-- [x] Tokenized text search with normalized whitespace.
-- [x] Text-search tokens are combined with AND semantics and are independent of word order.
-- [x] Search covers country, issuer, denomination, mint, material, state, era, description, source, year endpoints, and category names.
-- [x] Dictionary filters for the supported coin reference fields.
-- [x] Era filtering.
-- [x] Year-range overlap filtering.
-- [x] Image and video presence filters.
-- [x] Active, archived, and all status filtering.
-- [x] Category filtering with optional recursive inclusion of subcategories.
-- [x] Multiple selected categories use OR semantics within the category filter.
-- [x] Different filter types combine with AND semantics.
-- [x] Sorting by coin ID and year endpoints in ascending or descending order.
-- [x] Stable sorting with coin ID as a tie-breaker.
-- [x] Defensive distinct handling to prevent duplicate coins in query results.
+- tokenized text search with normalized whitespace and order-independent AND matching;
+- search across coin fields, related reference names, descriptions, sources, eras, years, and categories;
+- dictionary, era, year-range, image, video, status, and category filters;
+- recursive category filtering with optional subcategory inclusion;
+- OR semantics within a filter type and AND semantics between filter types;
+- deterministic sorting with ID tie-breaking;
+- duplicate-result protection in the coin query;
+- user-facing search/filter workflow and reset behavior;
+- Playwright coverage for search/filtering UI.
 
-### Frontend
+Final local validation passed: backend pytest, Ruff lint, Ruff format check, frontend production build, and the full Playwright UI suite.
 
-- [x] User-facing `Wyszukiwanie i filtrowanie monet` workflow.
-- [x] Search input with minimum three-character validation per search token.
-- [x] Dictionary filter controls.
-- [x] Era, year, image, video, and status filters.
-- [x] Category filter with `Uwzględniaj podkategorie` enabled by default.
-- [x] Direct-category filtering when subcategory inclusion is disabled.
-- [x] Sort controls.
-- [x] Filter reset behavior.
+---
 
-### Automated verification
+## Phase 6 — UI Foundation and Visual System
 
-Verified:
+**Status:** Implemented; final verification pending
 
-- backend pytest suite passes;
-- Ruff lint passes;
-- Ruff format check passes;
-- frontend production build passes;
-- all Playwright UI tests pass.
+Implemented:
 
-Playwright runs with both the frontend development server and FastAPI backend available, so the verified browser run does not depend on an unavailable backend proxy target.
+- consistent application layout and main navigation;
+- shared visual foundation for typography, spacing, cards, forms, buttons, messages, focus states, and responsive layouts;
+- reusable catalogue presentation components;
+- shared active/archive catalogue view structure;
+- Gallery, Grid, and List presentation modes;
+- persistent view-mode and gallery-column preferences using localStorage;
+- responsive coin image gallery with configurable column count;
+- consistent coin information presentation across Grid, List, and Detail;
+- image viewer with keyboard navigation;
+- redesigned coin creation and editing interfaces;
+- preserved inline dictionary and category creation workflows;
+- redesigned category and dictionary management interfaces;
+- updated Playwright UI tests to match the implemented UI;
+- automated coverage for the coin image viewer;
+- no new domain model, database schema, or API functionality introduced as part of Phase 6.
 
-Phase 5 is therefore complete.
+The latest verified Playwright result before the final inline-category fix was:
+
+```text
+39 passed, 1 failed
+```
+
+The remaining failure concerned inline category creation. The production flow was subsequently changed to emit the category returned by `POST /api/categories` directly instead of performing a second category-list request. The resulting test run is not yet independently verified.
 
 ---
 
@@ -219,7 +166,7 @@ Verified:
 
 - `category` entity with name and description;
 - `category_relation` parent/child relationships;
-- acyclic category graph validation in the backend;
+- acyclic category graph validation;
 - multiple parents and multiple children;
 - category CRUD UI at `/kategorie`;
 - relation add/remove UI;
@@ -237,14 +184,6 @@ Broader collection/tag organization remains future work.
 **Status:** Not part of the current development plan
 
 The application has no XLS/XLSX import implementation. Collection metadata will be entered manually through the application. No spreadsheet-import phase is currently scheduled.
-
----
-
-## Search and Filtering — Historical Summary
-
-The Phase 5 implementation is recorded above. Search and filtering are now part of the verified catalogue workflow.
-
-Broader collection/tag organization and related filtering remain future work.
 
 ---
 
@@ -268,7 +207,7 @@ Planned: database/image backup strategy and useful metadata/catalogue export.
 
 **Status:** Ongoing
 
-Backend pytest and Ruff checks and Playwright UI coverage are established. Phase 5 search/filtering verification is complete. Broader integration tests, CI checks, and further quality automation remain future work.
+Backend pytest and Ruff checks and Playwright UI coverage are established. Phase 5 verification is complete. Phase 6 final Playwright verification remains pending. Broader integration tests, CI checks, and further quality automation remain future work.
 
 ---
 
@@ -282,30 +221,38 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-No new development phase has been started after Phase 5. The next implementation task has not been approved yet.
+Collection Number — planned as a separate feature branch after completion and final verification of the UI Foundation phase.
 
-Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md`. Stop for discussion if the review identifies a direction or architecture change.
+The collection number will be a user-facing text value independent from the technical database ID. Planned work includes the database migration, API/model changes, creation/editing, search, display in all relevant views, validation, and automated backend/UI coverage.
 
 ---
 
 ## Change Log
 
-### 2026-09-15
+### 2026-09-15 — Phase 6 implementation record
+
+- Recorded the implemented UI Foundation and Visual System work.
+- Recorded the latest known Playwright result as 39 passed and 1 failed.
+- Recorded the subsequent inline-category production fix as not yet independently verified.
+- Set Collection Number as the next planned feature.
+
+### 2026-09-15 — Phase 6 Roadmap Change
+
+- Approved Phase 6 as UI Foundation and Visual System.
+- Replaced the original Phase 6 image-management focus with UI foundation and visual-system work.
+- Kept further image-management extensions as optional future work.
+
+### 2026-09-15 — Phase 5
 
 - Completed and verified Phase 5 — Search and Filtering.
 - Recorded the implemented search, filtering, recursive category filtering, and sorting behavior.
 - Recorded passing backend pytest, Ruff lint, Ruff format, frontend production build, and Playwright verification.
-- Updated the current phase from Phase 4 to Phase 5.
-- Synchronized the progress record with the verified Phase 5 implementation.
 
 ### 2026-09-15 — Phase 4
 
-- Closed Phase 4 after the final local verification pass.
-- Recorded passing backend tests, Ruff checks, frontend production build, and the 5-scenario Playwright coin suite.
-- Recorded the clean final working tree.
-- Added and verified the user-facing category-management and coin-category assignment workflows.
-- Updated category UI verification to 15 passing scenarios.
-- Synchronized documentation with the verified Phase 4 implementation.
+- Closed Phase 4 after final local verification.
+- Recorded passing backend tests, Ruff checks, frontend production build, and Playwright coin/category coverage.
+- Added and verified category-management and coin-category assignment workflows.
 - Removed spreadsheet import from the current next-step plan; collection metadata is to be entered manually.
 
 ### 2026-09-14
@@ -313,7 +260,6 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Updated the Phase 4 record to match the implemented coin entry, browser, editing, archive/restore, dictionary, and image workflows.
 - Recorded Playwright UI verification with 5 passing coin scenarios.
 - Recorded manual verification of a cross-era `476 BC → 1 AD` coin range.
-- Recorded the accepted image-storage convention and its current implementation.
-- Updated the roadmap relationship between Phase 4 and the originally planned image/browser/editing phases.
+- Recorded the accepted image-storage convention and its implementation.
 - Added Playwright as a frontend development/test dependency.
-- Removed the invalid frontend validation that compared numeric years without considering their eras.
+- Removed invalid frontend validation that compared numeric years without considering their eras.
