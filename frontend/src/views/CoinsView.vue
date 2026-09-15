@@ -13,6 +13,7 @@ const filters = useCoinFilters('coins')
 const coins = ref<Coin[]>([])
 const errorMessage = ref('')
 const viewMode = ref<'grid' | 'list'>('grid')
+const showAdvancedFilters = ref(false)
 
 async function loadCoins(): Promise<void> {
   try {
@@ -51,33 +52,304 @@ function resetFilters(): void {
   void loadCoins()
 }
 
+function toggleAdvancedFilters(): void {
+  showAdvancedFilters.value = !showAdvancedFilters.value
+}
+
 onMounted(loadCoins)
 </script>
 
 <template>
-  <section>
-    <header>
-      <h1>Monety</h1>
+  <section class="coins-view">
+    <header class="page-header">
       <div>
-        <button type="button" :disabled="viewMode === 'grid'" @click="viewMode = 'grid'">▦ Grid</button>
-        <button type="button" :disabled="viewMode === 'list'" @click="viewMode = 'list'">☷ Lista</button>
+        <h1>Monety</h1>
+        <p class="page-subtitle">Katalog kolekcji</p>
+      </div>
+
+      <div class="view-switcher" aria-label="Sposób wyświetlania monet">
+        <button type="button" :class="{ active: viewMode === 'grid' }" :disabled="viewMode === 'grid'" @click="viewMode = 'grid'">
+          ▦ Grid
+        </button>
+        <button type="button" :class="{ active: viewMode === 'list' }" :disabled="viewMode === 'list'" @click="viewMode = 'list'">
+          ☷ Lista
+        </button>
       </div>
     </header>
 
-    <CoinFilters :filters="filters" show-status @submit="loadCoins" />
-    <button type="button" @click="resetFilters">Wyczyść filtry</button>
+    <form class="simple-search" @submit.prevent="loadCoins">
+      <div class="search-field">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <input
+          v-model="filters.search"
+          type="search"
+          placeholder="Szukaj monet, np. polska grosz"
+          aria-label="Szukaj monet"
+        />
+      </div>
+      <button
+        class="filters-toggle"
+        type="button"
+        :aria-expanded="showAdvancedFilters"
+        aria-controls="advanced-coin-filters"
+        @click="toggleAdvancedFilters"
+      >
+        ⚙ Filtry
+      </button>
+    </form>
 
-    <p v-if="errorMessage">{{ errorMessage }}</p>
-    <p v-if="coins.length === 0">Brak monet spełniających kryteria.</p>
+    <div v-if="showAdvancedFilters" id="advanced-coin-filters" class="advanced-filters">
+      <div class="advanced-filters-header">
+        <div>
+          <h2>Filtry</h2>
+          <p>Uściślij wyszukiwanie według cech monety.</p>
+        </div>
+        <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
+      </div>
 
-    <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" />
+      <CoinFilters :filters="filters" show-status @submit="loadCoins" />
+      <button class="reset-button" type="button" @click="resetFilters">Wyczyść filtry</button>
+    </div>
 
-    <CoinList
-      v-else
-      :coins="coins"
-      @details="(coin) => router.push(`/monety/${coin.id}`)"
-      @archive="archiveCoin"
-      @restore="restoreCoin"
-    />
+    <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+
+    <div v-if="coins.length === 0" class="empty-state">
+      <strong>Brak monet</strong>
+      <span>Nie znaleziono monet spełniających kryteria.</span>
+    </div>
+
+    <template v-else>
+      <div class="results-bar">
+        <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
+      </div>
+
+      <CoinGrid v-if="viewMode === 'grid'" :coins="coins" />
+
+      <CoinList
+        v-else
+        :coins="coins"
+        @details="(coin) => router.push(`/monety/${coin.id}`)"
+        @archive="archiveCoin"
+        @restore="restoreCoin"
+      />
+    </template>
   </section>
 </template>
+
+<style scoped>
+.coins-view {
+  display: grid;
+  gap: 20px;
+}
+
+.page-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.page-subtitle {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.view-switcher {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.view-switcher button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.view-switcher button.active {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.simple-search {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.search-field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.search-field:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-icon {
+  color: #64748b;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.search-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 13px 0;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+
+.filters-toggle,
+.collapse-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 700;
+}
+
+.filters-toggle:hover,
+.collapse-button:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.advanced-filters {
+  padding: 20px;
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.advanced-filters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.advanced-filters-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.advanced-filters-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.advanced-filters :deep(.coin-filters) {
+  margin: 20px 0 12px;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.reset-button {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reset-button:hover {
+  background: #f8fafc;
+}
+
+.results-bar {
+  color: #475569;
+  font-size: 14px;
+}
+
+.error-message {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.empty-state {
+  display: grid;
+  gap: 6px;
+  padding: 48px 24px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #64748b;
+  text-align: center;
+}
+
+.empty-state strong {
+  color: #334155;
+  font-size: 18px;
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .view-switcher {
+    align-self: stretch;
+  }
+
+  .view-switcher button {
+    flex: 1;
+  }
+
+  .simple-search {
+    flex-direction: column;
+  }
+
+  .filters-toggle {
+    width: 100%;
+  }
+
+  .advanced-filters {
+    padding: 16px;
+  }
+}
+</style>
