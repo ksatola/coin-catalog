@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import Select, exists, func, or_, select
+from sqlalchemy import Select, String, cast, exists, func, or_, select
 
 from coin_catalog.models import (
     Category,
@@ -77,8 +77,8 @@ def _text_search_condition(token: str, include_category_children: bool):
         Era.name.ilike(pattern),
         Coin.description.ilike(pattern),
         Coin.source.ilike(pattern),
-        func.cast(Coin.from_year, str).ilike(pattern),
-        func.cast(Coin.to_year, str).ilike(pattern),
+        cast(Coin.from_year, String).ilike(pattern),
+        cast(Coin.to_year, String).ilike(pattern),
         _category_search_exists_for_coin(token, include_category_children),
     )
 
