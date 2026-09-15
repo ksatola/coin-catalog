@@ -99,7 +99,7 @@ async function mockCategoryApi(page: Page): Promise<void> {
       }
 
       if (method === 'POST') {
-        if (hasPath(state, childId, parentId)) {
+        if (hasPath(state, parentId, childId)) {
           await route.fulfill({ status: 409, body: '' })
           return
         }
@@ -325,7 +325,7 @@ test('kategoria posiadająca relacje nie może zostać usunięta', async ({ page
   const selectedCategory = categoryItem(page, 'Polska')
   await selectedCategory.getByRole('button', { name: 'Polska', exact: true }).click()
   page.on('dialog', (dialog) => dialog.accept())
-  await selectedCategory.locator('.editor').getByRole('button', { name: 'Usuń', exact: true }).click()
+  await page.locator('.editor .actions').getByRole('button', { name: 'Usuń', exact: true }).click()
   await expect(page.getByText('Nie można usunąć kategorii, ponieważ jest używana.')).toBeVisible()
   await expect(categoryItem(page, 'Polska')).toBeVisible()
 })
@@ -336,7 +336,7 @@ test('kategoria przypisana do monety nie może zostać usunięta', async ({ page
   const selectedCategory = categoryItem(page, 'II RP')
   await selectedCategory.getByRole('button', { name: 'II RP', exact: true }).click()
   page.on('dialog', (dialog) => dialog.accept())
-  await selectedCategory.locator('.editor').getByRole('button', { name: 'Usuń', exact: true }).click()
+  await page.locator('.editor .actions').getByRole('button', { name: 'Usuń', exact: true }).click()
   await expect(page.getByText('Nie można usunąć kategorii, ponieważ jest używana.')).toBeVisible()
   await expect(categoryItem(page, 'II RP')).toBeVisible()
 })
