@@ -9,6 +9,19 @@ export interface CoinImage {
   created_at: string
 }
 
+export interface Category {
+  id: number
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CategoryGraphItem extends Category {
+  parent_ids: number[]
+  child_ids: number[]
+}
+
 export interface CoinFormSubmit {
   coin: CoinCreate
   images: {
