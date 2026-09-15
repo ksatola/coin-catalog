@@ -8,6 +8,8 @@ const coin = {
   from_year: 1900,
   from_era_id: 1,
   to_year: 1901,
+  from_era_id: 1,
+  to_year: 1901,
   to_era_id: 1,
   mint_id: null,
   material_id: null,
@@ -35,6 +37,39 @@ const categories = [
   { id: 2, name: 'Polska', description: null, parent_ids: [1], child_ids: [], created_at: '', updated_at: '' },
 ]
 
+test('wyszukiwanie działa na żywo podczas pisania', async ({ page }) => {
+  const coinRequests: URL[] = []
+
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = route.request().url().split('/').pop() ?? ''
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []) })
+  })
+  await page.route('**/api/categories', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(categories) })
+  })
+  await page.route('**/api/coins*', async (route) => {
+    coinRequests.push(new URL(route.request().url()))
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([coin]) })
+  })
+
+  await page.goto('/monety')
+  await expect(page.getByRole('heading', { name: 'Monety' })).toBeVisible()
+  const initialRequestCount = coinRequests.length
+
+  const searchRequest = page.waitForRequest((request) => {
+    const url = new URL(request.url())
+    return url.pathname === '/api/coins' && url.searchParams.get('search') === 'polska grosz'
+  })
+  await page.getByLabel('Szukaj monet').fill('polska grosz')
+
+  const request = await searchRequest
+  const searchUrl = new URL(request.url())
+  expect(searchUrl.searchParams.get('search')).toBe('polska grosz')
+  expect(searchUrl.searchParams.get('status')).toBe('active')
+  expect(coinRequests.length).toBeGreaterThan(initialRequestCount)
+  await expect(page.getByText('#1')).toBeVisible()
+})
+
 test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page }) => {
   const coinRequests: URL[] = []
 
@@ -53,18 +88,13 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   await page.goto('/monety')
   await expect(page.getByRole('heading', { name: 'Monety' })).toBeVisible()
 
-  await page.getByLabel('Szukaj').fill('polska grosz')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
-  await expect(page.getByText('#1')).toBeVisible()
-
+  await page.getByLabel('Szukaj monet').fill('polska grosz')
+  await expect.poll(() => coinRequests.at(-1)?.searchParams.get('search')).toBe('polska grosz')
   const searchUrl = coinRequests.at(-1)
-  expect(searchUrl?.searchParams.get('search')).toBe('polska grosz')
   expect(searchUrl?.searchParams.get('status')).toBe('active')
 
-  await page.getByLabel('Szukaj').fill('grosz polska')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
-  const reorderedUrl = coinRequests.at(-1)
-  expect(reorderedUrl?.searchParams.get('search')).toBe('grosz polska')
+  await page.getByLabel('Szukaj monet').fill('grosz polska')
+  await expect.poll(() => coinRequests.at(-1)?.searchParams.get('search')).toBe('grosz polska')
 })
 
 test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączyć', async ({ page }) => {
@@ -97,7 +127,9 @@ test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączy�
   expect(requestUrl?.searchParams.get('include_category_children')).toBe('false')
 })
 
-test('wyszukiwanie krótsze niż trzy znaki jest blokowane w UI', async ({ page }) => {
+test('wyszukiwanie krótsze niż trzy znaki nie wysyła żądania', async ({ page }) => {
+  const coinRequests: URL[] = []
+
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = route.request().url().split('/').pop() ?? ''
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []) })
@@ -106,14 +138,18 @@ test('wyszukiwanie krótsze niż trzy znaki jest blokowane w UI', async ({ page 
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(categories) })
   })
   await page.route('**/api/coins*', async (route) => {
+    coinRequests.push(new URL(route.request().url()))
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([coin]) })
   })
 
   await page.goto('/monety')
-  await page.getByLabel('Szukaj').fill('ab')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await expect(page.getByText('#1')).toBeVisible()
+  const initialRequestCount = coinRequests.length
 
-  await expect(
-    page.getByText('Każdy fragment wyszukiwania musi mieć co najmniej 3 znaki.'),
-  ).toBeVisible()
+  await page.getByLabel('Szukaj monet').fill('ab')
+  await page.waitForTimeout(350)
+
+  expect(coinRequests.length).toBe(initialRequestCount)
+  await expect(page.getByText('#1')).toBeVisible()
+  await expect(page.getByText('Nie udało się pobrać monet.')).toHaveCount(0)
 })
