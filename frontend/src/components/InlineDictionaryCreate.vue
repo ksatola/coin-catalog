@@ -60,7 +60,7 @@ async function create(): Promise<void> {
 </script>
 
 <template>
-  <div class="inline-create">
+  <div class="inline-create" :class="{ 'is-open': isOpen }">
     <button
       type="button"
       class="add-button"
@@ -99,6 +99,10 @@ async function create(): Promise<void> {
   gap: 6px;
   margin-top: 4px;
   z-index: 30;
+}
+
+.inline-create.is-open {
+  z-index: 1000;
 }
 
 .add-button {
