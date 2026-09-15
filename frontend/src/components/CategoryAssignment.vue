@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const assignedCategories = ref<Category[]>([])
 const categories = ref<Category[]>([])
-const selectedCategoryId = ref<number | null>(null)
+const selectedCategoryIds = ref<number[]>([])
 const errorMessage = ref('')
 const loading = ref(false)
 
@@ -27,6 +27,7 @@ async function load(): Promise<void> {
 
     assignedCategories.value = await assignedResponse.json() as Category[]
     categories.value = await categoriesResponse.json() as Category[]
+    selectedCategoryIds.value = []
     errorMessage.value = ''
   } catch {
     errorMessage.value = 'Nie udało się pobrać kategorii.'
@@ -41,19 +42,20 @@ function availableCategories(): Category[] {
 }
 
 async function attach(): Promise<void> {
-  if (selectedCategoryId.value === null) return
+  if (selectedCategoryIds.value.length === 0) return
 
   try {
-    const response = await fetch(
-      `/api/coins/${props.coinId}/categories/${selectedCategoryId.value}`,
-      { method: 'POST' },
-    )
+    for (const categoryId of selectedCategoryIds.value) {
+      const response = await fetch(
+        `/api/coins/${props.coinId}/categories/${categoryId}`,
+        { method: 'POST' },
+      )
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
     }
 
-    selectedCategoryId.value = null
     await load()
   } catch {
     errorMessage.value = 'Nie udało się przypisać kategorii.'
@@ -96,18 +98,21 @@ onMounted(load)
     <p v-else>Brak przypisanych kategorii.</p>
 
     <form class="category-form" @submit.prevent="attach">
-      <select v-model.number="selectedCategoryId">
-        <option :value="null">Wybierz kategorię</option>
-        <option
-          v-for="category in availableCategories()"
-          :key="category.id"
-          :value="category.id"
-        >
-          {{ category.name }}
-        </option>
-      </select>
-      <button type="submit" :disabled="selectedCategoryId === null">
-        Dodaj kategorię
+      <label>
+        Wybierz kategorie
+        <select v-model="selectedCategoryIds" multiple size="5">
+          <option
+            v-for="category in availableCategories()"
+            :key="category.id"
+            :value="category.id"
+          >
+            {{ category.name }}
+          </option>
+        </select>
+      </label>
+      <small>Możesz wybrać więcej niż jedną kategorię.</small>
+      <button type="submit" :disabled="selectedCategoryIds.length === 0">
+        Dodaj kategorie
       </button>
     </form>
   </section>
@@ -136,9 +141,17 @@ onMounted(load)
 }
 
 .category-form {
-  display: flex;
+  display: grid;
   gap: 8px;
-  flex-wrap: wrap;
+}
+
+.category-form label {
+  display: grid;
+  gap: 4px;
+}
+
+.category-form select {
+  min-width: 220px;
 }
 
 .error {
