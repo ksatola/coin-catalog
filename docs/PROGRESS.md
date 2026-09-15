@@ -1,6 +1,6 @@
 # Coin Catalog — Development Progress
 
-This document records the verified current state of the project. A task is marked complete only after it has been implemented and verified where verification is applicable.
+This document records the current, verified state of the project. A task is marked complete only after it has been implemented and verified where verification is applicable.
 
 ---
 
@@ -8,7 +8,7 @@ This document records the verified current state of the project. A task is marke
 
 **Phase 4 — Coin Entry and Browser is complete.**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, and Phase 4 — Coin Entry and Browser are complete. Phase 4 provides the first usable catalogue workflow: coin entry, SQLite persistence, browsing, details, editing, archive/restore, dictionary management, and coin images. The backend also contains category structures and APIs; the frontend does not yet provide user-facing category management or coin-category assignment.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, and Phase 4 — Coin Entry and Browser are complete. Phase 4 provides the first usable catalogue workflow: coin entry, SQLite persistence, browsing, details, editing, archive/restore, dictionary management, image management, category management, and coin-category assignment.
 
 No new development phase has been started after Phase 4.
 
@@ -93,22 +93,29 @@ Verified:
 - [x] Additional image upload and deletion.
 - [x] Explicit primary-image replacement behavior.
 - [x] Cross-era date ranges are accepted without comparing numeric years across eras.
+- [x] Category management UI.
+- [x] Multiple parent/child category relationships and relation removal.
+- [x] Category cycle-error handling and deletion protection UI.
+- [x] Coin-category assignment and removal UI.
 
 ### Automated UI verification
 
-The Playwright coin suite passes:
+The verified Playwright coverage passes:
 
 ```text
-5 passed
+5 coin/image scenarios
+15 category and coin-category scenarios
 ```
 
-Covered scenarios include:
+The coin/image suite covers:
 
 - awers replacement;
 - cancelling an awers replacement;
 - rewers replacement;
 - additional image upload;
 - cross-era date range such as `476 BC → 1 AD`.
+
+The category suite covers category CRUD, multiple parent/child relations, relation removal, cycle prevention behavior, deletion protection, and coin-category assignment/removal.
 
 The frontend production build also passed.
 
@@ -148,27 +155,31 @@ The accepted storage decision D-030 is implemented for the current workflow:
 - sequential additional images;
 - SQLite image metadata;
 - JPG image serving;
-- explicit replacement confirmation.
+- explicit replacement confirmation;
+- byte-preserving storage without JPEG decode/re-encode or resizing.
 
 Further image features may be added later if justified.
 
 ---
 
-## Category Data Structures
+## Category Management
 
-**Status:** Backend implementation complete; user-facing UI not implemented
+**Status:** Complete for the current Phase 4 scope
 
 Verified:
 
 - `category` entity with name and description;
 - `category_relation` parent/child relationships;
 - acyclic category graph validation in the backend;
+- multiple parents and multiple children;
+- category CRUD UI at `/kategorie`;
+- relation add/remove UI;
+- cycle-error handling;
+- deletion protection while a category is used by a coin or category relation;
 - `coin_category` many-to-many relationship;
-- category CRUD and parent/child API endpoints;
-- coin-category assignment/removal API endpoints;
-- deletion protection while a category is used by a coin or category relation.
+- coin-category assignment/removal UI.
 
-The frontend currently does not expose category management or coin-category assignment.
+Broader collection/tag organization remains future work.
 
 ---
 
@@ -190,9 +201,9 @@ Planned: searchable fields, basic search, filtering, sorting, and query optimiza
 
 ## Broader Collections, Categories and Tags
 
-**Status:** Partially implemented / future expansion
+**Status:** Future expansion
 
-The backend category model and API are implemented. User-facing category management, coin-category assignment, broader collection/tag organization, and filtering remain future work.
+The current category model and user-facing category workflow are implemented. Broader collection/tag organization and related filtering remain future work.
 
 ---
 
@@ -208,7 +219,7 @@ Planned: database/image backup strategy and useful metadata/catalogue export.
 
 **Status:** Ongoing
 
-Backend pytest and Ruff checks and Playwright UI coverage are established. Broader integration tests, CI checks, and further quality automation remain future work.
+Backend pytest and Ruff checks and Playwright UI coverage are established. Current Phase 4 UI scenarios are verified. Broader integration tests, CI checks, and further quality automation remain future work.
 
 ---
 
@@ -235,7 +246,9 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Closed Phase 4 after the final local verification pass.
 - Recorded passing backend tests, Ruff checks, frontend production build, and the 5-scenario Playwright coin suite.
 - Recorded the clean final working tree.
-- Synchronized documentation with the verified category backend implementation.
+- Added and verified the user-facing category-management and coin-category assignment workflows.
+- Updated category UI verification to 15 passing scenarios.
+- Synchronized documentation with the verified Phase 4 implementation.
 - Removed spreadsheet import from the current next-step plan; collection metadata is to be entered manually.
 
 ### 2026-09-14
