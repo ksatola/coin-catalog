@@ -322,7 +322,8 @@ watch(() => props.coins, () => {
 
 .coin-line span + span::before,
 .coin-details span + span::before {
-  content: ' · ';
+  content: '·';
+  margin-inline: 6px;
   color: #94a3b8;
 }
 
