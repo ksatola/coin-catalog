@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
 import CoinGrid from '../components/CoinGrid.vue'
+import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin } from '../types'
@@ -12,7 +13,7 @@ const router = useRouter()
 const filters = useCoinFilters('coins')
 const coins = ref<Coin[]>([])
 const errorMessage = ref('')
-const viewMode = ref<'grid' | 'list'>('grid')
+const viewMode = ref<'image-grid' | 'grid' | 'list'>('image-grid')
 const showAdvancedFilters = ref(false)
 
 async function loadCoins(): Promise<void> {
@@ -68,6 +69,9 @@ onMounted(loadCoins)
       </div>
 
       <div class="view-switcher" aria-label="Sposób wyświetlania monet">
+        <button type="button" :class="{ active: viewMode === 'image-grid' }" :disabled="viewMode === 'image-grid'" @click="viewMode = 'image-grid'">
+          ▦ Galeria
+        </button>
         <button type="button" :class="{ active: viewMode === 'grid' }" :disabled="viewMode === 'grid'" @click="viewMode = 'grid'">
           ▦ Grid
         </button>
@@ -123,7 +127,8 @@ onMounted(loadCoins)
         <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
       </div>
 
-      <CoinGrid v-if="viewMode === 'grid'" :coins="coins" />
+      <CoinImageGrid v-if="viewMode === 'image-grid'" :coins="coins" />
+      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" />
 
       <CoinList
         v-else
