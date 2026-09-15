@@ -134,7 +134,7 @@ denomination
 mint
 material
 state
- era
+era
 category
 category_relation
 coin_category
