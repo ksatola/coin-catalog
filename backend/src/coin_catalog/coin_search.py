@@ -65,10 +65,20 @@ def _category_search_exists_for_coin(token: str, include_children: bool):
     )
 
 
-def _dictionary_search_exists_for_coin(column, pattern: str):
+def _dictionary_search_exists_for_coin(model, coin_column, pattern: str):
     return exists(
-        select(column).where(
-            column.ilike(pattern),
+        select(1).select_from(model).where(
+            model.name.ilike(pattern),
+            model.id == coin_column,
+        )
+    )
+
+
+def _era_search_exists_for_coin(coin_column, pattern: str):
+    return exists(
+        select(1).select_from(Era).where(
+            Era.name.ilike(pattern),
+            Era.id == coin_column,
         )
     )
 
@@ -76,38 +86,14 @@ def _dictionary_search_exists_for_coin(column, pattern: str):
 def _text_search_condition(token: str, include_category_children: bool):
     pattern = f"%{token}%"
     return or_(
-        _dictionary_search_exists_for_coin(
-            select(Country.name).where(Country.id == Coin.country_id).scalar_subquery(),
-            pattern,
-        ),
-        _dictionary_search_exists_for_coin(
-            select(Issuer.name).where(Issuer.id == Coin.issuer_id).scalar_subquery(),
-            pattern,
-        ),
-        _dictionary_search_exists_for_coin(
-            select(Denomination.name).where(Denomination.id == Coin.denomination_id).scalar_subquery(),
-            pattern,
-        ),
-        _dictionary_search_exists_for_coin(
-            select(Mint.name).where(Mint.id == Coin.mint_id).scalar_subquery(),
-            pattern,
-        ),
-        _dictionary_search_exists_for_coin(
-            select(Material.name).where(Material.id == Coin.material_id).scalar_subquery(),
-            pattern,
-        ),
-        _dictionary_search_exists_for_coin(
-            select(State.name).where(State.id == Coin.state_id).scalar_subquery(),
-            pattern,
-        ),
-        _dictionary_search_exists_for_coin(
-            select(Era.name).where(Era.id == Coin.from_era_id).scalar_subquery(),
-            pattern,
-        ),
-        _dictionary_search_exists_for_coin(
-            select(Era.name).where(Era.id == Coin.to_era_id).scalar_subquery(),
-            pattern,
-        ),
+        _dictionary_search_exists_for_coin(Country, Coin.country_id, pattern),
+        _dictionary_search_exists_for_coin(Issuer, Coin.issuer_id, pattern),
+        _dictionary_search_exists_for_coin(Denomination, Coin.denomination_id, pattern),
+        _dictionary_search_exists_for_coin(Mint, Coin.mint_id, pattern),
+        _dictionary_search_exists_for_coin(Material, Coin.material_id, pattern),
+        _dictionary_search_exists_for_coin(State, Coin.state_id, pattern),
+        _era_search_exists_for_coin(Coin.from_era_id, pattern),
+        _era_search_exists_for_coin(Coin.to_era_id, pattern),
         Coin.description.ilike(pattern),
         Coin.source.ilike(pattern),
         cast(Coin.from_year, String).ilike(pattern),
