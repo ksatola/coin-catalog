@@ -209,7 +209,7 @@ Thumbnail generation and image processing should be implemented as separate serv
 
 Significant architectural decisions must be recorded in:
 
-`docs/DECISIONS.md`
+docs/DECISIONS.md
 
 A decision should normally contain:
 
@@ -239,7 +239,7 @@ When an accepted architectural decision changes:
 
 Development progress is tracked in:
 
-`docs/PROGRESS.md`
+docs/PROGRESS.md
 
 A task should only be marked complete after it has actually been implemented and, where applicable, verified.
 
@@ -361,7 +361,7 @@ The user's approval to continue working, proceed to the next step, or perform te
 
 No code, documentation, configuration, migration, or other repository content may be created, modified, deleted, committed, or otherwise written to GitHub without explicit approval of the proposed change.
 
-Verification commands may be proposed and, when appropriate, run without repository writes. Repository modifications remain subject to explicit approval.
+Verification commands may be proposed and, when appropriate, run without repository writes. Repository modifications remain subject to explicit user approval.
 
 ### 19.1 Preferred Change Presentation
 
@@ -403,12 +403,8 @@ If the connector continues to return contradictory results, report the exact err
 
 The project is currently in:
 
-**Phase 4 — Coin Entry and Browser**
+**Phase 5 — Search and Filtering**
 
-Phase 3 — Database Foundation has been completed and verified. The initial SQLAlchemy database models, first Alembic migration, and focused database behavior tests are in place.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, and Phase 4 — Coin Entry and Browser have been completed and verified.
 
-Phase 4 focuses on the first usable coin-catalogue workflow:
-
-```text
-formularz → zapis do SQLite → lista monet → szczegóły monety
-```
+Phase 5 provides user-facing search and filtering for the coin browser, including tokenized text search, dictionary and category filters, recursive category filtering, date-range filtering, media-presence filters, status filtering, and deterministic sorting.

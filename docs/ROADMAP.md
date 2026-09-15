@@ -61,7 +61,7 @@ Implemented:
 - Playwright UI coverage for coin/image and category workflows;
 - cross-era date-range behavior where numeric years are not compared across BC/AD eras.
 
-Final verification is complete: the backend tests passed with 62 tests, Ruff checks passed, the frontend production build passed, the coin/image Playwright suite passed with 5 tests, the category and coin-category Playwright suite passed with 15 tests, manual cross-era entry was verified, and the final local working tree was clean.
+Final verification is complete: the backend tests passed with 62 tests, Ruff checks passed, the frontend production build passed, the coin/image Playwright suite passed with 5 tests, the category and coin-category suite passed with 15 tests, manual cross-era entry was verified, and the final local working tree was clean.
 
 ## Historical Scope Adjustment
 
@@ -73,15 +73,26 @@ Those original phase numbers are retained below as historical roadmap placeholde
 
 ## Phase 5 — Search and Filtering
 
-**Status:** Not started
+**Status:** Complete
 
-Planned work:
+Implemented and verified:
 
-- define searchable fields;
-- implement basic search;
-- implement filtering;
-- evaluate sorting;
-- optimize queries if required.
+- tokenized text search across coin and related reference/category names;
+- whitespace normalization and order-independent AND matching between search tokens;
+- validation requiring at least 3 characters per search token in the UI;
+- dictionary filters for country, issuer, denomination, mint, material, state, and era;
+- category filtering with optional recursive inclusion of subcategories;
+- `Uwzględniaj podkategorie` enabled by default, with direct-category-only filtering when disabled;
+- OR semantics within a selected filter type and AND semantics between different filter types;
+- year-range overlap filtering;
+- image and video presence filters;
+- active, archived, and all coin-status filtering;
+- deterministic sorting by ID and coin date fields with ID tie-breaking;
+- backend query construction using correlated `EXISTS` conditions and recursive category traversal;
+- duplicate-result protection in the coin query;
+- Playwright coverage for the search/filtering UI.
+
+Final local validation passed: backend pytest, Ruff lint, Ruff format check, frontend production build, and the full Playwright UI suite.
 
 ## Phase 6 — Image Management
 
