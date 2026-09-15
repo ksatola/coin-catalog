@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 
+import CoinCategoriesReadOnly from './CoinCategoriesReadOnly.vue'
 import type { Coin, CoinImage } from '../types'
 
 type DictionaryItem = {
@@ -219,6 +220,8 @@ onMounted(() => {
       <dt>Status</dt>
       <dd>{{ coin.is_deleted ? 'Zarchiwizowana' : 'Aktywna' }}</dd>
     </dl>
+
+    <CoinCategoriesReadOnly :coin-id="coin.id" />
   </section>
 </template>
 
