@@ -13,12 +13,12 @@ const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
 }
 
 async function fillRequiredFields(page: import('@playwright/test').Page): Promise<void> {
-  await page.getByLabel('Kraj').selectOption('1')
-  await page.getByLabel('Nominał').selectOption('1')
-  await page.getByLabel('Era od').selectOption('1')
-  await page.getByLabel('Rok od').fill('1900')
-  await page.getByLabel('Era do').selectOption('1')
-  await page.getByLabel('Rok do').fill('1901')
+  await page.getByLabel('Kraj', { exact: true }).selectOption('1')
+  await page.getByLabel('Nominał', { exact: true }).selectOption('1')
+  await page.getByLabel('Era od', { exact: true }).selectOption('1')
+  await page.getByLabel('Rok od', { exact: true }).fill('1900')
+  await page.getByLabel('Era do', { exact: true }).selectOption('1')
+  await page.getByLabel('Rok do', { exact: true }).fill('1901')
 }
 
 async function dropJpeg(page: import('@playwright/test').Page, zoneIndex: number, filename: string): Promise<void> {
