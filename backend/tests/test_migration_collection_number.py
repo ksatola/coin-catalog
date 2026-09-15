@@ -32,7 +32,7 @@ def test_collection_number_migration_upgrade_and_downgrade(
     assert columns["collection_number"]["nullable"] is True
     assert columns["collection_number"]["type"].__class__.__name__ == "TEXT"
 
-    command.downgrade(config, "7b2e4c1d9a60")
+    command.downgrade(config, "7a1b2c3d4e5f")
 
     inspector = inspect(engine)
     assert "collection_number" not in {
