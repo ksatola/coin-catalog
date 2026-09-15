@@ -4,6 +4,7 @@
     <RouterLink to="/dodaj">Dodaj monetę</RouterLink>
     <RouterLink to="/archiwum">Archiwum</RouterLink>
     <RouterLink to="/slowniki">Słowniki</RouterLink>
+    <RouterLink to="/kategorie">Kategorie</RouterLink>
   </nav>
 </template>
 
