@@ -104,7 +104,7 @@ async function mockCommonApi(page: Page) {
     })
   })
 
-  await page.route('**/api/coins', async (route) => {
+  await page.route('**/api/coins*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -236,7 +236,7 @@ test('podmiana rewersu zostaje wysłana jako zastąpienie', async ({ page }) => 
   ])
 })
 
-test('dodanie zdjęcia dodatkowego zostaje wysłane bez zastępowania', async ({ page }) => {
+test('dodanie zdjęcia dodatkowego zostaje wysłane bez zastępowania', async ({ page }) =>
   const { uploaded } = await mockCommonApi(page)
   let coinUpdates = 0
 
@@ -267,7 +267,7 @@ test('dodanie zdjęcia dodatkowego zostaje wysłane bez zastępowania', async ({
   ])
 })
 
-test('przedział między erą BC i AD nie jest blokowany przez kolejność wartości roku', async ({ page }) => {
+test('przedział między erą BC i AD nie jest blokowany przez kolejność wartości roku', async ({ page }) =>
   const { uploaded } = await mockCommonApi(page)
   let updates = 0
 
