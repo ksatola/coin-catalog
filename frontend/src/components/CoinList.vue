@@ -66,8 +66,8 @@ function formatDetails(coin: Coin): string[] {
   return [
     dictionaryName(dictionaries.materials, coin.material_id),
     dictionaryName(dictionaries.states, coin.state_id),
-    coin.weight !== null ? `${coin.weight.toFixed(2)} g` : null,
-    coin.diameter !== null ? `${coin.diameter.toFixed(2)} mm` : null,
+    coin.weight !== null ? `${Number(coin.weight).toFixed(2)} g` : null,
+    coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : null,
   ].filter((value): value is string => Boolean(value))
 }
 
@@ -216,7 +216,7 @@ watch(() => props.coins, () => {
             role="img"
           >
             <rect x="3" y="6" width="13" height="12" rx="2" />
-            <path d="m16 10 5-3v10l-5-3z" />
+            <path d="m16 10-5-3v10l5-3z" />
           </svg>
         </div>
       </div>
