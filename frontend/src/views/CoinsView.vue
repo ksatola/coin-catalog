@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinGrid from '../components/CoinGrid.vue'
@@ -13,13 +13,15 @@ const filterErrorMessage = ref('')
 const viewMode = ref<'grid' | 'list'>('grid')
 
 const search = ref('')
-const countryIds = ref<number[]>([])
-const issuerIds = ref<number[]>([])
-const denominationIds = ref<number[]>([])
-const mintIds = ref<number[]>([])
-const materialIds = ref<number[]>([])
-const stateIds = ref<number[]>([])
-const eraIds = ref<number[]>([])
+const dictionarySelections = reactive<Record<string, number[]>>({
+  countries: [],
+  issuers: [],
+  denominations: [],
+  mints: [],
+  materials: [],
+  states: [],
+  eras: [],
+})
 const categoryIds = ref<number[]>([])
 const includeCategoryChildren = ref(true)
 const fromYear = ref<number | null>(null)
@@ -65,19 +67,10 @@ function buildQuery(): string {
   const params = new URLSearchParams()
   if (search.value.trim()) params.set('search', search.value.trim())
 
-  const filters: Array<[string, number[]]> = [
-    ['country_id', countryIds.value],
-    ['issuer_id', issuerIds.value],
-    ['denomination_id', denominationIds.value],
-    ['mint_id', mintIds.value],
-    ['material_id', materialIds.value],
-    ['state_id', stateIds.value],
-    ['era_id', eraIds.value],
-    ['category_id', categoryIds.value],
-  ]
-  for (const [name, ids] of filters) {
-    for (const id of ids) params.append(name, String(id))
+  for (const [name, ids] of Object.entries(dictionarySelections)) {
+    for (const id of ids) params.append(`${name.slice(0, -1)}_id`, String(id))
   }
+  for (const id of categoryIds.value) params.append('category_id', String(id))
 
   params.set('include_category_children', String(includeCategoryChildren.value))
   if (fromYear.value !== null) params.set('from_year', String(fromYear.value))
@@ -153,13 +146,7 @@ async function restoreCoin(coin: Coin): Promise<void> {
 
 function resetFilters(): void {
   search.value = ''
-  countryIds.value = []
-  issuerIds.value = []
-  denominationIds.value = []
-  mintIds.value = []
-  materialIds.value = []
-  stateIds.value = []
-  eraIds.value = []
+  for (const name of Object.keys(dictionarySelections)) dictionarySelections[name] = []
   categoryIds.value = []
   includeCategoryChildren.value = true
   fromYear.value = null
@@ -202,15 +189,7 @@ onMounted(async () => {
       <div class="filter-grid">
         <label v-for="(items, name) in dictionaries" :key="name">
           {{ dictionaryLabels[name] }}
-          <select v-model="({
-            countries: countryIds,
-            issuers: issuerIds,
-            denominations: denominationIds,
-            mints: mintIds,
-            materials: materialIds,
-            states: stateIds,
-            eras: eraIds,
-          } as Record<string, typeof countryIds>)[name].value" multiple size="4">
+          <select v-model="dictionarySelections[name]" multiple size="4">
             <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
           </select>
         </label>
