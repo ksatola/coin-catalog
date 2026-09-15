@@ -103,7 +103,7 @@ test('moneta pozwala przypisać i usunąć kategorię', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
   await expect(page.getByText('Polska', { exact: true })).toBeVisible()
 
-  await page.getByRole('combobox', { name: '' }).selectOption('2')
+  await page.locator('.category-form select').selectOption('2')
   await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
 
   await expect(page.getByText('II RP', { exact: true })).toBeVisible()
