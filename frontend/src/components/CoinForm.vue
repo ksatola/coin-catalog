@@ -19,7 +19,7 @@ type Dictionaries = {
 
 const props = defineProps<{ coin?: Coin | null }>()
 const emit = defineEmits<{ submit: [payload: CoinFormSubmit]; cancel: [] }>()
-const { markDirty } = useUnsavedCoinForm()
+const { markDirty, markClean } = useUnsavedCoinForm()
 
 const emptyForm: CoinCreate = {
   country_id: 0,
@@ -192,6 +192,7 @@ function submitForm(): void {
 }
 
 function loadCoinIntoForm(coin: Coin | null | undefined): void {
+  markClean()
   Object.assign(form, coin ? { ...coin } : { ...emptyForm })
   validationMessage.value = ''
   void loadCoinImages(coin)
