@@ -43,12 +43,11 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   })
 
   await page.goto('/dodaj')
-
   await page.getByLabel('Rok od').fill('1900')
   await page.getByLabel('Rok do').fill('1901')
   await page.getByLabel('Opis').fill('Dane wpisane przed utworzeniem słownika')
 
-  await page.getByRole('button', { name: '+ Dodaj kraj' }).click()
+  await page.getByRole('button', { name: 'Dodaj kraj' }).click()
   await page.getByRole('textbox', { name: 'Nowy wpis w kraj' }).fill('Czechy')
   await page.getByRole('textbox', { name: 'Nowy wpis w kraj' }).locator('xpath=../..').getByRole('button', { name: 'Dodaj', exact: true }).click()
 
@@ -57,7 +56,7 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   await expect(page.getByLabel('Rok do')).toHaveValue('1901')
   await expect(page.getByLabel('Opis')).toHaveValue('Dane wpisane przed utworzeniem słownika')
 
-  await page.getByRole('button', { name: '+ Dodaj kategorię' }).click()
+  await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
   await page.getByLabel('Nazwa nowej kategorii').fill('Kategoria testowa')
   await page.getByRole('button', { name: 'Dodaj' }).last().click()
 
