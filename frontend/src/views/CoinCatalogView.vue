@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
@@ -86,12 +86,16 @@ async function loadCoins(): Promise<void> {
     return
   }
 
+  const scrollY = window.scrollY
+
   try {
     const query = buildCoinFilterQuery(filters)
     const response = await fetch(`/api/coins${query ? `?${query}` : ''}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     coins.value = await response.json() as Coin[]
     errorMessage.value = ''
+    await nextTick()
+    window.scrollTo(0, scrollY)
   } catch {
     errorMessage.value = isArchive
       ? 'Nie udało się pobrać archiwum.'
