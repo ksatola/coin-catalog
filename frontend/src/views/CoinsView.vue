@@ -13,14 +13,14 @@ const filterErrorMessage = ref('')
 const viewMode = ref<'grid' | 'list'>('grid')
 
 const search = ref('')
-const dictionarySelections = reactive<Record<string, number[]>>({
-  countries: [],
-  issuers: [],
-  denominations: [],
-  mints: [],
-  materials: [],
-  states: [],
-  eras: [],
+const dictionarySelections = reactive({
+  countries: [] as number[],
+  issuers: [] as number[],
+  denominations: [] as number[],
+  mints: [] as number[],
+  materials: [] as number[],
+  states: [] as number[],
+  eras: [] as number[],
 })
 const categoryIds = ref<number[]>([])
 const includeCategoryChildren = ref(true)
@@ -154,7 +154,7 @@ async function restoreCoin(coin: Coin): Promise<void> {
 
 function resetFilters(): void {
   search.value = ''
-  for (const name of Object.keys(dictionarySelections)) dictionarySelections[name] = []
+  for (const name of Object.keys(dictionarySelections)) dictionarySelections[name as keyof typeof dictionarySelections] = []
   categoryIds.value = []
   includeCategoryChildren.value = true
   fromYear.value = null
@@ -197,7 +197,7 @@ onMounted(async () => {
       <div class="filter-grid">
         <label v-for="(items, name) in dictionaries" :key="name">
           {{ dictionaryLabels[name] }}
-          <select v-model="dictionarySelections[name]" multiple size="4">
+          <select v-model="dictionarySelections[name as keyof typeof dictionarySelections]" multiple size="4">
             <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
           </select>
         </label>
