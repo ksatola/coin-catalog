@@ -134,7 +134,7 @@ denomination
 mint
 material
 state
-era
+ era
 category
 category_relation
 coin_category
@@ -169,9 +169,9 @@ The frontend is a Vue 3 application using:
 - Vite
 - Vue Router
 
-The frontend provides the user-facing catalogue workflow, including coin creation, editing, browsing, details, archive/restore, dictionary management, and image selection.
+The frontend provides the user-facing catalogue workflow, including coin creation, editing, browsing, details, archive/restore, dictionary management, image selection, category management, category relationship management, and coin-category assignment/removal.
 
-The current frontend does not provide a user-facing category-management or coin-category assignment UI, although the backend category structures and APIs are implemented.
+Category management is exposed through the `/kategorie` route. The category UI supports category CRUD, multiple parents and children, relation removal, cycle-error handling, and deletion protection messages. Coin-category assignment is exposed within the coin workflow and supports adding and removing assigned categories.
 
 The application uses component-based Vue code and does not currently depend on Pinia or a UI component framework.
 
@@ -309,7 +309,7 @@ Current automated verification includes:
 - frontend production build,
 - Playwright UI tests.
 
-The Playwright suite covers the current coin UI workflows, including image replacement, additional-image upload, and the cross-era date-range regression case.
+The Playwright UI coverage includes the coin/image workflows plus category management, category relationship handling, cycle prevention behavior, category deletion protection, and coin-category assignment/removal.
 
 Broader integration and CI coverage remain future work.
 
@@ -328,13 +328,12 @@ A production deployment architecture will be defined when deployment becomes an 
 The following are not yet fully specified or implemented:
 
 - advanced search and filtering,
-- user-facing category management and category assignment UI,
 - broader collections and tags,
 - authentication and authorization,
 - backup/recovery automation,
 - production deployment,
 - CI/CD pipeline.
 
-The backend category model and API are already implemented; the remaining category work is user-facing organization and workflow rather than creation of the underlying category data structures.
+The category data model, backend APIs, and current user-facing category workflows are implemented. Future category work is limited to broader organization and collection/tag capabilities unless new requirements are approved.
 
 The architecture should be updated when these areas become active development work.
