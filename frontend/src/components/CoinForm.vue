@@ -4,6 +4,7 @@ import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import CoinImageDropZone from './CoinImageDropZone.vue'
 import InlineDictionaryCreate from './InlineDictionaryCreate.vue'
 import type { Coin, CoinCreate, CoinFormSubmit, CoinImage } from '../types'
+import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = {
@@ -18,6 +19,7 @@ type Dictionaries = {
 
 const props = defineProps<{ coin?: Coin | null }>()
 const emit = defineEmits<{ submit: [payload: CoinFormSubmit]; cancel: [] }>()
+const { markDirty } = useUnsavedCoinForm()
 
 const emptyForm: CoinCreate = {
   country_id: 0,
@@ -95,21 +97,25 @@ function imageUrl(image: CoinImage | null): string | null {
 function setPrimaryFile(kind: 'avers' | 'rewers', files: File[]): void {
   pendingFiles[kind] = files[0] ?? null
   primaryImages[kind] = null
+  markDirty()
 }
 
 function clearPrimary(kind: 'avers' | 'rewers'): void {
   pendingFiles[kind] = null
   primaryImages[kind] = null
+  markDirty()
 }
 
 function addAdditionalFiles(files: File[]): void {
   pendingFiles.additional.push(...files)
   rebuildPendingAdditionalPreviewUrls()
+  markDirty()
 }
 
 function removePendingAdditional(index: number): void {
   pendingFiles.additional.splice(index, 1)
   rebuildPendingAdditionalPreviewUrls()
+  markDirty()
 }
 
 function removeAdditionalImage(image: CoinImage): void {
@@ -117,6 +123,7 @@ function removeAdditionalImage(image: CoinImage): void {
   pendingDeletedImages.value.push(image)
   additionalImages.value = additionalImages.value.filter((item) => item.id !== image.id)
   imageErrorMessage.value = ''
+  markDirty()
 }
 
 async function loadDictionary(dictionaryName: keyof Dictionaries): Promise<DictionaryItem[]> {
@@ -156,6 +163,7 @@ function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem): void
     if (!form.from_era_id) form.from_era_id = item.id
     else form.to_era_id = item.id
   }
+  markDirty()
 }
 
 function submitForm(): void {
@@ -190,6 +198,9 @@ function loadCoinIntoForm(coin: Coin | null | undefined): void {
 }
 
 watch(() => props.coin, loadCoinIntoForm, { immediate: true })
+watch(form, () => {
+  markDirty()
+}, { deep: true })
 onMounted(loadDictionaries)
 onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 </script>
