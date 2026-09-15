@@ -1,10 +1,15 @@
 <template>
   <nav class="navigation" aria-label="Główna nawigacja">
     <div class="navigation-inner">
-      <RouterLink class="brand" to="/monety">
+      <a
+        class="brand"
+        href="https://github.com/ksatola/coin-catalog"
+        target="_blank"
+        rel="noreferrer"
+      >
         <span class="brand-mark">CC</span>
         <span class="brand-name">Coin Catalog</span>
-      </RouterLink>
+      </a>
 
       <div class="navigation-links">
         <RouterLink to="/monety">Monety</RouterLink>
