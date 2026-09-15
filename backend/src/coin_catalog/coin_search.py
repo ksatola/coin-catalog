@@ -65,16 +65,49 @@ def _category_search_exists_for_coin(token: str, include_children: bool):
     )
 
 
+def _dictionary_search_exists_for_coin(column, pattern: str):
+    return exists(
+        select(column).where(
+            column.ilike(pattern),
+        )
+    )
+
+
 def _text_search_condition(token: str, include_category_children: bool):
     pattern = f"%{token}%"
     return or_(
-        Country.name.ilike(pattern),
-        Issuer.name.ilike(pattern),
-        Denomination.name.ilike(pattern),
-        Mint.name.ilike(pattern),
-        Material.name.ilike(pattern),
-        State.name.ilike(pattern),
-        Era.name.ilike(pattern),
+        _dictionary_search_exists_for_coin(
+            select(Country.name).where(Country.id == Coin.country_id).scalar_subquery(),
+            pattern,
+        ),
+        _dictionary_search_exists_for_coin(
+            select(Issuer.name).where(Issuer.id == Coin.issuer_id).scalar_subquery(),
+            pattern,
+        ),
+        _dictionary_search_exists_for_coin(
+            select(Denomination.name).where(Denomination.id == Coin.denomination_id).scalar_subquery(),
+            pattern,
+        ),
+        _dictionary_search_exists_for_coin(
+            select(Mint.name).where(Mint.id == Coin.mint_id).scalar_subquery(),
+            pattern,
+        ),
+        _dictionary_search_exists_for_coin(
+            select(Material.name).where(Material.id == Coin.material_id).scalar_subquery(),
+            pattern,
+        ),
+        _dictionary_search_exists_for_coin(
+            select(State.name).where(State.id == Coin.state_id).scalar_subquery(),
+            pattern,
+        ),
+        _dictionary_search_exists_for_coin(
+            select(Era.name).where(Era.id == Coin.from_era_id).scalar_subquery(),
+            pattern,
+        ),
+        _dictionary_search_exists_for_coin(
+            select(Era.name).where(Era.id == Coin.to_era_id).scalar_subquery(),
+            pattern,
+        ),
         Coin.description.ilike(pattern),
         Coin.source.ilike(pattern),
         cast(Coin.from_year, String).ilike(pattern),
