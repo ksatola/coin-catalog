@@ -124,6 +124,19 @@ def test_search_is_tokenized_and_order_independent(
     assert ids(client.get("/coins?search=grosz+polska")) == [coin.id]
 
 
+def test_search_returns_each_coin_only_once(
+    client: TestClient,
+    data: dict[str, Coin | Category],
+) -> None:
+    coin = data["coin"]
+
+    response = client.get("/coins?search=polska+grosz")
+    result_ids = ids(response)
+
+    assert result_ids == [coin.id]
+    assert len(result_ids) == len(set(result_ids))
+
+
 def test_search_supports_three_character_fragments(
     client: TestClient,
     data: dict[str, Coin | Category],
@@ -191,7 +204,9 @@ def test_filters_combine_with_and_and_values_inside_filter_are_or(
     assert ids(client.get("/coins?country_id=999999&from_year=1900")) == []
 
 
-def test_image_and_video_filters(client: TestClient, data: dict[str, Coin | Category]) -> None:
+def test_image_and_video_filters(
+    client: TestClient, data: dict[str, Coin | Category]
+) -> None:
     coin = data["coin"]
 
     assert ids(client.get("/coins?has_image=true")) == [coin.id]
