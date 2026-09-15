@@ -5,9 +5,11 @@ import { useRoute, useRouter } from 'vue-router'
 import CategoryAssignment from '../components/CategoryAssignment.vue'
 import CoinForm from '../components/CoinForm.vue'
 import type { Coin, CoinFormSubmit, CoinImage } from '../types'
+import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const route = useRoute()
 const router = useRouter()
+const { markClean } = useUnsavedCoinForm()
 
 const coin = ref<Coin | null>(null)
 const errorMessage = ref('')
@@ -23,6 +25,7 @@ async function loadCoin(): Promise<void> {
     }
 
     coin.value = await response.json() as Coin
+    markClean()
     errorMessage.value = ''
   } catch {
     errorMessage.value = 'Nie udało się pobrać monety.'
@@ -101,6 +104,7 @@ async function saveCoin(payload: CoinFormSubmit): Promise<void> {
       await deleteImage(coin.value.id, image)
     }
 
+    markClean()
     await router.push(`/monety/${coin.value.id}`)
   } catch {
     errorMessage.value = 'Nie udało się zapisać zmian monety lub jej zdjęć.'
