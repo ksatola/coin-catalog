@@ -90,6 +90,7 @@ def _era_search_exists_for_coin(coin_column, pattern: str):
 def _text_search_condition(token: str, include_category_children: bool):
     pattern = f"%{token}%"
     return or_(
+        Coin.collection_number.ilike(pattern),
         _dictionary_search_exists_for_coin(Country, Coin.country_id, pattern),
         _dictionary_search_exists_for_coin(Issuer, Coin.issuer_id, pattern),
         _dictionary_search_exists_for_coin(Denomination, Coin.denomination_id, pattern),
