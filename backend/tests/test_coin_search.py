@@ -170,7 +170,10 @@ def test_search_matches_category_ancestors_and_exact_scope(
     assert ids(client.get(f"/coins?search={root.name}")) == [coin.id]
     assert ids(client.get(f"/coins?search={parent.name}")) == [coin.id]
     assert ids(client.get(f"/coins?search={child.name}")) == [coin.id]
-    assert ids(client.get(f"/coins?search={root.name}&include_category_children=false")) == []
+    assert (
+        ids(client.get(f"/coins?search={root.name}&include_category_children=false"))
+        == []
+    )
 
 
 def test_category_filter_can_include_or_exclude_children(
@@ -182,7 +185,10 @@ def test_category_filter_can_include_or_exclude_children(
     child = data["child"]
 
     assert ids(client.get(f"/coins?category_id={root.id}")) == [coin.id]
-    assert ids(client.get(f"/coins?category_id={root.id}&include_category_children=false")) == []
+    assert (
+        ids(client.get(f"/coins?category_id={root.id}&include_category_children=false"))
+        == []
+    )
     assert ids(client.get(f"/coins?category_id={child.id}")) == [coin.id]
 
 
@@ -239,6 +245,6 @@ def test_sorting(
     archived = data["archived"]
     mapping = {1: coin.id, 2: archived.id}
 
-    assert ids(client.get(f"/coins?status=all&sort_by={sort_by}&sort_order={sort_order}")) == [
-        mapping[item] for item in expected
-    ]
+    assert ids(
+        client.get(f"/coins?status=all&sort_by={sort_by}&sort_order={sort_order}")
+    ) == [mapping[item] for item in expected]
