@@ -57,7 +57,15 @@ async function create(): Promise<void> {
 
 <template>
   <div class="inline-create">
-    <button type="button" @click="open">+ Dodaj {{ label.toLowerCase() }}</button>
+    <button
+      type="button"
+      class="add-button"
+      :aria-label="`Dodaj ${label.toLowerCase()}`"
+      :title="`Dodaj ${label.toLowerCase()}`"
+      @click="open"
+    >
+      +
+    </button>
 
     <div v-if="isOpen" class="editor">
       <div class="editor-field">
@@ -86,11 +94,29 @@ async function create(): Promise<void> {
   margin-top: 4px;
 }
 
+.add-button {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .editor {
   display: grid;
   gap: 6px;
   padding: 8px;
   border: 1px solid #ddd;
+  background: #ffffff;
 }
 
 .editor-field {
