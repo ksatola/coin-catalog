@@ -53,6 +53,16 @@ const dictionaryLabels: Record<string, string> = {
   eras: 'Era',
 }
 
+const dictionaryQueryNames: Record<string, string> = {
+  countries: 'country_id',
+  issuers: 'issuer_id',
+  denominations: 'denomination_id',
+  mints: 'mint_id',
+  materials: 'material_id',
+  states: 'state_id',
+  eras: 'era_id',
+}
+
 function validateSearch(): boolean {
   const tokens = search.value.trim().split(/\s+/).filter(Boolean)
   if (tokens.some((token) => token.length < 3)) {
@@ -68,7 +78,8 @@ function buildQuery(): string {
   if (search.value.trim()) params.set('search', search.value.trim())
 
   for (const [name, ids] of Object.entries(dictionarySelections)) {
-    for (const id of ids) params.append(`${name.slice(0, -1)}_id`, String(id))
+    const queryName = dictionaryQueryNames[name]
+    for (const id of ids) params.append(queryName, String(id))
   }
   for (const id of categoryIds.value) params.append('category_id', String(id))
 
