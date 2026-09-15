@@ -24,10 +24,7 @@ def test_collection_number_migration_upgrade_and_downgrade(
     command.upgrade(config, "9c7e1a2b4d6f")
 
     inspector = inspect(engine)
-    columns = {
-        column["name"]: column
-        for column in inspector.get_columns("coin")
-    }
+    columns = {column["name"]: column for column in inspector.get_columns("coin")}
     assert "collection_number" in columns
     assert columns["collection_number"]["nullable"] is True
     assert columns["collection_number"]["type"].__class__.__name__ == "TEXT"
