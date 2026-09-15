@@ -115,6 +115,11 @@ onMounted(loadFilters)
   font-weight: 600;
 }
 
+.coin-filters input,
+.coin-filters select {
+  min-height: 42px;
+}
+
 .filter-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -128,10 +133,12 @@ onMounted(loadFilters)
 .filter-grid select {
   min-width: 0;
   width: 100%;
+  min-height: 132px;
+  padding: 6px 4px;
 }
 
 .filter-grid option {
-  padding: 3px 4px;
+  padding: 5px 4px;
 }
 
 .checkbox-field {
@@ -147,6 +154,7 @@ onMounted(loadFilters)
 .checkbox-field input {
   width: 16px;
   height: 16px;
+  min-height: 16px;
   margin: 0;
 }
 
@@ -161,9 +169,13 @@ onMounted(loadFilters)
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.filter-row select {
+  min-height: 42px;
+}
+
 .submit-button {
   width: 100%;
-  min-height: 40px;
+  min-height: 44px;
   border: 0;
   border-radius: 7px;
   background: #2563eb;
