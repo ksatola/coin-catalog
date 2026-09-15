@@ -225,6 +225,7 @@ onMounted(loadCoins)
   align-items: center;
   gap: 10px;
   min-width: 0;
+  height: 48px;
   padding: 0 14px;
   border: 1px solid #cbd5e1;
   border-radius: 9px;
@@ -246,10 +247,14 @@ onMounted(loadCoins)
 .search-field input {
   width: 100%;
   min-width: 0;
-  padding: 13px 0;
+  height: 48px;
+  padding: 0;
   border: 0;
   outline: 0;
   box-shadow: none;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .filters-toggle,
