@@ -1,18 +1,18 @@
 import { ref } from 'vue'
 
-const isDirty = ref(false)
+const dirtyForms = ref(new Set<'create' | 'edit'>())
 
-export function useUnsavedCoinForm() {
+export function useUnsavedCoinForm(formType?: 'create' | 'edit') {
   function markDirty(): void {
-    isDirty.value = true
+    if (formType) dirtyForms.value.add(formType)
   }
 
   function markClean(): void {
-    isDirty.value = false
+    if (formType) dirtyForms.value.delete(formType)
   }
 
   return {
-    isDirty,
+    isDirty: formType ? { get value() { return dirtyForms.value.has(formType) } } : dirtyForms,
     markDirty,
     markClean,
   }
