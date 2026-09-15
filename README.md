@@ -8,9 +8,9 @@ The project is developed incrementally, with the repository documentation servin
 
 **Current phase:** Phase 4 is complete; the next development step has not yet been started.
 
-The application now provides a usable first catalogue workflow: coin creation, coin browsing, coin details, editing, soft archive/restore, dictionary management, and coin photograph management. The backend also contains category structures and APIs; user-facing category management is not yet implemented in the frontend.
+The application now provides a usable first catalogue workflow: coin creation, coin browsing, coin details, editing, soft archive/restore, dictionary management, coin photograph management, category management, and coin-category assignment. The backend and frontend category workflows are implemented and verified.
 
-Phase 4 is complete. Automated and manual verification has been completed. The previously planned spreadsheet-import phase is no longer the next development step because collection data will be entered manually through the application. Later planned areas include search/filtering, collection features, backup/export, testing/quality expansion, and deployment.
+Phase 4 is complete. Automated and manual verification has been completed. The previously planned spreadsheet-import phase is no longer the next development step because collection data will be entered manually through the application. Later planned areas include search/filtering, richer collection features, backup/export, testing/quality expansion, and deployment.
 
 ## Architecture
 
@@ -38,9 +38,12 @@ The frontend provides:
 - coin creation and editing,
 - soft archive and restore,
 - dictionary management,
-- primary and additional coin photographs.
+- primary and additional coin photographs,
+- category management,
+- category parent/child relationship management,
+- coin-category assignment and removal.
 
-The backend provides the corresponding FastAPI endpoints, including category management and coin-category relationships, and persists structured catalogue data in SQLite. Coin photographs are stored as external JPG files with metadata in SQLite rather than as database BLOBs.
+The backend provides the corresponding FastAPI endpoints and persists structured catalogue data in SQLite. Coin photographs are stored as external JPG files with metadata in SQLite rather than as database BLOBs.
 
 Coin dates are represented by a year together with an era for each endpoint. The application does not compare the numeric year values across eras, so ranges such as `476 BC → 1 AD` are valid.
 
