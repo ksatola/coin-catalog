@@ -399,6 +399,24 @@ Instead:
 
 If the connector continues to return contradictory results, report the exact error and stop modifying the repository until the problem is understood or a safe, equivalent write path is established.
 
+### 19.3 Git Object API Fallback
+
+If the GitHub Contents API cannot safely update an existing file, use the Git object API as an equivalent write path rather than retrying the failed operation blindly.
+
+The safe sequence is:
+
+1. Re-read the target branch reference and confirm its current HEAD commit SHA.
+2. Re-fetch the affected file from that exact branch and confirm its current Git blob SHA.
+3. Create the required new blob(s).
+4. Create a new tree based on the current target commit tree, replacing only the approved file path(s) with the new blob SHA(s).
+5. Create a new commit whose parent is the current branch HEAD commit.
+6. Move the target branch ref forward to the new commit without force-updating it.
+7. Verify the resulting branch and file state.
+
+Keep the Git object types distinct: blob SHAs identify file contents, tree SHAs identify directory trees, and commit SHAs identify commits. Never substitute one type of SHA for another.
+
+This fallback must preserve the current branch history and must not modify unrelated files or rewrite published history.
+
 ## 20. Current Development Stage
 
 The project is currently in:
