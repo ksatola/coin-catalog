@@ -60,8 +60,8 @@ function formatDetails(coin: Coin): string[] {
   return [
     dictionaryName(dictionaries.value.materials, coin.material_id),
     dictionaryName(dictionaries.value.states, coin.state_id),
-    coin.weight !== null ? `${coin.weight} g` : null,
-    coin.diameter !== null ? `${coin.diameter} mm` : null,
+    coin.weight !== null ? `${Number(coin.weight).toFixed(2)} g` : null,
+    coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : null,
   ].filter((value): value is string => Boolean(value))
 }
 
@@ -188,7 +188,7 @@ watch(() => props.coins, () => {
 
       <div class="coin-info">
         <div class="coin-meta">
-          <strong>#{{ coin.id }}</strong>
+          <strong>#{{ coin.id }} <span class="collection-number">|&nbsp;&nbsp;KC-042</span></strong>
           <span>{{ formatRange(coin) }}</span>
         </div>
         <div class="coin-line">
@@ -298,7 +298,13 @@ watch(() => props.coins, () => {
   font-size: 16px;
 }
 
-.coin-meta span {
+.collection-number {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.coin-meta > span {
   color: #64748b;
   font-size: 14px;
   white-space: nowrap;
@@ -343,7 +349,7 @@ watch(() => props.coins, () => {
     grid-template-columns: 1fr;
   }
 
-  .coin-meta span {
+  .coin-meta > span {
     white-space: normal;
     text-align: right;
   }
