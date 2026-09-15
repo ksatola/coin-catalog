@@ -125,7 +125,7 @@ watch(() => props.coins, () => {
   min-width: 0;
   min-height: 200px;
   place-items: center;
-  background: #f1f5f9;
+  background: #ffffff;
 }
 
 .coin-side + .coin-side {
