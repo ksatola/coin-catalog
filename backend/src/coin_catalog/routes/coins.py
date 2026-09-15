@@ -46,6 +46,14 @@ def list_coins(
     sort_order: str = "asc",
     session: Session = Depends(get_db),
 ) -> list[Coin]:
+    if search:
+        tokens = [token for token in search.split() if token]
+        if any(len(token) < 3 for token in tokens):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Search terms must contain at least 3 characters",
+            )
+
     if coin_status not in {"active", "archived", "all"}:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
