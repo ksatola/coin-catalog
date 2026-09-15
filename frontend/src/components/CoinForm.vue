@@ -523,7 +523,20 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 }
 
 .additional-upload-card {
-  flex: 0 0 160px;
+  flex: 0 0 140px;
+  width: 140px;
+  height: 116px;
+  box-sizing: border-box;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.additional-upload-card :deep(.image-drop-zone) {
+  width: 100%;
+  height: 100px;
+  box-sizing: border-box;
 }
 
 .additional-image-list {
@@ -534,7 +547,9 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 }
 
 .additional-image-card {
+  box-sizing: border-box;
   width: 140px;
+  min-height: 116px;
   margin: 0;
   padding: 8px;
   background: #ffffff;
