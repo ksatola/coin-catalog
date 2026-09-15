@@ -300,10 +300,26 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
       </div>
     </section>
 
-    <section class="form-section"><div class="section-heading"><h3>Źródło i opis</h3></div><div class="text-fields"><label class="field-card">Źródło <textarea v-model="form.source" rows="4" /></label><label class="field-card">Opis <textarea v-model="form.description" /></label></div></section>
+    <section class="form-section">
+      <div class="section-heading"><h3>Źródło i opis</h3></div>
+      <div class="text-fields">
+        <label class="field-card">
+          Źródło
+          <textarea v-model="form.source" rows="4" />
+        </label>
+        <label class="field-card">
+          Opis
+          <textarea v-model="form.description" />
+        </label>
+      </div>
+    </section>
+
     <label class="video-option"><input v-model="form.has_video" type="checkbox" /><span>Ma wideo</span></label>
     <div v-if="validationMessage" class="form-message form-message-warning">{{ validationMessage }}</div>
-    <footer class="form-actions"><button type="button" class="secondary-action" @click="emit('cancel')">Anuluj</button><button type="submit" class="primary-action">{{ isEditing() ? 'Zapisz zmiany' : 'Dodaj monetę' }}</button></footer>
+    <footer class="form-actions">
+      <button type="button" class="secondary-action" @click="emit('cancel')">Anuluj</button>
+      <button type="submit" class="primary-action">{{ isEditing() ? 'Zapisz zmiany' : 'Dodaj monetę' }}</button>
+    </footer>
   </form>
 </template>
 
@@ -311,7 +327,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .coin-form { display: grid; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 24px 0 40px; }
 .form-header { display: flex; align-items: center; justify-content: space-between; }
 .form-header h2 { margin: 0; font-size: 1.75rem; line-height: 1.2; }
-.form-section { display: grid; gap: 18px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(15,23,42,.04); }
+.form-section { display: grid; gap: 18px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04); }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .section-heading h3 { margin: 0; font-size: 1.1rem; }
 .section-heading span { color: #64748b; font-size: .875rem; }
@@ -321,14 +337,14 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .primary-image-card h4 { margin: 0; font-size: .95rem; }
 .primary-image-card :deep(.image-drop-zone) { width: 100%; height: min(36vw,420px); min-height: 280px; aspect-ratio: auto; border-color: #cbd5e1; border-radius: 8px; background: #fff; }
 .primary-image-card :deep(.image-drop-zone.has-image) { background: #fff; }
-.primary-image-card :deep(.image-preview) { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+.primary-image-card :deep(.preview-image) { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
 .additional-image-section { display: grid; gap: 12px; padding-top: 4px; }
 .additional-image-controls { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-.additional-upload-card { flex: 0 0 140px; width: 140px; height: 167px; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: content-box; }
-.additional-upload-card :deep(.image-drop-zone) { width: 140px; height: 167px; min-width: 140px; min-height: 167px; aspect-ratio: auto; box-sizing: border-box; border-color: #cbd5e1; border-radius: 6px; }
+.additional-upload-card { flex: 0 0 140px; box-sizing: border-box; width: 140px; height: 176px; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: flex-start; justify-content: center; }
+.additional-upload-card :deep(.image-drop-zone) { width: 122px; height: 120px; min-height: 120px; aspect-ratio: auto; box-sizing: border-box; }
 .additional-image-list { display: flex; flex: 1 1 400px; flex-wrap: wrap; gap: 12px; }
-.additional-image-card { width: 140px; margin: 0; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; }
-.additional-image-card img { display: block; width: 100%; height: 100px; object-fit: contain; border-radius: 6px; background: #f8fafc; }
+.additional-image-card { width: 140px; height: 176px; box-sizing: border-box; margin: 0; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; }
+.additional-image-card img { display: block; width: 122px; height: 100px; object-fit: contain; border-radius: 6px; background: #fff; }
 .additional-image-card figcaption { margin-top: 6px; font-size: .75rem; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .additional-image-card button { margin-top: 6px; padding: 5px 8px; font-size: .75rem; }
 .info-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
@@ -354,6 +370,19 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .secondary-action { border: 1px solid #cbd5e1; background: #fff; color: #334155; }
 .primary-action { border: 1px solid #0f172a; background: #0f172a; color: #fff; }
 .coin-form :deep(button:focus-visible),.coin-form input:focus-visible,.coin-form select:focus-visible,.coin-form textarea:focus-visible { outline: 3px solid rgba(59,130,246,.25); outline-offset: 2px; }
-@media (max-width: 800px) { .coin-form { padding: 16px 0 32px; } .form-section { padding: 18px; } .primary-image-fields,.info-grid { grid-template-columns: 1fr; } .field-card-wide { grid-column: auto; } .date-fields { grid-template-columns: 1fr; } .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; } }
-@media (max-width: 520px) { .section-heading { display: grid; gap: 4px; } .additional-upload-card { flex-basis: 100%; width: auto; } .additional-upload-card :deep(.image-drop-zone) { width: 100%; min-width: 0; } .additional-image-list { flex-basis: 100%; } .form-actions { display: grid; grid-template-columns: 1fr 1fr; } .form-actions button { width: 100%; } }
+@media (max-width:800px) {
+  .coin-form { padding: 16px 0 32px; }
+  .form-section { padding: 18px; }
+  .primary-image-fields,.info-grid { grid-template-columns: 1fr; }
+  .field-card-wide { grid-column: auto; }
+  .date-fields { grid-template-columns: 1fr; }
+  .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; }
+}
+@media (max-width:520px) {
+  .section-heading { display: grid; gap: 4px; }
+  .additional-upload-card { flex-basis: 100%; width: 140px; }
+  .additional-image-list { flex-basis: 100%; }
+  .form-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .form-actions button { width: 100%; }
+}
 </style>
