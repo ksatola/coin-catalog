@@ -22,6 +22,7 @@ const filters = useCoinFilters(props.scope)
 const coins = ref<Coin[]>([])
 const errorMessage = ref('')
 const showAdvancedFilters = ref(false)
+let searchTimer: ReturnType<typeof setTimeout> | undefined
 
 const isArchive = props.scope === 'archive'
 const pageTitle = isArchive ? 'Archiwum' : 'Monety'
@@ -56,6 +57,16 @@ watch(viewMode, (mode) => {
 
 watch(galleryColumns, (columns) => {
   localStorage.setItem(galleryColumnsStorageKey, String(columns))
+})
+
+watch(() => filters.search, () => {
+  if (searchTimer !== undefined) {
+    clearTimeout(searchTimer)
+  }
+
+  searchTimer = setTimeout(() => {
+    void loadCoins()
+  }, 250)
 })
 
 async function loadCoins(): Promise<void> {
