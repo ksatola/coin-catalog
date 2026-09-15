@@ -10,7 +10,7 @@ The project is developed incrementally, with the repository documentation servin
 
 The application now provides a usable first catalogue workflow: coin creation, coin browsing, coin details, editing, soft archive/restore, dictionary management, and coin photograph management.
 
-Phase 4 is being finalized with automated and manual verification. The next major development area is image-management refinement and integration of the accepted image-storage decision, followed by later import, search/filtering, and collection features.
+**Phase 4 is complete.** Automated and manual verification has been completed. The next major development area is Phase 5 — Spreadsheet Import. Later planned areas include search/filtering, collection features, backup/export, testing/quality expansion, and deployment.
 
 ## Architecture
 
