@@ -96,7 +96,7 @@ watch(() => props.coins, () => {
           <img
             v-if="imagesByCoin[coin.id]?.rewers"
             :src="imageUrl(coin, 'rewers')"
-            :alt="`Rewers monety #${coin.id}`
+            :alt="`Rewers monety #${coin.id}`"
           />
           <span v-else>Brak zdjęcia</span>
         </div>
