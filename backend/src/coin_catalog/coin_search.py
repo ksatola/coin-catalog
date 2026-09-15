@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import Select, String, cast, exists, func, or_, select
+from sqlalchemy import Select, String, cast, exists, or_, select
 
 from coin_catalog.models import (
     Category,
