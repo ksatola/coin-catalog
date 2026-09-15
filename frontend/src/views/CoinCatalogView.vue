@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
@@ -10,6 +10,7 @@ import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../compo
 import type { Coin } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
+type ViewMode = 'image-grid' | 'grid' | 'list'
 
 const props = defineProps<{
   scope: CatalogScope
@@ -19,7 +20,6 @@ const router = useRouter()
 const filters = useCoinFilters(props.scope)
 const coins = ref<Coin[]>([])
 const errorMessage = ref('')
-const viewMode = ref<'image-grid' | 'grid' | 'list'>('image-grid')
 const showAdvancedFilters = ref(false)
 
 const isArchive = props.scope === 'archive'
@@ -29,6 +29,20 @@ const emptyTitle = isArchive ? 'Brak zarchiwizowanych monet' : 'Brak monet'
 const emptyDescription = isArchive
   ? 'Nie znaleziono monet spełniających kryteria archiwum.'
   : 'Nie znaleziono monet spełniających kryteria.'
+const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
+
+function loadViewMode(): ViewMode {
+  const stored = localStorage.getItem(viewModeStorageKey)
+  return stored === 'image-grid' || stored === 'grid' || stored === 'list'
+    ? stored
+    : 'image-grid'
+}
+
+const viewMode = ref<ViewMode>(loadViewMode())
+
+watch(viewMode, (mode) => {
+  localStorage.setItem(viewModeStorageKey, mode)
+})
 
 async function loadCoins(): Promise<void> {
   try {
