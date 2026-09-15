@@ -19,6 +19,15 @@ const categories = [
     parent_ids: [1],
     child_ids: [],
   },
+  {
+    id: 3,
+    name: 'PRL',
+    description: null,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+    parent_ids: [],
+    child_ids: [],
+  },
 ]
 
 async function mockCategoryApi(page: Page): Promise<void> {
@@ -35,7 +44,7 @@ async function mockCategoryApi(page: Page): Promise<void> {
     await route.fulfill({
       status: 201,
       contentType: 'application/json',
-      body: JSON.stringify(categories[0]),
+      body: JSON.stringify({ ...categories[0], id: 4, name: 'Monety obiegowe' }),
     })
   })
 
@@ -54,7 +63,7 @@ async function mockCategoryApi(page: Page): Promise<void> {
       return
     }
     await route.fulfill({
-      status: 200,
+      status: 201,
       contentType: 'application/json',
       body: JSON.stringify(categories[1]),
     })
@@ -83,5 +92,23 @@ test('widok kategorii pozwala rozpocząć tworzenie nowej kategorii', async ({ p
   await expect(page.getByRole('heading', { name: 'Nowa kategoria' })).toBeVisible()
   await page.getByLabel('Nazwa').fill('Monety obiegowe')
   await page.getByLabel('Opis').fill('Monety przeznaczone do obiegu')
+  await page.getByLabel('Wybierz rodziców').selectOption(['1', '2'])
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
+
+  await expect(page.getByRole('heading', { name: 'Nowa kategoria' })).toBeVisible()
+})
+
+test('istniejąca kategoria pozwala przypisać wielu rodziców i wiele dzieci', async ({ page }) => {
+  await mockCategoryApi(page)
+
+  await page.goto('/kategorie')
+  await page.getByRole('button', { name: 'Polska' }).click()
+
+  const parentSelect = page.locator('select').filter({ has: page.locator('option') }).nth(0)
+  await parentSelect.selectOption('3')
+  await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
+
+  const childSelect = page.locator('select').filter({ has: page.locator('option') }).nth(1)
+  await childSelect.selectOption(['2', '3'])
+  await page.getByRole('button', { name: 'Dodaj dzieci' }).click()
 })
