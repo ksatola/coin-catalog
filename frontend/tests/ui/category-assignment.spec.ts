@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('moneta pozwala przypisać i usunąć wiele kategorii', async ({ page }) => {
+test('moneta pozwala przypisać i usunąć wiele kategorii w edycji', async ({ page }) => {
   const coin = {
     id: 404,
     country_id: 1,
@@ -133,7 +133,7 @@ test('moneta pozwala przypisać i usunąć wiele kategorii', async ({ page }) =>
     await route.fallback()
   })
 
-  await page.goto('/monety/404')
+  await page.goto('/monety/404/edytuj')
 
   await expect(page.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
   const assignment = page.locator('.category-assignment')
