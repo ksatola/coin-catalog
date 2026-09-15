@@ -115,6 +115,8 @@ backend/
         ├── schemas.py
         └── routes/
             ├── __init__.py
+            ├── categories.py
+            ├── coin_categories.py
             ├── coins.py
             ├── dictionaries.py
             └── images.py
@@ -139,7 +141,7 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
-The backend suite covers coin persistence and API behavior, dictionary CRUD and reference protection, and archive/restore behavior.
+The backend suite covers coin persistence and API behavior, dictionary CRUD and reference protection, archive/restore behavior, and category/image behavior.
 
 ## Database and Migrations
 
@@ -198,6 +200,20 @@ POST   /dictionaries/{dictionary_name}
 PUT    /dictionaries/{dictionary_name}/{item_id}
 DELETE /dictionaries/{dictionary_name}/{item_id}
 
+GET    /categories
+POST   /categories
+GET    /categories/{category_id}
+PUT    /categories/{category_id}
+DELETE /categories/{category_id}
+POST   /categories/{category_id}/parents/{parent_id}
+DELETE /categories/{category_id}/parents/{parent_id}
+GET    /categories/{category_id}/children
+GET    /categories/{category_id}/parents
+
+GET    /coins/{coin_id}/categories
+POST   /coins/{coin_id}/categories/{category_id}
+DELETE /coins/{coin_id}/categories/{category_id}
+
 GET    /coins/{coin_id}/images
 POST   /coins/{coin_id}/images
 DELETE /coins/{coin_id}/images/{image_id}
@@ -219,6 +235,8 @@ eras
 ```
 
 Dictionary entries cannot be deleted while referenced by a coin. Era references are protected for both `from_era_id` and `to_era_id`.
+
+Category relationships are checked to prevent cycles. Categories cannot be deleted while they are used by a coin or participate in a category relationship.
 
 Interactive API documentation is available at `http://localhost:8000/docs`.
 
@@ -281,6 +299,12 @@ The coin form uses dictionary-backed selectors and supports the core coin fields
 
 Date endpoints contain both a numeric year and an era. Numeric years are not compared across eras, so a range such as `476 BC → 1 AD` is valid.
 
+## Categories
+
+The backend implements a flexible category graph and coin-category many-to-many relationship. Category CRUD, parent/child relationships, cycle prevention, and coin-category assignment/removal are available through the API.
+
+The current frontend does not provide a user-facing category-management or coin-category assignment workflow.
+
 ## Coin Images
 
 Image management is implemented for primary and additional photographs.
@@ -296,6 +320,10 @@ The accepted storage convention uses a top-level `images/` directory, ignored by
 The database stores image metadata; image contents are files, not SQLite BLOBs. Primary replacement requires explicit replacement confirmation.
 
 See [`IMAGE_STORAGE_DECISION.md`](IMAGE_STORAGE_DECISION.md).
+
+## Manual Data Entry
+
+Collection metadata is entered manually through the application. There is currently no XLS/XLSX import mechanism and no spreadsheet-import phase in the current roadmap.
 
 ## Frontend Production Build
 
@@ -357,7 +385,7 @@ cd /workspaces/coin-catalog
 
 ## Current Scope
 
-Phase 4 currently covers:
+Phase 4 is complete and currently covers:
 
 - coin creation and persistence;
 - dictionary-backed entry;
@@ -366,10 +394,11 @@ Phase 4 currently covers:
 - soft archive/restore;
 - dictionary management;
 - primary and additional coin images;
+- backend category structures and APIs;
 - local development tooling;
 - automated UI coverage for the current workflows.
 
-Future work includes spreadsheet import, advanced search/filtering, richer collections/tags, backup/export, CI/CD, and deployment.
+Future work includes advanced search/filtering, user-facing category management, richer collections/tags, backup/export, CI/CD, and deployment.
 
 ## Working Rules
 

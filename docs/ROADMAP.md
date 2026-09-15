@@ -54,6 +54,7 @@ Implemented:
 - primary awers/rewers image replacement;
 - additional image upload/deletion;
 - accepted external-file image storage convention;
+- category data structures and backend category APIs;
 - Playwright UI coverage for current coin/image workflows;
 - cross-era date-range behavior where numeric years are not compared across BC/AD eras.
 
@@ -65,19 +66,17 @@ The original roadmap placed image management, the full coin browser, and editing
 
 Those original phase numbers are therefore retained below as historical roadmap placeholders rather than representing unimplemented work.
 
-## Phase 5 — Spreadsheet Import
+## Phase 5 — Search and Filtering
 
 **Status:** Not started
 
 Planned work:
 
-- inspect existing XLS/XLSX structure;
-- define source-to-model mappings;
-- define validation rules;
-- define duplicate handling;
-- implement import;
-- implement import error reporting;
-- test with representative data.
+- define searchable fields;
+- implement basic search;
+- implement filtering;
+- evaluate sorting;
+- optimize queries if required.
 
 ## Phase 6 — Image Management
 
@@ -93,31 +92,19 @@ The accepted storage and naming rules are documented in `docs/IMAGE_STORAGE_DECI
 
 The basic Grid/List browser, details, active/archived views, and navigation are implemented. Pagination or other large-collection optimization remains future work if required.
 
-## Phase 8 — Search and Filtering
-
-**Status:** Not started
-
-Planned work:
-
-- define searchable fields;
-- implement basic search;
-- implement filtering;
-- evaluate sorting;
-- optimize queries if required.
-
-## Phase 9 — Collections, Categories and Tags
+## Phase 8 — Collections, Categories and Tags
 
 **Status:** Partially implemented / future expansion
 
-Category data structures are already present in the current application. A broader user-facing collection/tag model and filtering workflow remain future work.
+Category data structures and backend APIs are already present in the current application. A user-facing category-management and coin-category assignment workflow, broader collection/tag model, and filtering workflow remain future work.
 
-## Phase 10 — Editing and Data Management
+## Phase 9 — Editing and Data Management
 
 **Status:** Partially absorbed into Phase 4
 
 Coin metadata editing is implemented. Future work may extend editing to additional organization and collection-management features.
 
-## Phase 11 — Backup and Export
+## Phase 10 — Backup and Export
 
 **Status:** Not started
 
@@ -129,13 +116,13 @@ Planned work:
 - evaluate metadata export;
 - evaluate full catalogue export.
 
-## Phase 12 — Testing and Quality
+## Phase 11 — Testing and Quality
 
 **Status:** In progress as an ongoing concern
 
 Automated backend and Playwright UI testing already exists. Future work includes broader integration coverage, CI checks, and additional quality automation.
 
-## Phase 13 — Packaging and Deployment
+## Phase 12 — Packaging and Deployment
 
 **Status:** Not started
 

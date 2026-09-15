@@ -6,9 +6,11 @@ This document records the verified current state of the project. A task is marke
 
 ## Current Phase
 
-**Phase 4 — Coin Entry and Browser**
+**Phase 4 — Coin Entry and Browser is complete.**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, and Phase 3 — Database Foundation are complete. Phase 4 now provides the first usable catalogue workflow: coin entry, SQLite persistence, browsing, details, editing, archive/restore, dictionary management, and coin images.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, and Phase 4 — Coin Entry and Browser are complete. Phase 4 provides the first usable catalogue workflow: coin entry, SQLite persistence, browsing, details, editing, archive/restore, dictionary management, and coin images. The backend also contains category structures and APIs; the frontend does not yet provide user-facing category management or coin-category assignment.
+
+No new development phase has been started after Phase 4.
 
 ---
 
@@ -73,6 +75,7 @@ Verified:
 - [x] Reference-protected dictionary deletion.
 - [x] Era deletion protection for both date endpoints.
 - [x] Category and coin-category data structures.
+- [x] Category management and coin-category backend APIs.
 - [x] Coin-image metadata and image APIs.
 
 ### Frontend
@@ -151,31 +154,33 @@ Further image features may be added later if justified.
 
 ---
 
-## Phase 5 — Spreadsheet Import
+## Category Data Structures
 
-**Status:** Not started
+**Status:** Backend implementation complete; user-facing UI not implemented
 
-Planned: inspect XLS/XLSX data, define mappings and validation, implement import and error reporting, and test with representative data.
+Verified:
 
----
+- `category` entity with name and description;
+- `category_relation` parent/child relationships;
+- acyclic category graph validation in the backend;
+- `coin_category` many-to-many relationship;
+- category CRUD and parent/child API endpoints;
+- coin-category assignment/removal API endpoints;
+- deletion protection while a category is used by a coin or category relation.
 
-## Phase 6 — Image Management
-
-**Status:** Initial capability absorbed into Phase 4
-
-Further image-management enhancements remain optional future work.
-
----
-
-## Phase 7 — Coin Browser
-
-**Status:** Basic capability absorbed into Phase 4
-
-The current browser and detail views are implemented. Large-collection pagination or optimization can be added when required.
+The frontend currently does not expose category management or coin-category assignment.
 
 ---
 
-## Phase 8 — Search and Filtering
+## Spreadsheet Import
+
+**Status:** Not part of the current development plan
+
+The application has no XLS/XLSX import implementation. Collection metadata will be entered manually through the application. No spreadsheet-import phase is currently scheduled.
+
+---
+
+## Search and Filtering
 
 **Status:** Not started
 
@@ -183,23 +188,15 @@ Planned: searchable fields, basic search, filtering, sorting, and query optimiza
 
 ---
 
-## Phase 9 — Collections, Categories and Tags
+## Broader Collections, Categories and Tags
 
 **Status:** Partially implemented / future expansion
 
-Category structures exist. Broader collection/tag organization and filtering remain future work.
+The backend category model and API are implemented. User-facing category management, coin-category assignment, broader collection/tag organization, and filtering remain future work.
 
 ---
 
-## Phase 10 — Editing and Data Management
-
-**Status:** Coin editing absorbed into Phase 4
-
-Further organization and collection-management editing remains future work.
-
----
-
-## Phase 11 — Backup and Export
+## Backup and Export
 
 **Status:** Not started
 
@@ -207,7 +204,7 @@ Planned: database/image backup strategy and useful metadata/catalogue export.
 
 ---
 
-## Phase 12 — Testing and Quality
+## Testing and Quality
 
 **Status:** Ongoing
 
@@ -215,7 +212,7 @@ Backend pytest and Ruff checks and Playwright UI coverage are established. Broad
 
 ---
 
-## Phase 13 — Packaging and Deployment
+## Packaging and Deployment
 
 **Status:** Not started
 
@@ -225,7 +222,7 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-Begin the next approved development task, with Phase 5 — Spreadsheet Import currently first in the roadmap.
+No new development phase has been started after Phase 4. The next implementation task has not been approved yet.
 
 Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, and `docs/ROADMAP.md`. Stop for discussion if the review identifies a direction or architecture change.
 
@@ -238,7 +235,8 @@ Before each major phase, review `AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECIS
 - Closed Phase 4 after the final local verification pass.
 - Recorded passing backend tests, Ruff checks, frontend production build, and the 5-scenario Playwright coin suite.
 - Recorded the clean final working tree.
-- Updated the next step to Phase 5 — Spreadsheet Import.
+- Synchronized documentation with the verified category backend implementation.
+- Removed spreadsheet import from the current next-step plan; collection metadata is to be entered manually.
 
 ### 2026-09-14
 

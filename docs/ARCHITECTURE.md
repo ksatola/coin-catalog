@@ -69,6 +69,8 @@ coin-catalog/
 │           ├── schemas.py
 │           └── routes/
 │               ├── __init__.py
+│               ├── categories.py
+│               ├── coin_categories.py
 │               ├── coins.py
 │               ├── dictionaries.py
 │               └── images.py
@@ -111,6 +113,7 @@ Responsibilities include:
 - database access through SQLAlchemy,
 - coin CRUD and archive/restore behavior,
 - dictionary CRUD,
+- category management and category-to-coin relationships,
 - coin-image metadata and filesystem operations.
 
 The backend uses explicit route modules rather than placing the complete API in `main.py`.
@@ -121,7 +124,7 @@ The backend uses explicit route modules rather than placing the complete API in 
 
 SQLite is the application database. SQLAlchemy provides the ORM and Alembic manages schema migrations.
 
-The initial domain model contains:
+The current domain model contains:
 
 ```text
 coin
@@ -139,6 +142,8 @@ coin_image
 ```
 
 The `coin` table represents a concrete physical coin. Reference tables provide reusable catalogue values. Categories and image metadata are represented separately from the core coin fields.
+
+Categories form a flexible directed acyclic graph through `category_relation`: a category may have multiple parents and multiple children. Coins are related to categories through the many-to-many `coin_category` association. The backend rejects category relationships that would create a cycle.
 
 Coins use soft deletion through `is_deleted`; archived coins remain in the database and are excluded from the active list.
 
@@ -166,6 +171,8 @@ The frontend is a Vue 3 application using:
 
 The frontend provides the user-facing catalogue workflow, including coin creation, editing, browsing, details, archive/restore, dictionary management, and image selection.
 
+The current frontend does not provide a user-facing category-management or coin-category assignment UI, although the backend category structures and APIs are implemented.
+
 The application uses component-based Vue code and does not currently depend on Pinia or a UI component framework.
 
 ---
@@ -192,11 +199,27 @@ POST   /dictionaries/{dictionary_name}
 PUT    /dictionaries/{dictionary_name}/{item_id}
 DELETE /dictionaries/{dictionary_name}/{item_id}
 
+GET    /categories
+POST   /categories
+GET    /categories/{category_id}
+PUT    /categories/{category_id}
+DELETE /categories/{category_id}
+POST   /categories/{category_id}/parents/{parent_id}
+DELETE /categories/{category_id}/parents/{parent_id}
+GET    /categories/{category_id}/children
+GET    /categories/{category_id}/parents
+
+GET    /coins/{coin_id}/categories
+POST   /coins/{coin_id}/categories/{category_id}
+DELETE /coins/{coin_id}/categories/{category_id}
+
 GET    /coins/{coin_id}/images
 POST   /coins/{coin_id}/images
 DELETE /coins/{coin_id}/images/{image_id}
 GET    /coins/{coin_id}/images/{image_id}/file
 ```
+
+Category relationships are validated to prevent cycles. A category cannot be deleted while it is assigned to a coin or participates in a category relationship.
 
 The image upload API supports primary `avers` and `rewers` images plus sequential additional images. Primary replacement requires explicit replacement confirmation.
 
@@ -219,32 +242,17 @@ images/
 └── ...
 ```
 
-Each coin has exactly one primary obverse and one primary reverse image. Additional images are sequentially numbered. SQLite stores image metadata and references, including image kind and ordering.
+The current coin-entry workflow requires one primary `awers` image and one primary `rewers` image when a coin is saved. Additional images are sequentially numbered. SQLite stores image metadata and references, including image kind and ordering.
 
 Image files are ignored by Git. The application must never silently overwrite an existing image; replacement is an explicit user action.
 
 ---
 
-## 10. Spreadsheet Import
+## 10. Manual Data Entry
 
-Existing XLS/XLSX files remain an external source of coin metadata.
+Coin collection data is entered manually through the application. There is currently no XLS/XLSX import mechanism and no planned spreadsheet-import workflow in the current roadmap.
 
-Import is not yet implemented. The future flow is expected to be:
-
-```text
-XLS/XLSX
-   │
-   ▼
-Import / Validation
-   │
-   ▼
-Application Data Model
-   │
-   ▼
-SQLite
-```
-
-Mappings, duplicate handling, validation, and error reporting will be specified when import work begins.
+The application data model and dictionary-backed coin form are therefore the current data-entry path.
 
 ---
 
@@ -266,9 +274,9 @@ Runtime data stored separately from source code.
 
 External files under `images/` and excluded from Git.
 
-### Source spreadsheets
+### Collection metadata
 
-External user data used for import.
+Entered manually through the application and stored in the application database.
 
 User collection data should not be committed to Git unless explicitly decided.
 
@@ -319,12 +327,14 @@ A production deployment architecture will be defined when deployment becomes an 
 
 The following are not yet fully specified or implemented:
 
-- XLS/XLSX import,
 - advanced search and filtering,
-- collections and tags,
+- user-facing category management and category assignment UI,
+- broader collections and tags,
 - authentication and authorization,
 - backup/recovery automation,
 - production deployment,
 - CI/CD pipeline.
+
+The backend category model and API are already implemented; the remaining category work is user-facing organization and workflow rather than creation of the underlying category data structures.
 
 The architecture should be updated when these areas become active development work.
