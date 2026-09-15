@@ -56,7 +56,7 @@ async function create(): Promise<void> {
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
-    const created = await response.json() as { id: number; name: string; description: string | null }
+    const created = await response.json() as CategoryGraphItem
 
     for (const parentId of parentIds.value) {
       const relationResponse = await fetch(`/api/categories/${created.id}/parents/${parentId}`, {
@@ -65,13 +65,11 @@ async function create(): Promise<void> {
       if (!relationResponse.ok) throw new Error(`HTTP ${relationResponse.status}`)
     }
 
-    const categoryResponse = await fetch('/api/categories', { cache: 'no-store' })
-    if (!categoryResponse.ok) throw new Error(`HTTP ${categoryResponse.status}`)
-    const categories = await categoryResponse.json() as CategoryGraphItem[]
-    const category = categories.find((item) => item.id === created.id)
-    if (!category) throw new Error('Created category not found')
-
-    emit('created', category)
+    emit('created', {
+      ...created,
+      parent_ids: [...parentIds.value],
+      child_ids: created.child_ids ?? [],
+    })
     cancel()
   } catch {
     errorMessage.value = 'Nie udało się dodać kategorii.'
