@@ -299,7 +299,6 @@ onMounted(refresh)
   font-size: .75rem;
   font-weight: 700;
   letter-spacing: .04em;
-  text-transform: uppercase;
 }
 
 .dictionary-header h2 {
