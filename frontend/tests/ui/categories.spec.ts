@@ -70,6 +70,24 @@ async function mockCategoryApi(page: Page): Promise<void> {
   })
 }
 
+test('widok kategorii pokazuje relacje rodziców i dzieci dla wszystkich kategorii', async ({ page }) => {
+  await mockCategoryApi(page)
+
+  await page.goto('/kategorie')
+
+  const polska = page.locator('.category-list li').filter({ hasText: 'Polska' })
+  await expect(polska).toContainText('Parents: —')
+  await expect(polska).toContainText('Children: II RP')
+
+  const iiRp = page.locator('.category-list li').filter({ hasText: 'II RP' })
+  await expect(iiRp).toContainText('Parents: Polska')
+  await expect(iiRp).toContainText('Children: —')
+
+  const prl = page.locator('.category-list li').filter({ hasText: 'PRL' })
+  await expect(prl).toContainText('Parents: —')
+  await expect(prl).toContainText('Children: —')
+})
+
 test('widok kategorii pozwala wybrać istniejącą kategorię i edytować jej dane', async ({ page }) => {
   await mockCategoryApi(page)
 
