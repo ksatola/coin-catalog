@@ -7,6 +7,7 @@ import CoinDetailView from '../views/CoinDetailView.vue'
 import CoinEditView from '../views/CoinEditView.vue'
 import CoinsView from '../views/CoinsView.vue'
 import DictionariesView from '../views/DictionariesView.vue'
+import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -44,6 +45,22 @@ const router = createRouter({
       component: CategoriesView,
     },
   ],
+})
+
+router.beforeEach((to, from) => {
+  const { isDirty, markClean } = useUnsavedCoinForm()
+
+  if (from.path === '/dodaj' && isDirty.value && to.path !== from.path) {
+    const shouldLeave = window.confirm(
+      'Masz niezapisane dane formularza. Czy na pewno chcesz opuścić stronę i je utracić?',
+    )
+
+    if (!shouldLeave) return false
+
+    markClean()
+  }
+
+  return true
 })
 
 export default router
