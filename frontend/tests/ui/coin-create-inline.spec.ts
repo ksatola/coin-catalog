@@ -49,7 +49,7 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   await page.getByLabel('Opis').fill('Dane wpisane przed utworzeniem słownika')
 
   await page.getByRole('button', { name: '+ Dodaj kraj' }).click()
-  await page.getByLabel('Nowy wpis w kraj').fill('Czechy')
+  await page.getByRole('textbox', { name: 'Nowy wpis w kraj' }).fill('Czechy')
   await page.getByRole('button', { name: 'Dodaj' }).first().click()
 
   await expect(page.getByLabel('Kraj')).toHaveValue('100')
