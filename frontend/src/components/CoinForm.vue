@@ -249,9 +249,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     <div v-if="imageErrorMessage" class="form-message form-message-error">{{ imageErrorMessage }}</div>
 
     <section class="form-section image-section">
-      <div class="section-heading">
-        <h3>Zdjęcia</h3>
-      </div>
+      <div class="section-heading"><h3>Zdjęcia</h3></div>
 
       <div class="primary-image-fields">
         <article class="primary-image-card">
@@ -289,105 +287,23 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     <section class="form-section">
       <div class="section-heading"><h3>Informacje</h3></div>
       <div class="info-grid">
-        <div class="field-card">
-          <label for="country">Kraj</label>
-          <div class="select-with-add">
-            <select id="country" v-model.number="form.country_id" required @click.stop><option :value="0">Wybierz kraj</option><option v-for="item in dictionaries.countries" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-            <InlineDictionaryCreate dictionary-name="countries" label="kraj" @created="addDictionaryItem('countries', $event)" />
-          </div>
-        </div>
-
-        <div class="field-card">
-          <label for="issuer">Emitent</label>
-          <div class="select-with-add">
-            <select id="issuer" v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-            <InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" />
-          </div>
-        </div>
-
-        <div class="field-card">
-          <label for="denomination">Nominał</label>
-          <div class="select-with-add">
-            <select id="denomination" v-model.number="form.denomination_id" required @click.stop><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-            <InlineDictionaryCreate dictionary-name="denominations" label="nominał" @created="addDictionaryItem('denominations', $event)" />
-          </div>
-        </div>
-
-        <div class="field-card field-card-wide">
-          <div class="date-fields">
-            <div>
-              <label for="from-era">Era od</label>
-              <div class="select-with-add">
-                <select id="from-era" v-model.number="form.from_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-                <InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" />
-              </div>
-            </div>
-            <label>Rok od <input v-model.number="form.from_year" type="number" required /></label>
-          </div>
-        </div>
-
-        <div class="field-card field-card-wide">
-          <div class="date-fields">
-            <div>
-              <label for="to-era">Era do</label>
-              <div class="select-with-add">
-                <select id="to-era" v-model.number="form.to_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-                <InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" />
-              </div>
-            </div>
-            <label>Rok do <input v-model.number="form.to_year" type="number" required /></label>
-          </div>
-        </div>
-
-        <div class="field-card">
-          <label for="mint">Mennica</label>
-          <div class="select-with-add">
-            <select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-            <InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" />
-          </div>
-        </div>
-
-        <div class="field-card">
-          <label for="material">Materiał</label>
-          <div class="select-with-add">
-            <select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-            <InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" />
-          </div>
-        </div>
-
-        <div class="field-card">
-          <label for="state">Stan zachowania</label>
-          <div class="select-with-add">
-            <select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select>
-            <InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" />
-          </div>
-        </div>
-
+        <div class="field-card"><label for="country">Kraj</label><div class="select-with-add"><select id="country" v-model.number="form.country_id" required @click.stop><option :value="0">Wybierz kraj</option><option v-for="item in dictionaries.countries" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="countries" label="kraj" @created="addDictionaryItem('countries', $event)" /></div></div>
+        <div class="field-card"><label for="issuer">Emitent</label><div class="select-with-add"><select id="issuer" v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" /></div></div>
+        <div class="field-card"><label for="denomination">Nominał</label><div class="select-with-add"><select id="denomination" v-model.number="form.denomination_id" required @click.stop><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="denominations" label="nominał" @created="addDictionaryItem('denominations', $event)" /></div></div>
+        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="from-era">Era od</label><div class="select-with-add"><select id="from-era" v-model.number="form.from_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok od <input v-model.number="form.from_year" type="number" required /></label></div></div>
+        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="to-era">Era do</label><div class="select-with-add"><select id="to-era" v-model.number="form.to_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok do <input v-model.number="form.to_year" type="number" required /></label></div></div>
+        <div class="field-card"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></div>
+        <div class="field-card"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
+        <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
         <label class="field-card">Waga [g] <input v-model.number="form.weight" type="number" step="0.001" min="0" /></label>
         <label class="field-card">Średnica [mm] <input v-model.number="form.diameter" type="number" step="0.01" min="0" /></label>
       </div>
     </section>
 
-    <section class="form-section">
-      <div class="section-heading"><h3>Źródło i opis</h3></div>
-      <div class="text-fields">
-        <label class="field-card">
-          Źródło
-          <textarea v-model="form.source" rows="4" />
-        </label>
-        <label class="field-card">
-          Opis
-          <textarea v-model="form.description" />
-        </label>
-      </div>
-    </section>
-
+    <section class="form-section"><div class="section-heading"><h3>Źródło i opis</h3></div><div class="text-fields"><label class="field-card">Źródło <textarea v-model="form.source" rows="4" /></label><label class="field-card">Opis <textarea v-model="form.description" /></label></div></section>
     <label class="video-option"><input v-model="form.has_video" type="checkbox" /><span>Ma wideo</span></label>
     <div v-if="validationMessage" class="form-message form-message-warning">{{ validationMessage }}</div>
-    <footer class="form-actions">
-      <button type="button" class="secondary-action" @click="emit('cancel')">Anuluj</button>
-      <button type="submit" class="primary-action">{{ isEditing() ? 'Zapisz zmiany' : 'Dodaj monetę' }}</button>
-    </footer>
+    <footer class="form-actions"><button type="button" class="secondary-action" @click="emit('cancel')">Anuluj</button><button type="submit" class="primary-action">{{ isEditing() ? 'Zapisz zmiany' : 'Dodaj monetę' }}</button></footer>
   </form>
 </template>
 
@@ -395,7 +311,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .coin-form { display: grid; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 24px 0 40px; }
 .form-header { display: flex; align-items: center; justify-content: space-between; }
 .form-header h2 { margin: 0; font-size: 1.75rem; line-height: 1.2; }
-.form-section { display: grid; gap: 18px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04); }
+.form-section { display: grid; gap: 18px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(15,23,42,.04); }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .section-heading h3 { margin: 0; font-size: 1.1rem; }
 .section-heading span { color: #64748b; font-size: .875rem; }
@@ -405,11 +321,11 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .primary-image-card h4 { margin: 0; font-size: .95rem; }
 .primary-image-card :deep(.image-drop-zone) { width: 100%; height: min(36vw,420px); min-height: 280px; aspect-ratio: auto; border-color: #cbd5e1; border-radius: 8px; background: #fff; }
 .primary-image-card :deep(.image-drop-zone.has-image) { background: #fff; }
-.primary-image-card :deep(.preview-image) { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+.primary-image-card :deep(.image-preview) { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
 .additional-image-section { display: grid; gap: 12px; padding-top: 4px; }
 .additional-image-controls { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-.additional-upload-card { flex: 0 0 160px; }
-.additional-upload-card :deep(.image-drop-zone) { width: 140px; height: 100px; min-height: 100px; aspect-ratio: auto; }
+.additional-upload-card { flex: 0 0 140px; width: 140px; height: 167px; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: content-box; }
+.additional-upload-card :deep(.image-drop-zone) { width: 140px; height: 167px; min-width: 140px; min-height: 167px; aspect-ratio: auto; box-sizing: border-box; border-color: #cbd5e1; border-radius: 6px; }
 .additional-image-list { display: flex; flex: 1 1 400px; flex-wrap: wrap; gap: 12px; }
 .additional-image-card { width: 140px; margin: 0; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; }
 .additional-image-card img { display: block; width: 100%; height: 100px; object-fit: contain; border-radius: 6px; background: #f8fafc; }
@@ -438,19 +354,6 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .secondary-action { border: 1px solid #cbd5e1; background: #fff; color: #334155; }
 .primary-action { border: 1px solid #0f172a; background: #0f172a; color: #fff; }
 .coin-form :deep(button:focus-visible),.coin-form input:focus-visible,.coin-form select:focus-visible,.coin-form textarea:focus-visible { outline: 3px solid rgba(59,130,246,.25); outline-offset: 2px; }
-@media (max-width:800px) {
-  .coin-form { padding: 16px 0 32px; }
-  .form-section { padding: 18px; }
-  .primary-image-fields,.info-grid { grid-template-columns: 1fr; }
-  .field-card-wide { grid-column: auto; }
-  .date-fields { grid-template-columns: 1fr; }
-  .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; }
-}
-@media (max-width:520px) {
-  .section-heading { display: grid; gap: 4px; }
-  .additional-upload-card { flex-basis: 100%; }
-  .additional-image-list { flex-basis: 100%; }
-  .form-actions { display: grid; grid-template-columns: 1fr 1fr; }
-  .form-actions button { width: 100%; }
-}
+@media (max-width: 800px) { .coin-form { padding: 16px 0 32px; } .form-section { padding: 18px; } .primary-image-fields,.info-grid { grid-template-columns: 1fr; } .field-card-wide { grid-column: auto; } .date-fields { grid-template-columns: 1fr; } .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; } }
+@media (max-width: 520px) { .section-heading { display: grid; gap: 4px; } .additional-upload-card { flex-basis: 100%; width: auto; } .additional-upload-card :deep(.image-drop-zone) { width: 100%; min-width: 0; } .additional-image-list { flex-basis: 100%; } .form-actions { display: grid; grid-template-columns: 1fr 1fr; } .form-actions button { width: 100%; } }
 </style>
