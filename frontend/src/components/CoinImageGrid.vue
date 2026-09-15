@@ -78,7 +78,10 @@ watch(() => props.coins, () => {
 <template>
   <div
     class="image-grid"
-    :style="{ '--image-grid-columns': columns ?? 2 }"
+    :style="{
+      '--image-grid-columns': columns ?? 2,
+      '--gallery-scale': 2 / (columns ?? 2),
+    }"
   >
     <RouterLink
       v-for="coin in coins"
@@ -116,7 +119,7 @@ watch(() => props.coins, () => {
 .coin-tile {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-height: 200px;
+  min-height: calc(200px * var(--gallery-scale));
   border: 1px solid #dbe3ee;
   border-radius: 10px;
   background: #ffffff;
@@ -127,8 +130,8 @@ watch(() => props.coins, () => {
 .coin-side {
   display: grid;
   min-width: 0;
-  min-height: 240px;
-  padding: 20px 0;
+  min-height: calc(240px * var(--gallery-scale));
+  padding: calc(20px * var(--gallery-scale)) 0;
   place-items: center;
   background: #ffffff;
 }
@@ -140,7 +143,7 @@ watch(() => props.coins, () => {
 .coin-side img {
   display: block;
   width: 100%;
-  height: 200px;
+  height: calc(200px * var(--gallery-scale));
   object-fit: contain;
 }
 
