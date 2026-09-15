@@ -118,6 +118,30 @@ This phase does not introduce new domain functionality, database-model changes, 
 
 The original Phase 6 scope focused on image management. The initial image-management capability was implemented during Phase 4 because it was required by the first usable catalogue workflow. Further image-management extensions remain optional future work and are not the focus of the current Phase 6.
 
+## Next Step — Collection Number
+
+**Status:** Planned
+
+After completion of Phase 6, introduce a dedicated collection number for each coin.
+
+The collection number will be a user-facing text value independent from the technical database ID.
+
+Planned work:
+
+- add a dedicated text collection-number field to the coin data model;
+- define its semantics, allowed format, and uniqueness rules;
+- add the field to the backend API and validation;
+- add collection-number input to coin creation and editing;
+- include the collection number in coin search;
+- display both the technical database ID and collection number in the Grid;
+- display the collection number in all other views where coin data is presented;
+- include the collection number in the Edit Coin view;
+- preserve the technical database ID separately from the collection number;
+- add the required database migration;
+- add automated backend and UI tests covering creation, editing, searching, validation, and display of the collection number.
+
+This work will be implemented on a separate feature branch after the UI Foundation phase is completed.
+
 ## Phase 7 — Coin Browser
 
 **Status:** Partially absorbed into Phase 4
