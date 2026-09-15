@@ -145,6 +145,8 @@ The `coin` table represents a concrete physical coin. Reference tables provide r
 
 Categories form a flexible directed acyclic graph through `category_relation`: a category may have multiple parents and multiple children. Coins are related to categories through the many-to-many `coin_category` association. The backend rejects category relationships that would create a cycle.
 
+A coin may be explicitly assigned to both a parent category and a child category in the same branch. Category assignment does not inherit automatically: assigning a child does not assign its parents, and assigning a parent does not assign its children. Multiple categories can be selected and assigned in one frontend action; already assigned categories are excluded from the selection list.
+
 Coins use soft deletion through `is_deleted`; archived coins remain in the database and are excluded from the active list.
 
 Coin dates use two independent endpoints:
@@ -171,7 +173,7 @@ The frontend is a Vue 3 application using:
 
 The frontend provides the user-facing catalogue workflow, including coin creation, editing, browsing, details, archive/restore, dictionary management, image selection, category management, category relationship management, and coin-category assignment/removal.
 
-Category management is exposed through the `/kategorie` route. The category UI supports category CRUD, multiple parents and children, relation removal, cycle-error handling, and deletion protection messages. Coin-category assignment is exposed within the coin workflow and supports adding and removing assigned categories.
+Category management is exposed through the `/kategorie` route. The category UI supports category CRUD, multiple parents and children, relation removal, cycle-error handling, and deletion protection messages. Coin-category assignment is exposed within the coin workflow and supports selecting multiple categories at once, adding them together, and removing individual assigned categories.
 
 The application uses component-based Vue code and does not currently depend on Pinia or a UI component framework.
 
@@ -309,7 +311,7 @@ Current automated verification includes:
 - frontend production build,
 - Playwright UI tests.
 
-The Playwright UI coverage includes the coin/image workflows plus category management, category relationship handling, cycle prevention behavior, category deletion protection, and coin-category assignment/removal.
+The Playwright UI coverage includes the coin/image workflows plus category management, category relationship handling, cycle prevention behavior, category deletion protection, and multi-category coin assignment/removal.
 
 Broader integration and CI coverage remain future work.
 
