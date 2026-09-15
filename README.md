@@ -6,11 +6,11 @@ The project is developed incrementally, with the repository documentation servin
 
 ## Project Status
 
-**Current phase:** Phase 4 is complete; the next development step has not yet been started.
+**Current phase:** Phase 7 — Collection Number is complete and verified on the working branch.
 
-The application now provides a usable first catalogue workflow: coin creation, coin browsing, coin details, editing, soft archive/restore, dictionary management, coin photograph management, category management, and coin-category assignment. The backend and frontend category workflows are implemented and verified.
+The application provides a usable catalogue workflow including coin creation, browsing, details, editing, soft archive/restore, dictionary management, coin photograph management, category management, coin-category assignment, search and filtering, and a user-facing collection number independent from the technical database ID.
 
-Phase 4 is complete. Automated and manual verification has been completed. The previously planned spreadsheet-import phase is no longer the next development step because collection data will be entered manually through the application. Later planned areas include search/filtering, richer collection features, backup/export, testing/quality expansion, and deployment.
+Phase 1 through Phase 6 are complete. Phase 7 — Collection Number adds the optional collection-number field across the database, API, forms, search, and catalogue presentation, with backend and Playwright coverage. Collection metadata continues to be entered manually through the application; XLS/XLSX import is not part of the current workflow.
 
 ## Architecture
 
@@ -33,17 +33,21 @@ The primary host platforms are Windows 11 and macOS.
 The frontend provides:
 
 - active and archived coin browsers,
-- Grid and List views,
+- Gallery, Grid, and List views,
 - coin detail views,
 - coin creation and editing,
+- optional collection-number entry and display,
 - soft archive and restore,
 - dictionary management,
 - primary and additional coin photographs,
 - category management,
 - category parent/child relationship management,
-- coin-category assignment and removal.
+- coin-category assignment and removal,
+- text search and catalogue filtering.
 
 The backend provides the corresponding FastAPI endpoints and persists structured catalogue data in SQLite. Coin photographs are stored as external JPG files with metadata in SQLite rather than as database BLOBs.
+
+Each coin has a technical database ID. An optional collection number is stored separately as user-facing text and is not used as a replacement for the technical ID.
 
 Coin dates are represented by a year together with an era for each endpoint. The application does not compare the numeric year values across eras, so ranges such as `476 BC → 1 AD` are valid.
 
