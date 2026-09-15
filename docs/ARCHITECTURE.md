@@ -25,7 +25,7 @@ Host Computer
           │        │
           │        ├── SQLAlchemy → SQLite
           │        │
-          │        └── Image service → images/
+          │        └── Image service → data/images/collection-*/
           │
           └── Playwright UI tests
 ```
@@ -41,7 +41,10 @@ coin-catalog/
 ├── .devcontainer/
 ├── docs/
 ├── data/
-├── images/
+│   ├── coin-catalog.db
+│   └── images/
+│       ├── collection-001/
+│       └── collection-002/
 ├── backend/
 │   ├── migrations/
 │   ├── tests/
@@ -51,7 +54,7 @@ coin-catalog/
     └── tests/ui/
 ```
 
-`images/` and `data/` are runtime data directories and are not versioned as application source.
+`data/` is runtime application data and is not versioned as application source.
 
 ## 4. Backend and Database
 
@@ -60,6 +63,7 @@ FastAPI provides HTTP endpoints and uses SQLAlchemy for database access. Alembic
 The current domain model contains:
 
 ```text
+collection
 coin
 country
 issuer
@@ -74,15 +78,19 @@ coin_category
 coin_image
 ```
 
-The `coin` table represents a concrete physical coin. It has a technical `id` and an optional user-facing `collection_number` text field. The collection number is independent from the technical ID and does not replace it.
+The `collection` table represents a user-defined collection within the shared SQLite database. Collection names are unique. Empty collections are allowed, while collections containing coins cannot be deleted through normal application functionality.
+
+The `coin` table represents a concrete physical coin. Each coin belongs to exactly one collection through `collection_id`. It has a globally unique technical `id` and an optional user-facing `collection_number` text field. The collection number is independent from the technical ID and does not replace it.
+
+Moving a coin between collections creates a new technical `coin.id`. The user-facing `collection_number` is preserved during the move unless the user changes it separately. Associated image metadata and files move to the target collection using filenames derived from the new technical ID.
 
 Coins use soft deletion through `is_deleted`. Coin dates use independent year and era endpoints, allowing ranges such as `476 BC → 1 AD` without comparing numeric years across eras.
 
-Categories form a directed acyclic graph through `category_relation`, and coins use the many-to-many `coin_category` association.
+Categories form a directed acyclic graph through `category_relation`, and coins use the many-to-many `coin_category` association. Categories are shared across all collections.
 
 ## 5. Frontend
 
-The frontend is a Vue 3 application using TypeScript, Vite, and Vue Router. It provides coin creation, editing, browsing, details, archive/restore, optional collection-number entry and display, dictionaries, images, categories, coin-category assignment, and search/filtering.
+The frontend is a Vue 3 application using TypeScript, Vite, and Vue Router. It provides coin creation, editing, browsing, details, archive/restore, collection management, collection selection, collection-aware search/filtering, optional collection-number entry and display, dictionaries, images, categories, coin-category assignment, and collection-aware coin moves.
 
 The application uses component-based Vue code and does not currently depend on Pinia or a UI component framework.
 
@@ -90,7 +98,9 @@ The application uses component-based Vue code and does not currently depend on P
 
 Frontend requests use relative `/api/...` paths and Vite proxies them to FastAPI during development.
 
-Coin CRUD endpoints support the optional `collection_number` field through the request and response schemas. Coin search includes the collection number among searchable fields.
+Coin CRUD endpoints support collection selection and the optional `collection_number` field through the request and response schemas. Coin search includes the collection number among searchable fields and supports filtering by one or multiple collections in combination with existing search and filter criteria.
+
+Collection endpoints provide collection management and collection-aware coin operations.
 
 Dictionary, category, coin-category, and image endpoints remain provided by their dedicated route modules.
 
@@ -98,19 +108,30 @@ Dictionary, category, coin-category, and image endpoints remain provided by thei
 
 Coin photographs are stored as external JPG files rather than SQLite BLOBs. The accepted storage decision is documented in `docs/IMAGE_STORAGE_DECISION.md`.
 
-The current convention is:
+Images are organized by collection, with no per-coin subdirectories:
 
 ```text
-images/
-├── 000404 - awers.jpg
-├── 000404 - rewers.jpg
-├── 000404 - 01.jpg
-└── ...
+data/
+├── coin-catalog.db
+└── images/
+    ├── collection-001/
+    │   ├── 000404 - awers.jpg
+    │   ├── 000404 - rewers.jpg
+    │   ├── 000405 - awers.jpg
+    │   └── ...
+    └── collection-002/
+        └── ...
 ```
+
+Within a collection, filenames use the six-digit technical coin ID and the established image suffix convention.
+
+The database stores image metadata and filenames. Each image reference must correspond to an existing file in the directory belonging to the coin's current collection.
+
+Moving a coin creates a new technical coin ID and therefore new image filenames. The move operation must keep database records and filesystem state consistent and must provide compensating rollback when any part of the operation fails.
 
 ## 8. Manual Data Entry
 
-Coin collection data is entered manually through the application. There is currently no XLS/XLSX import mechanism. The dictionary-backed coin form and optional collection-number field are part of the current data-entry path.
+Coin collection data is entered manually through the application. There is currently no XLS/XLSX import mechanism. The dictionary-backed coin form, collection selection, and optional collection-number field are part of the current data-entry path.
 
 ## 9. Portability
 
@@ -120,7 +141,7 @@ The architecture targets Windows 11 and macOS through the Docker-based developme
 
 Current automated verification includes backend pytest tests, backend Ruff checks, the frontend production build, and Playwright UI tests.
 
-Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, and catalogue search behavior.
+Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, and catalogue search behavior. Collection-specific coverage is being added during Phase 8, including collection selection, multi-collection filtering, coin moves, and image/file consistency.
 
 Broader integration and CI coverage remain future work.
 
@@ -133,9 +154,10 @@ The current priority is local development rather than production deployment. A p
 The following remain future or conditional work:
 
 - pagination or other large-collection browser optimization;
-- broader collections and tags;
 - backup/recovery automation;
 - production deployment;
 - CI/CD pipeline.
 
-The current category model, search/filtering, and collection-number workflow are implemented. The architecture should be updated when new active development materially changes these boundaries.
+Collections, collection-aware coin management, collection-aware image storage, collection filtering, and coin moves are part of the active Phase 8 architecture.
+
+The current category model, search/filtering, and collection-number workflow are implemented. Collection functionality is being introduced incrementally during Phase 8.
