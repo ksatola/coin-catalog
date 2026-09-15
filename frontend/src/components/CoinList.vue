@@ -71,6 +71,22 @@ function formatDetails(coin: Coin): string[] {
   ].filter((value): value is string => Boolean(value))
 }
 
+function formatIdentity(coin: Coin): string[] {
+  return [
+    dictionaryName(dictionaries.countries, coin.country_id),
+    dictionaryName(dictionaries.issuers, coin.issuer_id),
+    formatRange(coin),
+  ].filter((value): value is string => Boolean(value))
+}
+
+function formatDescription(coin: Coin): string[] {
+  return [
+    dictionaryName(dictionaries.denominations, coin.denomination_id),
+    dictionaryName(dictionaries.mints, coin.mint_id),
+    ...formatDetails(coin),
+  ].filter((value): value is string => Boolean(value))
+}
+
 async function loadDictionaries(): Promise<void> {
   const names: Array<keyof Dictionaries> = [
     'countries',
@@ -185,25 +201,17 @@ watch(() => props.coins, () => {
       </div>
 
       <div class="coin-info">
-        <div class="coin-meta">
+        <div class="coin-title">
           <strong>#{{ coin.id }} | KC-042</strong>
-          <span>{{ formatRange(coin) }}</span>
         </div>
         <div class="coin-line">
-          <span>{{ dictionaryName(dictionaries.countries, coin.country_id) }}</span>
-          <span v-if="dictionaryName(dictionaries.issuers, coin.issuer_id)">
-            {{ dictionaryName(dictionaries.issuers, coin.issuer_id) }}
+          <span v-for="(item, index) in formatIdentity(coin)" :key="`${coin.id}-identity-${index}`">
+            {{ item }}
           </span>
         </div>
         <div class="coin-line">
-          <span>{{ dictionaryName(dictionaries.denominations, coin.denomination_id) }}</span>
-          <span v-if="dictionaryName(dictionaries.mints, coin.mint_id)">
-            {{ dictionaryName(dictionaries.mints, coin.mint_id) }}
-          </span>
-        </div>
-        <div class="coin-details">
-          <span v-for="(detail, index) in formatDetails(coin)" :key="`${coin.id}-${index}`">
-            {{ detail }}
+          <span v-for="(item, index) in formatDescription(coin)" :key="`${coin.id}-description-${index}`">
+            {{ item }}
           </span>
           <svg
             v-if="coin.has_video"
@@ -306,26 +314,17 @@ watch(() => props.coins, () => {
   min-width: 0;
 }
 
-.coin-meta {
+.coin-title {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
 }
 
-.coin-meta strong {
+.coin-title strong {
   color: #0f172a;
   font-size: 16px;
 }
 
-.coin-meta > span {
-  color: #64748b;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.coin-line,
-.coin-details {
+.coin-line {
   display: flex;
   flex-wrap: wrap;
   color: #475569;
@@ -333,21 +332,14 @@ watch(() => props.coins, () => {
   line-height: 1.45;
 }
 
-.coin-line span + span,
-.coin-details span + span {
+.coin-line span + span {
   margin-left: 0.35em;
 }
 
-.coin-line span + span::before,
-.coin-details span + span::before {
+.coin-line span + span::before {
   content: '·';
   margin-right: 0.35em;
   color: #94a3b8;
-}
-
-.coin-details {
-  align-items: center;
-  color: #64748b;
 }
 
 .video-icon {
@@ -420,11 +412,6 @@ watch(() => props.coins, () => {
   .coin-image {
     width: 100%;
     height: 120px;
-  }
-
-  .coin-meta > span {
-    white-space: normal;
-    text-align: right;
   }
 
   .actions {
