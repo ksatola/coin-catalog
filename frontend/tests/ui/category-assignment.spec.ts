@@ -77,41 +77,72 @@ test('moneta pozwala przypisać i usunąć kategorię', async ({ page }) => {
 
   await page.route('**/api/coins/404/categories', async (route) => {
     if (route.request().method() === 'GET') {
+      const sortedAssigned = [...assigned].sort((a, b) => a.name.localeCompare(b.name))
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(assigned),
+        body: JSON.stringify(sortedAssigned),
       })
       return
     }
 
-    assigned = [allCategories[0], allCategories[1]]
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(allCategories[1]),
-    })
+    await route.fallback()
   })
 
   await page.route('**/api/coins/404/categories/*', async (route) => {
-    assigned = assigned.filter((category) => category.id !== 2)
-    await route.fulfill({ status: 204, body: '' })
+    const parts = new URL(route.request().url()).pathname.split('/').filter(Boolean)
+    const categoryId = Number(parts.at(-1))
+    const category = allCategories.find((item) => item.id === categoryId)
+
+    if (!category) {
+      await route.fulfill({ status: 404, body: '' })
+      return
+    }
+
+    if (route.request().method() === 'POST') {
+      if (!assigned.some((item) => item.id === categoryId)) {
+        assigned = [...assigned, category]
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(category),
+      })
+      return
+    }
+
+    if (route.request().method() === 'DELETE') {
+      if (!assigned.some((item) => item.id === categoryId)) {
+        await route.fulfill({ status: 404, body: '' })
+        return
+      }
+      assigned = assigned.filter((item) => item.id !== categoryId)
+      await route.fulfill({ status: 204, body: '' })
+      return
+    }
+
+    await route.fallback()
   })
 
   await page.goto('/monety/404')
 
   await expect(page.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
-  await expect(page.locator('.category-assignment').getByText('Polska', { exact: true })).toBeVisible()
+  const assignment = page.locator('.category-assignment')
+  await expect(assignment.getByText('Polska', { exact: true })).toBeVisible()
+  await expect(assignment.locator('select option[value="1"]')).toHaveCount(0)
+  await expect(assignment.locator('select option[value="2"]')).toHaveCount(1)
 
-  await page.locator('.category-form select').selectOption('2')
-  await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
+  await assignment.locator('select').selectOption('2')
+  await assignment.getByRole('button', { name: 'Dodaj kategorię' }).click()
 
-  const categoryItem = page
-    .locator('.category-assignment .category-list li')
+  const categoryItem = assignment
+    .locator('.category-list li')
     .filter({ hasText: 'II RP' })
   await expect(categoryItem).toBeVisible()
+  await expect(assignment.locator('select option[value="2"]')).toHaveCount(0)
 
   await categoryItem.getByRole('button', { name: 'Usuń', exact: true }).click()
 
   await expect(categoryItem).not.toBeVisible()
+  await expect(assignment.locator('select option[value="2"]')).toHaveCount(1)
 })
