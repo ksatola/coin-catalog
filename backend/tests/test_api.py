@@ -97,6 +97,7 @@ def test_create_coin(client: TestClient, reference_data: dict[str, int]) -> None
             "to_year": 1900,
             "to_era_id": reference_data["era_id"],
             "description": "Test coin",
+            "collection_number": "KC-001",
         },
     )
 
@@ -105,7 +106,48 @@ def test_create_coin(client: TestClient, reference_data: dict[str, int]) -> None
     data = response.json()
     assert data["id"] is not None
     assert data["description"] == "Test coin"
+    assert data["collection_number"] == "KC-001"
     assert data["is_deleted"] is False
+
+
+def test_update_coin_collection_number(
+    client: TestClient,
+    reference_data: dict[str, int],
+) -> None:
+    response = client.post(
+        "/coins",
+        json={
+            "country_id": reference_data["country_id"],
+            "denomination_id": reference_data["denomination_id"],
+            "from_year": 1900,
+            "from_era_id": reference_data["era_id"],
+            "to_year": 1900,
+            "to_era_id": reference_data["era_id"],
+            "collection_number": "KC-001",
+        },
+    )
+    assert response.status_code == 201
+    coin_id = response.json()["id"]
+
+    response = client.put(
+        f"/coins/{coin_id}",
+        json={
+            "country_id": reference_data["country_id"],
+            "denomination_id": reference_data["denomination_id"],
+            "from_year": 1900,
+            "from_era_id": reference_data["era_id"],
+            "to_year": 1900,
+            "to_era_id": reference_data["era_id"],
+            "collection_number": "KC-002",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["collection_number"] == "KC-002"
+
+    response = client.get(f"/coins/{coin_id}")
+    assert response.status_code == 200
+    assert response.json()["collection_number"] == "KC-002"
 
 
 def test_list_coins_returns_active_coins_only(

@@ -683,3 +683,39 @@ Separating categories from fixed dictionaries keeps the semantic meaning of thos
 - Coin-to-category assignment is many-to-many.
 - Future category UI should allow creating, editing, connecting, and browsing parent-child relationships.
 - Future implementation should preserve the distinction between categories and fixed domain dictionaries.
+
+---
+
+## D-032 — Optional Collection Number
+
+**Status:** Accepted  
+**Date:** 2026-09-15
+
+Each coin may have an optional collection number used as a user-defined identifier within the personal collection.
+
+The `coin` table contains:
+
+```text
+collection_number
+```
+
+The field is nullable and stored as `TEXT`. It is not the database primary key and does not replace the internal numeric coin ID.
+
+The collection number is exposed consistently through the coin create, update, and response schemas. It can be entered and edited in the frontend and is displayed in the coin grid, list, and detail views when present.
+
+The collection number is also included in coin text search.
+
+### Rationale
+
+A collection number is a practical human-facing identifier that may follow a numbering scheme defined by the collection owner. Storing it as text preserves formats that may contain prefixes, separators, or leading zeroes and avoids imposing an application-defined numbering scheme.
+
+Keeping the collection number separate from the internal database ID preserves the database identity of the coin while allowing the collection owner to use a meaningful external identifier.
+
+### Consequences
+
+- Collection numbers are optional and may be `NULL`.
+- Collection numbers are stored as text rather than numeric values.
+- Existing coins can remain without a collection number.
+- The internal coin ID remains the database identity.
+- Collection number changes are handled through the normal coin editing workflow.
+- Future uniqueness or formatting rules for collection numbers would require a separate explicit decision.

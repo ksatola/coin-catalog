@@ -46,6 +46,7 @@ export interface CoinCreate {
   description: string | null
   weight: number | null
   diameter: number | null
+  collection_number: string | null
   has_video: boolean
   source: string | null
 }

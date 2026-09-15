@@ -15,7 +15,7 @@ const dictionaries = {
   mints: [], materials: [], states: [], eras: [{ id: 3, name: 'AD' }],
 }
 
-async function mockApi(page: import('@playwright/test').Page): Promise<void> {
+async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Promise<void> {
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []) })
@@ -23,7 +23,12 @@ async function mockApi(page: import('@playwright/test').Page): Promise<void> {
   await page.route('**/api/categories', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
   await page.route('**/api/coins*', async (route) => {
     const search = new URL(route.request().url()).searchParams.get('search')
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(search ? [coin1] : [coin1, coin2]) })
+    const coins = Array.from({ length: coinCount }, (_, index) => ({
+      ...coin1,
+      id: index + 1,
+      description: `Moneta testowa ${index + 1}`,
+    }))
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(search ? [coins[0]] : coins) })
   })
   await page.route('**/api/coins/*/images', async (route) => {
     const coinId = Number(new URL(route.request().url()).pathname.split('/')[3])
@@ -52,4 +57,27 @@ test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page
   await expect(grid.getByRole('link', { name: 'Moneta #2' })).toBeVisible()
   await expect(grid.getByAltText('Awers monety #1')).toBeVisible()
   await expect(grid.getByAltText('Awers monety #2')).toBeVisible()
+})
+
+test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) => {
+  await mockApi(page, 20)
+  await page.goto('/monety')
+
+  const search = page.getByPlaceholder('Szukaj monet, np. polska grosz')
+  await expect(page.getByRole('link', { name: 'Moneta #20' })).toBeVisible()
+  await search.focus()
+  await page.evaluate(() => window.scrollTo(0, 700))
+
+  const before = await page.evaluate(() => window.scrollY)
+  await search.evaluate((element) => {
+    const input = element as HTMLInputElement
+    input.value = 'test'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+  })
+
+  await page.waitForTimeout(400)
+  await expect(page.getByRole('link', { name: 'Moneta #2' })).toHaveCount(0)
+
+  const after = await page.evaluate(() => window.scrollY)
+  expect(after).toBe(before)
 })
