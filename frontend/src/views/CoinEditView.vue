@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import CategoryAssignment from '../components/CategoryAssignment.vue'
 import CoinForm from '../components/CoinForm.vue'
 import type { Coin, CoinFormSubmit, CoinImage } from '../types'
 
@@ -127,5 +128,6 @@ onMounted(loadCoin)
       @submit="saveCoin"
       @cancel="cancelEditing"
     />
+    <CategoryAssignment v-if="coin" :coin-id="coin.id" />
   </section>
 </template>
