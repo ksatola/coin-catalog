@@ -10,6 +10,7 @@ type CoinImages = {
 
 const props = defineProps<{
   coins: Coin[]
+  columns?: 1 | 2 | 3 | 4
 }>()
 
 const imagesByCoin = reactive<Record<number, CoinImages>>({})
@@ -75,7 +76,10 @@ watch(() => props.coins, () => {
 </script>
 
 <template>
-  <div class="image-grid">
+  <div
+    class="image-grid"
+    :style="{ '--image-grid-columns': columns ?? 2 }"
+  >
     <RouterLink
       v-for="coin in coins"
       :key="coin.id"
@@ -104,7 +108,7 @@ watch(() => props.coins, () => {
 <style scoped>
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
+  grid-template-columns: repeat(var(--image-grid-columns), minmax(0, 1fr));
   gap: 16px;
   width: 100%;
 }
@@ -143,6 +147,12 @@ watch(() => props.coins, () => {
 .coin-tile:hover {
   border-color: #94a3b8;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 900px) {
+  .image-grid {
+    grid-template-columns: repeat(min(var(--image-grid-columns), 2), minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 600px) {
