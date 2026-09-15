@@ -196,7 +196,7 @@ onMounted(loadCategories)
             <li v-if="selectedCategory.parent_ids.length === 0">Brak rodziców.</li>
           </ul>
 
-          <form @submit.prevent="addParent">
+          <div class="parent-controls">
             <select v-model.number="parentId">
               <option :value="null">Wybierz rodzica</option>
               <option
@@ -207,8 +207,14 @@ onMounted(loadCategories)
                 {{ category.name }}
               </option>
             </select>
-            <button type="submit" :disabled="parentId === null">Dodaj rodzica</button>
-          </form>
+            <button
+              type="button"
+              :disabled="parentId === null"
+              @click="addParent"
+            >
+              Dodaj rodzica
+            </button>
+          </div>
 
           <h3>Dzieci</h3>
           <ul>
@@ -259,6 +265,7 @@ onMounted(loadCategories)
   gap: 4px;
 }
 
+.parent-controls,
 .actions {
   display: flex;
   gap: 8px;
