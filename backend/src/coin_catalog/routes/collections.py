@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from coin_catalog.database import get_db
-from coin_catalog.models import Collection, Coin
+from coin_catalog.models import Coin, Collection
 from coin_catalog.schemas import CollectionCreate, CollectionResponse
 
 router = APIRouter(prefix="/collections", tags=["collections"])
