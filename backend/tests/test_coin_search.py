@@ -180,10 +180,10 @@ def test_search_matches_category_ancestors_and_exact_scope(
     client: TestClient,
     data: dict[str, Coin | Category],
 ) -> None:
-    coin = data["coin"]
     root = data["root"]
     parent = data["parent"]
     child = data["child"]
+    coin = data["coin"]
 
     assert ids(client.get(f"/coins?search={root.name}")) == [coin.id]
     assert ids(client.get(f"/coins?search={parent.name}")) == [coin.id]
