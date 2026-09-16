@@ -42,6 +42,7 @@ def create_coin(
 @router.get("", response_model=list[CoinResponse])
 def list_coins(
     search: str | None = None,
+    collection_id: list[int] | None = Query(None),
     country_id: list[int] | None = Query(None),
     issuer_id: list[int] | None = Query(None),
     denomination_id: list[int] | None = Query(None),
@@ -86,6 +87,7 @@ def list_coins(
 
     statement = build_coin_query(
         search=search,
+        collection_ids=collection_id,
         country_ids=country_id,
         issuer_ids=issuer_id,
         denomination_ids=denomination_id,
