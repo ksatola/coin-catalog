@@ -1,10 +1,16 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from coin_catalog.database import get_db
 from coin_catalog.models import Coin, Collection
-from coin_catalog.schemas import CollectionCreate, CollectionResponse
+from coin_catalog.schemas import (
+    CollectionCreate,
+    CollectionResponse,
+    CollectionStatsResponse,
+)
 
 router = APIRouter(prefix="/collections", tags=["collections"])
 
@@ -74,6 +80,14 @@ def get_collection_details(
     return get_collection(collection_id, session)
 
 
+@router.get("/{collection_id}/stats", response_model=CollectionStatsResponse)
+def get_collection_stats(
+    collection_id: int,
+    session: Session = Depends(get_db),
+) -> Collection:
+    return get_collection(collection_id, session)
+
+
 @router.put("/{collection_id}", response_model=CollectionResponse)
 def update_collection(
     collection_id: int,
@@ -91,6 +105,7 @@ def update_collection(
     ensure_unique_name(name, session, collection_id)
     collection.name = name
     collection.description = collection_data.description
+    collection.last_modified_at = datetime.now(UTC)
     session.commit()
     session.refresh(collection)
     return collection
