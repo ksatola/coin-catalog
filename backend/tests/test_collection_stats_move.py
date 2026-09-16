@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,15 @@ from coin_catalog import coin_move
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
-from coin_catalog.models import Category, Coin, CoinImage, Collection, Country, Denomination, Era
+from coin_catalog.models import (
+    Category,
+    Coin,
+    CoinImage,
+    Collection,
+    Country,
+    Denomination,
+    Era,
+)
 from coin_catalog.routes import images
 
 
@@ -74,6 +83,8 @@ def test_move_rolls_back_stats_when_stats_update_fails(
         from_year=1900,
         from_era_id=era.id,
         to_year=1900,
+        from_era_id=era.id,
+        to_year=1900,
         to_era_id=era.id,
         categories=[category],
     )
@@ -117,7 +128,7 @@ def test_move_rolls_back_stats_when_stats_update_fails(
         collection: Collection,
         current_session: Session,
         *,
-        modified_at=None,
+        modified_at: datetime | None = None,
     ) -> Collection:
         nonlocal calls
         calls += 1
