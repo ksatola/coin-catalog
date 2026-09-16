@@ -101,6 +101,12 @@ def second_coin(session: Session) -> Coin:
     return value
 
 
+def collection_image_dir(image_dir: Path, coin: Coin) -> Path:
+    directory = image_dir / f"collection-{coin.collection_id:03d}"
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
 def upload_image(
     client: TestClient,
     coin_id: int,
@@ -130,8 +136,9 @@ def test_upload_primary_images(
     assert avers.json()["filename"] == f"{coin.id:06d} - avers.jpg"
     assert rewers.json()["filename"] == f"{coin.id:06d} - rewers.jpg"
 
-    assert (image_dir / f"{coin.id:06d} - avers.jpg").read_bytes() == b"avers-data"
-    assert (image_dir / f"{coin.id:06d} - rewers.jpg").read_bytes() == b"rewers-data"
+    collection_dir = collection_image_dir(image_dir, coin)
+    assert (collection_dir / f"{coin.id:06d} - avers.jpg").read_bytes() == b"avers-data"
+    assert (collection_dir / f"{coin.id:06d} - rewers.jpg").read_bytes() == b"rewers-data"
 
 
 def test_upload_additional_images_are_numbered(
@@ -151,9 +158,10 @@ def test_upload_additional_images_are_numbered(
     assert second.json()["filename"] == f"{coin.id:06d} - 02.jpg"
     assert third.json()["filename"] == f"{coin.id:06d} - 03.jpg"
 
-    assert (image_dir / f"{coin.id:06d} - 01.jpg").read_bytes() == b"first"
-    assert (image_dir / f"{coin.id:06d} - 02.jpg").read_bytes() == b"second"
-    assert (image_dir / f"{coin.id:06d} - 03.jpg").read_bytes() == b"third"
+    collection_dir = collection_image_dir(image_dir, coin)
+    assert (collection_dir / f"{coin.id:06d} - 01.jpg").read_bytes() == b"first"
+    assert (collection_dir / f"{coin.id:06d} - 02.jpg").read_bytes() == b"second"
+    assert (collection_dir / f"{coin.id:06d} - 03.jpg").read_bytes() == b"third"
 
 
 def test_list_images_returns_sort_order(
@@ -198,7 +206,8 @@ def test_get_image_file_returns_404_when_file_is_missing(
     created = upload_image(client, coin.id, "additional", b"image-data")
     image_id = created.json()["id"]
 
-    (image_dir / created.json()["filename"]).unlink()
+    collection_dir = collection_image_dir(image_dir, coin)
+    (collection_dir / created.json()["filename"]).unlink()
 
     response = client.get(f"/coins/{coin.id}/images/{image_id}/file")
 
@@ -235,7 +244,8 @@ def test_delete_additional_image_removes_database_row_and_file(
     response = client.delete(f"/coins/{coin.id}/images/{image_id}")
 
     assert response.status_code == 204
-    assert not (image_dir / filename).exists()
+    collection_dir = collection_image_dir(image_dir, coin)
+    assert not (collection_dir / filename).exists()
 
     listed = client.get(f"/coins/{coin.id}/images")
     assert listed.status_code == 200
@@ -283,7 +293,8 @@ def test_primary_image_requires_explicit_replacement(
     )
 
     assert replacement.status_code == 200
-    assert (image_dir / f"{coin.id:06d} - {kind}.jpg").read_bytes() == b"second"
+    collection_dir = collection_image_dir(image_dir, coin)
+    assert (collection_dir / f"{coin.id:06d} - {kind}.jpg").read_bytes() == b"second"
 
 
 def test_invalid_image_format_is_rejected(
@@ -307,7 +318,8 @@ def test_existing_additional_filename_cannot_be_overwritten(
     coin: Coin,
     image_dir: Path,
 ) -> None:
-    target = image_dir / f"{coin.id:06d} - 01.jpg"
+    collection_dir = collection_image_dir(image_dir, coin)
+    target = collection_dir / f"{coin.id:06d} - 01.jpg"
     target.write_bytes(b"existing")
 
     response = upload_image(client, coin.id, "additional", b"new")
