@@ -1,13 +1,13 @@
 from collections.abc import Generator
 from pathlib import Path
 
-import coin_catalog.coin_move as coin_move
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from coin_catalog import coin_move
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import (
@@ -195,9 +195,7 @@ def test_move_coin_recreates_coin_images_and_preserves_data(
     assert moved["description"] == "Coin to move"
 
     new_id = moved["id"]
-    target_dir = image_dir / (
-        f"collection-{reference_data['target_collection_id']:03d}"
-    )
+    target_dir = image_dir / f"collection-{reference_data['target_collection_id']:03d}"
     assert (target_dir / f"{new_id:06d} - avers.jpg").read_bytes() == b"avers-data"
     assert (target_dir / f"{new_id:06d} - rewers.jpg").read_bytes() == b"rewers-data"
     assert (target_dir / f"{new_id:06d} - 01.jpg").read_bytes() == b"additional-data"
@@ -253,9 +251,7 @@ def test_move_coin_rejects_target_filename_collision(
     )
 
     next_id = (session.scalar(select(func.max(Coin.id))) or 0) + 1
-    target_dir = image_dir / (
-        f"collection-{reference_data['target_collection_id']:03d}"
-    )
+    target_dir = image_dir / f"collection-{reference_data['target_collection_id']:03d}"
     target_dir.mkdir(parents=True, exist_ok=True)
     collision = target_dir / f"{next_id:06d} - avers.jpg"
     collision.write_bytes(b"existing")
@@ -270,11 +266,7 @@ def test_move_coin_rejects_target_filename_collision(
     assert session.get(Coin, coin.id) is not None
     assert collision.read_bytes() == b"existing"
 
-    source_file = (
-        image_dir
-        / f"collection-{coin.collection_id:03d}"
-        / coin.images[0].filename
-    )
+    source_file = image_dir / f"collection-{coin.collection_id:03d}" / coin.images[0].filename
     assert source_file.read_bytes() == b"avers-data"
 
 
@@ -311,7 +303,7 @@ def test_move_coin_rolls_back_database_and_filesystem_on_copy_failure(
         calls += 1
         if calls == 2:
             raise OSError("simulated copy failure")
-        return original_copy2(source, target)
+        return str(original_copy2(source, target))
 
     monkeypatch.setattr(coin_move.shutil, "copy2", failing_copy2)
 
@@ -328,9 +320,7 @@ def test_move_coin_rolls_back_database_and_filesystem_on_copy_failure(
     assert (source_dir / f"{coin.id:06d} - avers.jpg").read_bytes() == b"avers-data"
     assert (source_dir / f"{coin.id:06d} - rewers.jpg").read_bytes() == b"rewers-data"
 
-    target_dir = image_dir / (
-        f"collection-{reference_data['target_collection_id']:03d}"
-    )
+    target_dir = image_dir / f"collection-{reference_data['target_collection_id']:03d}"
     assert list(target_dir.glob("*.jpg")) == []
     assert list(target_dir.glob(".*.tmp")) == []
 
