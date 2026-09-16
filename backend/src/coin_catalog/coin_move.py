@@ -111,7 +111,9 @@ def move_coin(
         target_filenames = [target.name for _, target in image_moves]
 
         existing_db_filename = session.scalar(
-            select(CoinImage.id).where(CoinImage.filename.in_(target_filenames)).limit(1),
+            select(CoinImage.id)
+            .where(CoinImage.filename.in_(target_filenames))
+            .limit(1),
         )
         if existing_db_filename is not None:
             raise HTTPException(
