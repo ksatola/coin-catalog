@@ -97,12 +97,26 @@ def test_collection_has_expected_columns_and_unique_name() -> None:
         "description",
         "created_at",
         "updated_at",
+        "coin_count",
+        "archived_coin_count",
+        "image_count",
+        "file_size_bytes",
+        "category_count",
+        "coins_without_images_count",
+        "last_modified_at",
     }
     assert table.c.name.nullable is False
     assert table.c.name.unique is True
     assert table.c.description.nullable is True
     assert table.c.created_at.nullable is False
     assert table.c.updated_at.nullable is False
+    assert table.c.coin_count.nullable is False
+    assert table.c.archived_coin_count.nullable is False
+    assert table.c.image_count.nullable is False
+    assert table.c.file_size_bytes.nullable is False
+    assert table.c.category_count.nullable is False
+    assert table.c.coins_without_images_count.nullable is False
+    assert table.c.last_modified_at.nullable is False
 
 
 def test_collection_can_be_empty(session: Session) -> None:
@@ -237,12 +251,14 @@ def test_coin_image_has_expected_columns_and_kind_constraint() -> None:
         "kind",
         "sort_order",
         "created_at",
+        "file_size_bytes",
     }
     assert table.c.coin_id.nullable is False
     assert table.c.filename.nullable is False
     assert table.c.filename.unique is True
     assert table.c.kind.nullable is False
     assert table.c.sort_order.nullable is False
+    assert table.c.file_size_bytes.nullable is False
     assert any(
         "kind IN ('avers', 'rewers', 'additional')" in str(constraint.sqltext)
         for constraint in table.constraints
