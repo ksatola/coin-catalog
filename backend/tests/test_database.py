@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from coin_catalog.database import Base
-from coin_catalog.models import Coin, Country, Denomination, Era
+from coin_catalog.models import Collection, Coin, Country, Denomination, Era
 
 
 @pytest.fixture
@@ -21,19 +21,33 @@ def session() -> Generator[Session]:
         engine.dispose()
 
 
+def make_collection(session: Session) -> Collection:
+    collection = Collection(name="Test Collection")
+    session.add(collection)
+    session.flush()
+    return collection
+
+
+def make_coin_reference_data(session: Session) -> tuple[Collection, Country, Denomination, Era]:
+    collection = make_collection(session)
+    country = Country(name="Test Country")
+    denomination = Denomination(name="Test Denomination")
+    era = Era(name="CE")
+    session.add_all([country, denomination, era])
+    session.flush()
+    return collection, country, denomination, era
+
+
 def test_database_session(session: Session) -> None:
     result = session.execute(text("SELECT 1"))
     assert result.scalar_one() == 1
 
 
 def test_create_coin_with_required_data(session: Session) -> None:
-    country = Country(name="Test Country")
-    denomination = Denomination(name="Test Denomination")
-    era = Era(name="CE")
-    session.add_all([country, denomination, era])
-    session.flush()
+    collection, country, denomination, era = make_coin_reference_data(session)
 
     coin = Coin(
+        collection=collection,
         country=country,
         denomination=denomination,
         from_year=1900,
@@ -45,6 +59,7 @@ def test_create_coin_with_required_data(session: Session) -> None:
     session.commit()
 
     assert coin.id is not None
+    assert coin.collection is collection
     assert coin.is_deleted is False
     assert coin.has_video is False
     assert coin.created_at is not None
@@ -54,13 +69,10 @@ def test_create_coin_with_required_data(session: Session) -> None:
 def test_identical_physical_coins_can_be_stored_separately(
     session: Session,
 ) -> None:
-    country = Country(name="Test Country")
-    denomination = Denomination(name="Test Denomination")
-    era = Era(name="CE")
-    session.add_all([country, denomination, era])
-    session.flush()
+    collection, country, denomination, era = make_coin_reference_data(session)
 
     first_coin = Coin(
+        collection=collection,
         country=country,
         denomination=denomination,
         from_year=1900,
@@ -69,6 +81,7 @@ def test_identical_physical_coins_can_be_stored_separately(
         to_era=era,
     )
     second_coin = Coin(
+        collection=collection,
         country=country,
         denomination=denomination,
         from_year=1900,
@@ -83,13 +96,10 @@ def test_identical_physical_coins_can_be_stored_separately(
 
 
 def test_coin_relationships_are_available(session: Session) -> None:
-    country = Country(name="Test Country")
-    denomination = Denomination(name="Test Denomination")
-    era = Era(name="CE")
-    session.add_all([country, denomination, era])
-    session.flush()
+    collection, country, denomination, era = make_coin_reference_data(session)
 
     coin = Coin(
+        collection=collection,
         country=country,
         denomination=denomination,
         from_year=100,
@@ -101,6 +111,7 @@ def test_coin_relationships_are_available(session: Session) -> None:
     session.commit()
     session.refresh(coin)
 
+    assert coin.collection is collection
     assert coin.country is country
     assert coin.denomination is denomination
     assert coin.from_era is era
@@ -108,13 +119,10 @@ def test_coin_relationships_are_available(session: Session) -> None:
 
 
 def test_coin_optional_fields_can_be_empty(session: Session) -> None:
-    country = Country(name="Test Country")
-    denomination = Denomination(name="Test Denomination")
-    era = Era(name="CE")
-    session.add_all([country, denomination, era])
-    session.flush()
+    collection, country, denomination, era = make_coin_reference_data(session)
 
     coin = Coin(
+        collection=collection,
         country=country,
         denomination=denomination,
         from_year=2000,
@@ -139,13 +147,10 @@ def test_coin_optional_fields_can_be_empty(session: Session) -> None:
 def test_coin_can_be_marked_deleted_and_restored(
     session: Session,
 ) -> None:
-    country = Country(name="Test Country")
-    denomination = Denomination(name="Test Denomination")
-    era = Era(name="CE")
-    session.add_all([country, denomination, era])
-    session.flush()
+    collection, country, denomination, era = make_coin_reference_data(session)
 
     coin = Coin(
+        collection=collection,
         country=country,
         denomination=denomination,
         from_year=1900,
