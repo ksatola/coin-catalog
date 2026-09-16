@@ -29,14 +29,35 @@ def test_collections_migration_upgrade_and_downgrade(
             )
         )
 
-    command.upgrade(config, "b1c2d3e4f5a6")
+    command.upgrade(config, "c3d4e5f6a7b8")
 
     inspector = inspect(engine)
     assert "collection" in inspector.get_table_names()
-    columns = {column["name"]: column for column in inspector.get_columns("coin")}
-    assert "collection_id" in columns
-    assert columns["collection_id"]["nullable"] is False
-    assert columns["collection_id"]["type"].__class__.__name__ == "INTEGER"
+    collection_columns = {
+        column["name"]: column for column in inspector.get_columns("collection")
+    }
+    for column_name in {
+        "coin_count",
+        "archived_coin_count",
+        "image_count",
+        "file_size_bytes",
+        "category_count",
+        "coins_without_images_count",
+        "last_modified_at",
+    }:
+        assert column_name in collection_columns
+    assert collection_columns["last_modified_at"]["nullable"] is False
+
+    coin_columns = {column["name"]: column for column in inspector.get_columns("coin")}
+    assert "collection_id" in coin_columns
+    assert coin_columns["collection_id"]["nullable"] is False
+    assert coin_columns["collection_id"]["type"].__class__.__name__ == "INTEGER"
+
+    image_columns = {
+        column["name"]: column for column in inspector.get_columns("coin_image")
+    }
+    assert "file_size_bytes" in image_columns
+    assert image_columns["file_size_bytes"]["nullable"] is False
 
     foreign_keys = inspector.get_foreign_keys("coin")
     collection_fk = next(
@@ -50,9 +71,19 @@ def test_collections_migration_upgrade_and_downgrade(
 
     with engine.connect() as connection:
         collection = connection.execute(
-            text("SELECT id, name FROM collection WHERE name = 'Default Collection'")
+            text(
+                "SELECT id, name, coin_count, archived_coin_count, image_count, "
+                "file_size_bytes, category_count, coins_without_images_count "
+                "FROM collection WHERE name = 'Default Collection'"
+            )
         ).one()
         assert collection.name == "Default Collection"
+        assert collection.coin_count == 1
+        assert collection.archived_coin_count == 0
+        assert collection.image_count == 0
+        assert collection.file_size_bytes == 0
+        assert collection.category_count == 0
+        assert collection.coins_without_images_count == 1
         assert (
             connection.execute(
                 text("SELECT collection_id FROM coin WHERE id = 1")

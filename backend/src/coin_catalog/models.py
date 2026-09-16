@@ -105,6 +105,21 @@ class Collection(Base):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
+    coin_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    archived_coin_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    image_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    category_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    coins_without_images_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    last_modified_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
 
     coins: Mapped[list[Coin]] = relationship(back_populates="collection")
 
@@ -189,6 +204,7 @@ class CoinImage(Base):
     filename: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     kind: Mapped[str] = mapped_column(Text, nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,

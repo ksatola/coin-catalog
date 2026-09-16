@@ -1,8 +1,11 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from coin_catalog.coin_move import move_coin
 from coin_catalog.coin_search import build_coin_query
+from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import get_db
 from coin_catalog.models import Coin, Collection
 from coin_catalog.schemas import CoinCreate, CoinMoveRequest, CoinResponse, CoinUpdate
@@ -31,10 +34,12 @@ def create_coin(
     coin_data: CoinCreate,
     session: Session = Depends(get_db),
 ) -> Coin:
-    get_collection_or_404(coin_data.collection_id, session)
+    collection = get_collection_or_404(coin_data.collection_id, session)
 
     coin = Coin(**coin_data.model_dump())
     session.add(coin)
+    session.flush()
+    recalculate_collection_stats(collection, session)
     session.commit()
     session.refresh(coin)
     return coin
@@ -145,7 +150,7 @@ def update_coin(
             detail="Coin not found",
         )
 
-    get_collection_or_404(coin_data.collection_id, session)
+    collection = get_collection_or_404(coin_data.collection_id, session)
 
     if coin_data.collection_id != coin.collection_id:
         raise HTTPException(
@@ -156,6 +161,7 @@ def update_coin(
     for field, value in coin_data.model_dump().items():
         setattr(coin, field, value)
 
+    recalculate_collection_stats(collection, session, modified_at=datetime.now(UTC))
     session.commit()
     session.refresh(coin)
     return coin
@@ -184,6 +190,8 @@ def archive_coin(
         )
 
     coin.is_deleted = True
+    collection = get_collection_or_404(coin.collection_id, session)
+    recalculate_collection_stats(collection, session, modified_at=datetime.now(UTC))
     session.commit()
     session.refresh(coin)
     return coin
@@ -203,6 +211,8 @@ def restore_coin(
         )
 
     coin.is_deleted = False
+    collection = get_collection_or_404(coin.collection_id, session)
+    recalculate_collection_stats(collection, session, modified_at=datetime.now(UTC))
     session.commit()
     session.refresh(coin)
     return coin

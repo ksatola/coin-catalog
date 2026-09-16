@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from coin_catalog import coin_move
+from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import (
@@ -140,6 +141,7 @@ def create_image(
         filename=filename,
         kind=kind,
         sort_order=sort_order,
+        file_size_bytes=len(content),
     )
     session.add(image)
     session.commit()
@@ -179,6 +181,20 @@ def test_move_coin_recreates_coin_images_and_preserves_data(
         content=b"additional-data",
     )
 
+    source_collection = session.get(
+        Collection,
+        reference_data["source_collection_id"],
+    )
+    target_collection = session.get(
+        Collection,
+        reference_data["target_collection_id"],
+    )
+    assert source_collection is not None
+    assert target_collection is not None
+    recalculate_collection_stats(source_collection, session)
+    recalculate_collection_stats(target_collection, session)
+    session.commit()
+
     old_id = coin.id
     source_dir = image_dir / f"collection-{coin.collection_id:03d}"
 
@@ -214,6 +230,21 @@ def test_move_coin_recreates_coin_images_and_preserves_data(
     ]
     assert session.scalar(select(func.count()).select_from(CoinImage)) == 3
 
+    session.refresh(source_collection)
+    session.refresh(target_collection)
+    assert source_collection.coin_count == 0
+    assert source_collection.image_count == 0
+    assert source_collection.file_size_bytes == 0
+    assert source_collection.category_count == 0
+    assert source_collection.coins_without_images_count == 0
+    assert target_collection.coin_count == 1
+    assert target_collection.image_count == 3
+    assert target_collection.file_size_bytes == len(b"avers-data") + len(
+        b"rewers-data"
+    ) + len(b"additional-data")
+    assert target_collection.category_count == 1
+    assert target_collection.coins_without_images_count == 0
+
 
 def test_move_coin_without_images_updates_only_database(
     client: TestClient,
@@ -232,6 +263,16 @@ def test_move_coin_without_images_updates_only_database(
     assert moved["id"] != coin.id
     assert moved["collection_id"] == reference_data["target_collection_id"]
     assert session.get(Coin, coin.id) is None
+
+    source = session.get(Collection, reference_data["source_collection_id"])
+    target = session.get(Collection, reference_data["target_collection_id"])
+    assert source is not None
+    assert target is not None
+    assert source.coin_count == 0
+    assert target.coin_count == 1
+    assert target.image_count == 0
+    assert target.coins_without_images_count == 1
+    assert target.category_count == 1
 
 
 def test_move_coin_rejects_target_filename_collision(
@@ -297,6 +338,32 @@ def test_move_coin_rolls_back_database_and_filesystem_on_copy_failure(
         content=b"rewers-data",
     )
 
+    source_collection = session.get(
+        Collection,
+        reference_data["source_collection_id"],
+    )
+    target_collection = session.get(
+        Collection,
+        reference_data["target_collection_id"],
+    )
+    assert source_collection is not None
+    assert target_collection is not None
+    recalculate_collection_stats(source_collection, session)
+    recalculate_collection_stats(target_collection, session)
+    session.commit()
+    original_stats = (
+        source_collection.coin_count,
+        source_collection.image_count,
+        source_collection.file_size_bytes,
+        source_collection.category_count,
+        source_collection.coins_without_images_count,
+        target_collection.coin_count,
+        target_collection.image_count,
+        target_collection.file_size_bytes,
+        target_collection.category_count,
+        target_collection.coins_without_images_count,
+    )
+
     original_copy2 = coin_move.shutil.copy2
     calls = 0
 
@@ -317,6 +384,21 @@ def test_move_coin_rolls_back_database_and_filesystem_on_copy_failure(
 
     assert session.get(Coin, coin.id) is not None
     assert session.scalar(select(func.count()).select_from(Coin)) == 1
+
+    session.refresh(source_collection)
+    session.refresh(target_collection)
+    assert (
+        source_collection.coin_count,
+        source_collection.image_count,
+        source_collection.file_size_bytes,
+        source_collection.category_count,
+        source_collection.coins_without_images_count,
+        target_collection.coin_count,
+        target_collection.image_count,
+        target_collection.file_size_bytes,
+        target_collection.category_count,
+        target_collection.coins_without_images_count,
+    ) == original_stats
 
     source_dir = image_dir / f"collection-{coin.collection_id:03d}"
     assert (source_dir / f"{coin.id:06d} - avers.jpg").read_bytes() == b"avers-data"

@@ -9,7 +9,17 @@ class CollectionCreate(BaseModel):
     description: str | None = None
 
 
-class CollectionResponse(CollectionCreate):
+class CollectionStatsResponse(BaseModel):
+    coin_count: int
+    archived_coin_count: int
+    image_count: int
+    file_size_bytes: int
+    category_count: int
+    coins_without_images_count: int
+    last_modified_at: datetime
+
+
+class CollectionResponse(CollectionCreate, CollectionStatsResponse):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -91,4 +101,5 @@ class CoinImageResponse(BaseModel):
     filename: str
     kind: str
     sort_order: int
+    file_size_bytes: int
     created_at: datetime

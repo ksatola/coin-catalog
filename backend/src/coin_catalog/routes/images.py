@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import get_db
 from coin_catalog.models import Coin, CoinImage
 from coin_catalog.schemas import CoinImageResponse
@@ -149,26 +150,40 @@ def upload_image(
             )
 
     data = upload.file.read()
+    previous_data = target.read_bytes() if target.exists() else None
     target.write_bytes(data)
 
-    if existing is not None:
-        existing.filename = filename
-        existing.sort_order = sort_order
-        session.commit()
-        session.refresh(existing)
-        response.status_code = status.HTTP_200_OK
-        return existing
+    try:
+        if existing is not None:
+            existing.filename = filename
+            existing.sort_order = sort_order
+            existing.file_size_bytes = len(data)
+            recalculate_collection_stats(coin.collection, session)
+            session.commit()
+            session.refresh(existing)
+            response.status_code = status.HTTP_200_OK
+            return existing
 
-    image = CoinImage(
-        coin_id=coin_id,
-        filename=filename,
-        kind=kind,
-        sort_order=sort_order,
-    )
-    session.add(image)
-    session.commit()
-    session.refresh(image)
-    return image
+        image = CoinImage(
+            coin_id=coin_id,
+            filename=filename,
+            kind=kind,
+            sort_order=sort_order,
+            file_size_bytes=len(data),
+        )
+        session.add(image)
+        session.flush()
+        recalculate_collection_stats(coin.collection, session)
+        session.commit()
+        session.refresh(image)
+        return image
+    except Exception:
+        session.rollback()
+        if previous_data is None:
+            target.unlink(missing_ok=True)
+        else:
+            target.write_bytes(previous_data)
+        raise
 
 
 @router.delete("/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -199,4 +214,5 @@ def delete_image(
     if target.exists():
         target.unlink()
     session.delete(image)
+    recalculate_collection_stats(coin.collection, session)
     session.commit()

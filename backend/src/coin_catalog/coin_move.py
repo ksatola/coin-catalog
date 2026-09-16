@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.models import Coin, CoinImage, Collection
 from coin_catalog.routes.images import collection_images_dir
 
@@ -46,20 +47,22 @@ def move_coin(
             detail="Coin not found",
         )
 
+    source_collection_id = source_coin.collection_id
+    source_collection = session.get(Collection, source_collection_id)
     target_collection = session.get(Collection, target_collection_id)
-    if target_collection is None:
+    if target_collection is None or source_collection is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Collection not found",
         )
 
-    if source_coin.collection_id == target_collection_id:
+    if source_collection_id == target_collection_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Coin already belongs to this collection",
         )
 
-    source_dir = collection_images_dir(source_coin.collection_id)
+    source_dir = collection_images_dir(source_collection_id)
     source_images = list(source_coin.images)
     source_files: list[tuple[CoinImage, Path]] = []
 
@@ -142,6 +145,7 @@ def move_coin(
                 filename=target.name,
                 kind=image.kind,
                 sort_order=image.sort_order,
+                file_size_bytes=image.file_size_bytes,
             )
             for image, (_, target) in zip(source_images, image_moves, strict=True)
         ]
@@ -151,6 +155,8 @@ def move_coin(
             source.unlink()
 
         session.delete(source_coin)
+        recalculate_collection_stats(source_collection, session)
+        recalculate_collection_stats(target_collection, session)
         session.commit()
         session.refresh(new_coin)
         return new_coin
