@@ -4,6 +4,19 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class CollectionCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class CollectionResponse(CollectionCreate):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class CoinCreate(BaseModel):
     collection_id: int
     collection_number: str | None = None
