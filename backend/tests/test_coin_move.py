@@ -315,12 +315,12 @@ def test_move_coin_rolls_back_database_and_filesystem_on_copy_failure(
 
     monkeypatch.setattr(coin_move.shutil, "copy2", failing_copy2)
 
-    response = client.post(
-        f"/coins/{coin.id}/move",
-        json={"target_collection_id": reference_data["target_collection_id"]},
-    )
+    with pytest.raises(OSError, match="simulated copy failure"):
+        client.post(
+            f"/coins/{coin.id}/move",
+            json={"target_collection_id": reference_data["target_collection_id"]},
+        )
 
-    assert response.status_code == 500
     assert session.get(Coin, coin.id) is not None
     assert session.scalar(select(func.count()).select_from(Coin)) == 1
 
