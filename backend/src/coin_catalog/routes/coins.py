@@ -3,10 +3,22 @@ from sqlalchemy.orm import Session
 
 from coin_catalog.coin_search import build_coin_query
 from coin_catalog.database import get_db
-from coin_catalog.models import Coin
+from coin_catalog.models import Coin, Collection
 from coin_catalog.schemas import CoinCreate, CoinResponse, CoinUpdate
 
 router = APIRouter(prefix="/coins", tags=["coins"])
+
+
+def get_collection_or_404(collection_id: int, session: Session) -> Collection:
+    collection = session.get(Collection, collection_id)
+
+    if collection is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Collection not found",
+        )
+
+    return collection
 
 
 @router.post(
@@ -18,6 +30,8 @@ def create_coin(
     coin_data: CoinCreate,
     session: Session = Depends(get_db),
 ) -> Coin:
+    get_collection_or_404(coin_data.collection_id, session)
+
     coin = Coin(**coin_data.model_dump())
     session.add(coin)
     session.commit()
@@ -126,6 +140,14 @@ def update_coin(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Coin not found",
+        )
+
+    get_collection_or_404(coin_data.collection_id, session)
+
+    if coin_data.collection_id != coin.collection_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Coin collection must be changed through the move operation",
         )
 
     for field, value in coin_data.model_dump().items():
