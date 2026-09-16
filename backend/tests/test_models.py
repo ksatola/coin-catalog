@@ -1,7 +1,8 @@
 from collections.abc import Iterator
+from typing import cast
 
 import pytest
-from sqlalchemy import create_engine, event, inspect
+from sqlalchemy import Table, create_engine, event, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -207,7 +208,7 @@ def test_coin_collection_relationship_works(session: Session) -> None:
 
 
 def test_category_relation_has_composite_primary_key_and_self_relation_check() -> None:
-    table = CategoryRelation.__table__
+    table = cast(Table, CategoryRelation.__table__)
 
     assert set(table.primary_key.columns.keys()) == {"parent_id", "child_id"}
     assert len(table.constraints) >= 1
@@ -219,7 +220,7 @@ def test_category_relation_has_composite_primary_key_and_self_relation_check() -
 
 
 def test_coin_category_has_composite_primary_key() -> None:
-    table = CoinCategory.__table__
+    table = cast(Table, CoinCategory.__table__)
 
     assert set(table.primary_key.columns.keys()) == {"coin_id", "category_id"}
     foreign_keys = {foreign_key.target_fullname for foreign_key in table.foreign_keys}
@@ -227,7 +228,7 @@ def test_coin_category_has_composite_primary_key() -> None:
 
 
 def test_coin_image_has_expected_columns_and_kind_constraint() -> None:
-    table = CoinImage.__table__
+    table = cast(Table, CoinImage.__table__)
 
     assert set(table.columns.keys()) == {
         "id",
@@ -340,7 +341,7 @@ def test_new_tables_have_expected_foreign_keys() -> None:
         )
         assert collection_fk["constrained_columns"] == ["collection_id"]
         assert collection_fk["referred_columns"] == ["id"]
-        assert collection_fk["options"]["ondelete"] == "RESTRICT"
+        assert collection_fk.get("options", {}).get("ondelete") == "RESTRICT"
 
         category_relation_fks = {
             foreign_key["referred_table"]
