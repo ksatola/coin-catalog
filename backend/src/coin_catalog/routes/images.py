@@ -107,10 +107,10 @@ def get_image_file(
 @router.post("", response_model=CoinImageResponse, status_code=status.HTTP_201_CREATED)
 def upload_image(
     coin_id: int,
+    response: Response,
     upload: UploadFile = File(...),
     kind: str = Query(..., pattern="^(avers|rewers|additional)$"),
     replace: bool = Query(False),
-    response: Response = None,
     session: Session = Depends(get_db),
 ) -> CoinImage:
     coin = get_coin(coin_id, session)
