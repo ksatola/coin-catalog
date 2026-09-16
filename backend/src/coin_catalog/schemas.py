@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class CoinCreate(BaseModel):
+    collection_id: int
     collection_number: str | None = None
     country_id: int
     issuer_id: int | None = None
