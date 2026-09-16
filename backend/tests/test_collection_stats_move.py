@@ -83,8 +83,6 @@ def test_move_rolls_back_stats_when_stats_update_fails(
         from_year=1900,
         from_era_id=era.id,
         to_year=1900,
-        from_era_id=era.id,
-        to_year=1900,
         to_era_id=era.id,
         categories=[category],
     )
