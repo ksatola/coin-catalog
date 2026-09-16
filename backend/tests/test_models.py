@@ -2,7 +2,7 @@ from collections.abc import Iterator
 from typing import cast
 
 import pytest
-from sqlalchemy import Table, create_engine, event, inspect
+from sqlalchemy import CheckConstraint, Table, create_engine, event, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -215,7 +215,7 @@ def test_category_relation_has_composite_primary_key_and_self_relation_check() -
     assert any(
         "parent_id <> child_id" in str(constraint.sqltext)
         for constraint in table.constraints
-        if hasattr(constraint, "sqltext")
+        if isinstance(constraint, CheckConstraint)
     )
 
 
@@ -246,7 +246,7 @@ def test_coin_image_has_expected_columns_and_kind_constraint() -> None:
     assert any(
         "kind IN ('avers', 'rewers', 'additional')" in str(constraint.sqltext)
         for constraint in table.constraints
-        if hasattr(constraint, "sqltext")
+        if isinstance(constraint, CheckConstraint)
     )
 
 
