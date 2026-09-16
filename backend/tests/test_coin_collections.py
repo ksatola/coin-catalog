@@ -1,5 +1,6 @@
 from collections.abc import Generator
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -23,6 +24,7 @@ def create_test_coin_payload(reference_data: dict[str, int]) -> dict[str, int | 
     }
 
 
+@pytest.fixture
 def test_session() -> Generator[Session]:
     engine = create_engine(
         "sqlite://",
@@ -39,11 +41,10 @@ def test_session() -> Generator[Session]:
         engine.dispose()
 
 
-def test_client(test_session: Generator[Session]) -> Generator[TestClient]:
-    session = next(test_session)
-
+@pytest.fixture
+def test_client(test_session: Session) -> Generator[TestClient]:
     def override_get_db() -> Generator[Session]:
-        yield session
+        yield test_session
 
     app.dependency_overrides[get_db] = override_get_db
 
@@ -51,10 +52,6 @@ def test_client(test_session: Generator[Session]) -> Generator[TestClient]:
         yield TestClient(app)
     finally:
         app.dependency_overrides.clear()
-        try:
-            next(test_session)
-        except StopIteration:
-            pass
 
 
 def seed_reference_data(session: Session) -> dict[str, int]:
@@ -95,13 +92,12 @@ def test_create_coin_rejects_missing_collection(test_client: TestClient) -> None
 
 def test_update_coin_rejects_missing_collection(
     test_client: TestClient,
-    test_session: Generator[Session],
+    test_session: Session,
 ) -> None:
-    session = next(test_session)
-    reference_data = seed_reference_data(session)
+    reference_data = seed_reference_data(test_session)
     coin = Coin(**create_test_coin_payload(reference_data))
-    session.add(coin)
-    session.commit()
+    test_session.add(coin)
+    test_session.commit()
 
     payload = create_test_coin_payload(reference_data)
     payload["collection_id"] = 999999
@@ -114,13 +110,12 @@ def test_update_coin_rejects_missing_collection(
 
 def test_update_coin_cannot_change_collection_directly(
     test_client: TestClient,
-    test_session: Generator[Session],
+    test_session: Session,
 ) -> None:
-    session = next(test_session)
-    reference_data = seed_reference_data(session)
+    reference_data = seed_reference_data(test_session)
     coin = Coin(**create_test_coin_payload(reference_data))
-    session.add(coin)
-    session.commit()
+    test_session.add(coin)
+    test_session.commit()
     original_coin_id = coin.id
 
     payload = create_test_coin_payload(reference_data)
@@ -133,6 +128,6 @@ def test_update_coin_cannot_change_collection_directly(
         "Coin collection must be changed through the move operation"
     )
 
-    session.refresh(coin)
+    test_session.refresh(coin)
     assert coin.id == original_coin_id
     assert coin.collection_id == reference_data["collection_id"]
