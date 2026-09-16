@@ -41,6 +41,10 @@ class CoinUpdate(CoinCreate):
     pass
 
 
+class CoinMoveRequest(BaseModel):
+    target_collection_id: int
+
+
 class CoinResponse(CoinCreate):
     model_config = ConfigDict(from_attributes=True)
 
