@@ -65,7 +65,7 @@ def upgrade() -> None:
     )
 
     bind = op.get_bind()
-    images_dir = Path(__file__).resolve().parents[2] / "images"
+    images_dir = Path(__file__).resolve().parents[3] / "images"
     image_rows = bind.execute(
         sa.text(
             "SELECT ci.id, c.collection_id, ci.filename "
