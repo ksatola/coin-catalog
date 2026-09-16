@@ -5,6 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from coin_catalog.models import Coin, CoinImage, Collection
@@ -107,6 +108,16 @@ def move_coin(
             (source, target_dir / moved_image_filename(new_coin.id, image))
             for image, source in source_files
         ]
+        target_filenames = [target.name for _, target in image_moves]
+
+        existing_db_filename = session.scalar(
+            select(CoinImage.id).where(CoinImage.filename.in_(target_filenames)).limit(1),
+        )
+        if existing_db_filename is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Target image filename already exists in the database",
+            )
 
         target_dir.mkdir(parents=True, exist_ok=True)
         for _, target in image_moves:
