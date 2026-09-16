@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from coin_catalog.coin_move import move_coin
 from coin_catalog.coin_search import build_coin_query
 from coin_catalog.database import get_db
 from coin_catalog.models import Coin, Collection
-from coin_catalog.schemas import CoinCreate, CoinResponse, CoinUpdate
+from coin_catalog.schemas import CoinCreate, CoinMoveRequest, CoinResponse, CoinUpdate
 
 router = APIRouter(prefix="/coins", tags=["coins"])
 
@@ -158,6 +159,15 @@ def update_coin(
     session.commit()
     session.refresh(coin)
     return coin
+
+
+@router.post("/{coin_id}/move", response_model=CoinResponse)
+def move_coin_endpoint(
+    coin_id: int,
+    move_data: CoinMoveRequest,
+    session: Session = Depends(get_db),
+) -> Coin:
+    return move_coin(coin_id, move_data.target_collection_id, session)
 
 
 @router.post("/{coin_id}/archive", response_model=CoinResponse)
