@@ -69,7 +69,7 @@ class State(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list[Coin]] = relationship(back_populates="state")
+    coins: Mapped[list[Coin]] = relationship(back_populates="coins")
 
 
 class Era(Base):
@@ -284,7 +284,7 @@ class Coin(Base):
     )
     mint: Mapped[Mint | None] = relationship(back_populates="coins")
     material: Mapped[Material | None] = relationship(back_populates="coins")
-    state: Mapped[State | None] = relationship(back_populates="state")
+    state: Mapped[State | None] = relationship(back_populates="coins")
     categories: Mapped[list[Category]] = relationship(
         "Category",
         secondary="coin_category",
