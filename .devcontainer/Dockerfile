@@ -39,6 +39,11 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /workspace
+WORKDIR /workspaces/coin-catalog/backend
+
+COPY backend/pyproject.toml backend/uv.lock ./
+RUN uv sync --frozen
+
+WORKDIR /workspaces/coin-catalog
 
 CMD ["sleep", "infinity"]
