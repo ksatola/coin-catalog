@@ -36,7 +36,7 @@ def test_collections_migration_upgrade_and_downgrade(
     collection_columns = {
         column["name"]: column for column in inspector.get_columns("collection")
     }
-    for column_name in {
+    for column_name in (
         "coin_count",
         "archived_coin_count",
         "image_count",
@@ -44,7 +44,7 @@ def test_collections_migration_upgrade_and_downgrade(
         "category_count",
         "coins_without_images_count",
         "last_modified_at",
-    }:
+    ):
         assert column_name in collection_columns
     assert collection_columns["last_modified_at"]["nullable"] is False
 
