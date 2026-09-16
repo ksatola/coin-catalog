@@ -25,7 +25,6 @@ def upgrade() -> None:
     )
 
     bind = op.get_bind()
-    now = sa.func.current_timestamp()
     bind.execute(
         sa.text(
             "INSERT INTO collection (name, description, created_at, updated_at) "
