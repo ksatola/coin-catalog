@@ -75,6 +75,7 @@ def move_coin(
 
     image_moves: list[tuple[Path, Path]] = []
     temp_targets: list[Path] = []
+    created_targets: set[Path] = set()
 
     try:
         new_coin = Coin(
@@ -135,6 +136,7 @@ def move_coin(
             _copy_to_target(source, temp_target)
             temp_target.replace(target)
             temp_targets.remove(temp_target)
+            created_targets.add(target)
 
         new_coin.images = [
             CoinImage(
@@ -158,7 +160,7 @@ def move_coin(
         for temp_target in temp_targets:
             temp_target.unlink(missing_ok=True)
         for source, target in image_moves:
-            if target.exists():
+            if target in created_targets and target.exists():
                 _restore_source(source, target)
         raise
     except Exception:
@@ -166,6 +168,6 @@ def move_coin(
         for temp_target in temp_targets:
             temp_target.unlink(missing_ok=True)
         for source, target in image_moves:
-            if target.exists():
+            if target in created_targets and target.exists():
                 _restore_source(source, target)
         raise
