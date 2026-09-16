@@ -34,6 +34,10 @@ def get_coin(coin_id: int, session: Session) -> Coin:
     return coin
 
 
+def collection_images_dir(collection_id: int) -> Path:
+    return IMAGES_DIR / f"collection-{collection_id:03d}"
+
+
 def validate_jpeg(upload: UploadFile) -> None:
     filename = (upload.filename or "").lower()
     content_type = (upload.content_type or "").lower()
@@ -77,7 +81,7 @@ def get_image_file(
     image_id: int,
     session: Session = Depends(get_db),
 ) -> FileResponse:
-    get_coin(coin_id, session)
+    coin = get_coin(coin_id, session)
     image = session.scalar(
         select(CoinImage).where(
             CoinImage.id == image_id,
@@ -90,7 +94,7 @@ def get_image_file(
             detail="Image not found",
         )
 
-    target = IMAGES_DIR / image.filename
+    target = collection_images_dir(coin.collection_id) / image.filename
     if not target.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -115,7 +119,8 @@ def upload_image(
 ) -> CoinImage:
     coin = get_coin(coin_id, session)
     validate_jpeg(upload)
-    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    image_dir = collection_images_dir(coin.collection_id)
+    image_dir.mkdir(parents=True, exist_ok=True)
 
     existing: CoinImage | None = None
     if kind in PRIMARY_KINDS:
@@ -126,7 +131,7 @@ def upload_image(
             )
         )
         filename = primary_filename(coin_id, kind)
-        target = IMAGES_DIR / filename
+        target = image_dir / filename
         if (existing is not None or target.exists()) and not replace:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -136,7 +141,7 @@ def upload_image(
     else:
         sort_order = next_additional_order(coin)
         filename = f"{coin_id:06d} - {sort_order - 1:02d}.jpg"
-        target = IMAGES_DIR / filename
+        target = image_dir / filename
         if target.exists():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -172,7 +177,7 @@ def delete_image(
     image_id: int,
     session: Session = Depends(get_db),
 ) -> None:
-    get_coin(coin_id, session)
+    coin = get_coin(coin_id, session)
     image = session.scalar(
         select(CoinImage).where(
             CoinImage.id == image_id,
@@ -190,7 +195,7 @@ def delete_image(
             detail="Primary image must be replaced rather than deleted",
         )
 
-    target = IMAGES_DIR / image.filename
+    target = collection_images_dir(coin.collection_id) / image.filename
     if target.exists():
         target.unlink()
     session.delete(image)
