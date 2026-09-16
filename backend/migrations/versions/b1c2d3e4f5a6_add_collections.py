@@ -44,7 +44,9 @@ def upgrade() -> None:
     )
 
     with op.batch_alter_table("coin", recreate="always") as batch_op:
-        batch_op.alter_column("collection_id", existing_type=sa.Integer(), nullable=False)
+        batch_op.alter_column(
+            "collection_id", existing_type=sa.Integer(), nullable=False
+        )
         batch_op.create_foreign_key(
             "fk_coin_collection_id",
             "collection",
