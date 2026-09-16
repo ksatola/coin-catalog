@@ -1,6 +1,9 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import get_db
 from coin_catalog.models import Category, Coin
 from coin_catalog.routes.categories import get_category
@@ -41,6 +44,11 @@ def attach_category(
     category = get_category(category_id, session)
     if category not in coin.categories:
         coin.categories.append(category)
+        recalculate_collection_stats(
+            coin.collection,
+            session,
+            modified_at=datetime.now(UTC),
+        )
         session.commit()
         session.refresh(category)
     return category
@@ -60,4 +68,9 @@ def detach_category(
             detail="Category is not attached to coin",
         )
     coin.categories.remove(category)
+    recalculate_collection_stats(
+        coin.collection,
+        session,
+        modified_at=datetime.now(UTC),
+    )
     session.commit()
