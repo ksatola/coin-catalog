@@ -266,7 +266,9 @@ def test_move_coin_rejects_target_filename_collision(
     assert session.get(Coin, coin.id) is not None
     assert collision.read_bytes() == b"existing"
 
-    source_file = image_dir / f"collection-{coin.collection_id:03d}" / coin.images[0].filename
+    source_file = (
+        image_dir / f"collection-{coin.collection_id:03d}" / coin.images[0].filename
+    )
     assert source_file.read_bytes() == b"avers-data"
 
 

@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from coin_catalog.models import Coin, CoinImage, Collection
 from coin_catalog.routes.images import collection_images_dir
 
-
 PRIMARY_KINDS = {"avers", "rewers"}
 
 
