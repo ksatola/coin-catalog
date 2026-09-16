@@ -172,7 +172,9 @@ def test_primary_image_requires_explicit_replace(
     )
     assert replacement.status_code == 200
     assert (
-        image_dir / f"collection-{coin.collection_id:03d}" / f"{coin.id:06d} - avers.jpg"
+        image_dir
+        / f"collection-{coin.collection_id:03d}"
+        / f"{coin.id:06d} - avers.jpg"
     ).read_bytes() == b"second"
 
 

@@ -138,7 +138,9 @@ def test_upload_primary_images(
 
     collection_dir = collection_image_dir(image_dir, coin)
     assert (collection_dir / f"{coin.id:06d} - avers.jpg").read_bytes() == b"avers-data"
-    assert (collection_dir / f"{coin.id:06d} - rewers.jpg").read_bytes() == b"rewers-data"
+    assert (
+        collection_dir / f"{coin.id:06d} - rewers.jpg"
+    ).read_bytes() == b"rewers-data"
 
 
 def test_upload_additional_images_are_numbered(
