@@ -60,29 +60,22 @@ def move_coin(
         )
 
     source_dir = collection_images_dir(source_coin.collection_id)
-    target_dir = collection_images_dir(target_collection_id)
-    image_moves: list[tuple[Path, Path]] = []
+    source_images = list(source_coin.images)
+    source_files: list[tuple[CoinImage, Path]] = []
 
-    for image in source_coin.images:
+    for image in source_images:
         source = source_dir / image.filename
         if not source.exists():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Image file not found: {image.filename}",
             )
+        source_files.append((image, source))
 
-        target = target_dir / moved_image_filename(coin_id + 1, image)
-        image_moves.append((source, target))
+    image_moves: list[tuple[Path, Path]] = []
+    temp_targets: list[Path] = []
 
     try:
-        target_dir.mkdir(parents=True, exist_ok=True)
-        for _, target in image_moves:
-            if target.exists():
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=f"Image already exists: {target.name}",
-                )
-
         new_coin = Coin(
             collection_id=target_collection_id,
             collection_number=source_coin.collection_number,
@@ -109,10 +102,13 @@ def move_coin(
         session.add(new_coin)
         session.flush()
 
+        target_dir = collection_images_dir(target_collection_id)
         image_moves = [
             (source, target_dir / moved_image_filename(new_coin.id, image))
-            for image, (source, _) in zip(source_coin.images, image_moves, strict=True)
+            for image, source in source_files
         ]
+
+        target_dir.mkdir(parents=True, exist_ok=True)
         for _, target in image_moves:
             if target.exists():
                 raise HTTPException(
@@ -122,8 +118,10 @@ def move_coin(
 
         for source, target in image_moves:
             temp_target = target.with_name(f".{target.name}.{uuid4().hex}.tmp")
+            temp_targets.append(temp_target)
             _copy_to_target(source, temp_target)
             temp_target.replace(target)
+            temp_targets.remove(temp_target)
 
         new_coin.images = [
             CoinImage(
@@ -131,7 +129,7 @@ def move_coin(
                 kind=image.kind,
                 sort_order=image.sort_order,
             )
-            for image, (_, target) in zip(source_coin.images, image_moves, strict=True)
+            for image, (_, target) in zip(source_images, image_moves, strict=True)
         ]
         session.flush()
 
@@ -144,17 +142,16 @@ def move_coin(
         return new_coin
     except HTTPException:
         session.rollback()
-        for _, target in image_moves:
+        for temp_target in temp_targets:
+            temp_target.unlink(missing_ok=True)
+        for source, target in image_moves:
             if target.exists():
-                _restore_source(
-                    source=next(
-                        source for source, candidate in image_moves if candidate == target
-                    ),
-                    target=target,
-                )
+                _restore_source(source, target)
         raise
     except Exception:
         session.rollback()
+        for temp_target in temp_targets:
+            temp_target.unlink(missing_ok=True)
         for source, target in image_moves:
             if target.exists():
                 _restore_source(source, target)
