@@ -44,7 +44,7 @@ RUN apt-get update \
 WORKDIR /workspaces/coin-catalog/backend
 
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --frozen
+RUN uv sync --frozen --no-install-project
 
 WORKDIR /workspaces/coin-catalog
 
