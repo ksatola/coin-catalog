@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 
 import pytest
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, event, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -20,6 +20,13 @@ from coin_catalog.models import (
 )
 
 
+def enable_foreign_keys(dbapi_connection, connection_record) -> None:
+    del connection_record
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 @pytest.fixture
 def session() -> Iterator[Session]:
     engine = create_engine(
@@ -27,6 +34,7 @@ def session() -> Iterator[Session]:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    event.listen(engine, "connect", enable_foreign_keys)
     Base.metadata.create_all(engine)
     test_session = sessionmaker(bind=engine)()
 
@@ -157,25 +165,26 @@ def test_coin_collection_foreign_key_is_enforced(session: Session) -> None:
 
 
 def test_collection_with_coins_cannot_be_deleted(session: Session) -> None:
-    collection = make_collection(session)
-    make_coin(session)
-    coin = session.query(Coin).filter(Coin.collection_id == collection.id).first()
-    assert coin is None
+    collection = make_collection(session, "Collection With Coin")
+    country = Country(name="Test Country")
+    denomination = Denomination(name="Test Denomination")
+    era = Era(name="CE")
+    session.add_all([country, denomination, era])
+    session.flush()
 
-    collection_with_coin = make_collection(session, "Collection With Coin")
     coin = Coin(
-        collection=collection_with_coin,
-        country=Country(name="Second Country"),
-        denomination=Denomination(name="Second Denomination"),
+        collection=collection,
+        country=country,
+        denomination=denomination,
         from_year=1900,
-        from_era=Era(name="Second Era"),
+        from_era=era,
         to_year=1900,
-        to_era=Era(name="Second Era"),
+        to_era=era,
     )
     session.add(coin)
     session.commit()
 
-    session.delete(collection_with_coin)
+    session.delete(collection)
     with pytest.raises(IntegrityError):
         session.commit()
 
@@ -317,6 +326,7 @@ def test_new_tables_have_expected_foreign_keys() -> None:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    event.listen(engine, "connect", enable_foreign_keys)
     Base.metadata.create_all(engine)
 
     inspector = inspect(engine)
