@@ -11,10 +11,10 @@ from coin_catalog.main import app
 from coin_catalog.models import (
     Category,
     CategoryRelation,
-    Collection,
     Coin,
     CoinCategory,
     CoinImage,
+    Collection,
     Country,
     Denomination,
     Era,
@@ -60,7 +60,9 @@ def data(session: Session) -> dict[str, Coin | Category]:
     parent = Category(name="Polska")
     child = Category(name="Grosz")
     other = Category(name="Inne")
-    session.add_all([collection, country, denomination, era, root, parent, child, other])
+    session.add_all(
+        [collection, country, denomination, era, root, parent, child, other]
+    )
     session.flush()
 
     session.add_all(

@@ -53,9 +53,12 @@ def test_collections_migration_upgrade_and_downgrade(
             text("SELECT id, name FROM collection WHERE name = 'Default Collection'")
         ).one()
         assert collection.name == "Default Collection"
-        assert connection.execute(
-            text("SELECT collection_id FROM coin WHERE id = 1")
-        ).scalar_one() == collection.id
+        assert (
+            connection.execute(
+                text("SELECT collection_id FROM coin WHERE id = 1")
+            ).scalar_one()
+            == collection.id
+        )
 
     command.downgrade(config, "9c7e1a2b4d6f")
 

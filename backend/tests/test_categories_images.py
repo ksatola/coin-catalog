@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
-from coin_catalog.models import Category, Collection, Coin, Country, Denomination, Era
+from coin_catalog.models import Category, Coin, Collection, Country, Denomination, Era
 from coin_catalog.routes import images
 
 

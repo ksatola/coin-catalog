@@ -9,8 +9,8 @@ from sqlalchemy.pool import StaticPool
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import (
-    Collection,
     Coin,
+    Collection,
     Country,
     Denomination,
     Era,

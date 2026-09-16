@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from coin_catalog.database import Base
-from coin_catalog.models import Collection, Coin, Country, Denomination, Era
+from coin_catalog.models import Coin, Collection, Country, Denomination, Era
 
 
 @pytest.fixture
@@ -28,7 +28,9 @@ def make_collection(session: Session) -> Collection:
     return collection
 
 
-def make_coin_reference_data(session: Session) -> tuple[Collection, Country, Denomination, Era]:
+def make_coin_reference_data(
+    session: Session,
+) -> tuple[Collection, Country, Denomination, Era]:
     collection = make_collection(session)
     country = Country(name="Test Country")
     denomination = Denomination(name="Test Denomination")

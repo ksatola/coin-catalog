@@ -10,10 +10,10 @@ from coin_catalog.database import Base
 from coin_catalog.models import (
     Category,
     CategoryRelation,
-    Collection,
     Coin,
     CoinCategory,
     CoinImage,
+    Collection,
     Country,
     Denomination,
     Era,
