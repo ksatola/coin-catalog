@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from typing import cast
 
 import pytest
 from fastapi.testclient import TestClient
@@ -180,10 +181,10 @@ def test_search_matches_category_ancestors_and_exact_scope(
     client: TestClient,
     data: dict[str, Coin | Category],
 ) -> None:
-    root = data["root"]
-    parent = data["parent"]
-    child = data["child"]
-    coin = data["coin"]
+    root = cast(Category, data["root"])
+    parent = cast(Category, data["parent"])
+    child = cast(Category, data["child"])
+    coin = cast(Coin, data["coin"])
 
     assert ids(client.get(f"/coins?search={root.name}")) == [coin.id]
     assert ids(client.get(f"/coins?search={parent.name}")) == [coin.id]
