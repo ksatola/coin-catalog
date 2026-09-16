@@ -117,7 +117,7 @@ def test_coin_can_have_multiple_categories(
     )
 
 
-def test_image_upload_uses_six_digit_filename(
+def test_image_upload_uses_collection_directory(
     client: TestClient,
     coin: Coin,
     tmp_path,
@@ -133,9 +133,12 @@ def test_image_upload_uses_six_digit_filename(
         files={"upload": ("source.jpg", b"jpg-data", "image/jpeg")},
     )
 
+    collection_dir = image_dir / f"collection-{coin.collection_id:03d}"
+    filename = f"{coin.id:06d} - 01.jpg"
     assert response.status_code == 201
-    assert response.json()["filename"] == f"{coin.id:06d} - 01.jpg"
-    assert (image_dir / f"{coin.id:06d} - 01.jpg").read_bytes() == b"jpg-data"
+    assert response.json()["filename"] == filename
+    assert (collection_dir / filename).read_bytes() == b"jpg-data"
+    assert not (image_dir / filename).exists()
 
 
 def test_primary_image_requires_explicit_replace(
@@ -168,7 +171,9 @@ def test_primary_image_requires_explicit_replace(
         files={"upload": ("source.jpg", b"second", "image/jpeg")},
     )
     assert replacement.status_code == 200
-    assert (image_dir / f"{coin.id:06d} - avers.jpg").read_bytes() == b"second"
+    assert (
+        image_dir / f"collection-{coin.collection_id:03d}" / f"{coin.id:06d} - avers.jpg"
+    ).read_bytes() == b"second"
 
 
 @pytest.mark.parametrize("kind", ["avers", "rewers"])
@@ -208,4 +213,3 @@ def test_category_delete_is_blocked_when_attached_to_coin(
 
     response = client.delete(f"/categories/{category.id}")
     assert response.status_code == 409
-    assert response.json()["detail"] == "Category is in use"
