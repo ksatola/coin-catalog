@@ -24,8 +24,8 @@ def test_collections_migration_upgrade_and_downgrade(
         connection.execute(
             text(
                 "INSERT INTO coin (country_id, denomination_id, from_year, from_era_id, "
-                "to_year, to_era_id, has_video) "
-                "VALUES (1, 1, 1900, 1, 1900, 1, 0)"
+                "to_year, to_era_id, has_video, created_at, updated_at) "
+                "VALUES (1, 1, 1900, 1, 1900, 1, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
             )
         )
 
