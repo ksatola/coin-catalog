@@ -11,6 +11,7 @@ from coin_catalog.main import app
 from coin_catalog.models import (
     Category,
     CategoryRelation,
+    Collection,
     Coin,
     CoinCategory,
     CoinImage,
@@ -51,6 +52,7 @@ def client(session: Session) -> Generator[TestClient]:
 
 @pytest.fixture
 def data(session: Session) -> dict[str, Coin | Category]:
+    collection = Collection(name="Test Collection")
     country = Country(name="Polska")
     denomination = Denomination(name="Grosz")
     era = Era(name="AD")
@@ -58,7 +60,7 @@ def data(session: Session) -> dict[str, Coin | Category]:
     parent = Category(name="Polska")
     child = Category(name="Grosz")
     other = Category(name="Inne")
-    session.add_all([country, denomination, era, root, parent, child, other])
+    session.add_all([collection, country, denomination, era, root, parent, child, other])
     session.flush()
 
     session.add_all(
@@ -69,6 +71,7 @@ def data(session: Session) -> dict[str, Coin | Category]:
     )
 
     coin = Coin(
+        collection=collection,
         collection_number="KC-001",
         country_id=country.id,
         denomination_id=denomination.id,
@@ -79,6 +82,7 @@ def data(session: Session) -> dict[str, Coin | Category]:
         description="Polski grosz srebrny",
     )
     archived = Coin(
+        collection=collection,
         country_id=country.id,
         denomination_id=denomination.id,
         from_year=1800,
