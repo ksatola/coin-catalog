@@ -33,17 +33,86 @@ Czyli:
 
 ## Collection Selection
 
-**Tak.**
-
-Formularz monety miałby pole:
+Formularze tworzenia i edycji monety mają pole wyboru kolekcji:
 
 ```text
 Collection: [ My Roman Coins ▼ ]
 ```
 
-Przy tworzeniu wybierasz kolekcję. Przy edycji widzisz aktualną kolekcję i możesz ją zmienić.
+Zasady UI:
+
+- przy tworzeniu monety użytkownik wybiera dokładnie jedną kolekcję,
+- przy edycji monety użytkownik może zmienić przypisaną kolekcję,
+- w formularzu edycji użytkownik może utworzyć nową kolekcję bez opuszczania formularza i następnie przypisać ją do monety,
+- widok szczegółów monety jest **read-only**: pokazuje przypisaną kolekcję, ale nie pozwala jej zmieniać ani tworzyć kolekcji,
+- nazwa przypisanej kolekcji w szczegółach monety może prowadzić do widoku tej kolekcji.
 
 Dla istniejących monet po wprowadzeniu kolekcji utworzymy jedną domyślną kolekcję, np. `Default Collection`, i przypiszemy do niej obecne rekordy.
+
+## Collection UI Scope
+
+Kolekcje są pełnoprawnym elementem UI i powinny mieć **analogiczne umiejscowienie oraz funkcjonalny scope do kategorii**. Nie należy traktować kolekcji jako wyłącznie pola technicznego w formularzu monety.
+
+### Navigation
+
+- `Collections` jest dostępne w głównej nawigacji na analogicznym poziomie jak `Categories`,
+- użytkownik może wejść bezpośrednio do listy kolekcji,
+- użytkownik może wejść z monety do jej kolekcji.
+
+### Collection List / Management
+
+Widok kolekcji zapewnia:
+
+- listę kolekcji,
+- utworzenie kolekcji,
+- edycję kolekcji,
+- usunięcie pustej kolekcji,
+- statystyki kolekcji,
+- przejście do monet należących do kolekcji.
+
+Zasady usuwania wynikają z domeny: kolekcji zawierającej monety nie można usunąć.
+
+### Coin List
+
+Na ekranie monet kolekcja jest filtrem na równi z istniejącymi filtrami, w szczególności z kategoriami. Filtr kolekcji jest multi-select zgodnie z sekcją `Collection Search`.
+
+Lista monet powinna również prezentować przypisaną kolekcję w miejscach, w których użytkownik potrzebuje kontekstu kolekcji.
+
+### Coin Detail
+
+Szczegóły monety pokazują:
+
+```text
+Collection: My Roman Coins
+```
+
+Jest to informacja **read-only**.
+
+Na tym ekranie:
+
+- można zobaczyć, do której kolekcji należy moneta,
+- można przejść do widoku kolekcji,
+- **nie można zmienić przypisania**,
+- **nie można utworzyć kolekcji**.
+
+### Coin Edit
+
+Ekran edycji monety zapewnia pełny workflow przypisania kolekcji:
+
+- pokazuje aktualnie przypisaną kolekcję,
+- pozwala wybrać inną istniejącą kolekcję,
+- pozwala utworzyć nową kolekcję bez opuszczania formularza,
+- po utworzeniu nowa kolekcja może zostać przypisana do edytowanej monety.
+
+Ten workflow powinien być rozwiązany analogicznie do istniejącego workflow kategorii.
+
+### Coin Create
+
+Ekran tworzenia monety:
+
+- wymaga wyboru dokładnie jednej kolekcji,
+- pozwala wybrać istniejącą kolekcję,
+- pozwala utworzyć nową kolekcję bez opuszczania formularza, analogicznie do kategorii.
 
 ## Moving a Coin Between Collections
 
@@ -487,20 +556,35 @@ Testowałbym też:
 
 Na poziomie E2E:
 
+**Collections**
+- kolekcje są dostępne w głównej nawigacji na analogicznym poziomie jak kategorie,
+- użytkownik może utworzyć, edytować i usunąć pustą kolekcję,
+- użytkownik może wejść z kolekcji do jej monet,
+- statystyki kolekcji są widoczne.
+
 **Create**
 - utworzenie kolekcji,
 - dodanie monety do wybranej kolekcji,
+- możliwość utworzenia kolekcji z poziomu formularza tworzenia monety,
 - kolekcja jest widoczna w szczegółach/katalogu.
 
 **Edit**
 - zmiana kolekcji,
-- `collection_number` pozostaje,
-- coin pojawia się w nowej kolekcji.
+- możliwość utworzenia kolekcji z poziomu formularza edycji monety,
+- nowa kolekcja może zostać przypisana do edytowanej monety,
+- `collection_number` pozostaje bez zmian przy zmianie kolekcji.
+
+**Detail**
+- szczegóły monety pokazują przypisaną kolekcję,
+- przypisana kolekcja jest read-only,
+- można przejść do widoku kolekcji,
+- nie ma akcji zmiany ani tworzenia kolekcji na ekranie szczegółów.
 
 **Search**
 - multi-select kolekcji,
 - wyniki zmieniają się poprawnie,
-- połączenie wyboru kolekcji z istniejącym search/filter.
+- połączenie wyboru kolekcji z istniejącym search/filter,
+- kolekcja i pozostałe filtry działają jako AND.
 
 **Move**
 - użytkownik uruchamia przeniesienie,
@@ -524,7 +608,10 @@ backend
 └── filesystem/database consistency tests
 
 frontend
+├── collection navigation/list tests
 ├── collection selection tests
+├── collection creation from coin create/edit tests
+├── collection read-only coin detail tests
 ├── multi-collection search tests
 └── coin move E2E tests
 ```
