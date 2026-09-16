@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import (
+    Collection,
     Coin,
     Country,
     Denomination,
@@ -62,6 +63,7 @@ def client(session: Session) -> Generator[TestClient]:
 
 @pytest.fixture
 def reference_data(session: Session) -> dict[str, int]:
+    collection = Collection(name="Test Collection")
     country = Country(name="Test Country")
     issuer = Issuer(name="Test Issuer")
     denomination = Denomination(name="Test Denomination")
@@ -71,11 +73,12 @@ def reference_data(session: Session) -> dict[str, int]:
     era = Era(name="CE")
 
     session.add_all(
-        [country, issuer, denomination, mint, material, state, era],
+        [collection, country, issuer, denomination, mint, material, state, era],
     )
     session.commit()
 
     return {
+        "collection_id": collection.id,
         "country_id": country.id,
         "issuer_id": issuer.id,
         "denomination_id": denomination.id,
@@ -90,6 +93,7 @@ def test_create_coin(client: TestClient, reference_data: dict[str, int]) -> None
     response = client.post(
         "/coins",
         json={
+            "collection_id": reference_data["collection_id"],
             "country_id": reference_data["country_id"],
             "denomination_id": reference_data["denomination_id"],
             "from_year": 1900,
@@ -105,6 +109,7 @@ def test_create_coin(client: TestClient, reference_data: dict[str, int]) -> None
 
     data = response.json()
     assert data["id"] is not None
+    assert data["collection_id"] == reference_data["collection_id"]
     assert data["description"] == "Test coin"
     assert data["collection_number"] == "KC-001"
     assert data["is_deleted"] is False
@@ -117,6 +122,7 @@ def test_update_coin_collection_number(
     response = client.post(
         "/coins",
         json={
+            "collection_id": reference_data["collection_id"],
             "country_id": reference_data["country_id"],
             "denomination_id": reference_data["denomination_id"],
             "from_year": 1900,
@@ -132,6 +138,7 @@ def test_update_coin_collection_number(
     response = client.put(
         f"/coins/{coin_id}",
         json={
+            "collection_id": reference_data["collection_id"],
             "country_id": reference_data["country_id"],
             "denomination_id": reference_data["denomination_id"],
             "from_year": 1900,
@@ -156,6 +163,7 @@ def test_list_coins_returns_active_coins_only(
     reference_data: dict[str, int],
 ) -> None:
     active_coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1900,
@@ -164,6 +172,7 @@ def test_list_coins_returns_active_coins_only(
         to_era_id=reference_data["era_id"],
     )
     deleted_coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1901,
@@ -191,6 +200,7 @@ def test_list_archived_coins_returns_archived_coins_only(
     reference_data: dict[str, int],
 ) -> None:
     active_coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1900,
@@ -199,6 +209,7 @@ def test_list_archived_coins_returns_archived_coins_only(
         to_era_id=reference_data["era_id"],
     )
     archived_coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1901,
@@ -227,6 +238,7 @@ def test_archive_coin(
     reference_data: dict[str, int],
 ) -> None:
     coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1900,
@@ -258,6 +270,7 @@ def test_restore_coin(
     reference_data: dict[str, int],
 ) -> None:
     coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1900,
@@ -291,6 +304,7 @@ def test_archive_and_restore_coin_round_trip(
     response = client.post(
         "/coins",
         json={
+            "collection_id": reference_data["collection_id"],
             "country_id": reference_data["country_id"],
             "denomination_id": reference_data["denomination_id"],
             "from_year": 1900,
@@ -330,6 +344,7 @@ def test_get_coin(
     reference_data: dict[str, int],
 ) -> None:
     coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1900,
@@ -418,6 +433,7 @@ def test_dictionary_delete_is_blocked_when_used_by_coin(
     item_id = reference_data[reference_key]
 
     coin_data = {
+        "collection_id": reference_data["collection_id"],
         "country_id": reference_data["country_id"],
         "denomination_id": reference_data["denomination_id"],
         "from_year": 1900,
@@ -450,6 +466,7 @@ def test_dictionary_era_delete_is_blocked_when_used_by_coin_to_era(
     item_id = reference_data["era_id"]
 
     coin = Coin(
+        collection_id=reference_data["collection_id"],
         country_id=reference_data["country_id"],
         denomination_id=reference_data["denomination_id"],
         from_year=1900,
