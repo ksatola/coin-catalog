@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
-from coin_catalog.models import Category, Coin, Country, Denomination, Era
+from coin_catalog.models import Category, Collection, Coin, Country, Denomination, Era
 from coin_catalog.routes import images
 
 
@@ -42,13 +42,15 @@ def client(session: Session) -> Generator[TestClient]:
 
 @pytest.fixture
 def coin(session: Session) -> Coin:
+    collection = Collection(name="Test Collection")
     country = Country(name="Test Country")
     denomination = Denomination(name="Test Denomination")
     era = Era(name="CE")
-    session.add_all([country, denomination, era])
+    session.add_all([collection, country, denomination, era])
     session.commit()
 
     value = Coin(
+        collection_id=collection.id,
         country_id=country.id,
         denomination_id=denomination.id,
         from_year=1900,
