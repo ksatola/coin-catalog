@@ -46,7 +46,7 @@ def test_collections_migration_upgrade_and_downgrade(
     )
     assert collection_fk["constrained_columns"] == ["collection_id"]
     assert collection_fk["referred_columns"] == ["id"]
-    assert collection_fk["options"]["ondelete"] == "RESTRICT"
+    assert collection_fk.get("options", {}).get("ondelete") == "RESTRICT"
 
     with engine.connect() as connection:
         collection = connection.execute(
