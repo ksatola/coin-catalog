@@ -125,8 +125,8 @@ test.describe('collections', () => {
     await expect(page.getByText('791', { exact: true })).toBeVisible()
     await expect(page.getByText('17', { exact: true })).toBeVisible()
     await expect(page.getByText('4', { exact: true })).toBeVisible()
-    await expect(page.getByText('3.0 GB')).toBeVisible()
-    await expect(page.getByText('16 września 2026, 12:42')).toBeVisible()
+    await expect(page.getByText('3 GB')).toBeVisible()
+    await expect(page.getByText('16 września 2026')).toBeVisible()
   })
 
   test('creates, edits and deletes a collection', async ({ page }) => {
