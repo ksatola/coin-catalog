@@ -122,6 +122,25 @@ def ids(response) -> list[int]:
     return [item["id"] for item in response.json()]
 
 
+def add_coin_in_new_collection(session: Session, source: Coin) -> Coin:
+    collection = Collection(name="Second Collection")
+    coin = Coin(
+        collection=collection,
+        collection_number="KC-002",
+        country_id=source.country_id,
+        denomination_id=source.denomination_id,
+        from_year=source.from_year,
+        from_era_id=source.from_era_id,
+        to_year=source.to_year,
+        to_era_id=source.to_era_id,
+        description="Drugi polski grosz",
+    )
+    session.add_all([collection, coin])
+    session.commit()
+    session.refresh(coin)
+    return coin
+
+
 def test_search_is_tokenized_and_order_independent(
     client: TestClient,
     data: dict[str, Coin | Category],
@@ -175,6 +194,58 @@ def test_search_rejects_fragments_shorter_than_three_characters(
     assert (
         response.json()["detail"] == "Search terms must contain at least 3 characters"
     )
+
+
+def test_collection_filter_supports_one_multiple_all_and_no_restriction(
+    client: TestClient,
+    session: Session,
+    data: dict[str, Coin | Category],
+) -> None:
+    coin = cast(Coin, data["coin"])
+    second_coin = add_coin_in_new_collection(session, coin)
+    first_collection_id = coin.collection_id
+    second_collection_id = second_coin.collection_id
+
+    assert ids(client.get("/coins")) == [coin.id, second_coin.id]
+    assert ids(client.get(f"/coins?collection_id={first_collection_id}")) == [coin.id]
+    assert ids(client.get(f"/coins?collection_id={second_collection_id}")) == [
+        second_coin.id
+    ]
+    assert ids(
+        client.get(
+            f"/coins?collection_id={first_collection_id}&collection_id={second_collection_id}"
+        )
+    ) == [coin.id, second_coin.id]
+
+
+def test_collection_filter_returns_no_results_for_unknown_collection(
+    client: TestClient,
+    data: dict[str, Coin | Category],
+) -> None:
+    assert ids(client.get("/coins?collection_id=999999")) == []
+
+
+def test_collection_filter_combines_with_search_and_other_filters(
+    client: TestClient,
+    session: Session,
+    data: dict[str, Coin | Category],
+) -> None:
+    coin = cast(Coin, data["coin"])
+    second_coin = add_coin_in_new_collection(session, coin)
+
+    assert ids(
+        client.get(f"/coins?collection_id={second_coin.collection_id}&search=grosz")
+    ) == [second_coin.id]
+    assert ids(
+        client.get(
+            f"/coins?collection_id={second_coin.collection_id}&country_id={coin.country_id}&from_year=1900"
+        )
+    ) == [second_coin.id]
+    assert ids(
+        client.get(
+            f"/coins?collection_id={coin.collection_id}&country_id={coin.country_id}&from_year=1900"
+        )
+    ) == [coin.id]
 
 
 def test_search_matches_category_ancestors_and_exact_scope(
