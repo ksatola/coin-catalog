@@ -417,6 +417,32 @@ Keep the Git object types distinct: blob SHAs identify file contents, tree SHAs 
 
 This fallback must preserve the current branch history and must not modify unrelated files or rewrite published history.
 
+### 19.4 Python Environment and `uv` Execution
+
+Python dependencies and the project environment are managed with `uv`.
+
+All Python commands that depend on project packages must be executed through the `uv` environment.
+
+Use:
+
+```bash
+cd /workspaces/coin-catalog/backend
+
+uv sync --frozen
+uv run pytest -q
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
+```
+
+Do not run project tests, Ruff, or Pyright directly against the system Python environment when those commands depend on project packages.
+
+Do not install project Python dependencies manually with `pip` as a substitute for `uv`.
+
+If imports such as `fastapi`, `sqlalchemy`, `alembic`, or `pydantic` cannot be resolved, first verify that the commands are being executed through `uv run` and that `uv sync --frozen` has completed successfully.
+
+The development container may provide standalone tooling such as `pytest`, `ruff`, and `pyright`, but project dependencies must remain managed through `uv` and `uv.lock`.
+
 ## 20. Current Development Stage
 
 The project is currently in:
