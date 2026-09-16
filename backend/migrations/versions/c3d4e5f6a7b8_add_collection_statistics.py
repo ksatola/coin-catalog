@@ -94,19 +94,20 @@ def upgrade() -> None:
         )
     )
 
-    for column in (
-        "coin_count",
-        "archived_coin_count",
-        "image_count",
-        "file_size_bytes",
-        "category_count",
-        "coins_without_images_count",
-    ):
-        op.alter_column("collection", column, server_default=None)
-    op.alter_column("coin_image", "file_size_bytes", server_default=None)
-
     with op.batch_alter_table("collection", recreate="always") as batch_op:
+        for column in (
+            "coin_count",
+            "archived_coin_count",
+            "image_count",
+            "file_size_bytes",
+            "category_count",
+            "coins_without_images_count",
+        ):
+            batch_op.alter_column(column, server_default=None)
         batch_op.alter_column("last_modified_at", nullable=False)
+
+    with op.batch_alter_table("coin_image", recreate="always") as batch_op:
+        batch_op.alter_column("file_size_bytes", server_default=None)
 
 
 def downgrade() -> None:
