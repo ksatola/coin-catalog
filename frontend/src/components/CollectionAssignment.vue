@@ -6,11 +6,14 @@ import type { Collection } from '../types'
 const props = defineProps<{
   collections: Collection[]
   selectedCollectionId: number
+  savedCollectionId: number
+  savingCollection: boolean
 }>()
 
 const emit = defineEmits<{
   'update:selectedCollectionId': [id: number]
   created: [collection: Collection]
+  save: []
 }>()
 
 const isOpen = ref(false)
@@ -93,6 +96,15 @@ async function create(): Promise<void> {
       </select>
     </label>
 
+    <button
+      type="button"
+      class="save-button"
+      :disabled="props.selectedCollectionId === props.savedCollectionId || props.savingCollection"
+      @click="emit('save')"
+    >
+      {{ props.savingCollection ? 'Zapisywanie…' : 'Zapisz kolekcję' }}
+    </button>
+
     <button type="button" class="open-button" :aria-expanded="isOpen" @click="toggle">
       Dodaj kolekcję
     </button>
@@ -168,17 +180,33 @@ async function create(): Promise<void> {
   font: inherit;
 }
 
+.save-button,
 .open-button {
   justify-self: start;
   min-height: 40px;
   padding: 8px 14px;
-  border: 1px solid #0f172a;
   border-radius: 8px;
-  background: #0f172a;
-  color: #ffffff;
   font: inherit;
   font-size: .875rem;
   font-weight: 700;
+}
+
+.save-button {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.save-button:disabled {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.open-button {
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #ffffff;
 }
 
 .editor {
