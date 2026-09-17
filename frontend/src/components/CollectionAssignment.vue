@@ -121,7 +121,7 @@ async function create(): Promise<void> {
 .collection-card {
   display: grid;
   gap: 12px;
-  margin: 0 0 24px;
+  margin: 0;
   padding: 24px 26px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
