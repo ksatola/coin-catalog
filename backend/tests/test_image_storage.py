@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from coin_catalog.database import Base
 from coin_catalog import image_storage
+from coin_catalog.database import Base
 from coin_catalog.image_storage import (
     ensure_image_storage,
     find_image_storage_issues,
@@ -96,8 +96,10 @@ def test_missing_referenced_file_is_reported_without_modifying_database(
     assert [(issue.kind, issue.detail) for issue in issues] == [
         (
             "missing_file",
-            f"coin_image {image.id}: missing file "
-            f"{tmp_path / 'images' / f'collection-{collection.id:03d}' / image.filename}",
+            (
+                f"coin_image {image.id}: missing file "
+                f"{tmp_path / 'images' / f'collection-{collection.id:03d}' / image.filename}"
+            ),
         )
     ]
     assert session.get(CoinImage, image.id) is not None
