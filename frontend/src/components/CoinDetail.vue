@@ -25,7 +25,7 @@ function formatDateRange(): string { return `${formatYear(props.coin.from_year, 
 async function loadDictionary(dictionaryNameKey: keyof Dictionaries): Promise<DictionaryItem[]> { const response = await fetch(`/api/dictionaries/${dictionaryNameKey}`); if (!response.ok) throw new Error(`HTTP ${response.status}`); return await response.json() as DictionaryItem[] }
 async function loadDictionaries(): Promise<void> {
   const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all(['countries','issuers','denominations','mints','materials','states','eras'].map((name) => loadDictionary(name as keyof Dictionaries)))
-  dictionaries.countries = countries; dictionaries.issuers = issuers; dictionaries.denominations = denominations; dictionaries.mints = mints; dictionaries.materials = materials; dictionaries.states = states; dictionaries.eras = eras
+  dictionaries.countries = countries ?? []; dictionaries.issuers = issuers ?? []; dictionaries.denominations = denominations ?? []; dictionaries.mints = mints ?? []; dictionaries.materials = materials ?? []; dictionaries.states = states ?? []; dictionaries.eras = eras ?? []
 }
 async function loadCollection(): Promise<void> {
   try {
