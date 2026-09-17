@@ -156,14 +156,17 @@ test('Edytuj monetę: zapis kolekcji jest niezależny od zapisu danych monety', 
   await page.getByLabel('Wybierz kolekcję').selectOption('2')
   await page.getByLabel('Kraj', { exact: true }).selectOption('2')
 
+  let putCount = 0
+  page.on('request', (request) => {
+    if (request.url().endsWith('/api/coins/1') && request.method() === 'PUT') putCount += 1
+  })
+
   const moveRequest = page.waitForRequest('**/api/coins/1/move')
-  const putRequest = page.waitForRequest('**/api/coins/1', { predicate: (request) => request.method() === 'PUT' })
   await page.getByRole('button', { name: 'Zapisz kolekcję' }).click()
   const request = await moveRequest
   expect(request.postDataJSON()).toEqual({ target_collection_id: 2 })
+  expect(putCount).toBe(0)
   await expect(page.getByRole('button', { name: 'Zapisz kolekcję' })).toBeDisabled()
-  await expect.poll(async () => page.locator('[data-testid="unused"]').count()).toBe(0)
-  await expect(putRequest).not.toBeTruthy()
 })
 
 test('Edytuj monetę: zapis danych monety nie uruchamia operacji move', async ({ page }) => {
@@ -172,15 +175,15 @@ test('Edytuj monetę: zapis danych monety nie uruchamia operacji move', async ({
   await page.getByLabel('Kraj', { exact: true }).selectOption('2')
   await page.getByLabel('Nominał', { exact: true }).selectOption('3')
 
-  const putRequest = page.waitForRequest('**/api/coins/1', { predicate: (request) => request.method() === 'PUT' })
-  const moveRequests: Promise<unknown>[] = []
+  let moveCount = 0
   page.on('request', (request) => {
-    if (request.url().includes('/api/coins/1/move')) moveRequests.push(Promise.resolve(request))
+    if (request.url().includes('/api/coins/1/move')) moveCount += 1
   })
+  const putRequest = page.waitForRequest('**/api/coins/1', { predicate: (request) => request.method() === 'PUT' })
   await page.getByRole('button', { name: 'Zapisz' }).click()
   const request = await putRequest
   expect(request.postDataJSON()).toMatchObject({ country_id: 2, denomination_id: 3, collection_id: 1 })
-  expect(moveRequests).toHaveLength(0)
+  expect(moveCount).toBe(0)
 })
 
 test('Edytuj monetę: po osobnym zapisie kolekcji dane monety zapisują się pod nowym ID', async ({ page }) => {
