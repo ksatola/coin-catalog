@@ -51,7 +51,6 @@ async function loadCollections(): Promise<void> {
 function addCreatedCollection(collection: Collection): void {
   collections.value.push(collection)
   selectedCollectionId.value = collection.id
-  markDirty()
 }
 
 async function saveCollection(): Promise<void> {
@@ -71,6 +70,7 @@ async function saveCollection(): Promise<void> {
     currentCoinId.value = movedCoin.id
     savedCollectionId.value = movedCoin.collection_id
     selectedCollectionId.value = movedCoin.collection_id
+    markClean()
   } catch {
     errorMessage.value = 'Nie udało się zapisać kolekcji monety.'
   } finally {
