@@ -62,6 +62,7 @@ export interface CoinCreate {
   mint_id: number | null
   material_id: number | null
   state_id: number | null
+  collection_id?: number
   description: string | null
   weight: number | null
   diameter: number | null

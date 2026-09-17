@@ -32,6 +32,10 @@ const initialCollections: Collection[] = [
   },
 ]
 
+const collectionCoins = [
+  { id: 404, collection_id: 1, collection_number: 'PL-0404', from_year: 1924, to_year: 1924 },
+]
+
 function cloneCollections(): Collection[] {
   return initialCollections.map((collection) => ({ ...collection }))
 }
@@ -43,29 +47,17 @@ async function mockCollectionApi(page: Page): Promise<void> {
   await page.route('**/api/collections', async (route) => {
     const method = route.request().method()
     if (method === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(state),
-      })
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(state) })
       return
     }
 
     if (method === 'POST') {
       const body = route.request().postDataJSON() as { name: string; description: string | null }
       const collection: Collection = {
-        id: nextId++,
-        name: body.name.trim(),
-        description: body.description,
-        created_at: '2026-09-16T11:00:00Z',
-        updated_at: '2026-09-16T11:00:00Z',
-        coin_count: 0,
-        archived_coin_count: 0,
-        image_count: 0,
-        file_size_bytes: 0,
-        category_count: 0,
-        coins_without_images_count: 0,
-        last_modified_at: '2026-09-16T11:00:00Z',
+        id: nextId++, name: body.name.trim(), description: body.description,
+        created_at: '2026-09-16T11:00:00Z', updated_at: '2026-09-16T11:00:00Z',
+        coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0,
+        category_count: 0, coins_without_images_count: 0, last_modified_at: '2026-09-16T11:00:00Z',
       }
       state.push(collection)
       await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(collection) })
@@ -88,11 +80,7 @@ async function mockCollectionApi(page: Page): Promise<void> {
     }
 
     if (parts.length === 4 && parts[3] === 'stats' && method === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(collection),
-      })
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collection) })
       return
     }
 
@@ -111,6 +99,10 @@ async function mockCollectionApi(page: Page): Promise<void> {
     }
 
     await route.fallback()
+  })
+
+  await page.route('**/api/coins?collection_id=1', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collectionCoins) })
   })
 }
 
@@ -149,5 +141,15 @@ test.describe('collections', () => {
     page.once('dialog', (dialog) => dialog.accept())
     await page.getByRole('button', { name: 'Usuń kolekcję' }).click()
     await expect(page.getByRole('button', { name: 'Zmieniona kolekcja' })).toHaveCount(0)
+  })
+
+  test('shows collection detail and its coins', async ({ page }) => {
+    await mockCollectionApi(page)
+    await page.goto('/kolekcje/1')
+
+    await expect(page.getByRole('heading', { name: 'Monety polskie' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Monety w kolekcji' })).toBeVisible()
+    await expect(page.getByRole('link', { name: /#404/ })).toHaveAttribute('href', '/monety/404')
+    await expect(page.getByRole('button', { name: 'Pokaż monety' })).toBeVisible()
   })
 })

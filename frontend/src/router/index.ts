@@ -6,6 +6,7 @@ import CoinCreateView from '../views/CoinCreateView.vue'
 import CoinDetailView from '../views/CoinDetailView.vue'
 import CoinEditView from '../views/CoinEditView.vue'
 import CoinsView from '../views/CoinsView.vue'
+import CollectionDetailView from '../views/CollectionDetailView.vue'
 import CollectionsView from '../views/CollectionsView.vue'
 import DictionariesView from '../views/DictionariesView.vue'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
@@ -22,6 +23,7 @@ const router = createRouter({
     { path: '/slowniki', component: DictionariesView },
     { path: '/kategorie', component: CategoriesView },
     { path: '/kolekcje', component: CollectionsView },
+    { path: '/kolekcje/:id', component: CollectionDetailView },
   ],
 })
 
