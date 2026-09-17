@@ -136,19 +136,20 @@ onMounted(() => {
     <p v-if="errorMessage">{{ errorMessage }}</p>
     <p v-if="collectionsErrorMessage">{{ collectionsErrorMessage }}</p>
 
-    <CollectionAssignment
-      v-if="coin"
-      v-model:selected-collection-id="selectedCollectionId"
-      :collections="collections"
-      @created="addCreatedCollection"
-    />
-
     <CoinForm
       v-if="coin"
       :coin="coin"
       @submit="saveCoin"
       @cancel="cancelEditing"
-    />
+    >
+      <template #collection>
+        <CollectionAssignment
+          v-model:selected-collection-id="selectedCollectionId"
+          :collections="collections"
+          @created="addCreatedCollection"
+        />
+      </template>
+    </CoinForm>
     <CategoryAssignment v-if="coin" :coin-id="coin.id" />
   </section>
 </template>
