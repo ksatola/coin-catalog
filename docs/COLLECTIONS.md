@@ -1,8 +1,10 @@
 # Collections
 
-## Domain Model
+This document is the canonical functional specification for Collections in Phase 8. It reconciles the earlier collection notes with the accepted architecture decisions and the current implementation direction.
 
-Jedna wspólna baza SQLite:
+## 1. Domain Model
+
+The application uses one shared SQLite database for all collections and coins.
 
 ```text
 collection
@@ -21,189 +23,242 @@ collection_number
 ...
 ```
 
-Czyli:
+Rules:
 
-- **jedna baza danych** dla całego katalogu,
-- jedna `coin` nadal oznacza **jeden fizyczny egzemplarz**,
-- każdy coin należy do **dokładnie jednej kolekcji**,
-- `collection_number` pozostaje numerem użytkowym konkretnego coina,
-- kolekcja dostaje własne `id`, nazwę i opcjonalny opis,
-- przeniesienie coina między kolekcjami będzie zwykłą zmianą `collection_id`,
-- istniejące coiny dostaną jedną domyślną kolekcję podczas migracji, żeby nie komplikować kompatybilności.
+- one `coin` row represents one physical coin;
+- every coin belongs to exactly one collection;
+- collection names are unique;
+- empty collections are allowed;
+- a collection containing coins cannot be deleted;
+- categories are global and shared across all collections;
+- `collection_number` is an optional, user-controlled value independent of technical `coin.id`;
+- existing coins are assigned to a default collection during migration.
 
-## Collection Selection
+## 2. Collection UI
 
-Formularze tworzenia i edycji monety mają pole wyboru kolekcji:
-
-```text
-Collection: [ My Roman Coins ▼ ]
-```
-
-Zasady UI:
-
-- przy tworzeniu monety użytkownik wybiera dokładnie jedną kolekcję,
-- przy edycji monety użytkownik może zmienić przypisaną kolekcję,
-- w formularzu edycji użytkownik może utworzyć nową kolekcję bez opuszczania formularza i następnie przypisać ją do monety,
-- widok szczegółów monety jest **read-only**: pokazuje przypisaną kolekcję, ale nie pozwala jej zmieniać ani tworzyć kolekcji,
-- nazwa przypisanej kolekcji w szczegółach monety może prowadzić do widoku tej kolekcji.
-
-Dla istniejących monet po wprowadzeniu kolekcji utworzymy jedną domyślną kolekcję, np. `Default Collection`, i przypiszemy do niej obecne rekordy.
-
-## Collection UI Scope
-
-Kolekcje są pełnoprawnym elementem UI i powinny mieć **analogiczne umiejscowienie oraz funkcjonalny scope do kategorii**. Nie należy traktować kolekcji jako wyłącznie pola technicznego w formularzu monety.
+Collections are a first-class UI concept, not merely a technical coin attribute.
 
 ### Navigation
 
-- `Collections` jest dostępne w głównej nawigacji na analogicznym poziomie jak `Categories`,
-- użytkownik może wejść bezpośrednio do listy kolekcji,
-- użytkownik może wejść z monety do jej kolekcji.
+- Collections are available in the main navigation at the same level as Categories.
+- The collection list is the central management view.
+- Collection entries provide a clear `Pokaż` action.
+- `Pokaż` navigates to `/kolekcje/:id`.
+- A collection name shown on coin detail is a read-only navigation link to `/kolekcje/:id`.
 
-### Collection List / Management
+### Collection list / management
 
-Widok kolekcji zapewnia:
+The collection view provides:
 
-- listę kolekcji,
-- utworzenie kolekcji,
-- edycję kolekcji,
-- usunięcie pustej kolekcji,
-- statystyki kolekcji,
-- przejście do monet należących do kolekcji.
+- collection listing;
+- collection creation;
+- collection editing;
+- deletion of empty collections;
+- persisted collection statistics;
+- navigation to the coins belonging to a collection.
 
-Zasady usuwania wynikają z domeny: kolekcji zawierającej monety nie można usunąć.
+Creating a collection must also create its filesystem directory. The application must not normally leave a successfully created collection without its required directory.
 
-### Coin List
+### Collection detail
 
-Na ekranie monet kolekcja jest filtrem na równi z istniejącymi filtrami, w szczególności z kategoriami. Filtr kolekcji jest multi-select zgodnie z sekcją `Collection Search`.
+`/kolekcje/:id` is a collection dashboard, not a second implementation of the coin catalogue.
 
-Lista monet powinna również prezentować przypisaną kolekcję w miejscach, w których użytkownik potrzebuje kontekstu kolekcji.
+It should present:
 
-### Coin Detail
+- collection name;
+- description;
+- persisted statistics;
+- last modification information;
+- a `Pokaż monety` action.
 
-Szczegóły monety pokazują:
-
-```text
-Collection: My Roman Coins
-```
-
-Jest to informacja **read-only**.
-
-Na tym ekranie:
-
-- można zobaczyć, do której kolekcji należy moneta,
-- można przejść do widoku kolekcji,
-- **nie można zmienić przypisania**,
-- **nie można utworzyć kolekcji**.
-
-### Coin Edit
-
-Ekran edycji monety zapewnia pełny workflow przypisania kolekcji:
-
-- pokazuje aktualnie przypisaną kolekcję,
-- pozwala wybrać inną istniejącą kolekcję,
-- pozwala utworzyć nową kolekcję bez opuszczania formularza,
-- po utworzeniu nowa kolekcja może zostać przypisana do edytowanej monety.
-
-Ten workflow powinien być rozwiązany analogicznie do istniejącego workflow kategorii.
-
-### Coin Create
-
-Ekran tworzenia monety:
-
-- wymaga wyboru dokładnie jednej kolekcji,
-- pozwala wybrać istniejącą kolekcję,
-- pozwala utworzyć nową kolekcję bez opuszczania formularza, analogicznie do kategorii.
-
-## Moving a Coin Between Collections
-
-**Tak, zdecydowanie.**
-
-Nie traktowałbym tego jako specjalnej operacji bazodanowej. Z punktu widzenia domeny:
+`Pokaż monety` opens the central coin catalogue with the collection selected, for example:
 
 ```text
-Coin #123
-Collection A
-      │
-      │ Move to Collection B
-      ▼
-Collection B
+/monety?collection_id=1
 ```
 
-Zmienia się `coin.collection_id`.
+The detail view may show a concise collection-specific coin summary/list, but filtering, search, view modes and general coin browsing remain responsibilities of the central catalogue.
 
-Natomiast **fizyczne JPG również powinny zostać przeniesione**, jeśli przyjmiemy organizację:
+## 3. Coin Create and Edit
+
+### Coin create
+
+Creating a coin requires exactly one collection.
+
+The form must:
+
+- allow selecting an existing collection;
+- allow creating a new collection inline without leaving the form;
+- select the newly created collection for the coin.
+
+### Coin edit
+
+The coin edit page provides the full collection-assignment workflow.
+
+The collection assignment block must appear in this order:
 
 ```text
-data/
-└── images/
-    ├── collection-a/
-    │   └── coin-123/
-    │       ├── obverse.jpg
-    │       └── reverse.jpg
-    │
-    └── collection-b/
+Edytuj monetę
+
+[ Kolekcja ]
+
+[ Zdjęcia ]
 ```
 
-Po przeniesieniu:
+Specifically:
+
+- below the `Edytuj monetę` page header;
+- above the `Zdjęcia` section;
+- not above the page header;
+- showing the current collection as selected;
+- allowing selection of another existing collection;
+- allowing inline creation and selection of a new collection.
+
+Changing a coin's collection uses the domain move operation described in section 5. It is not a simple `collection_id` update.
+
+### Coin detail
+
+Coin detail is read-only with respect to collection assignment.
+
+It shows:
 
 ```text
-data/
-└── images/
-    └── collection-b/
-        └── coin-123/
-            ├── obverse.jpg
-            └── reverse.jpg
+Kolekcja: Default Collection
 ```
 
-Ale tutaj zrobiłbym ważne rozróżnienie:
+The collection name links to `/kolekcje/:id`. The detail page does not change the collection and does not create collections.
 
-**operacja "przenieś monetę" powinna być atomową operacją aplikacyjną** — najpierw poprawnie przenieść/zmienić referencje do plików, a dopiero potem zatwierdzić zmianę `collection_id`, albo mieć bezpieczny mechanizm rollbacku w przypadku błędu filesystemu.
+## 4. Collection Filtering and Search
 
-Nie chcemy sytuacji:
+`Monety` and `Archiwum` use the same collection-filter concept.
+
+The user can select:
+
+- all collections;
+- exactly one collection;
+- multiple collections.
+
+The UI should expose this as a multi-select collection filter, for example:
 
 ```text
-DB → Collection B
-JPG → nadal Collection A
+Kolekcje:
+[ Wszystkie kolekcje ▼ ]
 ```
 
-## Collection Search
-
-**Tak. I zrobiłbym to od początku w modelu.**
-
-Nie ograniczałbym wyszukiwania do:
+with selections conceptually equivalent to:
 
 ```text
-Collection: [one collection]
+☑ Default Collection
+☑ Collection 3
+☐ Collection 2
 ```
 
-tylko filtr byłby wielokrotnego wyboru:
+The existing `collectionIds: number[]` model is the basis for this behavior.
+
+### All collections
+
+All collections are represented by an empty collection filter:
 
 ```text
-Collections:
-☑ Roman
-☑ Greek
-☐ Polish
-☐ Medieval
+collectionIds = []
 ```
 
-Wtedy wyniki oznaczają:
+No special collection ID represents "all".
+
+### Selected collections
+
+Examples:
 
 ```text
-WHERE coin.collection_id IN (Roman, Greek)
+collectionIds = [1]
+collectionIds = [1, 3]
+collectionIds = [2, 3, 4]
 ```
 
-Czyli można:
+The backend query uses repeated `collection_id` parameters and returns coins belonging to any selected collection.
 
-- oglądać jedną kolekcję,
-- wybrać kilka kolekcji,
-- wybrać wszystkie,
-- wyszukiwać bez ograniczenia kolekcji.
+### Quick search scope
 
-To dobrze współgra z obecnym mechanizmem wyszukiwania i filtrowania.
+Quick/free-text search always operates inside the currently selected collection scope.
 
-## File System
+Therefore:
 
-Docelowo:
+```text
+Wszystkie kolekcje + "polska grosz"
+```
+
+searches all collections, while:
+
+```text
+Default Collection + "polska grosz"
+```
+
+searches only that collection, and selecting two collections searches only those two.
+
+The same rule applies to the archive.
+
+### Visible context
+
+The active collection scope must be visible in both `Monety` and `Archiwum`, so the user can always distinguish:
+
+- all collections;
+- one selected collection;
+- multiple selected collections.
+
+The application keeps one central coin catalogue. A collection selection is a filter/context, not a separate catalogue mode.
+
+Coin lists should display collection information where it is useful for disambiguating results.
+
+## 5. Moving a Coin Between Collections
+
+Moving a coin between collections is an application-level move operation. It is **not** a simple:
+
+```sql
+UPDATE coin SET collection_id = ...
+```
+
+The accepted move semantics are:
+
+1. create a new technical `coin.id` in the target collection using the normal SQLite ID mechanism;
+2. copy the complete coin data to the new record;
+3. preserve the user-facing `collection_number`;
+4. recreate all associated `coin_image` records for the new coin ID;
+5. copy/rename all associated JPG files into the target collection directory using the new technical ID;
+6. protect against target filename collisions;
+7. keep the source record and source files intact until the target state is complete;
+8. remove the source record/files only after the target state is ready and the operation can be committed;
+9. compensate/rollback all changes if the operation fails.
+
+Example:
+
+```text
+collection-001
+  coin id=404
+  000404 - awers.jpg
+  000404 - rewers.jpg
+
+             │ MOVE
+             ▼
+
+collection-002
+  coin id=731
+  000731 - awers.jpg
+  000731 - rewers.jpg
+```
+
+`collection_number` remains unchanged by the move unless the user explicitly edits it later.
+
+The technical `coin.id` remains globally unique. No separate collection-specific ID generator is introduced.
+
+### Atomicity requirement
+
+SQLite transactions cover database state, but filesystem operations are outside the database transaction. Therefore a move must use temporary/staging files and a compensating rollback strategy so that a failed move does not leave an ambiguous DB/filesystem state.
+
+The user-visible operation must be atomic: after completion the coin is either fully in the source state or fully in the target state.
+
+## 6. Filesystem Layout
+
+The collection-aware runtime layout is:
 
 ```text
 data/
@@ -219,401 +274,141 @@ data/
         └── ...
 ```
 
-Czyli **tylko jeden poziom podfolderów dla kolekcji**. Wewnątrz kolekcji nie tworzymy folderów dla poszczególnych monet. Obecny system nazewnictwa plików zostaje zachowany.
+Rules:
 
-## Moving a Coin and File Renaming
+- `data/images/` is the image root;
+- there is exactly one collection directory level;
+- per-coin directories are not used;
+- filenames retain the existing six-digit technical coin-ID convention and image suffixes;
+- `coin_image.filename` must match the actual filename on disk;
+- every image file must reside in the directory corresponding to the coin's current collection.
 
-Jeżeli coin `id=404` zostaje przeniesiony z `collection-001` do `collection-002`, **nie zachowujemy jego dotychczasowego ID**.
+The old flat top-level `/images/` layout is not the target architecture. It is legacy/source data that may require migration or explicit recovery handling.
 
-Tworzymy nowy rekord, np.:
+## 7. Filesystem Lifecycle and Startup Consistency
 
-```text
-collection-001
-    coin id=404
-        000404 - awers.jpg
-        000404 - rewers.jpg
+The application owns the required runtime database/filesystem structure and must be able to prepare it from scratch.
 
-             ↓ MOVE
-
-collection-002
-    coin id=731
-        000731 - awers.jpg
-        000731 - rewers.jpg
-```
-
-Czyli operacja obejmuje jednocześnie:
-
-1. utworzenie nowego `coin.id` w kolekcji docelowej,
-2. przeniesienie danych monety,
-3. przeniesienie jej zdjęć,
-4. zmianę nazw JPG zgodnie z nowym ID,
-5. aktualizację rekordów `coin_image`,
-6. usunięcie starego rekordu/plików źródłowych,
-7. ochronę przed kolizją nazw w kolekcji docelowej.
-
-W efekcie **ID monety jest unikalne w skali całej bazy**, ale fizyczna numeracja/nazwa plików jest związana z konkretnym rekordem.
-
-Jeżeli w kolekcji docelowej istnieje już np. `000731 - awers.jpg`, proces nie może go nadpisać. Nowy ID musi być dobrany tak, żeby zestaw nazw plików był bezkolizyjny.
-
-## Collection Number
-
-`collection_number`:
-
-- zachowujemy podczas przenoszenia,
-- może być zmieniona ręcznie w UI,
-- jest całkowicie kontrolowana manualnie przez end usera,
-- nie jest generowana automatycznie przez system,
-- jest niezależna od technicznego `coin.id`.
-
-Przyjęcie przez Ciebie SQL `coin.id` jako źródła nowego ID jest sensowne. **Nie tworzyłbym osobnego generatora numerów dla kolekcji** — SQLite pozostaje źródłem technicznej tożsamości coina, a `collection_number` jest całkowicie niezależną, ręcznie zarządzaną wartością użytkownika.
-
-## Collection Rules
-
-- nazwa kolekcji musi być unikalna,
-- można utworzyć pustą kolekcję,
-- nie można usunąć kolekcji zawierającej monety; najpierw trzeba je przenieść,
-- kategorie są wspólne dla wszystkich kolekcji,
-- wszystkie istniejące `coin_image` są przenoszone razem z monetą, niezależnie od rodzaju (`avers`, `rewers`, `additional`).
-
-## Atomic Move Operation
-
-Przyjmujemy, że **przeniesienie monety jest operacją transakcyjną z mechanizmem rollbacku**. Stan źródłowy pozostaje nienaruszony aż do momentu, gdy cały nowy stan zostanie skutecznie przygotowany.
-
-Przykładowo:
+At startup, an idempotent consistency/initialization step must ensure at minimum:
 
 ```text
-collection-001
-  coin 404
-  000404 - awers.jpg
-  000404 - rewers.jpg
-
-             │
-             │ MOVE
-             ▼
-
-collection-002
-  nowy coin ID 731
-  000731 - awers.jpg
-  000731 - rewers.jpg
+data/
+├── coin-catalog.db
+└── images/
+    ├── collection-001/
+    ├── collection-002/
+    └── ...
 ```
 
-### Warunek sukcesu
+Required behavior:
 
-Operacja może usunąć:
+- create `data/` when missing;
+- initialize/create the database using the normal application database migration flow when the database file is missing;
+- create `data/images/` when missing;
+- create a missing `collection-XXX` directory for every collection present in the database;
+- do not delete an orphan directory merely because it has no corresponding collection row;
+- do not invent missing image files for `coin_image` rows;
+- detect and report broken image references instead of silently fabricating data;
+- make the consistency step safe to execute on every startup.
+
+Automatic repair is non-destructive: it may create required structure, but it must not delete data based only on an inferred mismatch.
+
+## 8. Integrity Invariant
+
+For every `CoinImage` in a healthy runtime state:
 
 ```text
-coin 404
-stare JPG
+coin exists
+image metadata exists
+referenced file exists
+file is under the directory for coin.collection_id
+coin_image.filename matches the actual filename
 ```
 
-**dopiero wtedy**, gdy wszystkie poniższe rzeczy zakończą się sukcesem:
+This invariant is both a runtime integrity-check target and a test target.
 
-1. wygenerowano nowe ID,
-2. utworzono nowy rekord `coin`,
-3. utworzono odpowiednie rekordy `coin_image`,
-4. wszystkie JPG zostały skopiowane/przeniesione do `images/collection-002/`,
-5. nadano im nowe nazwy,
-6. sprawdzono, że pliki docelowe istnieją i nie kolidują,
-7. transakcja bazodanowa może zostać zatwierdzona.
+## 9. Collection Rules
 
-### W przypadku błędu
+- collection names are unique;
+- empty collections are allowed;
+- collections containing coins cannot be deleted;
+- categories are shared globally across collections;
+- all image kinds (`avers`, `rewers`, `additional`) move with the coin;
+- `collection_number` is optional, manual, and independent of technical `coin.id`.
 
-Wracamy do stanu sprzed operacji:
+## 10. Test Strategy
 
-```text
-collection-001
-  coin 404
-  000404 - awers.jpg
-  000404 - rewers.jpg
+Existing collection tests must be extended rather than duplicated. The repository already contains collection CRUD, statistics, migration, coin-collection, and coin-move tests.
 
-collection-002
-  brak nowego coina
-  brak częściowo przeniesionych JPG
-```
+### Backend
 
-Czyli nie może zostać ani:
+Add or extend tests for:
 
-```text
-coin w B + stare JPG w A
-```
+1. collection creation creates its `collection-XXX` directory;
+2. startup consistency creates missing directories for existing collections;
+3. the consistency check is idempotent;
+4. missing `data/`, `data/images/`, or collection directories are recreated safely;
+5. existing files/directories are not destructively removed by consistency repair;
+6. broken `coin_image` filesystem references are detected/reported by the chosen integrity-check mechanism;
+7. collection filtering supports one, multiple, and all collections;
+8. quick search combined with collection filtering respects both constraints;
+9. archive filtering uses the same collection-selection rules;
+10. coin move continues to verify database and filesystem consistency, including failure/rollback paths.
 
-ani:
+### Frontend / E2E
 
-```text
-coin w A + JPG w B
-```
+Add or extend tests for:
 
-ani tym bardziej częściowo utworzony rekord albo częściowo skopiowany zestaw zdjęć.
+1. coin edit renders collection assignment below the page header and above `Zdjęcia`;
+2. the current collection is selected when editing a coin;
+3. another existing collection can be selected;
+4. a new collection can be created inline and becomes selected;
+5. the Collections list exposes `Pokaż`;
+6. `Pokaż` navigates to `/kolekcje/:id`;
+7. a coin-detail collection link navigates to `/kolekcje/:id`;
+8. collection detail `Pokaż monety` opens the main catalogue with the collection selected;
+9. the catalogue can select all collections;
+10. the catalogue can select one collection;
+11. the catalogue can select multiple collections;
+12. the active collection scope is visible;
+13. quick search respects the active collection scope;
+14. archive uses the same collection-selection behavior.
 
-### Technical Requirement
+## 11. Implementation Order
 
-SQLite potrafi zapewnić atomowość **transakcji bazodanowej**, ale system plików nie uczestniczy automatycznie w tej samej transakcji. Dlatego nie możemy po prostu zrobić:
+The agreed implementation order is:
 
-```text
-BEGIN
-  INSERT coin
-  move JPG
-  COMMIT
-```
+### A. Filesystem lifecycle and startup consistency
 
-i uznać, że mamy gwarantowany rollback wszystkiego.
+Implement runtime directory/database consistency first, including collection-directory creation and safe/idempotent startup repair.
 
-Potrzebujemy świadomie zaprojektowanego **two-phase filesystem/database operation** z tymczasowymi nazwami/plikami i procedurą kompensującą. Szczególnie ważne będzie, żeby awaria procesu w dowolnym momencie nie pozostawiła niejednoznacznego stanu.
+### B. Coin edit layout
 
-To oznacza, że w decyzji architektonicznej warto zapisać nie tylko „move coin”, ale również wymaganie:
+Move the existing `CollectionAssignment` block into the correct location: below the page header and above `Zdjęcia`.
 
-> **A coin move must be atomic from the user's perspective and must provide rollback/compensation for both database and filesystem changes.**
+### C. Multi-collection filtering in Monety and Archiwum
 
-## Integrity Invariant
+Expose the existing `collectionIds` model through the UI, make the active scope visible, and ensure quick search and archive behavior use the same scope.
 
-Po każdej zakończonej operacji przeniesienia powinno być możliwe sprawdzenie:
+### D. Collection detail view
 
-```text
-dla każdego CoinImage:
-    coin istnieje
-    wskazany plik istnieje
-    plik znajduje się w katalogu właściwym dla kolekcji coina
-    filename odpowiada rzeczywistej nazwie pliku
-```
+Refine `/kolekcje/:id` as the collection dashboard and connect it cleanly to the central coin catalogue.
 
-To można później wykorzystać również jako **integrity check** aplikacji, nie tylko jako test.
+### E. Tests and verification
 
-# Test Strategy
+Extend the existing backend and E2E collection test suites, then run the complete verification suite.
 
-Testy należy podzielić na **warstwy**, bo sama poprawność `collection_id` nie wystarczy — najtrudniejszym elementem jest spójność DB + filesystemu podczas przenoszenia.
+## 12. Reconciliation Notes
 
-## 1. Model i baza danych
+This specification supersedes earlier conflicting descriptions of Collections.
 
-**Collections**
-- utworzenie kolekcji,
-- nazwa kolekcji jest unikalna,
-- można utworzyć pustą kolekcję,
-- kolekcja może zawierać wiele monet,
-- nie można usunąć kolekcji zawierającej monety,
-- można usunąć pustą kolekcję.
+In particular:
 
-**Coins**
-- każda nowa moneta wymaga kolekcji,
-- `collection_id` wskazuje istniejącą kolekcję,
-- coin może zostać przeniesiony do innej kolekcji,
-- `collection_number` pozostaje niezmieniony podczas przeniesienia,
-- ręczna zmiana `collection_number` nadal działa.
+- moving a coin is **not** a simple `collection_id` update; it creates a new technical coin ID and moves/renames its images;
+- image storage is **not** a flat top-level `/images/` directory; the target runtime layout is `data/images/collection-XXX/`;
+- per-coin image directories are **not** used;
+- the collection filter is multi-select, not single-select;
+- `Wszystkie kolekcje` is represented by an empty collection filter;
+- `/kolekcje/:id` is a collection dashboard/context view, while `/monety` and `/archiwum` remain the central browsing/search surfaces.
 
-## 2. Wyszukiwanie
-
-Tu zrobiłbym kilka kombinacji:
-
-```text
-1 kolekcja → wyniki tylko z niej
-2 kolekcje → wyniki z obu
-3 z 5 kolekcji → wyniki tylko z wybranych
-wszystkie → wyniki ze wszystkich
-brak filtra kolekcji → wszystkie
-kolekcja + tekst → oba filtry działają jednocześnie
-kolekcja + pozostałe filtry → AND między filtrami
-```
-
-Szczególnie ważny jest przypadek, w którym ta sama fraza występuje w monetach z różnych kolekcji.
-
-## 3. Pliki
-
-Dla normalnego dodawania/edycji:
-
-- JPG trafia do `images/collection-001/`,
-- nazwa pozostaje zgodna z obecnym systemem,
-- nie są tworzone podfoldery coinów,
-- `coin_image.filename` odpowiada faktycznemu plikowi,
-- wiele zdjęć jednej monety działa poprawnie,
-- `avers`, `rewers`, `additional` zachowują swoje metadane.
-
-## 4. Przeniesienie — happy path
-
-To powinien być osobny, mocny zestaw testów.
-
-Przykład:
-
-```text
-Collection A
-  coin 100
-  00100 - awers.jpg
-  00100 - rewers.jpg
-
-Collection B
-  coin 200
-```
-
-Po przeniesieniu:
-
-```text
-Collection A
-  brak coin 100
-
-Collection B
-  coin 201       ← nowe SQL ID
-  00201 - awers.jpg
-  00201 - rewers.jpg
-```
-
-Test powinien sprawdzić **cały stan**, a nie tylko HTTP 200:
-
-- nowe ID ≠ stare ID,
-- nowy coin ma poprawne dane,
-- `collection_id` wskazuje kolekcję B,
-- `collection_number` jest taki sam,
-- wszystkie `coin_image` wskazują nowy coin,
-- wszystkie nowe JPG istnieją,
-- stare JPG nie istnieją,
-- starego rekordu nie ma,
-- w docelowej kolekcji nie ma kolizji nazw.
-
-## 5. Przeniesienie z kolizją nazw
-
-To jest bardzo ważny test.
-
-Jeżeli:
-
-```text
-Collection B/
-    00201 - awers.jpg
-```
-
-już istnieje, przenoszony coin **nie może go nadpisać**.
-
-Test powinien potwierdzić:
-
-- istniejący plik pozostaje nietknięty,
-- generowane jest inne ID,
-- nowe JPG mają inne nazwy,
-- nowy coin wskazuje właśnie te nowe pliki,
-- źródłowy coin pozostaje niezmieniony, jeśli operacja nie może zostać bezpiecznie zakończona.
-
-## 6. Rollback — najważniejsza grupa
-
-Tutaj celowo wymuszamy błędy.
-
-Osobne testy dla awarii:
-
-- utworzenia nowego rekordu DB,
-- kopiowania pierwszego JPG,
-- kopiowania kolejnego JPG,
-- zmiany nazwy pliku,
-- utworzenia rekordu `coin_image`,
-- finalizacji transakcji DB,
-- problemu z plikiem docelowym.
-
-Po **każdym** błędzie sprawdzamy:
-
-```text
-DB:
-  stary coin istnieje
-  nowy coin nie istnieje
-  stare coin_image istnieją
-  nowe coin_image nie pozostają
-
-Filesystem:
-  stare JPG istnieją
-  ich zawartość się nie zmieniła
-  niedokończone nowe JPG nie pozostają
-```
-
-To jest właściwy test atomowości.
-
-## 7. Awaria po częściowym sukcesie
-
-Jeszcze mocniejszy wariant:
-
-```text
-JPG 1 → przeniesiony
-JPG 2 → przeniesiony
-JPG 3 → ERROR
-```
-
-Rollback musi usunąć **JPG 1 i JPG 2**, przywracając stan początkowy.
-
-Analogicznie:
-
-```text
-DB INSERT → sukces
-JPG → sukces
-kolejny krok → ERROR
-```
-
-Nowy rekord DB musi zostać wycofany.
-
-## 8. ID i nazewnictwo
-
-Testowałbym też:
-
-- nowe ID jest generowane przez SQLite,
-- nowe ID nie koliduje z istniejącym ID,
-- nazwa każdego JPG wynika z nowego ID,
-- istniejące pliki w kolekcji docelowej nigdy nie są nadpisywane,
-- przeniesienie monety bez zdjęć również działa,
-- przeniesienie monety z jednym zdjęciem działa,
-- przeniesienie z wieloma zdjęciami działa.
-
-## 9. UI / Playwright
-
-Na poziomie E2E:
-
-**Collections**
-- kolekcje są dostępne w głównej nawigacji na analogicznym poziomie jak kategorie,
-- użytkownik może utworzyć, edytować i usunąć pustą kolekcję,
-- użytkownik może wejść z kolekcji do jej monet,
-- statystyki kolekcji są widoczne.
-
-**Create**
-- utworzenie kolekcji,
-- dodanie monety do wybranej kolekcji,
-- możliwość utworzenia kolekcji z poziomu formularza tworzenia monety,
-- kolekcja jest widoczna w szczegółach/katalogu.
-
-**Edit**
-- zmiana kolekcji,
-- możliwość utworzenia kolekcji z poziomu formularza edycji monety,
-- nowa kolekcja może zostać przypisana do edytowanej monety,
-- `collection_number` pozostaje bez zmian przy zmianie kolekcji.
-
-**Detail**
-- szczegóły monety pokazują przypisaną kolekcję,
-- przypisana kolekcja jest read-only,
-- można przejść do widoku kolekcji,
-- nie ma akcji zmiany ani tworzenia kolekcji na ekranie szczegółów.
-
-**Search**
-- multi-select kolekcji,
-- wyniki zmieniają się poprawnie,
-- połączenie wyboru kolekcji z istniejącym search/filter,
-- kolekcja i pozostałe filtry działają jako AND.
-
-**Move**
-- użytkownik uruchamia przeniesienie,
-- potwierdza operację,
-- UI pokazuje nowy rekord/ID,
-- zdjęcia nadal są dostępne.
-
-**Failure**
-- jeśli chcemy to pokryć E2E, można zasymulować błąd backendu i sprawdzić komunikat oraz zachowanie UI. Szczegółowe scenariusze awarii filesystemu lepiej jednak testować na backendzie.
-
-## Proposed Test Structure
-
-```text
-backend
-├── collection CRUD tests
-├── collection/coin relationship tests
-├── collection search tests
-├── coin move success tests
-├── coin move collision tests
-├── coin move rollback tests
-└── filesystem/database consistency tests
-
-frontend
-├── collection navigation/list tests
-├── collection selection tests
-├── collection creation from coin create/edit tests
-├── collection read-only coin detail tests
-├── multi-collection search tests
-└── coin move E2E tests
-```
-
-Najważniejsze jest to, żeby **rollback testy były rzeczywistymi testami awarii**, a nie tylko testem „normalnego przeniesienia”. To właśnie one dadzą nam największą gwarancję, że nie zostawimy użytkownika z rozjechaną bazą i plikami.
+These points must be kept synchronized with the accepted architecture decisions, implementation, and tests.
