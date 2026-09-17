@@ -55,6 +55,11 @@ const images = [
   { id: 102, coin_id: 1, filename: 'coin-1-rewers.jpg', kind: 'rewers', sort_order: 1, file_size_bytes: 50, created_at: '' },
 ]
 
+const movedImages = [
+  { id: 201, coin_id: 2, filename: 'coin-2-avers.jpg', kind: 'avers', sort_order: 0, file_size_bytes: 50, created_at: '' },
+  { id: 202, coin_id: 2, filename: 'coin-2-rewers.jpg', kind: 'rewers', sort_order: 1, file_size_bytes: 50, created_at: '' },
+]
+
 async function mockEditApis(page: Page): Promise<void> {
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
@@ -79,6 +84,9 @@ async function mockEditApis(page: Page): Promise<void> {
   })
   await page.route('**/api/coins/1/images', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(images) })
+  })
+  await page.route('**/api/coins/2/images', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(movedImages) })
   })
   await page.route('**/api/coins/1/categories', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(assignedCategories) })
