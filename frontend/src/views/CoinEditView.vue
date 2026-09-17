@@ -173,6 +173,7 @@ onMounted(() => {
     <CoinForm
       v-if="coin"
       :coin="coin"
+      :image-coin-id="currentCoinId"
       class="edit-coin-form"
       @submit="saveCoin"
       @cancel="cancelEditing"
