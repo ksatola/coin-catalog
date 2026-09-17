@@ -136,20 +136,42 @@ onMounted(() => {
     <p v-if="errorMessage">{{ errorMessage }}</p>
     <p v-if="collectionsErrorMessage">{{ collectionsErrorMessage }}</p>
 
+    <header class="edit-page-header">
+      <h2>Edytuj monetę</h2>
+    </header>
+
+    <CollectionAssignment
+      v-if="coin"
+      v-model:selected-collection-id="selectedCollectionId"
+      :collections="collections"
+      @created="addCreatedCollection"
+    />
+
     <CoinForm
       v-if="coin"
       :coin="coin"
+      class="edit-coin-form"
       @submit="saveCoin"
       @cancel="cancelEditing"
-    >
-      <template #collection>
-        <CollectionAssignment
-          v-model:selected-collection-id="selectedCollectionId"
-          :collections="collections"
-          @created="addCreatedCollection"
-        />
-      </template>
-    </CoinForm>
+    />
     <CategoryAssignment v-if="coin" :coin-id="coin.id" />
   </section>
 </template>
+
+<style scoped>
+.edit-page-header {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.edit-page-header h2 {
+  margin: 0;
+  padding-top: 24px;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.edit-coin-form :deep(.form-header) {
+  display: none;
+}
+</style>
