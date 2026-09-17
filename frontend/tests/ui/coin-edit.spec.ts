@@ -50,6 +50,11 @@ const coin = {
   is_deleted: false,
 }
 
+const images = [
+  { id: 101, coin_id: 1, filename: 'coin-1-avers.jpg', kind: 'avers', sort_order: 0, file_size_bytes: 50, created_at: '' },
+  { id: 102, coin_id: 1, filename: 'coin-1-rewers.jpg', kind: 'rewers', sort_order: 1, file_size_bytes: 50, created_at: '' },
+]
+
 async function mockEditApis(page: Page): Promise<void> {
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
@@ -73,7 +78,7 @@ async function mockEditApis(page: Page): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collections[0]) })
   })
   await page.route('**/api/coins/1/images', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(images) })
   })
   await page.route('**/api/coins/1/categories', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(assignedCategories) })
@@ -84,6 +89,13 @@ async function mockEditApis(page: Page): Promise<void> {
       return
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coin) })
+  })
+  await page.route('**/api/coins/2', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ...coin, id: 2, collection_id: 2 }),
+    })
   })
   await page.route('**/api/coins/1/move', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...coin, id: 2, collection_id: 2 }) })
@@ -138,15 +150,50 @@ test('Edytuj monetę: udostępnia zarządzanie kategoriami i kolekcją', async (
   await expect(page.locator('.category-list li').filter({ hasText: 'Polska' })).toBeVisible()
 })
 
-test('Edytuj monetę: zmiana kolekcji uruchamia operację move', async ({ page }) => {
+test('Edytuj monetę: zapis kolekcji jest niezależny od zapisu danych monety', async ({ page }) => {
   await mockEditApis(page)
   await page.goto('/monety/1/edytuj')
   await page.getByLabel('Wybierz kolekcję').selectOption('2')
   await page.getByLabel('Kraj', { exact: true }).selectOption('2')
-  await page.getByLabel('Nominał', { exact: true }).selectOption('3')
 
   const moveRequest = page.waitForRequest('**/api/coins/1/move')
-  await page.getByRole('button', { name: 'Zapisz' }).click()
+  const putRequest = page.waitForRequest('**/api/coins/1', { predicate: (request) => request.method() === 'PUT' })
+  await page.getByRole('button', { name: 'Zapisz kolekcję' }).click()
   const request = await moveRequest
   expect(request.postDataJSON()).toEqual({ target_collection_id: 2 })
+  await expect(page.getByRole('button', { name: 'Zapisz kolekcję' })).toBeDisabled()
+  await expect.poll(async () => page.locator('[data-testid="unused"]').count()).toBe(0)
+  await expect(putRequest).not.toBeTruthy()
+})
+
+test('Edytuj monetę: zapis danych monety nie uruchamia operacji move', async ({ page }) => {
+  await mockEditApis(page)
+  await page.goto('/monety/1/edytuj')
+  await page.getByLabel('Kraj', { exact: true }).selectOption('2')
+  await page.getByLabel('Nominał', { exact: true }).selectOption('3')
+
+  const putRequest = page.waitForRequest('**/api/coins/1', { predicate: (request) => request.method() === 'PUT' })
+  const moveRequests: Promise<unknown>[] = []
+  page.on('request', (request) => {
+    if (request.url().includes('/api/coins/1/move')) moveRequests.push(Promise.resolve(request))
+  })
+  await page.getByRole('button', { name: 'Zapisz' }).click()
+  const request = await putRequest
+  expect(request.postDataJSON()).toMatchObject({ country_id: 2, denomination_id: 3, collection_id: 1 })
+  expect(moveRequests).toHaveLength(0)
+})
+
+test('Edytuj monetę: po osobnym zapisie kolekcji dane monety zapisują się pod nowym ID', async ({ page }) => {
+  await mockEditApis(page)
+  await page.goto('/monety/1/edytuj')
+  await page.getByLabel('Wybierz kolekcję').selectOption('2')
+  await page.getByLabel('Kraj', { exact: true }).selectOption('2')
+
+  await page.getByRole('button', { name: 'Zapisz kolekcję' }).click()
+  await expect(page.getByRole('button', { name: 'Zapisz kolekcję' })).toBeDisabled()
+
+  const putRequest = page.waitForRequest('**/api/coins/2', { predicate: (request) => request.method() === 'PUT' })
+  await page.getByRole('button', { name: 'Zapisz' }).click()
+  const request = await putRequest
+  expect(request.postDataJSON()).toMatchObject({ country_id: 2, collection_id: 2 })
 })
