@@ -15,8 +15,11 @@ const { markClean, markDirty } = useUnsavedCoinForm()
 const coin = ref<Coin | null>(null)
 const collections = ref<Collection[]>([])
 const selectedCollectionId = ref(0)
+const savedCollectionId = ref(0)
+const currentCoinId = ref(0)
 const errorMessage = ref('')
 const collectionsErrorMessage = ref('')
+const savingCollection = ref(false)
 
 async function loadCoin(): Promise<void> {
   try {
@@ -24,7 +27,9 @@ async function loadCoin(): Promise<void> {
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
     coin.value = await response.json() as Coin
+    currentCoinId.value = coin.value.id
     selectedCollectionId.value = coin.value.collection_id
+    savedCollectionId.value = coin.value.collection_id
     markClean()
     errorMessage.value = ''
   } catch {
@@ -47,6 +52,30 @@ function addCreatedCollection(collection: Collection): void {
   collections.value.push(collection)
   selectedCollectionId.value = collection.id
   markDirty()
+}
+
+async function saveCollection(): Promise<void> {
+  if (!currentCoinId.value || !selectedCollectionId.value || selectedCollectionId.value === savedCollectionId.value) return
+
+  savingCollection.value = true
+  errorMessage.value = ''
+  try {
+    const response = await fetch(`/api/coins/${currentCoinId.value}/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_collection_id: selectedCollectionId.value }),
+    })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    const movedCoin = await response.json() as Coin
+    currentCoinId.value = movedCoin.id
+    savedCollectionId.value = movedCoin.collection_id
+    selectedCollectionId.value = movedCoin.collection_id
+  } catch {
+    errorMessage.value = 'Nie udało się zapisać kolekcji monety.'
+  } finally {
+    savingCollection.value = false
+  }
 }
 
 async function uploadFile(
@@ -73,56 +102,47 @@ async function deleteImage(coinId: number, image: CoinImage): Promise<void> {
 }
 
 async function saveCoin(payload: CoinFormSubmit): Promise<void> {
-  if (!coin.value || !selectedCollectionId.value) {
-    errorMessage.value = 'Wybierz kolekcję monety.'
+  if (!coin.value || !currentCoinId.value || !savedCollectionId.value) {
+    errorMessage.value = 'Nie udało się ustalić monety lub jej kolekcji.'
+    return
+  }
+
+  if (selectedCollectionId.value !== savedCollectionId.value) {
+    errorMessage.value = 'Najpierw zapisz zmianę kolekcji osobnym przyciskiem.'
     return
   }
 
   try {
-    let savedCoinId = coin.value.id
-    const collectionChanged = selectedCollectionId.value !== coin.value.collection_id
-
-    if (collectionChanged) {
-      const moveResponse = await fetch(`/api/coins/${coin.value.id}/move`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_collection_id: selectedCollectionId.value }),
-      })
-      if (!moveResponse.ok) throw new Error(`HTTP ${moveResponse.status}`)
-      const movedCoin = await moveResponse.json() as Coin
-      savedCoinId = movedCoin.id
-    }
-
-    const coinUpdate = { ...payload.coin, collection_id: selectedCollectionId.value }
-    const response = await fetch(`/api/coins/${savedCoinId}`, {
+    const coinUpdate = { ...payload.coin, collection_id: savedCollectionId.value }
+    const response = await fetch(`/api/coins/${currentCoinId.value}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(coinUpdate),
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
-    if (payload.images.avers) await uploadFile(savedCoinId, payload.images.avers, 'avers', true)
-    if (payload.images.rewers) await uploadFile(savedCoinId, payload.images.rewers, 'rewers', true)
-    for (const file of payload.images.additional) await uploadFile(savedCoinId, file, 'additional')
-    for (const image of payload.images.additionalDeletes) await deleteImage(savedCoinId, image)
+    if (payload.images.avers) await uploadFile(currentCoinId.value, payload.images.avers, 'avers', true)
+    if (payload.images.rewers) await uploadFile(currentCoinId.value, payload.images.rewers, 'rewers', true)
+    for (const file of payload.images.additional) await uploadFile(currentCoinId.value, file, 'additional')
+    for (const image of payload.images.additionalDeletes) await deleteImage(currentCoinId.value, image)
 
     markClean()
-    await router.push(`/monety/${savedCoinId}`)
+    await router.push(`/monety/${currentCoinId.value}`)
   } catch {
-    errorMessage.value = 'Nie udało się zapisać zmian monety, kolekcji lub jej zdjęć.'
+    errorMessage.value = 'Nie udało się zapisać zmian monety lub jej zdjęć.'
   }
 }
 
 function cancelEditing(): void {
   if (coin.value) {
-    void router.push(`/monety/${coin.value.id}`)
+    void router.push(`/monety/${currentCoinId.value}`)
     return
   }
   void router.push('/monety')
 }
 
 watch(selectedCollectionId, () => {
-  if (coin.value && selectedCollectionId.value !== coin.value.collection_id) markDirty()
+  if (coin.value && selectedCollectionId.value !== savedCollectionId.value) markDirty()
 })
 
 onMounted(() => {
@@ -144,7 +164,10 @@ onMounted(() => {
       v-if="coin"
       v-model:selected-collection-id="selectedCollectionId"
       :collections="collections"
+      :saved-collection-id="savedCollectionId"
+      :saving-collection="savingCollection"
       @created="addCreatedCollection"
+      @save="saveCollection"
     />
 
     <CoinForm
@@ -154,7 +177,7 @@ onMounted(() => {
       @submit="saveCoin"
       @cancel="cancelEditing"
     />
-    <CategoryAssignment v-if="coin" :coin-id="coin.id" />
+    <CategoryAssignment v-if="coin" :coin-id="currentCoinId" />
   </section>
 </template>
 
