@@ -15,13 +15,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from coin_catalog.collection_stats import recalculate_collection_stats
-from coin_catalog.database import get_db
+from coin_catalog.database import DATA_DIR, get_db
 from coin_catalog.models import Coin, CoinImage
 from coin_catalog.schemas import CoinImageResponse
 
 router = APIRouter(prefix="/coins/{coin_id}/images", tags=["images"])
 
-IMAGES_DIR = Path(__file__).resolve().parents[4] / "images"
+IMAGES_DIR = DATA_DIR / "images"
 PRIMARY_KINDS = {"avers", "rewers"}
 
 
