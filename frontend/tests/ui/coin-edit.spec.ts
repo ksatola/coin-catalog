@@ -32,7 +32,6 @@ const coin = {
   diameter: null,
   collection_number: '1',
   has_video: false,
-  source: null,
   archived: false,
   collection_id: 1,
 }
@@ -48,10 +47,7 @@ async function mockCoinEditApi(page: Parameters<typeof test>[0]['page']): Promis
   await page.route('**/api/collections', async (route) => await route.fulfill({ json: collections }))
   await page.route('**/api/coins/1/images', async (route) => await route.fulfill({ json: [] }))
   await page.route('**/api/coins/2/images', async (route) => await route.fulfill({ json: [] }))
-  await page.route('**/api/coins/1', async (route) => {
-    if (route.request().method() === 'GET') await route.fulfill({ json: coin })
-    else await route.fulfill({ json: coin })
-  })
+  await page.route('**/api/coins/1', async (route) => await route.fulfill({ json: coin }))
   await page.route('**/api/coins/2', async (route) => await route.fulfill({ json: movedCoin }))
   await page.route('**/api/coins/1/move', async (route) => await route.fulfill({ json: movedCoin }))
 }
