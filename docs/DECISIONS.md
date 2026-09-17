@@ -106,7 +106,7 @@ Vue 3 is the frontend framework. Frontend functionality is organized primarily i
 ## D-011 — TypeScript
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 TypeScript is used for frontend development to improve maintainability and provide static typing for the growing frontend codebase.
 
@@ -115,7 +115,7 @@ TypeScript is used for frontend development to improve maintainability and provi
 ## D-012 — Vite
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Vite is the frontend development and build tool for the Vue/TypeScript application.
 
@@ -124,7 +124,7 @@ Vite is the frontend development and build tool for the Vue/TypeScript applicati
 ## D-013 — Coin Photographs Stored as Files
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Original coin photographs are stored as external files rather than SQLite BLOBs. The database stores references and metadata. Exact storage layout and backup strategy will be decided during image management implementation.
 
@@ -133,7 +133,7 @@ Original coin photographs are stored as external files rather than SQLite BLOBs.
 ## D-014 — Existing XLS/XLSX Data as Import Source
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Existing XLS/XLSX data will be imported into the application database. Exact spreadsheet structure, mappings, validation, and duplicate handling will be determined during the import phase.
 
@@ -142,7 +142,7 @@ Existing XLS/XLSX data will be imported into the application database. Exact spr
 ## D-015 — Current Development Priority
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Development begins with the development environment rather than application features. The first implementation phase is **Phase 1 — Development Environment**.
 
@@ -559,12 +559,15 @@ The catalogue represents physical collection data. Accidental deletion should th
 
 ## D-030 — Coin Image Storage, Naming, and Editing Workflow
 
-**Status:** Accepted  
+**Status:** Superseded  
 **Date:** 2026-09-14
+**Superseded by:** D-034 — Collection-Aware Coin Images
 
-Original coin photographs are stored as external JPG files in a top-level `images/` directory at the same repository level as `data/`. The `images/` directory is ignored by Git and is not version-controlled.
+This decision remains the historical source for the coin image naming and manual editing workflow, but its original storage-root and directory-layout provisions are superseded by D-034.
 
-All image files are stored directly inside `images/`; separate per-coin subdirectories are not used.
+Original coin photographs are stored as external JPG files. The collection-aware filesystem location is defined by D-034; the legacy top-level `images/` directory described by the original version of this decision is no longer the current storage location.
+
+All image files are stored directly inside the applicable collection directory; separate per-coin subdirectories are not used.
 
 A coin ID is represented in image filenames as exactly six decimal digits with leading zeroes. For example, coin ID `404` is represented as `000404`.
 
@@ -596,7 +599,7 @@ The application must never silently overwrite an existing image file. When an op
 
 ### Rationale
 
-The collection already contains rectangular JPG photographs that are close to square, and the browser grid is therefore designed around square image cells. Direct flat storage in `images/` keeps the file collection simple and predictable; the six-digit coin ID provides stable lexical sorting and grouping without requiring per-coin directories.
+The collection already contains rectangular JPG photographs that are close to square, and the browser grid is therefore designed around square image cells. Collection-level storage keeps the file collection separated by collection without requiring per-coin directories; the six-digit coin ID provides stable lexical sorting and grouping within each collection.
 
 Requiring an awers and rewers at save time reflects the domain model: both sides are essential primary photographs of a coin. Allowing temporary removal during editing makes replacement practical without permitting an incomplete saved coin.
 
@@ -606,8 +609,7 @@ Keeping image metadata in SQLite while retaining the actual JPG files on disk se
 
 ### Consequences
 
-- The repository uses a top-level `images/` directory alongside `data/` for application image data.
-- Git must ignore `/images/`.
+- The collection-aware storage root and directory layout are defined by D-034.
 - Image filenames use the six-digit coin ID and the approved suffix format.
 - A saved coin has one current primary obverse image and one current primary reverse image.
 - Additional images are represented as sequential numbered files for the same coin.
