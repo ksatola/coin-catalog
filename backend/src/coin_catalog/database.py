@@ -6,6 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DATA_DIR = PROJECT_ROOT / "data"
 DATABASE_PATH = DATA_DIR / "coin-catalog.db"
+IMAGES_DIR = DATA_DIR / "images"
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
 
@@ -40,6 +41,11 @@ def get_db():
 
 
 def initialize_database() -> None:
+    """Create runtime data directories and ensure the SQLite file can be opened.
+
+    Schema creation and upgrades remain the responsibility of Alembic.
+    """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     with engine.connect():
         pass
