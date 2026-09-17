@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CategoryAssignment from '../components/CategoryAssignment.vue'
@@ -140,10 +140,6 @@ function cancelEditing(): void {
   }
   void router.push('/monety')
 }
-
-watch(selectedCollectionId, () => {
-  if (coin.value && selectedCollectionId.value !== savedCollectionId.value) markDirty()
-})
 
 onMounted(() => {
   void loadCoin()
