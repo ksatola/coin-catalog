@@ -28,8 +28,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from) => {
-  const { isDirty, markClean } = useUnsavedCoinForm()
+  const { isDirty, markClean, consumeNavigationAllowance } = useUnsavedCoinForm()
   const isCoinForm = from.path === '/dodaj' || /^\/monety\/[^/]+\/edytuj$/.test(from.path)
+
+  if (isCoinForm && consumeNavigationAllowance()) return true
 
   if (isCoinForm && isDirty.value && to.path !== from.path) {
     const shouldLeave = window.confirm(
