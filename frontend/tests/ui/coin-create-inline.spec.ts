@@ -116,8 +116,9 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   await page.getByRole('button', { name: 'Dodaj' }).last().click()
 
   const categorySelect = page.getByLabel('Wybierz kategorie')
-  const createdCategory = categorySelect.locator('option', {
-    hasText: 'Kategoria testowa',
+  const createdCategory = categorySelect.getByRole('option', {
+    name: 'Kategoria testowa',
+    exact: true,
   })
 
   await expect(createdCategory).toHaveCount(1)
