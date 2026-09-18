@@ -324,6 +324,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     </section>
 
     <label class="video-option"><input v-model="form.has_video" type="checkbox" /><span>Ma wideo</span></label>
+    <slot name="categories" />
     <div v-if="validationMessage" class="form-message form-message-warning">{{ validationMessage }}</div>
     <footer class="form-actions">
       <button type="button" class="secondary-action" @click="emit('cancel')">Anuluj</button>
