@@ -6,11 +6,11 @@ The project is developed incrementally, with the repository documentation servin
 
 ## Project Status
 
-**Current phase:** Phase 7 — Collection Number is complete and verified on the working branch.
+**Current phase:** Phase 8 — Collections is complete and verified on the working branch.
 
-The application provides a usable catalogue workflow including coin creation, browsing, details, editing, soft archive/restore, dictionary management, coin photograph management, category management, coin-category assignment, search and filtering, and a user-facing collection number independent from the technical database ID.
+The application provides a usable catalogue workflow including coin creation, browsing, details, editing, soft archive/restore, dictionary management, coin photograph management, category management, coin-category assignment, search and filtering, collection management, collection-aware filtering and search, collection-aware image storage, atomic coin moves, and a user-facing collection number independent from the technical database ID.
 
-Phase 1 through Phase 6 are complete. Phase 7 — Collection Number adds the optional collection-number field across the database, API, forms, search, and catalogue presentation, with backend and Playwright coverage. Collection metadata continues to be entered manually through the application; XLS/XLSX import is not part of the current workflow.
+Phase 1 through Phase 7 are complete. Phase 8 — Collections adds collections as a first-class organizational entity across the database, API, coin operations, filtering, image storage, and frontend collection management. Collection metadata continues to be entered manually through the application; XLS/XLSX import is not part of the current workflow.
 
 ## Architecture
 
@@ -37,6 +37,9 @@ The frontend provides:
 - coin detail views,
 - coin creation and editing,
 - optional collection-number entry and display,
+- collection management and collection detail views,
+- collection assignment and collection-aware filtering/search,
+- atomic coin moves between collections,
 - soft archive and restore,
 - dictionary management,
 - primary and additional coin photographs,
@@ -61,7 +64,6 @@ The repository contains the project's persistent technical and development conte
 - [`docs/PROGRESS.md`](docs/PROGRESS.md) — current implementation progress
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — planned development path
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — development environment and local workflow
-- [`docs/IMAGE_STORAGE_DECISION.md`](docs/IMAGE_STORAGE_DECISION.md) — accepted coin-image storage and naming rules
 
 These documents are kept synchronized with verified implementation changes.
 
@@ -84,15 +86,15 @@ Development should favor small, verifiable changes over large speculative implem
 
 Collection metadata is entered manually through the application. XLS/XLSX import is not part of the current workflow.
 
-Coin photographs are not committed to Git. The accepted storage convention uses a top-level `images/` directory alongside `data/`, flat six-digit coin IDs, and filenames such as:
+Coin photographs are not committed to Git. The current storage convention uses collection-specific directories under `data/images/`, flat six-digit technical coin IDs, and filenames such as:
 
 ```text
-000404 - awers.jpg
-000404 - rewers.jpg
-000404 - 01.jpg
+data/images/collection-001/000404 - awers.jpg
+data/images/collection-001/000404 - rewers.jpg
+data/images/collection-001/000404 - 01.jpg
 ```
 
-The database stores image metadata and references; image contents remain files on disk.
+The database stores image metadata and references; image contents remain files on disk. Each image reference must belong to the directory of the coin's current collection.
 
 ## Development Setup
 
