@@ -124,6 +124,11 @@ async function mockCollectionApi(page: Page): Promise<void> {
   })
 
   await page.route('**/api/coins?collection_id=1', async (route) => {
+    const params = new URL(route.request().url()).searchParams
+    if (params.has('status')) {
+      await route.fallback()
+      return
+    }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collectionCoins) })
   })
 }
@@ -226,7 +231,7 @@ test.describe('collections', () => {
     await expect(page.getByText('791', { exact: true })).toBeVisible()
     await expect(page.getByText('17', { exact: true })).toBeVisible()
     await expect(page.getByText('4', { exact: true })).toBeVisible()
-    await expect(page.getByText('3 GB')).toBeVisible()
+    await expect(page.getByText('3.0 GB')).toBeVisible()
     await expect(page.getByText('16 września 2026')).toBeVisible()
   })
 
@@ -240,8 +245,8 @@ test.describe('collections', () => {
     await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
 
     await expect(page.getByRole('button', { name: 'Nowa kolekcja' }).first()).toBeVisible()
-    await expect(page.getByDisplayValue('Nowa kolekcja')).toBeVisible()
-    await expect(page.getByDisplayValue('Testowy opis')).toBeVisible()
+    await expect(page.getByLabel('Nazwa')).toHaveValue('Nowa kolekcja')
+    await expect(page.getByLabel('Opis')).toHaveValue('Testowy opis')
 
     await page.getByLabel('Nazwa').fill('Zmieniona kolekcja')
     await page.getByRole('button', { name: 'Zapisz', exact: true }).click()
@@ -318,7 +323,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
-    await page.getByLabel('Szukaj').fill('PL-0404')
+    await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('PL-0404')
     await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
     await expect(page.getByText('#404')).toBeVisible()
