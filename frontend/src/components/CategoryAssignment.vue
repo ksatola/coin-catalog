@@ -12,6 +12,10 @@ const categories = ref<Category[]>([])
 const selectedCategoryIds = ref<number[]>([])
 const errorMessage = ref('')
 const loading = ref(false)
+const isOpen = ref(false)
+const name = ref('')
+const description = ref('')
+const saving = ref(false)
 
 async function load(): Promise<void> {
   loading.value = true
@@ -44,6 +48,8 @@ function availableCategories(): Category[] {
 async function attach(): Promise<void> {
   if (selectedCategoryIds.value.length === 0) return
 
+  saving.value = true
+  errorMessage.value = ''
   try {
     for (const categoryId of selectedCategoryIds.value) {
       const response = await fetch(
@@ -59,6 +65,8 @@ async function attach(): Promise<void> {
     await load()
   } catch {
     errorMessage.value = 'Nie udało się przypisać kategorii.'
+  } finally {
+    saving.value = false
   }
 }
 
@@ -79,12 +87,73 @@ async function detach(category: Category): Promise<void> {
   }
 }
 
+function toggle(): void {
+  if (isOpen.value) {
+    cancel()
+    return
+  }
+
+  isOpen.value = true
+  errorMessage.value = ''
+}
+
+function cancel(): void {
+  isOpen.value = false
+  name.value = ''
+  description.value = ''
+  errorMessage.value = ''
+}
+
+async function create(): Promise<void> {
+  const trimmedName = name.value.trim()
+  if (!trimmedName) {
+    errorMessage.value = 'Nazwa nie może być pusta.'
+    return
+  }
+
+  saving.value = true
+  errorMessage.value = ''
+  try {
+    const response = await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: trimmedName,
+        description: description.value.trim() || null,
+      }),
+    })
+
+    if (response.status === 409) {
+      errorMessage.value = 'Kategoria o tej nazwie już istnieje.'
+      return
+    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    const created = await response.json() as Category
+    const attachResponse = await fetch(
+      `/api/coins/${props.coinId}/categories/${created.id}`,
+      { method: 'POST' },
+    )
+    if (!attachResponse.ok) throw new Error(`HTTP ${attachResponse.status}`)
+
+    await load()
+    cancel()
+  } catch {
+    errorMessage.value = 'Nie udało się dodać kategorii.'
+  } finally {
+    saving.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
 <template>
   <section class="category-assignment form-section">
-    <div class="section-heading"><h3>Kategorie</h3></div>
+    <div>
+      <h3>Kategorie</h3>
+      <p>Moneta może mieć wiele przypisanych kategorii.</p>
+    </div>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <p v-if="loading">Ładowanie kategorii…</p>
@@ -92,12 +161,27 @@ onMounted(load)
     <ul v-if="assignedCategories.length" class="category-list">
       <li v-for="category in assignedCategories" :key="category.id">
         <span>{{ category.name }}</span>
-        <button type="button" @click="detach(category)">Usuń</button>
+        <button type="button" :disabled="saving" @click="detach(category)">Usuń</button>
       </li>
     </ul>
     <p v-else>Brak przypisanych kategorii.</p>
 
-    <form class="category-form" @submit.prevent="attach">
+    <div class="category-actions">
+      <button
+        type="button"
+        class="save-button"
+        :disabled="selectedCategoryIds.length === 0 || saving"
+        @click="attach"
+      >
+        {{ saving ? 'Zapisywanie…' : 'Zapisz kategorię' }}
+      </button>
+
+      <button type="button" class="open-button" :aria-expanded="isOpen" @click="toggle">
+        Dodaj kategorię
+      </button>
+    </div>
+
+    <div v-if="selectedCategoryIds.length > 0" class="selection">
       <label>
         Wybierz kategorie
         <select v-model="selectedCategoryIds" multiple size="5">
@@ -111,16 +195,68 @@ onMounted(load)
         </select>
       </label>
       <small>Możesz wybrać więcej niż jedną kategorię.</small>
-      <button type="submit" :disabled="selectedCategoryIds.length === 0">
-        Dodaj kategorie
-      </button>
-    </form>
+    </div>
+
+    <label v-else class="category-select">
+      <span>Wybierz kategorie</span>
+      <select v-model="selectedCategoryIds" multiple size="5">
+        <option
+          v-for="category in availableCategories()"
+          :key="category.id"
+          :value="category.id"
+        >
+          {{ category.name }}
+        </option>
+      </select>
+      <small>Możesz wybrać więcej niż jedną kategorię.</small>
+    </label>
+
+    <div v-if="isOpen" class="editor">
+      <label class="editor-field">
+        <span>Nazwa nowej kategorii</span>
+        <input v-model="name" type="text" autocomplete="off" />
+      </label>
+
+      <label class="editor-field">
+        <span>Opis</span>
+        <textarea v-model="description" rows="3" />
+      </label>
+
+      <div class="editor-actions">
+        <button type="button" class="editor-primary" :disabled="saving" @click="create">
+          Dodaj
+        </button>
+        <button type="button" class="editor-secondary" :disabled="saving" @click="cancel">
+          Anuluj
+        </button>
+      </div>
+    </div>
   </section>
 </template>
 
 <style scoped>
-.category-assignment { display: grid; gap: 18px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04); }
-.category-assignment .section-heading h3 { margin: 0; font-size: 1.1rem; }
+.category-assignment {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.category-assignment h3 {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 1.1rem;
+}
+
+.category-assignment p {
+  margin: 0;
+  color: #64748b;
+  font-size: .85rem;
+}
+
 .category-list {
   display: flex;
   flex-wrap: wrap;
@@ -133,7 +269,6 @@ onMounted(load)
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 6px 8px;
   padding: 8px 10px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -141,19 +276,34 @@ onMounted(load)
   color: #334155;
 }
 
-.category-form { display: grid; gap: 10px; }
+.category-list button {
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fff;
+  color: #991b1b;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+}
 
-.category-form label {
+.category-select,
+.selection label,
+.editor-field {
   display: grid;
   gap: 8px;
   color: #334155;
   font-weight: 600;
 }
 
-.category-form select {
+.category-select select,
+.selection select,
+.editor input,
+.editor textarea {
   box-sizing: border-box;
   width: 100%;
-  min-height: 132px;
+  min-height: 44px;
   padding: 10px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 7px;
@@ -162,9 +312,103 @@ onMounted(load)
   font: inherit;
 }
 
-.category-form small { color: #64748b; font-size: .8rem; }
-.category-form button { justify-self: start; min-height: 44px; padding: 10px 18px; border: 1px solid #0f172a; border-radius: 8px; background: #0f172a; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-.category-form button:disabled { cursor: not-allowed; opacity: .55; }
-.category-assignment button:focus-visible, .category-assignment select:focus-visible { outline: 3px solid rgba(59,130,246,.25); outline-offset: 2px; }
-.error { color: #b00020; }
+.category-select select,
+.selection select {
+  min-height: 132px;
+}
+
+.category-select small,
+.selection small {
+  color: #64748b;
+  font-size: .8rem;
+  font-weight: 400;
+}
+
+.category-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.save-button,
+.open-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+}
+
+.save-button {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.save-button:disabled {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.open-button {
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #fff;
+}
+
+.editor {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 100%);
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .12);
+}
+
+.editor textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.editor-actions button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+}
+
+.editor-primary {
+  border: 1px solid #0f172a;
+  background: #0f172a;
+  color: #fff;
+}
+
+.editor-secondary {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.category-assignment button:focus-visible,
+.category-assignment select:focus-visible,
+.category-assignment input:focus-visible,
+.category-assignment textarea:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, .25);
+  outline-offset: 2px;
+}
+
+.error {
+  color: #b00020;
+}
 </style>
