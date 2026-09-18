@@ -1,11 +1,8 @@
 # Coin Catalog — Development Guide
 
-This document describes the current, verified development environment and normal local workflow.
+This document describes the current development environment and normal local workflow, including the project's helper commands, Git workflow, testing, and collection-aware application verification.
 
 For coding style and quality conventions, see [`CODING_STANDARDS.md`](CODING_STANDARDS.md).
-For helper scripts, see [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md).
-For branching and merge workflow, see [`GIT_WORKFLOW.md`](GIT_WORKFLOW.md).
-For image storage rules, see [`IMAGE_STORAGE_DECISION.md`](IMAGE_STORAGE_DECISION.md).
 
 ## Host Requirements
 
@@ -82,7 +79,6 @@ From the repository root:
 
 `./status` provides process and port diagnostics.
 
-See [`DEV_SCRIPTS.md`](DEV_SCRIPTS.md) for details.
 
 ## Current Development Services
 
@@ -119,7 +115,8 @@ backend/
             ├── coin_categories.py
             ├── coins.py
             ├── dictionaries.py
-            └── images.py
+            ├── images.py
+            └── collections.py
 ```
 
 Backend commands run from:
@@ -136,9 +133,11 @@ Run:
 
 ```bash
 cd /workspaces/coin-catalog/backend
+uv sync --frozen
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
+uv run pyright
 ```
 
 The backend suite covers coin persistence and API behavior, dictionary CRUD and reference protection, archive/restore behavior, and category/image behavior.
@@ -151,7 +150,7 @@ The development database is:
 /workspaces/coin-catalog/data/coin-catalog.db
 ```
 
-The database is not committed to Git.
+The database is not committed to Git. Runtime image files under `data/images/` are likewise application data rather than versioned source.
 
 Run Alembic commands from the backend directory:
 
@@ -185,6 +184,13 @@ backend/src/coin_catalog/main.py
 Current API:
 
 ```text
+GET    /collections
+POST   /collections
+GET    /collections/{collection_id}
+PUT    /collections/{collection_id}
+DELETE /collections/{collection_id}
+GET    /collections/{collection_id}/stats
+
 GET  /health
 
 POST /coins
@@ -194,6 +200,7 @@ GET  /coins/{coin_id}
 PUT  /coins/{coin_id}
 POST /coins/{coin_id}/archive
 POST /coins/{coin_id}/restore
+POST /coins/{coin_id}/move
 
 GET    /dictionaries/{dictionary_name}
 POST   /dictionaries/{dictionary_name}
@@ -282,13 +289,15 @@ Vite polling is enabled for reliable source-change detection inside the Dev Cont
 /archiwum                 → archived coins
 /slowniki                 → dictionary editor
 /kategorie                → category management
+/kolekcje                 → collection management
+/kolekcje/:id             → collection details
 ```
 
-The fixed bottom navigation contains `Monety`, `Dodaj monetę`, `Archiwum`, and `Słowniki`.
+The fixed bottom navigation contains `Monety`, `Dodaj monetę`, `Archiwum`, and `Słowniki`. Collection management is available through the collection UI and collection-aware catalogue navigation.
 
 ## Current Coin Browser and Entry Flow
 
-The browser supports Grid and List layouts. Grid is the default.
+The browser supports Grid and List layouts. Grid is the default. The active catalogue and archive can be scoped to all, one, or multiple collections; an empty collection selection means all collections. Quick search respects the selected collection scope. Collection detail views are available at `/kolekcje/:id`, and coin editing moves a coin through the collection move operation rather than changing only `collection_id`.
 
 Grid tiles open details. List rows are not clickable; actions are explicit buttons.
 
@@ -354,7 +363,7 @@ The verified UI coverage includes image replacement, cancellation, additional-im
 
 ## Recommended Local Verification
 
-For the current Phase 4 branch:
+For the current Phase 8 branch:
 
 ```bash
 cd /workspaces/coin-catalog/backend

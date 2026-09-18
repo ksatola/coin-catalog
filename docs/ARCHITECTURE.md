@@ -106,7 +106,7 @@ Dictionary, category, coin-category, and image endpoints remain provided by thei
 
 ## 7. Coin Photographs
 
-Coin photographs are stored as external JPG files rather than SQLite BLOBs. The accepted storage decision is documented in `docs/IMAGE_STORAGE_DECISION.md`.
+Coin photographs are stored as external JPG files rather than SQLite BLOBs. The current image-storage decision is recorded in `docs/DECISIONS.md`.
 
 Images are organized by collection, with no per-coin subdirectories:
 
@@ -141,7 +141,7 @@ The architecture targets Windows 11 and macOS through the Docker-based developme
 
 Current automated verification includes backend pytest tests, backend Ruff checks, the frontend production build, and Playwright UI tests.
 
-Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, and catalogue search behavior. Collection-specific coverage is being added during Phase 8, including collection selection, multi-collection filtering, coin moves, and image/file consistency.
+Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, catalogue search behavior, and collection workflows including collection selection, multi-collection filtering, coin moves, and image/file consistency.
 
 Broader integration and CI coverage remain future work.
 
@@ -149,7 +149,17 @@ Broader integration and CI coverage remain future work.
 
 The current priority is local development rather than production deployment. A production deployment architecture will be defined when deployment becomes an actual requirement.
 
-## 12. Current Architecture Boundaries
+## 12. Collection Integrity and Lifecycle
+
+Collections use one shared SQLite database. Each coin belongs to exactly one collection, while categories remain global across collections. Empty collections may exist; normal application functionality does not delete collections containing coins.
+
+Creating a collection also prepares its `data/images/collection-XXX/` directory. Startup consistency is non-destructive: required data/image/collection directories are created when missing, existing files are not removed merely because they are not referenced, and broken database-to-file references are reported rather than silently repaired by inventing files.
+
+The collection filter model uses `collectionIds: number[]`; an empty selection means all collections. Repeated `collection_id` query parameters can represent multiple selected collections. Quick search is constrained by the selected collection scope.
+
+A coin move is an application-level compensating operation. It creates a new technical coin ID, preserves the user-facing collection number, prepares target image files and metadata, protects against collisions, and removes source state only after the target state is ready. Failures must leave the source intact or compensate partial target changes.
+
+## 13. Current Architecture Boundaries
 
 The following remain future or conditional work:
 
@@ -158,6 +168,6 @@ The following remain future or conditional work:
 - production deployment;
 - CI/CD pipeline.
 
-Collections, collection-aware coin management, collection-aware image storage, collection filtering, and coin moves are part of the active Phase 8 architecture.
+Collections, collection-aware coin management, collection-aware image storage, collection filtering, and coin moves are part of the implemented Phase 8 architecture.
 
-The current category model, search/filtering, and collection-number workflow are implemented. Collection functionality is being introduced incrementally during Phase 8.
+The current category model, search/filtering, collection-number workflow, and collection functionality are implemented.

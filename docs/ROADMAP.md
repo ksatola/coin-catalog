@@ -78,9 +78,9 @@ The collection number has no uniqueness rule or restrictive format at this stage
 
 Implemented and verified functionality covers the collection domain/database, collection API, collection-aware coin operations, collection filtering/search, collection-aware filesystem, atomic coin move, and the collection frontend. The current development cycle verified the Phase 8 Playwright suites, image-storage tests, and backend Ruff checks recorded in docs/PROGRESS.md. Collection creation prepares its filesystem directory, the catalog shows active collection scope, and the collection management view exposes detail navigation.
 
-Phase 8 introduces collections as a first-class organizational entity while keeping one shared SQLite database.
+Phase 8 introduced collections as a first-class organizational entity while keeping one shared SQLite database.
 
-Planned implementation:
+Implemented scope:
 
 1. Collection domain and database
    - `collection` model and table;
