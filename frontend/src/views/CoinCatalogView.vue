@@ -51,6 +51,14 @@ function loadGalleryColumns(): GalleryColumns {
 const viewMode = ref<ViewMode>(loadViewMode())
 const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
 
+function activeCollectionScopeLabel(): string {
+  const ids = filters.collectionIds
+  if (ids.length === 0) return 'Wszystkie kolekcje'
+  return ids.length === 1
+    ? `Kolekcja #${ids[0]}`
+    : `${ids.length} kolekcje (#${ids.join(', #')})`
+}
+
 watch(viewMode, (mode) => {
   localStorage.setItem(viewModeStorageKey, mode)
 })
@@ -145,6 +153,9 @@ onMounted(loadCoins)
       <div>
         <h1>{{ pageTitle }}</h1>
         <p class="page-subtitle">{{ pageSubtitle }}</p>
+        <p class="active-collection-scope" aria-label="Aktywny zakres kolekcji">
+          <span>Aktywny zakres kolekcji:</span> <strong>{{ activeCollectionScopeLabel() }}</strong>
+        </p>
       </div>
 
       <div class="header-controls">
@@ -266,6 +277,16 @@ onMounted(loadCoins)
   margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
+}
+
+.active-collection-scope {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.active-collection-scope span {
+  color: #64748b;
 }
 
 .header-controls {
