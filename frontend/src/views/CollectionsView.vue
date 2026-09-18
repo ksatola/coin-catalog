@@ -230,14 +230,14 @@ onMounted(loadCollections)
         </section>
 
         <footer class="actions">
-          <button type="submit" class="primary-action" :disabled="saving">
-            {{ saving ? 'Zapisywanie…' : editing ? 'Zapisz' : 'Dodaj' }}
-          </button>
           <button v-if="editing" type="button" class="secondary-action" @click="resetForm">
             Nowa kolekcja
           </button>
           <button v-if="editing" type="button" class="danger-action" @click="deleteCollection">
             Usuń kolekcję
+          </button>
+          <button type="submit" class="primary-action" :disabled="saving">
+            {{ saving ? 'Zapisywanie…' : editing ? 'Zapisz' : 'Dodaj' }}
           </button>
         </footer>
       </form>
