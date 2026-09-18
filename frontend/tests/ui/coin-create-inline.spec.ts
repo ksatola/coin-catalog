@@ -136,7 +136,7 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   })
 
   await expect(createdCategory).toHaveCount(1)
-  await expect(createdCategory).toBeSelected()
+  await expect(categorySelect).toHaveValues(['200'])
 
   await expect(page.getByLabel('Rok od')).toHaveValue('1900')
   await expect(page.getByLabel('Rok do')).toHaveValue('1901')
