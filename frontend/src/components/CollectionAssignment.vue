@@ -6,8 +6,8 @@ import type { Collection } from '../types'
 const props = defineProps<{
   collections: Collection[]
   selectedCollectionId: number
-  savedCollectionId: number
-  savingCollection: boolean
+  savedCollectionId?: number
+  savingCollection?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -102,6 +102,7 @@ async function create(): Promise<void> {
       </button>
 
       <button
+        v-if="props.savedCollectionId !== undefined && props.savingCollection !== undefined"
         type="button"
         class="save-button"
         :disabled="props.selectedCollectionId === props.savedCollectionId || props.savingCollection"
