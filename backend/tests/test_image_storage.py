@@ -157,3 +157,60 @@ def test_unsafe_image_filename_is_reported(
 
     assert len(issues) == 1
     assert issues[0].kind == "invalid_filename"
+
+
+def test_ensure_image_storage_is_idempotent(
+    session: Session,
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(image_storage, "IMAGES_DIR", tmp_path / "images")
+    collection = Collection(name="Test Collection")
+    session.add(collection)
+    session.commit()
+
+    assert ensure_image_storage(session) == []
+    sentinel = (
+        tmp_path / "images" / f"collection-{collection.id:03d}" / "sentinel.txt"
+    )
+    sentinel.write_text("keep", encoding="utf-8")
+
+    assert ensure_image_storage(session) == []
+    assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+def test_ensure_image_storage_does_not_remove_orphaned_files_or_directories(
+    session: Session,
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(image_storage, "IMAGES_DIR", tmp_path / "images")
+    orphan_dir = tmp_path / "images" / "collection-999"
+    orphan_dir.mkdir(parents=True)
+    orphan_file = orphan_dir / "orphan.jpg"
+    orphan_file.write_bytes(b"orphan")
+
+    collection = Collection(name="Test Collection")
+    session.add(collection)
+    session.commit()
+
+    assert ensure_image_storage(session) == []
+    assert orphan_dir.is_dir()
+    assert orphan_file.read_bytes() == b"orphan"
+
+
+def test_initialize_database_creates_missing_runtime_data_directories(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from coin_catalog import database
+
+    data_dir = tmp_path / "data"
+    images_dir = data_dir / "images"
+    monkeypatch.setattr(database, "DATA_DIR", data_dir)
+    monkeypatch.setattr(database, "IMAGES_DIR", images_dir)
+
+    database.initialize_database()
+
+    assert data_dir.is_dir()
+    assert images_dir.is_dir()
