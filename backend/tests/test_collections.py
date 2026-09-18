@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from collections.abc import Generator
 
 import pytest
@@ -8,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import Base, get_db
+from coin_catalog import image_storage
 from coin_catalog.main import app
 from coin_catalog.models import (
     Category,
@@ -48,6 +51,25 @@ def client(session: Session) -> Generator[TestClient]:
         yield TestClient(app)
     finally:
         app.dependency_overrides.clear()
+
+
+def test_creating_collection_creates_image_directory(
+    client: TestClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    image_root = tmp_path / "images"
+    monkeypatch.setattr(image_storage, "IMAGES_DIR", image_root)
+
+    response = client.post(
+        "/collections",
+        json={"name": "Directory Collection"},
+    )
+
+    assert response.status_code == 201
+    collection_id = response.json()["id"]
+    collection_dir = image_root / f"collection-{collection_id:03d}"
+    assert collection_dir.is_dir()
 
 
 def test_collection_crud(client: TestClient) -> None:
