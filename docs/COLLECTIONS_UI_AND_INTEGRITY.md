@@ -279,9 +279,9 @@ The following tasks were identified during review of the current coin edit save 
 - [x] **Define and implement independent collection-save behavior.** Collection changes must use the existing atomic coin-move mechanism without coupling it to the coin-detail update flow.
 - [x] **Add automated tests for the separated save mechanisms.** Cover collection change/save independently from coin-detail update, including the case where both collection and coin attributes have been edited before either save action is used.
 - [x] **Add regression coverage for the interaction with categories.** Category assignment/removal must remain an independent save mechanism and must not be affected by collection or coin-detail saves.
-- [ ] **Fix vertical spacing in the coin edit UI.** The current margin/spacing adjustment around the edit header, Collection section, and Photos section did not produce the intended visual result. Revisit later and make the spacing match the gaps between the subsequent form sections.
+- [x] **Fix vertical spacing in the coin edit UI.** The edit header, Collection section, and Photos section now use the intended vertical spacing.
 
 ### Notes
 
-- The spacing issue is intentionally deferred for now.
+- The spacing issue has been completed and is no longer deferred.
 - The current category mechanism is the reference pattern for independent save behavior: category assignment/removal is handled by its own controls and API calls.
