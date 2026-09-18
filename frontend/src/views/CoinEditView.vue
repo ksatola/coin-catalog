@@ -10,7 +10,7 @@ import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const route = useRoute()
 const router = useRouter()
-const { markClean, markDirty, allowNavigation } = useUnsavedCoinForm()
+const { markClean, markDirty } = useUnsavedCoinForm()
 
 const coin = ref<Coin | null>(null)
 const collections = ref<Collection[]>([])
@@ -126,7 +126,6 @@ async function saveCoin(payload: CoinFormSubmit): Promise<void> {
     for (const file of payload.images.additional) await uploadFile(currentCoinId.value, file, 'additional')
     for (const image of payload.images.additionalDeletes) await deleteImage(currentCoinId.value, image)
 
-    allowNavigation()
     markClean()
     await router.push(`/monety/${currentCoinId.value}`)
   } catch {
