@@ -124,11 +124,6 @@ async function mockCollectionApi(page: Page): Promise<void> {
   })
 
   await page.route('**/api/coins?collection_id=1', async (route) => {
-    const params = new URL(route.request().url()).searchParams
-    if (params.has('status')) {
-      await route.fallback()
-      return
-    }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collectionCoins) })
   })
 }
@@ -231,7 +226,7 @@ test.describe('collections', () => {
     await expect(page.getByText('791', { exact: true })).toBeVisible()
     await expect(page.getByText('17', { exact: true })).toBeVisible()
     await expect(page.getByText('4', { exact: true })).toBeVisible()
-    await expect(page.getByText('3.0 GB')).toBeVisible()
+    await expect(page.getByText('3.0 GB', { exact: true })).toBeVisible()
     await expect(page.getByText('16 września 2026')).toBeVisible()
   })
 
@@ -350,6 +345,7 @@ test.describe('collections', () => {
     await mockCatalogApi(page)
     await page.goto('/kolekcje/1')
 
+    await expect(page.getByRole('link', { name: /#404/ })).toBeVisible()
     await page.getByRole('button', { name: 'Pokaż monety' }).click()
     await expect(page).toHaveURL(/\/monety\?collection_id=1$/)
     await expect(page.getByText('#101')).toBeVisible()
