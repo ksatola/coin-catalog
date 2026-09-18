@@ -447,8 +447,8 @@ The development container may provide standalone tooling such as `pytest`, `ruff
 
 The project is currently in:
 
-**Phase 7 — Collection Number**
+**Phase 8 — Collections**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, and Phase 6 — UI Foundation have been completed and verified.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, Phase 6 — UI Foundation, and Phase 7 — Collection Number have been completed and verified.
 
-Phase 7 adds an optional collection number to coins across the database, API, frontend forms and views, and search. The feature is covered by backend and frontend tests, and the catalog search flow preserves the user's scroll position while results refresh.
+Phase 8 adds collections as a first-class organizational entity across the database, API, collection-aware coin operations and filtering, image storage, atomic coin moves, and frontend collection management and assignment. Phase 8 implementation and the verification recorded in docs/PROGRESS.md are complete.
