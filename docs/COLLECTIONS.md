@@ -199,7 +199,9 @@ The same rule applies to the archive.
 
 ### Visible context
 
-The active collection scope must be visible in both `Monety` and `Archiwum`, so the user can always distinguish:
+The active collection scope is visible directly in both `Monety` and `Archiwum`, so the user can distinguish all collections, one collection, or multiple selected collections without opening the filter panel.
+
+The user can always distinguish:
 
 - all collections;
 - one selected collection;
