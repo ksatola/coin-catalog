@@ -15,6 +15,11 @@ const collections = [
   { id: 2, name: 'Kolekcja 2', description: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
 ]
 
+const categories = [
+  { id: 1, name: 'Kategoria 1', description: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+  { id: 2, name: 'Kategoria 2', description: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+]
+
 const coin = {
   id: 1,
   country_id: 1,
@@ -198,14 +203,14 @@ test('zapisuje wybraną istniejącą kategorię z edycji monety', async ({ page 
   await mockCoinEditApi(page)
 
   let assignedCategoryIds: number[] = []
-  let attachRequest: Record<string, unknown> | null = null
+  let attachRequestCount = 0
 
   await page.route('**/api/categories', async (route) => {
     await route.fulfill({ json: categories })
   })
   await page.route('**/api/coins/1/categories', async (route) => {
     if (route.request().method() === 'POST') {
-      attachRequest = route.request().postDataJSON() as Record<string, unknown>
+      attachRequestCount += 1
       assignedCategoryIds = [2]
       await route.fulfill({ json: categories[1] })
       return
@@ -220,7 +225,7 @@ test('zapisuje wybraną istniejącą kategorię z edycji monety', async ({ page 
   await page.getByLabel('Wybierz kategorie').selectOption('2')
   await page.getByRole('button', { name: 'Zapisz kategorię' }).click()
 
-  await expect.poll(() => attachRequest).toBeTruthy()
+  await expect.poll(() => attachRequestCount).toBe(1)
   await expect(page.getByText('Kategoria 2')).toBeVisible()
 })
 
@@ -228,7 +233,7 @@ test('tworzy kategorię z edycji monety i przypisuje ją do monety', async ({ pa
   await mockCoinEditApi(page)
 
   let createdCategoryRequest: Record<string, unknown> | null = null
-  let attachRequest: Record<string, unknown> | null = null
+  let attachRequestCount = 0
   const createdCategory = {
     id: 3,
     name: 'Nowa kategoria',
@@ -257,7 +262,7 @@ test('tworzy kategorię z edycji monety i przypisuje ją do monety', async ({ pa
     })
   })
   await page.route('**/api/coins/1/categories/3', async (route) => {
-    attachRequest = route.request().postDataJSON() as Record<string, unknown>
+    attachRequestCount += 1
     assignedCategoryIds = [3]
     await route.fulfill({ json: createdCategory })
   })
@@ -272,6 +277,6 @@ test('tworzy kategorię z edycji monety i przypisuje ją do monety', async ({ pa
     name: 'Nowa kategoria',
     description: 'Nowy opis',
   })
-  await expect.poll(() => attachRequest).toBeTruthy()
+  await expect.poll(() => attachRequestCount).toBe(1)
   await expect(page.getByText('Nowa kategoria')).toBeVisible()
 })
