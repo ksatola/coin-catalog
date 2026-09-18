@@ -265,6 +265,7 @@ test.describe('collections', () => {
   test('filters catalog by one collection', async ({ page }) => {
     await mockCatalogApi(page)
     await page.goto('/monety')
+    await page.getByRole('button', { name: '▦ Grid' }).click()
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
@@ -279,6 +280,7 @@ test.describe('collections', () => {
   test('filters catalog by multiple collections', async ({ page }) => {
     await mockCatalogApi(page)
     await page.goto('/monety')
+    await page.getByRole('button', { name: '▦ Grid' }).click()
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption(['1', '2'])
@@ -293,6 +295,7 @@ test.describe('collections', () => {
   test('clearing filters restores all active collections', async ({ page }) => {
     await mockCatalogApi(page)
     await page.goto('/monety')
+    await page.getByRole('button', { name: '▦ Grid' }).click()
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
@@ -311,6 +314,7 @@ test.describe('collections', () => {
   test('combines collection filter with search', async ({ page }) => {
     await mockCatalogApi(page)
     await page.goto('/monety')
+    await page.getByRole('button', { name: '▦ Grid' }).click()
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
@@ -325,6 +329,7 @@ test.describe('collections', () => {
   test('keeps collection scope in archive', async ({ page }) => {
     await mockCatalogApi(page)
     await page.goto('/archiwum')
+    await page.getByRole('button', { name: '▦ Grid' }).click()
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('2')
