@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import CoinList from '../components/CoinList.vue'
 import type { Coin, Collection } from '../types'
 
 const route = useRoute()
@@ -79,12 +80,11 @@ onMounted(load)
           </div>
         </div>
 
-        <div v-if="coins.length" class="coin-list">
-          <RouterLink v-for="coin in coins" :key="coin.id" class="coin-item" :to="`/monety/${coin.id}`">
-            <strong>#{{ coin.id }}<span v-if="coin.collection_number"> · {{ coin.collection_number }}</span></strong>
-            <span>{{ coin.from_year }}–{{ coin.to_year }}</span>
-          </RouterLink>
-        </div>
+        <CoinList
+          v-if="coins.length"
+          :coins="coins"
+          @details="(coin) => router.push(`/monety/${coin.id}`)"
+        />
         <p v-else class="empty-state">Ta kolekcja nie zawiera jeszcze monet.</p>
       </section>
     </template>
@@ -111,10 +111,6 @@ h2 { font-size: 20px; }
 .warning-card strong { color: #92400e; }
 .coins-section { padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; box-shadow: 0 2px 8px rgba(15,23,42,.05); }
 .section-heading { margin-bottom: 16px; }
-.coin-list { display: grid; gap: 8px; }
-.coin-item { display: flex; justify-content: space-between; gap: 16px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; color: #334155; text-decoration: none; }
-.coin-item:hover { background: #f8fafc; }
-.coin-item strong { color: #0f172a; }
 .empty-state { margin: 0; padding: 24px; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; text-align: center; }
 .error { margin: 0; padding: 12px 14px; border: 1px solid #fecaca; border-radius: 8px; background: #fef2f2; color: #991b1b; }
 @media (max-width: 800px) { .page-header { flex-direction: column; } .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
