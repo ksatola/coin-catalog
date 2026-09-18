@@ -106,7 +106,7 @@ Dictionary, category, coin-category, and image endpoints remain provided by thei
 
 ## 7. Coin Photographs
 
-Coin photographs are stored as external JPG files rather than SQLite BLOBs. The accepted storage decision is documented in `docs/IMAGE_STORAGE_DECISION.md`.
+Coin photographs are stored as external JPG files rather than SQLite BLOBs. The current image-storage decision is recorded in `docs/DECISIONS.md`.
 
 Images are organized by collection, with no per-coin subdirectories:
 
@@ -141,7 +141,7 @@ The architecture targets Windows 11 and macOS through the Docker-based developme
 
 Current automated verification includes backend pytest tests, backend Ruff checks, the frontend production build, and Playwright UI tests.
 
-Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, and catalogue search behavior. Collection-specific coverage is being added during Phase 8, including collection selection, multi-collection filtering, coin moves, and image/file consistency.
+Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, catalogue search behavior, and collection workflows including collection selection, multi-collection filtering, coin moves, and image/file consistency.
 
 Broader integration and CI coverage remain future work.
 
@@ -160,4 +160,4 @@ The following remain future or conditional work:
 
 Collections, collection-aware coin management, collection-aware image storage, collection filtering, and coin moves are part of the active Phase 8 architecture.
 
-The current category model, search/filtering, and collection-number workflow are implemented. Collection functionality is being introduced incrementally during Phase 8.
+The current category model, search/filtering, collection-number workflow, and collection functionality are implemented.
