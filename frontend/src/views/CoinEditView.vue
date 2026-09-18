@@ -159,6 +159,7 @@ onMounted(() => {
     <CollectionAssignment
       v-if="coin"
       v-model:selected-collection-id="selectedCollectionId"
+      mode="edit"
       :collections="collections"
       :saved-collection-id="savedCollectionId"
       :saving-collection="savingCollection"
