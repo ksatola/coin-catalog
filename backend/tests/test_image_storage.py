@@ -170,9 +170,7 @@ def test_ensure_image_storage_is_idempotent(
     session.commit()
 
     assert ensure_image_storage(session) == []
-    sentinel = (
-        tmp_path / "images" / f"collection-{collection.id:03d}" / "sentinel.txt"
-    )
+    sentinel = tmp_path / "images" / f"collection-{collection.id:03d}" / "sentinel.txt"
     sentinel.write_text("keep", encoding="utf-8")
 
     assert ensure_image_storage(session) == []
