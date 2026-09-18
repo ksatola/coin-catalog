@@ -275,6 +275,9 @@ test.describe('collections', () => {
     await expect(page.getByRole('heading', { name: 'Monety polskie' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Monety w kolekcji' })).toBeVisible()
     await expect(page.getByRole('link', { name: /#404/ })).toHaveAttribute('href', '/monety/404')
+    await expect(page.locator('.coin-row')).toHaveCount(1)
+    await expect(page.locator('.coin-row .image-pair')).toBeVisible()
+    await expect(page.locator('.coin-row .actions')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Pokaż monety' })).toBeVisible()
   })
 
