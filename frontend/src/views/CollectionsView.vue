@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import type { Collection } from '../types'
 
+const router = useRouter()
 const collections = ref<Collection[]>([])
 const selectedId = ref<number | null>(null)
 const name = ref('')
@@ -144,19 +146,30 @@ onMounted(loadCollections)
 
     <div class="collections-layout">
       <aside class="collection-list" aria-label="Lista kolekcji">
-        <button
+        <div
           v-for="collection in collections"
           :key="collection.id"
-          type="button"
           class="collection-item"
           :class="{ active: selectedId === collection.id }"
-          @click="selectCollection(collection)"
         >
-          <span class="collection-item-name">{{ collection.name }}</span>
-          <span class="collection-item-meta">
-            {{ collection.coin_count }} monet · {{ formatFileSize(collection.file_size_bytes) }}
-          </span>
-        </button>
+          <button
+            type="button"
+            class="collection-select"
+            @click="selectCollection(collection)"
+          >
+            <span class="collection-item-name">{{ collection.name }}</span>
+            <span class="collection-item-meta">
+              {{ collection.coin_count }} monet · {{ formatFileSize(collection.file_size_bytes) }}
+            </span>
+          </button>
+          <button
+            type="button"
+            class="collection-show"
+            @click="router.push(`/kolekcje/${collection.id}`)"
+          >
+            Pokaż
+          </button>
+        </div>
         <p v-if="collections.length === 0" class="empty-state">
           Brak kolekcji.
         </p>
@@ -296,14 +309,12 @@ onMounted(loadCollections)
 
 .collection-item {
   display: grid;
-  gap: 4px;
-  width: 100%;
-  padding: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 4px;
   border: 1px solid transparent;
   border-radius: 8px;
-  background: transparent;
-  color: #334155;
-  text-align: left;
 }
 
 .collection-item:hover {
@@ -313,6 +324,35 @@ onMounted(loadCollections)
 .collection-item.active {
   border-color: #dbe3ed;
   background: #e8eef5;
+}
+
+.collection-select {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #334155;
+  text-align: left;
+  font: inherit;
+}
+
+.collection-show {
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.collection-show:hover {
+  background: #f8fafc;
 }
 
 .collection-item-name {
