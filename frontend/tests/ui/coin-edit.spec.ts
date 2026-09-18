@@ -141,3 +141,55 @@ test('po przeniesieniu kolekcji zapis danych używa nowego id monety', async ({ 
   await expect(page).toHaveURL('/monety/2')
   expect(movedCoinUpdate).toMatchObject({ country_id: 1, collection_id: 2, description: 'Nowy opis' })
 })
+
+test('tworzy kolekcję z edycji monety i zapisuje jej przypisanie', async ({ page }) => {
+  await mockCoinEditApi(page)
+
+  let createdCollectionRequest: Record<string, unknown> | null = null
+  let moveRequest: Record<string, unknown> | null = null
+
+  await page.route('**/api/collections', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fulfill({ json: collections })
+      return
+    }
+
+    createdCollectionRequest = route.request().postDataJSON() as Record<string, unknown>
+
+    await route.fulfill({
+      status: 201,
+      json: {
+        id: 3,
+        name: 'Nowa kolekcja',
+        description: 'Nowy opis',
+        created_at: '2026-09-18T00:00:00',
+        updated_at: '2026-09-18T00:00:00',
+      },
+    })
+  })
+
+  await page.route('**/api/coins/1/move', async (route) => {
+    moveRequest = route.request().postDataJSON() as Record<string, unknown>
+    await route.fulfill({ json: { ...movedCoin, collection_id: 3 } })
+  })
+
+  await page.goto('/monety/1/edytuj')
+
+  await page.getByRole('button', { name: 'Dodaj kolekcję' }).click()
+  await page.getByLabel('Nazwa nowej kolekcji').fill('Nowa kolekcja')
+  await page.locator('.editor').getByLabel('Opis').fill('Nowy opis')
+  await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
+
+  await expect(page.getByLabel('Kolekcja')).toHaveValue('3')
+  expect(createdCollectionRequest).toEqual({
+    name: 'Nowa kolekcja',
+    description: 'Nowy opis',
+  })
+
+  await page.getByRole('button', { name: 'Zapisz kolekcję' }).click()
+
+  await expect.poll(() => moveRequest).toEqual({
+    target_collection_id: 3,
+  })
+  await expect(page.getByLabel('Kolekcja')).toHaveValue('3')
+})
