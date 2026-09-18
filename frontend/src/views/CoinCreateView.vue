@@ -123,7 +123,6 @@ onMounted(() => {
 
     <CollectionAssignment
       v-model:selected-collection-id="selectedCollectionId"
-      mode="create"
       :collections="collections"
       @created="addCreatedCollection"
     />
