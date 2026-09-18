@@ -143,7 +143,7 @@ test('moneta pozwala przypisać i usunąć wiele kategorii w edycji', async ({ p
   await expect(assignment.locator('select option[value="3"]')).toHaveCount(1)
 
   await assignment.locator('select').selectOption(['2', '3'])
-  await assignment.getByRole('button', { name: 'Dodaj kategorię' }).click()
+  await assignment.getByRole('button', { name: 'Zapisz kategorię' }).click()
 
   await expect(assignment.locator('.category-list li').filter({ hasText: 'II RP' })).toBeVisible()
   await expect(assignment.locator('.category-list li').filter({ hasText: 'PRL' })).toBeVisible()
