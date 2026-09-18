@@ -173,8 +173,11 @@ onMounted(() => {
       class="edit-coin-form"
       @submit="saveCoin"
       @cancel="cancelEditing"
-    />
-    <CategoryAssignment v-if="coin" :coin-id="currentCoinId" />
+    >
+      <template #categories>
+        <CategoryAssignment v-if="coin" :coin-id="currentCoinId" />
+      </template>
+    </CoinForm>
   </section>
 </template>
 
