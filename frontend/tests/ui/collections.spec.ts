@@ -257,6 +257,17 @@ test.describe('collections', () => {
     await expect(page.getByRole('button', { name: 'Zmieniona kolekcja' })).toHaveCount(0)
   })
 
+  test('opens collection detail from the collection editor', async ({ page }) => {
+    await mockCollectionApi(page)
+    await page.goto('/kolekcje')
+
+    await page.getByRole('button', { name: 'Monety polskie' }).click()
+    await page.getByRole('button', { name: 'Pokaż', exact: true }).click()
+
+    await expect(page).toHaveURL('/kolekcje/1')
+    await expect(page.getByRole('heading', { name: 'Monety polskie' })).toBeVisible()
+  })
+
   test('shows collection detail and its coins', async ({ page }) => {
     await mockCollectionApi(page)
     await page.goto('/kolekcje/1')
