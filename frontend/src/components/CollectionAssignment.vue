@@ -5,7 +5,6 @@ import type { Collection } from '../types'
 
 const props = defineProps<{
   collections: Collection[]
-  mode: 'create' | 'edit'
   selectedCollectionId: number
   savedCollectionId: number
   savingCollection: boolean
@@ -103,7 +102,6 @@ async function create(): Promise<void> {
       </button>
 
       <button
-        v-if="props.mode === 'edit'"
         type="button"
         class="save-button"
         :disabled="props.selectedCollectionId === props.savedCollectionId || props.savingCollection"
