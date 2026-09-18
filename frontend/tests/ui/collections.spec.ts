@@ -278,6 +278,17 @@ test.describe('collections', () => {
     await expect(page.getByRole('button', { name: 'Pokaż monety' })).toBeVisible()
   })
 
+  test('shows active collection scope', async ({ page }) => {
+    await mockCatalogApi(page)
+    await page.goto('/monety')
+
+    await expect(page.getByLabel('Aktywny zakres kolekcji')).toContainText('Wszystkie kolekcje')
+
+    await page.getByRole('button', { name: '⚙ Filtry' }).click()
+    await page.getByLabel('Kolekcje').selectOption(['1', '2'])
+    await expect(page.getByLabel('Aktywny zakres kolekcji')).toContainText('2 kolekcje (#1, #2)')
+  })
+
   test('filters catalog by one collection', async ({ page }) => {
     await mockCatalogApi(page)
     await page.goto('/monety')
