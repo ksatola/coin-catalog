@@ -13,6 +13,9 @@ import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior() {
+    return { top: 0 }
+  },
   routes: [
     { path: '/', redirect: '/monety' },
     { path: '/monety', component: CoinsView },
