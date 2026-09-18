@@ -83,8 +83,8 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="category-assignment">
-    <h2>Kategorie</h2>
+  <section class="category-assignment form-section">
+    <div class="section-heading"><h3>Kategorie</h3></div>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <p v-if="loading">Ładowanie kategorii…</p>
@@ -119,10 +119,8 @@ onMounted(load)
 </template>
 
 <style scoped>
-.category-assignment {
-  margin-top: 24px;
-}
-
+.category-assignment { display: grid; gap: 18px; padding: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04); }
+.category-assignment .section-heading h3 { margin: 0; font-size: 1.1rem; }
 .category-list {
   display: flex;
   flex-wrap: wrap;
@@ -136,25 +134,37 @@ onMounted(load)
   gap: 8px;
   align-items: center;
   padding: 6px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
 }
 
-.category-form {
-  display: grid;
-  gap: 8px;
-}
+.category-form { display: grid; gap: 10px; }
 
 .category-form label {
   display: grid;
-  gap: 4px;
+  gap: 8px;
+  color: #334155;
+  font-weight: 600;
 }
 
 .category-form select {
-  min-width: 220px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 132px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
 }
 
-.error {
-  color: #b00020;
-}
+.category-form small { color: #64748b; font-size: .8rem; }
+.category-form button { justify-self: start; min-height: 44px; padding: 10px 18px; border: 1px solid #0f172a; border-radius: 8px; background: #0f172a; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.category-form button:disabled { cursor: not-allowed; opacity: .55; }
+.category-assignment button:focus-visible, .category-assignment select:focus-visible { outline: 3px solid rgba(59,130,246,.25); outline-offset: 2px; }
+.error { color: #b00020; }
 </style>
