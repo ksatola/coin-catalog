@@ -60,7 +60,7 @@ function activeCollectionScopeLabel(): string {
     .map((id) => collections.value.find((collection) => collection.id === id)?.name ?? `Kolekcja #${id}`)
 
   return names.length === 1
-    ? names[0]
+    ? names[0] ?? ''
     : names.join(', ')
 }
 
