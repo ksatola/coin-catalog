@@ -151,7 +151,7 @@ Application data such as the SQLite database is excluded from Git according to t
 
 ## 9. Git and Commits
 
-Follow the project's branch workflow documented in `docs/GIT_WORKFLOW.md`.
+Follow the project's branch workflow documented in `docs/DEVELOPMENT.md`.
 
 Commits should be:
 
