@@ -76,7 +76,7 @@ The collection number has no uniqueness rule or restrictive format at this stage
 
 **Status:** In progress
 
-Implemented functionality currently covers the collection domain/database, collection API, collection-aware coin operations, collection filtering/search, collection-aware filesystem, atomic coin move, and the collection frontend. The current development cycle has verified the Playwright collection suites reported in docs/PROGRESS.md; complete Phase 8 verification remains pending.
+Implemented functionality currently covers the collection domain/database, collection API, collection-aware coin operations, collection filtering/search, collection-aware filesystem, atomic coin move, and the collection frontend. The current development cycle has verified the Playwright collection suites reported in docs/PROGRESS.md. Collection creation now prepares its filesystem directory, the catalog shows active collection scope, and the collection management view exposes detail navigation; complete Phase 8 verification remains pending.
 
 Phase 8 introduces collections as a first-class organizational entity while keeping one shared SQLite database.
 
@@ -106,6 +106,7 @@ Planned implementation:
    - combinations with existing search and filters.
 
 5. Collection-aware filesystem
+   - creating a collection creates its required `collection-XXX/` directory;
    - `images/collection-001/`;
    - flat files within each collection;
    - no per-coin directories;
