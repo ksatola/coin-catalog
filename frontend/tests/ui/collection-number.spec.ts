@@ -21,6 +21,7 @@ const coin = {
   to_era_id: 1,
   mint_id: null,
   material_id: null,
+  collection_id: 1,
   state_id: null,
   description: 'Moneta testowa',
   weight: null,
