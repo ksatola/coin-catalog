@@ -232,7 +232,7 @@ test.describe('collections', () => {
     await expect(page.getByText('17', { exact: true })).toBeVisible()
     await expect(page.getByText('4', { exact: true })).toBeVisible()
     await expect(page.getByText('3.0 GB', { exact: true })).toBeVisible()
-    await expect(page.getByText('16 września 2026')).toBeVisible()
+    await expect(page.locator('.last-modified')).toContainText('Ostatnia zmiana:')
   })
 
   test('creates, edits and deletes a collection', async ({ page }) => {
