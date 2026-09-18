@@ -76,7 +76,7 @@ test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) =>
   })
 
   await page.waitForTimeout(400)
-  await expect(page.getByRole('link', { name: 'Moneta #2' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Moneta #2', exact: true })).toHaveCount(0)
 
   const after = await page.evaluate(() => window.scrollY)
   expect(after).toBe(before)
