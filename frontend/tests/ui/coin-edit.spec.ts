@@ -38,6 +38,13 @@ const coin = {
 
 const movedCoin = { ...coin, id: 2, collection_id: 2 }
 
+const coinImages = [
+  { id: 1, coin_id: 1, filename: 'avers.jpg', kind: 'avers', sort_order: 0, file_size_bytes: 1000, created_at: '2026-01-01T00:00:00' },
+  { id: 2, coin_id: 1, filename: 'rewers.jpg', kind: 'rewers', sort_order: 0, file_size_bytes: 1000, created_at: '2026-01-01T00:00:00' },
+]
+
+const movedCoinImages = coinImages.map((image) => ({ ...image, coin_id: 2 }))
+
 async function mockCoinEditApi(page: Parameters<typeof test>[0]['page']): Promise<void> {
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() as keyof typeof dictionaries
@@ -45,8 +52,8 @@ async function mockCoinEditApi(page: Parameters<typeof test>[0]['page']): Promis
   })
   await page.route('**/api/categories*', async (route) => await route.fulfill({ json: [] }))
   await page.route('**/api/collections', async (route) => await route.fulfill({ json: collections }))
-  await page.route('**/api/coins/1/images', async (route) => await route.fulfill({ json: [] }))
-  await page.route('**/api/coins/2/images', async (route) => await route.fulfill({ json: [] }))
+  await page.route('**/api/coins/1/images', async (route) => await route.fulfill({ json: coinImages }))
+  await page.route('**/api/coins/2/images', async (route) => await route.fulfill({ json: movedCoinImages }))
   await page.route('**/api/coins/1', async (route) => await route.fulfill({ json: coin }))
   await page.route('**/api/coins/2', async (route) => await route.fulfill({ json: movedCoin }))
   await page.route('**/api/coins/1/move', async (route) => await route.fulfill({ json: movedCoin }))
