@@ -44,6 +44,8 @@ The following existing documents are candidates for consolidation/removal after 
 docs/DEV_SCRIPTS.md
 docs/GIT_WORKFLOW.md
 docs/IMAGE_STORAGE_DECISION.md
+docs/COLLECTIONS.md
+docs/COLLECTIONS_UI_AND_INTEGRITY.md
 ```
 
 No file is to be deleted until its useful content has been reviewed and incorporated into the appropriate permanent document.
@@ -83,6 +85,8 @@ Should describe:
 - coin/collection relationships;
 - frontend routing;
 - important implementation constraints.
+
+Relevant stable technical rules from `COLLECTIONS.md` and `COLLECTIONS_UI_AND_INTEGRITY.md` should be incorporated here where they describe current implemented behavior.
 
 This document describes the **current implemented architecture**, not future plans.
 
@@ -128,6 +132,8 @@ Should contain:
 - known unverified areas;
 - concise history of completed work.
 
+Phase 8 completion notes from `COLLECTIONS_UI_AND_INTEGRITY.md) should be preserved here as verified history where appropriate.
+
 Only verified state should be presented as completed.
 
 ### docs/ROADMAP.md
@@ -154,6 +160,8 @@ Should contain:
 - rationale;
 - consequences;
 - relationship between older and newer decisions.
+
+Relevant accepted agreements from `COLLECTIONS.md` and `COLLECTIONS_UI_AND_INTEGRITY.md` should be retained here when they represent architectural or product decisions rather than implementation detail.
 
 D-030 / image-storage history must remain understandable, with D-034 represented as the current collection-aware decision.
 
@@ -196,14 +204,51 @@ Move historical decision information into `DECISIONS.md` where appropriate and k
 
 After migration and verification, remove the standalone file.
 
+### COLLECTIONS.md
+
+This is currently the canonical Phase 8 functional specification for Collections.
+
+Review it carefully against the completed implementation. Do not retain it as a second source of truth if its current-state rules can be represented cleanly in the permanent documentation.
+
+Migrate:
+
+- stable domain rules and architecture into `ARCHITECTURE.md`;
+- accepted product/architecture agreements into `DECISIONS.md`;
+- verified completion facts into `PROGRESS.md`;
+- genuinely future requirements, if any remain, into `ROADMAP.md`.
+
+After migration and verification, remove the standalone file unless the review demonstrates that a separate Collections specification is still justified.
+
+### COLLECTIONS_UI_AND_INTEGRITY.md
+
+This document mixes accepted Phase 8 UI/integrity agreements, implementation order, completed follow-ups, and test strategy.
+
+It should not remain as an additional current source of truth.
+
+Migrate:
+
+- current architecture/integrity invariants into `ARCHITECTURE.md`;
+- accepted UI/product agreements into `DECISIONS.md`;
+- completed Phase 8 work and verification notes into `PROGRESS.md`;
+- only genuinely outstanding future work into `ROADMAP.md`;
+- operational test commands/verification procedures into `DEVELOPMENT.md).
+
+After migration and verification, remove the standalone file.
+
 ## Execution Order
 
 1. Create this temporary plan as the working reference.
 2. Re-read all current Markdown files and verify their claims against the current Phase 8 source tree.
-3. Review `DECISIONS.md`, especially the image-storage decisions D-030 and D-034.
-4. Review the current backend routes, models, migrations, and filesystem implementation.
-5. Review the current frontend routes and collection-related UI.
-6. Prepare the complete new content for:
+3. Review `DECISIONS.md), especially the image-storage decisions D-030 and D-034.
+4. Review `COLLECTIONS.md` and `COLLECTIONS_UI_AND_INTEGRITY.md` against the current implementation and distinguish:
+   - current architecture;
+   - accepted decisions;
+   - verified history;
+   - future work;
+   - obsolete implementation plans.
+5. Review the current backend routes, models, migrations, and filesystem implementation.
+6. Review the current frontend routes and collection-related UI.
+7. Prepare the complete new content for:
    - `README.md`
    - `docs/ARCHITECTURE.md`
    - `docs/DEVELOPMENT.md`
@@ -211,18 +256,20 @@ After migration and verification, remove the standalone file.
    - `docs/ROADMAP.md`
    - `docs/DECISIONS.md`
    - `docs/CODING_STANDARDS.md` only if changes are actually required.
-7. Prepare the consolidation/removal diffs for:
+8. Prepare the consolidation/removal diffs for:
    - `docs/DEV_SCRIPTS.md`
    - `docs/GIT_WORKFLOW.md`
    - `docs/IMAGE_STORAGE_DECISION.md`
-8. Present all proposed changes for review before any repository write.
-9. Wait for explicit approval (`zgoda`).
-10. Re-fetch every file being modified immediately before writing and use its current Git blob SHA.
-11. Apply the approved documentation changes incrementally.
-12. Verify that all Markdown links and cross-references are valid.
-13. Run the relevant project verification commands.
-14. Re-read the resulting documentation and compare it against the actual implementation.
-15. Remove this temporary plan once the documentation update is complete and verified.
+   - `docs/COLLECTIONS.md`
+   - `docs/COLLECTIONS_UI_AND_INTEGRITY.md`
+9. Present all proposed changes for review before any repository write.
+10. Wait for explicit approval (`zgoda`).
+11. Re-fetch every file being modified immediately before writing and use its current Git blob SHA.
+12. Apply the approved documentation changes incrementally.
+13. Verify that all Markdown links and cross-references are valid.
+14. Run the relevant project verification commands.
+15. Re-read the resulting documentation and compare it against the actual implementation.
+16. Remove this temporary plan once the documentation update is complete and verified.
 
 ## Important Constraints
 
