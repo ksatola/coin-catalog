@@ -274,8 +274,9 @@ test.describe('collections', () => {
 
     await expect(page.getByRole('heading', { name: 'Monety polskie' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Monety w kolekcji' })).toBeVisible()
-    await expect(page.getByRole('link', { name: /#404/ })).toHaveAttribute('href', '/monety/404')
     await expect(page.locator('.coin-row')).toHaveCount(1)
+    await expect(page.locator('.coin-row')).toContainText('#404')
+    await expect(page.getByRole('button', { name: 'Szczegóły' })).toBeVisible()
     await expect(page.locator('.coin-row .image-pair')).toBeVisible()
     await expect(page.locator('.coin-row .actions')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Pokaż monety' })).toBeVisible()
@@ -375,7 +376,11 @@ test.describe('collections', () => {
     await mockCatalogApi(page)
     await page.goto('/kolekcje/1')
 
-    await expect(page.getByRole('link', { name: /#404/ })).toBeVisible()
+    await expect(page.locator('.coin-row')).toContainText('#404')
+    await page.getByRole('button', { name: 'Szczegóły' }).click()
+    await expect(page).toHaveURL('/monety/404')
+
+    await page.goto('/kolekcje/1')
     await page.getByRole('button', { name: 'Pokaż monety' }).click()
     await expect(page).toHaveURL(/\/monety\?collection_id=1$/)
     await page.getByRole('button', { name: '▦ Grid' }).click()
