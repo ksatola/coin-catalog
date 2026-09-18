@@ -6,7 +6,9 @@ This document records the current, verified state of the project. A task is mark
 
 ## Current Phase
 
-**Phase 7 — Collection Number is complete and verified on the working branch.**
+**Phase 8 — Collections is in progress on the working branch.**
+
+Phase 7 — Collection Number is complete and verified.
 
 Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, and Phase 6 — UI Foundation and Visual System are complete.
 
@@ -88,6 +90,19 @@ The collection number is optional, user-facing text independent from the technic
 
 ---
 
+## Phase 8 — Collections
+
+**Status:** In progress
+
+Implemented repository functionality includes collection CRUD and statistics, collection-aware coin data and filtering, collection-aware image storage, atomic coin moves with filesystem/database compensation, collection management and detail views, collection assignment during coin creation/editing, and independent collection-save behavior in coin editing.
+
+Verified in the current development cycle:
+
+- frontend/tests/ui/coin-edit.spec.ts — **7 tests passed** (user-reported local Playwright result);
+- frontend/tests/ui/collections.spec.ts — **9 tests passed** (user-reported local Playwright result).
+
+The Phase 8 backend suite and complete project verification have not yet been reported as run in the current cycle, so Phase 8 remains **in progress** rather than complete.
+
 ## Image Management
 
 **Status:** Initial implementation complete
@@ -142,11 +157,18 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-The next development step has not yet been selected. The next phase should begin with the required documentation review and a dedicated working branch from the latest stable `main`.
+Next step: complete the remaining Phase 8 verification, then synchronize the phase documentation with the final verified results.
 
 ---
 
 ## Change Log
+
+### 2026-09-18 — Phase 8 verification update
+
+- Recorded the user-reported Playwright result of **7 passed** for frontend/tests/ui/coin-edit.spec.ts.
+- Recorded the previously verified **9 passed** result for frontend/tests/ui/collections.spec.ts.
+- Kept Phase 8 marked **in progress** because the complete backend/project verification has not yet been reported as run in the current cycle.
+
 
 ### 2026-09-15 — Phase 7 completion
 
