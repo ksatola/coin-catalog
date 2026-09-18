@@ -7,7 +7,7 @@ import CoinGrid from '../components/CoinGrid.vue'
 import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
-import type { Coin } from '../types'
+import type { Coin, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
 type ViewMode = 'image-grid' | 'grid' | 'list'
@@ -20,6 +20,7 @@ const props = defineProps<{
 const router = useRouter()
 const filters = useCoinFilters(props.scope)
 const coins = ref<Coin[]>([])
+const collections = ref<Collection[]>([])
 const errorMessage = ref('')
 const showAdvancedFilters = ref(false)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
@@ -50,6 +51,28 @@ function loadGalleryColumns(): GalleryColumns {
 
 const viewMode = ref<ViewMode>(loadViewMode())
 const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
+
+function activeCollectionScopeLabel(): string {
+  const ids = filters.collectionIds
+  if (ids.length === 0) return 'Wszystkie kolekcje'
+
+  const names = ids
+    .map((id) => collections.value.find((collection) => collection.id === id)?.name ?? `Kolekcja #${id}`)
+
+  return names.length === 1
+    ? names[0] ?? ''
+    : names.join(', ')
+}
+
+async function loadCollections(): Promise<void> {
+  try {
+    const response = await fetch('/api/collections', { cache: 'no-store' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    collections.value = await response.json() as Collection[]
+  } catch {
+    collections.value = []
+  }
+}
 
 watch(viewMode, (mode) => {
   localStorage.setItem(viewModeStorageKey, mode)
@@ -136,7 +159,9 @@ function toggleAdvancedFilters(): void {
   showAdvancedFilters.value = !showAdvancedFilters.value
 }
 
-onMounted(loadCoins)
+onMounted(async () => {
+  await Promise.all([loadCoins(), loadCollections()])
+})
 </script>
 
 <template>
@@ -145,6 +170,9 @@ onMounted(loadCoins)
       <div>
         <h1>{{ pageTitle }}</h1>
         <p class="page-subtitle">{{ pageSubtitle }}</p>
+        <p class="active-collection-scope" aria-label="Aktywny zakres kolekcji">
+          <span>Aktywny zakres kolekcji:</span> <strong>{{ activeCollectionScopeLabel() }}</strong>
+        </p>
       </div>
 
       <div class="header-controls">
@@ -266,6 +294,16 @@ onMounted(loadCoins)
   margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
+}
+
+.active-collection-scope {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.active-collection-scope span {
+  color: #64748b;
 }
 
 .header-controls {

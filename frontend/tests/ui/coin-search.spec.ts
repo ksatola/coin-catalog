@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const coin = { id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Polski grosz', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
+const coin = { id: 1, collection_id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Polski grosz', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 const dictionaries = {
   countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [{ id: 1, name: '1 grosz' }],
   mints: [], materials: [], states: [], eras: [{ id: 1, name: 'AD' }],
@@ -8,6 +8,10 @@ const dictionaries = {
 const categories = [
   { id: 1, name: 'Monety', description: null, parent_ids: [], child_ids: [2], created_at: '', updated_at: '' },
   { id: 2, name: 'Polska', description: null, parent_ids: [1], child_ids: [], created_at: '', updated_at: '' },
+]
+const collections = [
+  { id: 1, name: 'Główna kolekcja', description: null, coin_count: 1, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 1, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
+  { id: 2, name: 'Monety polskie', description: null, coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 0, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
 ]
 
 async function openAdvancedFilters(page: import('@playwright/test').Page): Promise<void> {
@@ -21,6 +25,9 @@ async function mockCatalog(page: import('@playwright/test').Page, requests?: URL
   })
   await page.route('**/api/categories', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(categories) })
+  })
+  await page.route('**/api/collections', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collections) })
   })
   await page.route('**/api/coins*', async (route) => {
     requests?.push(new URL(route.request().url()))
@@ -43,6 +50,17 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('grosz polska')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   expect(coinRequests.at(-1)?.searchParams.get('search')).toBe('grosz polska')
+})
+
+test('filtr kolekcji wysyła wybrane identyfikatory', async ({ page }) => {
+  const coinRequests: URL[] = []
+  await mockCatalog(page, coinRequests)
+  await page.goto('/monety')
+  await openAdvancedFilters(page)
+  await page.locator('label').filter({ hasText: 'Kolekcje' }).locator('select').first().selectOption(['1', '2'])
+  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+
+  expect(coinRequests.at(-1)?.searchParams.getAll('collection_id')).toEqual(['1', '2'])
 })
 
 test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączyć', async ({ page }) => {

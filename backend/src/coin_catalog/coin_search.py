@@ -110,6 +110,7 @@ def _text_search_condition(token: str, include_category_children: bool):
 def build_coin_query(
     *,
     search: str | None = None,
+    collection_ids: Sequence[int] | None = None,
     country_ids: Sequence[int] | None = None,
     issuer_ids: Sequence[int] | None = None,
     denomination_ids: Sequence[int] | None = None,
@@ -140,6 +141,9 @@ def build_coin_query(
             statement = statement.where(
                 _text_search_condition(token, include_category_children)
             )
+
+    if collection_ids:
+        statement = statement.where(Coin.collection_id.in_(collection_ids))
 
     id_filters = (
         (Coin.country_id, country_ids),

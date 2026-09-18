@@ -6,7 +6,9 @@ This document records the current, verified state of the project. A task is mark
 
 ## Current Phase
 
-**Phase 7 — Collection Number is complete and verified on the working branch.**
+**Phase 8 — Collections is complete and verified on the working branch.**
+
+Phase 7 — Collection Number is complete and verified.
 
 Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, and Phase 6 — UI Foundation and Visual System are complete.
 
@@ -88,6 +90,29 @@ The collection number is optional, user-facing text independent from the technic
 
 ---
 
+## Phase 8 — Collections
+
+**Status:** Complete
+
+Implemented and verified repository functionality includes collection CRUD and statistics, collection-aware coin data and filtering, collection-aware image storage, atomic coin moves with filesystem/database compensation, collection management and detail views, collection assignment during coin creation/editing, and independent collection-save behavior in coin editing.
+
+Verified in the current development cycle:
+
+- frontend/tests/ui/coin-edit.spec.ts — **7 tests passed** (user-reported local Playwright result);
+- frontend/tests/ui/collections.spec.ts — **11 tests passed** (user-reported local Playwright result);
+- backend/tests/test_image_storage.py — **7 tests passed** (user-reported local pytest result);
+- backend Ruff lint and format checks — **all checks passed** (user-reported local result).
+
+Additional Phase 8 work completed in the current cycle:
+
+- collection creation now creates the required `collection-XXX` image directory before committing the collection;
+- backend regression coverage verifies the collection-directory creation behavior;
+- `Monety` and `Archiwum` display the active collection scope directly in the page header;
+- the Collections management view provides `Pokaż` navigation to `/kolekcje/:id`;
+- Playwright coverage was extended for active collection scope and collection-detail navigation.
+
+The complete project verification beyond the checks listed above (including the full backend pytest suite, Pyright, frontend type-check/build, and complete Playwright suite) is **not recorded here as verified** unless separately reported by the project owner.
+
 ## Image Management
 
 **Status:** Initial implementation complete
@@ -142,11 +167,27 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-The next development step has not yet been selected. The next phase should begin with the required documentation review and a dedicated working branch from the latest stable `main`.
+Next step: Phase 8 is complete. Continue with the next planned phase or maintenance work.
 
 ---
 
 ## Change Log
+
+### 2026-09-18 — Phase 8 collection UI and filesystem update
+
+- Recorded collection-directory creation on collection creation.
+- Recorded active collection scope visibility in Monety and Archiwum.
+- Recorded collection-list `Pokaż` navigation to `/kolekcje/:id`.
+- Added backend and Playwright regression coverage for the new behavior.
+
+### 2026-09-18 — Phase 8 completion update
+
+- Recorded the user-reported Playwright result of **7 passed** for frontend/tests/ui/coin-edit.spec.ts.
+- Updated frontend/tests/ui/collections.spec.ts to the user-reported current result of **11 passed**.
+- Recorded the user-reported pytest result of **7 passed** for backend/tests/test_image_storage.py.
+- Recorded the user-reported result that backend Ruff lint and format checks pass.
+- Marked Phase 8 complete based on the verified implementation and the phase-specific verification recorded above.
+
 
 ### 2026-09-15 — Phase 7 completion
 

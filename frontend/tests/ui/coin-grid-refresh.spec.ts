@@ -28,7 +28,7 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Pr
       id: index + 1,
       description: `Moneta testowa ${index + 1}`,
     }))
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(search ? [coins[0]] : coins) })
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(search ? coins.filter((item) => item.id !== 2) : coins) })
   })
   await page.route('**/api/coins/*/images', async (route) => {
     const coinId = Number(new URL(route.request().url()).pathname.split('/')[3])
@@ -76,7 +76,7 @@ test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) =>
   })
 
   await page.waitForTimeout(400)
-  await expect(page.getByRole('link', { name: 'Moneta #2' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Moneta #2', exact: true })).toHaveCount(0)
 
   const after = await page.evaluate(() => window.scrollY)
   expect(after).toBe(before)

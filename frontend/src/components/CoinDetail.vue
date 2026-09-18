@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import CoinCategoriesReadOnly from './CoinCategoriesReadOnly.vue'
-import type { Coin, CoinImage } from '../types'
+import type { Coin, CoinImage, Collection } from '../types'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = { countries: DictionaryItem[]; issuers: DictionaryItem[]; denominations: DictionaryItem[]; mints: DictionaryItem[]; materials: DictionaryItem[]; states: DictionaryItem[]; eras: DictionaryItem[] }
 
 const props = defineProps<{ coin: Coin }>()
 const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
+const collection = ref<Collection | null>(null)
+const collectionErrorMessage = ref('')
 const primaryImages = reactive<{ avers: CoinImage | null; rewers: CoinImage | null }>({ avers: null, rewers: null })
 const additionalImages = ref<CoinImage[]>([])
 const imageErrorMessage = ref('')
@@ -22,7 +25,17 @@ function formatDateRange(): string { return `${formatYear(props.coin.from_year, 
 async function loadDictionary(dictionaryNameKey: keyof Dictionaries): Promise<DictionaryItem[]> { const response = await fetch(`/api/dictionaries/${dictionaryNameKey}`); if (!response.ok) throw new Error(`HTTP ${response.status}`); return await response.json() as DictionaryItem[] }
 async function loadDictionaries(): Promise<void> {
   const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all(['countries','issuers','denominations','mints','materials','states','eras'].map((name) => loadDictionary(name as keyof Dictionaries)))
-  dictionaries.countries = countries; dictionaries.issuers = issuers; dictionaries.denominations = denominations; dictionaries.mints = mints; dictionaries.materials = materials; dictionaries.states = states; dictionaries.eras = eras
+  dictionaries.countries = countries ?? []; dictionaries.issuers = issuers ?? []; dictionaries.denominations = denominations ?? []; dictionaries.mints = mints ?? []; dictionaries.materials = materials ?? []; dictionaries.states = states ?? []; dictionaries.eras = eras ?? []
+}
+async function loadCollection(): Promise<void> {
+  try {
+    const response = await fetch(`/api/collections/${props.coin.collection_id}`, { cache: 'no-store' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    collection.value = await response.json() as Collection
+    collectionErrorMessage.value = ''
+  } catch {
+    collectionErrorMessage.value = 'Nie udało się pobrać kolekcji monety.'
+  }
 }
 async function loadImages(): Promise<void> {
   try {
@@ -37,13 +50,14 @@ function closeImage(): void { selectedImageIndex.value = null }
 function showPreviousImage(): void { if (selectedImageIndex.value === null || allImages.value.length < 2) return; selectedImageIndex.value = (selectedImageIndex.value - 1 + allImages.value.length) % allImages.value.length }
 function showNextImage(): void { if (selectedImageIndex.value === null || allImages.value.length < 2) return; selectedImageIndex.value = (selectedImageIndex.value + 1) % allImages.value.length }
 function handleViewerKeydown(event: KeyboardEvent): void { if (selectedImageIndex.value === null) return; if (event.key === 'Escape') closeImage(); else if (event.key === 'ArrowLeft') showPreviousImage(); else if (event.key === 'ArrowRight') showNextImage() }
-onMounted(() => { void loadDictionaries(); void loadImages(); window.addEventListener('keydown', handleViewerKeydown) })
+onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImages(); window.addEventListener('keydown', handleViewerKeydown) })
 </script>
 
 <template>
   <section class="coin-detail">
     <h1>Szczegóły monety #{{ coin.id }}<span v-if="coin.collection_number" class="collection-number"> | {{ coin.collection_number }}</span></h1>
     <p v-if="imageErrorMessage" class="image-error">{{ imageErrorMessage }}</p>
+    <p v-if="collectionErrorMessage" class="image-error">{{ collectionErrorMessage }}</p>
 
     <div class="primary-images">
       <figure class="primary-image-card" @click="primaryImages.avers && openImage(primaryImages.avers)"><button v-if="primaryImages.avers" type="button" class="image-button" @click.stop="openImage(primaryImages.avers)"><img :src="imageUrl(primaryImages.avers)" alt="Awers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia awersu</div><figcaption>Awers</figcaption></figure>
@@ -56,6 +70,7 @@ onMounted(() => { void loadDictionaries(); void loadImages(); window.addEventLis
       <h2>Informacje</h2>
       <dl class="details-grid">
         <div class="detail-item"><dt>Numer kolekcji</dt><dd>{{ coin.collection_number ?? '—' }}</dd></div>
+        <div class="detail-item"><dt>Kolekcja</dt><dd><RouterLink v-if="collection" :to="`/kolekcje/${collection.id}`">{{ collection.name }}</RouterLink><span v-else>Ładowanie…</span></dd></div>
         <div class="detail-item"><dt>Kraj</dt><dd>{{ dictionaryName(dictionaries.countries, coin.country_id) }}</dd></div>
         <div class="detail-item"><dt>Emitent</dt><dd>{{ dictionaryName(dictionaries.issuers, coin.issuer_id) }}</dd></div>
         <div class="detail-item"><dt>Nominał</dt><dd>{{ dictionaryName(dictionaries.denominations, coin.denomination_id) }}</dd></div>
@@ -83,6 +98,6 @@ onMounted(() => { void loadDictionaries(); void loadImages(); window.addEventLis
 </template>
 
 <style scoped>
-.coin-detail{display:grid;gap:28px}.coin-detail h1,.coin-detail h2,.coin-detail p{margin:0}.coin-detail h1{color:#0f172a;font-size:28px;line-height:1.2}.coin-detail h2{margin-bottom:12px;color:#0f172a;font-size:20px}.collection-number{color:#64748b;font-size:.7em;font-weight:600}.image-error{color:#b91c1c}.primary-images{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.primary-image-card{min-width:0;margin:0;padding:12px;border:1px solid #dbe3ee;border-radius:10px;background:#fff}.image-button{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;cursor:zoom-in}.primary-image-card img,.primary-image-card .image-placeholder{display:block;width:100%;height:min(52vw,520px);min-height:300px;object-fit:contain;border-radius:8px;background:#fff}.primary-image-card .image-placeholder{display:grid;place-items:center;color:#64748b}.primary-image-card figcaption,.additional-image-card figcaption{margin-top:8px;color:#475569;font-size:13px}.additional-images{min-width:0}.additional-image-list{display:flex;gap:12px;min-width:0;overflow-x:auto;padding:2px 2px 8px}.additional-image-card{flex:0 0 88px;width:88px;margin:0}.additional-image-card .image-button{overflow:hidden;border:1px solid #dbe3ee;border-radius:8px;background:#fff}.additional-image-card img{display:block;width:88px;height:88px;object-fit:contain;background:#f8fafc}.additional-image-card figcaption{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.details-section{padding-top:4px}.details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;border:1px solid #dbe3ee;border-radius:10px;overflow:hidden;background:#fff}.detail-item{display:grid;gap:4px;min-width:0;padding:14px 16px;border-bottom:1px solid #e2e8f0}.detail-item:nth-child(odd){border-right:1px solid #e2e8f0}.detail-item dt{color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}.detail-item dd{margin:0;color:#0f172a;font-size:15px;font-weight:500}.detail-item-wide{grid-column:1/-1;border-right:0!important}.text-section{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.text-section>div{padding:16px;border:1px solid #dbe3ee;border-radius:10px;background:#fff}.text-section p{color:#475569;line-height:1.6;white-space:pre-wrap}.image-viewer{position:fixed;z-index:1000;inset:0;display:grid;place-items:center;padding:48px 72px;background:rgba(15,23,42,.92)}.viewer-content{display:flex;width:min(100%,1400px);max-height:calc(100vh - 96px);flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:0}.viewer-image-frame{display:flex;width:fit-content;max-width:100%;flex-direction:column;align-items:stretch}.viewer-image-frame img{display:block;width:auto;height:auto;max-width:calc(100vw - 144px);max-height:calc(100vh - 156px);object-fit:contain}.viewer-image-frame figcaption{display:flex;width:100%;box-sizing:border-box;flex:0 0 auto;justify-content:space-between;gap:16px;color:#e2e8f0;font-size:13px}.viewer-close,.viewer-nav{position:fixed;z-index:1001;border:0;background:transparent;color:#fff;cursor:pointer}.viewer-close{top:16px;right:20px;font-size:36px;line-height:1}.viewer-nav{top:50%;width:48px;height:64px;margin-top:-32px;border-radius:8px;background:rgba(255,255,255,.12);font-size:42px;line-height:1}.viewer-prev{left:16px}.viewer-next{right:16px}.viewer-close:hover,.viewer-nav:hover{background:rgba(255,255,255,.2)}
+.coin-detail{display:grid;gap:28px}.coin-detail h1,.coin-detail h2,.coin-detail p{margin:0}.coin-detail h1{color:#0f172a;font-size:28px;line-height:1.2}.coin-detail h2{margin-bottom:12px;color:#0f172a;font-size:20px}.collection-number{color:#64748b;font-size:.7em;font-weight:600}.image-error{color:#b91c1c}.primary-images{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.primary-image-card{min-width:0;margin:0;padding:12px;border:1px solid #dbe3ee;border-radius:10px;background:#fff}.image-button{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;cursor:zoom-in}.primary-image-card img,.primary-image-card .image-placeholder{display:block;width:100%;height:min(52vw,520px);min-height:300px;object-fit:contain;border-radius:8px;background:#fff}.primary-image-card .image-placeholder{display:grid;place-items:center;color:#64748b}.primary-image-card figcaption,.additional-image-card figcaption{margin-top:8px;color:#475569;font-size:13px}.additional-images{min-width:0}.additional-image-list{display:flex;gap:12px;min-width:0;overflow-x:auto;padding:2px 2px 8px}.additional-image-card{flex:0 0 88px;width:88px;margin:0}.additional-image-card .image-button{overflow:hidden;border:1px solid #dbe3ee;border-radius:8px;background:#fff}.additional-image-card img{display:block;width:88px;height:88px;object-fit:contain;background:#f8fafc}.additional-image-card figcaption{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.details-section{padding-top:4px}.details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;border:1px solid #dbe3ee;border-radius:10px;overflow:hidden;background:#fff}.detail-item{display:grid;gap:4px;min-width:0;padding:14px 16px;border-bottom:1px solid #e2e8f0}.detail-item:nth-child(odd){border-right:1px solid #e2e8f0}.detail-item dt{color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}.detail-item dd{margin:0;color:#0f172a;font-size:15px;font-weight:500}.detail-item-wide{grid-column:1/-1;border-right:0!important}.detail-item a{color:#2563eb;text-decoration:none}.detail-item a:hover{text-decoration:underline}.text-section{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.text-section>div{padding:16px;border:1px solid #dbe3ee;border-radius:10px;background:#fff}.text-section p{color:#475569;line-height:1.6;white-space:pre-wrap}.image-viewer{position:fixed;z-index:1000;inset:0;display:grid;place-items:center;padding:48px 72px;background:rgba(15,23,42,.92)}.viewer-content{display:flex;width:min(100%,1400px);max-height:calc(100vh - 96px);flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:0}.viewer-image-frame{display:flex;width:fit-content;max-width:100%;flex-direction:column;align-items:stretch}.viewer-image-frame img{display:block;width:auto;height:auto;max-width:calc(100vw - 144px);max-height:calc(100vh - 156px);object-fit:contain}.viewer-image-frame figcaption{display:flex;width:100%;box-sizing:border-box;flex:0 0 auto;justify-content:space-between;gap:16px;color:#e2e8f0;font-size:13px}.viewer-close,.viewer-nav{position:fixed;z-index:1001;border:0;background:transparent;color:#fff;cursor:pointer}.viewer-close{top:16px;right:20px;font-size:36px;line-height:1}.viewer-nav{top:50%;width:48px;height:64px;margin-top:-32px;border-radius:8px;background:rgba(255,255,255,.12);font-size:42px;line-height:1}.viewer-prev{left:16px}.viewer-next{right:16px}.viewer-close:hover,.viewer-nav:hover{background:rgba(255,255,255,.2)}
 @media(max-width:700px){.primary-images,.details-grid,.text-section{grid-template-columns:1fr}.primary-image-card img,.primary-image-card .image-placeholder{height:72vw;min-height:240px}.detail-item,.detail-item:nth-child(odd){border-right:0}.detail-item-wide{grid-column:auto}.image-viewer{padding:48px 16px 32px}.viewer-content{max-height:calc(100vh - 80px)}.viewer-image-frame img{max-width:calc(100vw - 72px);max-height:calc(100vh - 136px)}.viewer-nav{width:40px;height:52px;margin-top:-26px}.viewer-prev{left:8px}.viewer-next{right:8px}}
 </style>

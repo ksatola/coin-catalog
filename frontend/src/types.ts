@@ -6,7 +6,26 @@ export interface CoinImage {
   filename: string
   kind: CoinImageKind
   sort_order: number
+  file_size_bytes: number
   created_at: string
+}
+
+export interface CollectionStats {
+  coin_count: number
+  archived_coin_count: number
+  image_count: number
+  file_size_bytes: number
+  category_count: number
+  coins_without_images_count: number
+  last_modified_at: string
+}
+
+export interface Collection extends CollectionStats {
+  id: number
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface Category {
@@ -43,6 +62,7 @@ export interface CoinCreate {
   mint_id: number | null
   material_id: number | null
   state_id: number | null
+  collection_id?: number
   description: string | null
   weight: number | null
   diameter: number | null
@@ -53,6 +73,7 @@ export interface CoinCreate {
 
 export interface Coin extends CoinCreate {
   id: number
+  collection_id: number
   is_deleted: boolean
   created_at: string
   updated_at: string

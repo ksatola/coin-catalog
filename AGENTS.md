@@ -417,12 +417,38 @@ Keep the Git object types distinct: blob SHAs identify file contents, tree SHAs 
 
 This fallback must preserve the current branch history and must not modify unrelated files or rewrite published history.
 
+### 19.4 Python Environment and `uv` Execution
+
+Python dependencies and the project environment are managed with `uv`.
+
+All Python commands that depend on project packages must be executed through the `uv` environment.
+
+Use:
+
+```bash
+cd /workspaces/coin-catalog/backend
+
+uv sync --frozen
+uv run pytest -q
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
+```
+
+Do not run project tests, Ruff, or Pyright directly against the system Python environment when those commands depend on project packages.
+
+Do not install project Python dependencies manually with `pip` as a substitute for `uv`.
+
+If imports such as `fastapi`, `sqlalchemy`, `alembic`, or `pydantic` cannot be resolved, first verify that the commands are being executed through `uv run` and that `uv sync --frozen` has completed successfully.
+
+The development container may provide standalone tooling such as `pytest`, `ruff`, and `pyright`, but project dependencies must remain managed through `uv` and `uv.lock`.
+
 ## 20. Current Development Stage
 
 The project is currently in:
 
-**Phase 7 — Collection Number**
+**Phase 8 — Collections**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, and Phase 6 — UI Foundation have been completed and verified.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, Phase 6 — UI Foundation, and Phase 7 — Collection Number have been completed and verified.
 
-Phase 7 adds an optional collection number to coins across the database, API, frontend forms and views, and search. The feature is covered by backend and frontend tests, and the catalog search flow preserves the user's scroll position while results refresh.
+Phase 8 adds collections as a first-class organizational entity across the database, API, collection-aware coin operations and filtering, image storage, atomic coin moves, and frontend collection management and assignment. Phase 8 implementation and the verification recorded in docs/PROGRESS.md are complete.

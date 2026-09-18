@@ -88,6 +88,42 @@ class Era(Base):
     )
 
 
+class Collection(Base):
+    __tablename__ = "collection"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+    coin_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    archived_coin_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    image_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    category_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    coins_without_images_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    last_modified_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+
+    coins: Mapped[list[Coin]] = relationship(back_populates="collection")
+
+
 class Category(Base):
     __tablename__ = "category"
 
@@ -168,6 +204,7 @@ class CoinImage(Base):
     filename: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     kind: Mapped[str] = mapped_column(Text, nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -194,6 +231,10 @@ class Coin(Base):
     __tablename__ = "coin"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    collection_id: Mapped[int] = mapped_column(
+        ForeignKey("collection.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     collection_number: Mapped[str | None] = mapped_column(Text)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
@@ -229,6 +270,7 @@ class Coin(Base):
         onupdate=lambda: datetime.now(UTC),
     )
 
+    collection: Mapped[Collection] = relationship(back_populates="coins")
     country: Mapped[Country] = relationship(back_populates="coins")
     issuer: Mapped[Issuer | None] = relationship(back_populates="coins")
     denomination: Mapped[Denomination] = relationship(back_populates="coins")

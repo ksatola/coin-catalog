@@ -34,11 +34,18 @@ RUN apt-get update \
     && mv /root/.local/bin/uvx /usr/local/bin/uvx \
     && uv --version \
     && uv pip install --system "pytest>=9.1.1" "ruff>=0.16.7" \
+    && npm install --global pyright \
     && pytest --version \
     && ruff --version \
+    && pyright --version \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /workspace
+WORKDIR /workspaces/coin-catalog/backend
+
+COPY backend/pyproject.toml backend/uv.lock ./
+RUN uv sync --frozen --no-install-project
+
+WORKDIR /workspaces/coin-catalog
 
 CMD ["sleep", "infinity"]

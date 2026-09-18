@@ -17,7 +17,7 @@ type Dictionaries = {
   eras: DictionaryItem[]
 }
 
-const props = defineProps<{ coin?: Coin | null }>()
+const props = defineProps<{ coin?: Coin | null; imageCoinId?: number }>()
 const emit = defineEmits<{ submit: [payload: CoinFormSubmit]; cancel: [] }>()
 const { markDirty, markClean } = useUnsavedCoinForm()
 
@@ -87,21 +87,31 @@ function clearImages(): void {
 async function loadCoinImages(coin: Coin | null | undefined): Promise<void> {
   clearImages()
   if (!coin) return
+  await refreshCoinImages(coin.id)
+}
+
+async function refreshCoinImages(coinId: number): Promise<void> {
   try {
-    const response = await fetch(`/api/coins/${coin.id}/images`)
+    const response = await fetch(`/api/coins/${coinId}/images`)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const images = await response.json() as CoinImage[]
-    primaryImages.avers = images.find((image) => image.kind === 'avers') ?? null
-    primaryImages.rewers = images.find((image) => image.kind === 'rewers') ?? null
-    additionalImages.value = images.filter((image) => image.kind === 'additional')
+    const deletedKeys = new Set(pendingDeletedImages.value.map((image) => `${image.kind}:${image.sort_order}`))
+
+    if (!pendingFiles.avers) primaryImages.avers = images.find((image) => image.kind === 'avers') ?? null
+    if (!pendingFiles.rewers) primaryImages.rewers = images.find((image) => image.kind === 'rewers') ?? null
+    additionalImages.value = images.filter(
+      (image) => image.kind === 'additional' && !deletedKeys.has(`${image.kind}:${image.sort_order}`),
+    )
+    imageErrorMessage.value = ''
   } catch {
     imageErrorMessage.value = 'Nie udało się pobrać zdjęć monety.'
   }
 }
 
 function imageUrl(image: CoinImage | null): string | null {
-  if (!image || !props.coin) return null
-  return `/api/coins/${props.coin.id}/images/${image.id}/file`
+  const imageCoinId = props.imageCoinId ?? props.coin?.id
+  if (!image || !imageCoinId) return null
+  return `/api/coins/${imageCoinId}/images/${image.id}/file`
 }
 
 function setPrimaryFile(kind: 'avers' | 'rewers', files: File[]): void {
@@ -233,6 +243,9 @@ function loadCoinIntoForm(coin: Coin | null | undefined): void {
 }
 
 watch(() => props.coin, loadCoinIntoForm, { immediate: true })
+watch(() => props.imageCoinId, (coinId) => {
+  if (coinId && coinId !== props.coin?.id) void refreshCoinImages(coinId)
+})
 watch(form, () => {
   markDirty()
 }, { deep: true })
@@ -311,6 +324,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     </section>
 
     <label class="video-option"><input v-model="form.has_video" type="checkbox" /><span>Ma wideo</span></label>
+    <slot name="categories" />
     <div v-if="validationMessage" class="form-message form-message-warning">{{ validationMessage }}</div>
     <footer class="form-actions">
       <button type="button" class="secondary-action" @click="emit('cancel')">Anuluj</button>

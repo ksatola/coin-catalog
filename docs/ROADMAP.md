@@ -72,17 +72,73 @@ Implemented and verified:
 
 The collection number has no uniqueness rule or restrictive format at this stage.
 
-## Phase 8 — Coin Browser Optimization
+## Phase 8 — Collections
+
+**Status:** Complete
+
+Implemented and verified functionality covers the collection domain/database, collection API, collection-aware coin operations, collection filtering/search, collection-aware filesystem, atomic coin move, and the collection frontend. The current development cycle verified the Phase 8 Playwright suites, image-storage tests, and backend Ruff checks recorded in docs/PROGRESS.md. Collection creation prepares its filesystem directory, the catalog shows active collection scope, and the collection management view exposes detail navigation.
+
+Phase 8 introduces collections as a first-class organizational entity while keeping one shared SQLite database.
+
+Planned implementation:
+
+1. Collection domain and database
+   - `collection` model and table;
+   - `coin.collection_id`;
+   - collection uniqueness and deletion rules;
+   - migration of existing coins to a default collection.
+
+2. Collection API
+   - collection CRUD;
+   - validation;
+   - collection-aware coin operations.
+
+3. Collection-aware coin CRUD
+   - collection selection during creation;
+   - collection selection during editing;
+   - collection management from the UI.
+
+4. Collection filtering and search
+   - one selected collection;
+   - multiple selected collections;
+   - all collections;
+   - no collection restriction;
+   - combinations with existing search and filters.
+
+5. Collection-aware filesystem
+   - creating a collection creates its required `collection-XXX/` directory;
+   - `images/collection-001/`;
+   - flat files within each collection;
+   - no per-coin directories;
+   - migration/compatibility for existing image files.
+
+6. Atomic coin move
+   - new SQL `coin.id`;
+   - preservation of `collection_number`;
+   - image copy/rename;
+   - target collision handling;
+   - database/filesystem coordination;
+   - rollback and compensation.
+
+7. Frontend
+   - collection management;
+   - collection selector;
+   - multi-collection search;
+   - coin move workflow.
+
+8. Verification
+   - backend collection tests;
+   - search/filter tests;
+   - filesystem consistency tests;
+   - move/collision tests;
+   - injected-failure rollback tests;
+   - Playwright coverage.
+
+## Phase 9 — Coin Browser Optimization
 
 **Status:** Future / conditional
 
 The basic browser is already implemented. Pagination or other large-collection optimization should be introduced only if actual collection size or performance requirements justify it.
-
-## Phase 9 — Broader Collections, Categories and Tags
-
-**Status:** Future expansion
-
-Current category functionality is implemented. Broader collection/tag organization remains future work.
 
 ## Phase 10 — Backup and Export
 

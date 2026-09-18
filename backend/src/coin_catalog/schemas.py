@@ -4,7 +4,31 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class CollectionCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class CollectionStatsResponse(BaseModel):
+    coin_count: int
+    archived_coin_count: int
+    image_count: int
+    file_size_bytes: int
+    category_count: int
+    coins_without_images_count: int
+    last_modified_at: datetime
+
+
+class CollectionResponse(CollectionCreate, CollectionStatsResponse):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class CoinCreate(BaseModel):
+    collection_id: int
     collection_number: str | None = None
     country_id: int
     issuer_id: int | None = None
@@ -25,6 +49,10 @@ class CoinCreate(BaseModel):
 
 class CoinUpdate(CoinCreate):
     pass
+
+
+class CoinMoveRequest(BaseModel):
+    target_collection_id: int
 
 
 class CoinResponse(CoinCreate):
@@ -73,4 +101,5 @@ class CoinImageResponse(BaseModel):
     filename: str
     kind: str
     sort_order: int
+    file_size_bytes: int
     created_at: datetime

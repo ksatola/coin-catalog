@@ -2,9 +2,10 @@
 import { nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
+import CollectionAssignment from '../components/CollectionAssignment.vue'
 import CoinForm from '../components/CoinForm.vue'
 import InlineCategoryCreate from '../components/InlineCategoryCreate.vue'
-import type { CategoryGraphItem, CoinFormSubmit } from '../types'
+import type { CategoryGraphItem, Collection, CoinFormSubmit } from '../types'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = useRouter()
@@ -13,15 +14,33 @@ const errorMessage = ref('')
 const categories = ref<CategoryGraphItem[]>([])
 const selectedCategoryIds = ref<number[]>([])
 const categoriesErrorMessage = ref('')
+const collections = ref<Collection[]>([])
+const selectedCollectionId = ref(0)
+const collectionsErrorMessage = ref('')
 
 async function loadCategories(): Promise<void> {
   try {
     const response = await fetch('/api/categories')
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    categories.value = await response.json() as CategoryGraphItem[]
+    const loadedCategories = await response.json() as CategoryGraphItem[]
+    const loadedIds = new Set(loadedCategories.map((category) => category.id))
+    const locallyCreatedCategories = categories.value.filter((category) => !loadedIds.has(category.id))
+    categories.value = [...loadedCategories, ...locallyCreatedCategories]
     categoriesErrorMessage.value = ''
   } catch {
     categoriesErrorMessage.value = 'Nie udało się pobrać kategorii.'
+  }
+}
+
+async function loadCollections(): Promise<void> {
+  try {
+    const response = await fetch('/api/collections', { cache: 'no-store' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    collections.value = await response.json() as Collection[]
+    selectedCollectionId.value = collections.value[0]?.id ?? 0
+    collectionsErrorMessage.value = ''
+  } catch {
+    collectionsErrorMessage.value = 'Nie udało się pobrać kolekcji.'
   }
 }
 
@@ -29,6 +48,12 @@ async function addCreatedCategory(category: CategoryGraphItem): Promise<void> {
   categories.value.push(category)
   await nextTick()
   selectedCategoryIds.value = [...selectedCategoryIds.value, category.id]
+  markDirty()
+}
+
+function addCreatedCollection(collection: Collection): void {
+  collections.value.push(collection)
+  selectedCollectionId.value = collection.id
   markDirty()
 }
 
@@ -47,11 +72,16 @@ async function assignCategories(coinId: number): Promise<void> {
 }
 
 async function createCoin(payload: CoinFormSubmit): Promise<void> {
+  if (!selectedCollectionId.value) {
+    errorMessage.value = 'Wybierz kolekcję monety.'
+    return
+  }
+
   try {
     const response = await fetch('/api/coins', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload.coin),
+      body: JSON.stringify({ ...payload.coin, collection_id: selectedCollectionId.value }),
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const coin = await response.json() as { id: number }
@@ -76,10 +106,14 @@ function cancelCreating(): void {
 watch(selectedCategoryIds, () => {
   markDirty()
 }, { deep: true })
+watch(selectedCollectionId, () => {
+  if (selectedCollectionId.value === 0 || selectedCollectionId.value !== collections.value[0]?.id) markDirty()
+})
 
 onMounted(() => {
   markClean()
   void loadCategories()
+  void loadCollections()
 })
 </script>
 
@@ -88,6 +122,13 @@ onMounted(() => {
     <h1>Dodaj monetę</h1>
     <p v-if="errorMessage">{{ errorMessage }}</p>
     <p v-if="categoriesErrorMessage">{{ categoriesErrorMessage }}</p>
+    <p v-if="collectionsErrorMessage">{{ collectionsErrorMessage }}</p>
+
+    <CollectionAssignment
+      v-model:selected-collection-id="selectedCollectionId"
+      :collections="collections"
+      @created="addCreatedCollection"
+    />
 
     <section class="category-card">
       <h2>Kategorie</h2>

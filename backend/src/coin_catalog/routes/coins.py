@@ -1,12 +1,28 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from coin_catalog.coin_move import move_coin
 from coin_catalog.coin_search import build_coin_query
+from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import get_db
-from coin_catalog.models import Coin
-from coin_catalog.schemas import CoinCreate, CoinResponse, CoinUpdate
+from coin_catalog.models import Coin, Collection
+from coin_catalog.schemas import CoinCreate, CoinMoveRequest, CoinResponse, CoinUpdate
 
 router = APIRouter(prefix="/coins", tags=["coins"])
+
+
+def get_collection_or_404(collection_id: int, session: Session) -> Collection:
+    collection = session.get(Collection, collection_id)
+
+    if collection is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Collection not found",
+        )
+
+    return collection
 
 
 @router.post(
@@ -18,8 +34,12 @@ def create_coin(
     coin_data: CoinCreate,
     session: Session = Depends(get_db),
 ) -> Coin:
+    collection = get_collection_or_404(coin_data.collection_id, session)
+
     coin = Coin(**coin_data.model_dump())
     session.add(coin)
+    session.flush()
+    recalculate_collection_stats(collection, session)
     session.commit()
     session.refresh(coin)
     return coin
@@ -28,6 +48,7 @@ def create_coin(
 @router.get("", response_model=list[CoinResponse])
 def list_coins(
     search: str | None = None,
+    collection_id: list[int] | None = Query(None),
     country_id: list[int] | None = Query(None),
     issuer_id: list[int] | None = Query(None),
     denomination_id: list[int] | None = Query(None),
@@ -72,6 +93,7 @@ def list_coins(
 
     statement = build_coin_query(
         search=search,
+        collection_ids=collection_id,
         country_ids=country_id,
         issuer_ids=issuer_id,
         denomination_ids=denomination_id,
@@ -128,12 +150,30 @@ def update_coin(
             detail="Coin not found",
         )
 
+    collection = get_collection_or_404(coin_data.collection_id, session)
+
+    if coin_data.collection_id != coin.collection_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Coin collection must be changed through the move operation",
+        )
+
     for field, value in coin_data.model_dump().items():
         setattr(coin, field, value)
 
+    recalculate_collection_stats(collection, session, modified_at=datetime.now(UTC))
     session.commit()
     session.refresh(coin)
     return coin
+
+
+@router.post("/{coin_id}/move", response_model=CoinResponse)
+def move_coin_endpoint(
+    coin_id: int,
+    move_data: CoinMoveRequest,
+    session: Session = Depends(get_db),
+) -> Coin:
+    return move_coin(coin_id, move_data.target_collection_id, session)
 
 
 @router.post("/{coin_id}/archive", response_model=CoinResponse)
@@ -150,6 +190,8 @@ def archive_coin(
         )
 
     coin.is_deleted = True
+    collection = get_collection_or_404(coin.collection_id, session)
+    recalculate_collection_stats(collection, session, modified_at=datetime.now(UTC))
     session.commit()
     session.refresh(coin)
     return coin
@@ -169,6 +211,8 @@ def restore_coin(
         )
 
     coin.is_deleted = False
+    collection = get_collection_or_404(coin.collection_id, session)
+    recalculate_collection_stats(collection, session, modified_at=datetime.now(UTC))
     session.commit()
     session.refresh(coin)
     return coin

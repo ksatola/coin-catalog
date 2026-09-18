@@ -14,13 +14,14 @@ from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from coin_catalog.database import get_db
+from coin_catalog.collection_stats import recalculate_collection_stats
+from coin_catalog.database import DATA_DIR, get_db
 from coin_catalog.models import Coin, CoinImage
 from coin_catalog.schemas import CoinImageResponse
 
 router = APIRouter(prefix="/coins/{coin_id}/images", tags=["images"])
 
-IMAGES_DIR = Path(__file__).resolve().parents[4] / "images"
+IMAGES_DIR = DATA_DIR / "images"
 PRIMARY_KINDS = {"avers", "rewers"}
 
 
@@ -32,6 +33,10 @@ def get_coin(coin_id: int, session: Session) -> Coin:
             detail="Coin not found",
         )
     return coin
+
+
+def collection_images_dir(collection_id: int) -> Path:
+    return IMAGES_DIR / f"collection-{collection_id:03d}"
 
 
 def validate_jpeg(upload: UploadFile) -> None:
@@ -77,7 +82,7 @@ def get_image_file(
     image_id: int,
     session: Session = Depends(get_db),
 ) -> FileResponse:
-    get_coin(coin_id, session)
+    coin = get_coin(coin_id, session)
     image = session.scalar(
         select(CoinImage).where(
             CoinImage.id == image_id,
@@ -90,7 +95,7 @@ def get_image_file(
             detail="Image not found",
         )
 
-    target = IMAGES_DIR / image.filename
+    target = collection_images_dir(coin.collection_id) / image.filename
     if not target.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -107,15 +112,16 @@ def get_image_file(
 @router.post("", response_model=CoinImageResponse, status_code=status.HTTP_201_CREATED)
 def upload_image(
     coin_id: int,
+    response: Response,
     upload: UploadFile = File(...),
     kind: str = Query(..., pattern="^(avers|rewers|additional)$"),
     replace: bool = Query(False),
-    response: Response = None,
     session: Session = Depends(get_db),
 ) -> CoinImage:
     coin = get_coin(coin_id, session)
     validate_jpeg(upload)
-    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    image_dir = collection_images_dir(coin.collection_id)
+    image_dir.mkdir(parents=True, exist_ok=True)
 
     existing: CoinImage | None = None
     if kind in PRIMARY_KINDS:
@@ -126,7 +132,7 @@ def upload_image(
             )
         )
         filename = primary_filename(coin_id, kind)
-        target = IMAGES_DIR / filename
+        target = image_dir / filename
         if (existing is not None or target.exists()) and not replace:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -136,7 +142,7 @@ def upload_image(
     else:
         sort_order = next_additional_order(coin)
         filename = f"{coin_id:06d} - {sort_order - 1:02d}.jpg"
-        target = IMAGES_DIR / filename
+        target = image_dir / filename
         if target.exists():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -144,26 +150,40 @@ def upload_image(
             )
 
     data = upload.file.read()
+    previous_data = target.read_bytes() if target.exists() else None
     target.write_bytes(data)
 
-    if existing is not None:
-        existing.filename = filename
-        existing.sort_order = sort_order
-        session.commit()
-        session.refresh(existing)
-        response.status_code = status.HTTP_200_OK
-        return existing
+    try:
+        if existing is not None:
+            existing.filename = filename
+            existing.sort_order = sort_order
+            existing.file_size_bytes = len(data)
+            recalculate_collection_stats(coin.collection, session)
+            session.commit()
+            session.refresh(existing)
+            response.status_code = status.HTTP_200_OK
+            return existing
 
-    image = CoinImage(
-        coin_id=coin_id,
-        filename=filename,
-        kind=kind,
-        sort_order=sort_order,
-    )
-    session.add(image)
-    session.commit()
-    session.refresh(image)
-    return image
+        image = CoinImage(
+            coin_id=coin_id,
+            filename=filename,
+            kind=kind,
+            sort_order=sort_order,
+            file_size_bytes=len(data),
+        )
+        session.add(image)
+        session.flush()
+        recalculate_collection_stats(coin.collection, session)
+        session.commit()
+        session.refresh(image)
+        return image
+    except Exception:
+        session.rollback()
+        if previous_data is None:
+            target.unlink(missing_ok=True)
+        else:
+            target.write_bytes(previous_data)
+        raise
 
 
 @router.delete("/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -172,7 +192,7 @@ def delete_image(
     image_id: int,
     session: Session = Depends(get_db),
 ) -> None:
-    get_coin(coin_id, session)
+    coin = get_coin(coin_id, session)
     image = session.scalar(
         select(CoinImage).where(
             CoinImage.id == image_id,
@@ -190,8 +210,9 @@ def delete_image(
             detail="Primary image must be replaced rather than deleted",
         )
 
-    target = IMAGES_DIR / image.filename
+    target = collection_images_dir(coin.collection_id) / image.filename
     if target.exists():
         target.unlink()
     session.delete(image)
+    recalculate_collection_stats(coin.collection, session)
     session.commit()

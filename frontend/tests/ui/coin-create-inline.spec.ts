@@ -113,15 +113,30 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
 
   await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
   await page.getByLabel('Nazwa nowej kategorii').fill('Kategoria testowa')
-  await page.getByRole('button', { name: 'Dodaj' }).last().click()
+  let categoryPostSeen = false
+  page.on('request', (request) => {
+    if (
+      request.url().endsWith('/api/categories') &&
+      request.method() === 'POST'
+    ) {
+      categoryPostSeen = true
+    }
+  })
+  await page.locator('.inline-create').getByRole('button', {
+    name: 'Dodaj',
+    exact: true,
+  }).click()
+  await expect.poll(() => categoryPostSeen).toBe(true)
+  await expect(page.getByLabel('Nazwa nowej kategorii')).toHaveCount(0)
 
   const categorySelect = page.getByLabel('Wybierz kategorie')
-  const createdCategory = categorySelect.locator('option', {
-    hasText: 'Kategoria testowa',
+  const createdCategory = categorySelect.getByRole('option', {
+    name: 'Kategoria testowa',
+    exact: true,
   })
 
   await expect(createdCategory).toHaveCount(1)
-  await expect(createdCategory).toBeSelected()
+  await expect(categorySelect).toHaveValues(['200'])
 
   await expect(page.getByLabel('Rok od')).toHaveValue('1900')
   await expect(page.getByLabel('Rok do')).toHaveValue('1901')

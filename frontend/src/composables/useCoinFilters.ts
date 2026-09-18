@@ -15,6 +15,7 @@ type DictionarySelections = {
 export type CoinFilterState = {
   search: string
   dictionarySelections: DictionarySelections
+  collectionIds: number[]
   categoryIds: number[]
   includeCategoryChildren: boolean
   fromYear: number | null
@@ -38,6 +39,7 @@ function createState(statusFilter: string): CoinFilterState {
       states: [],
       eras: [],
     },
+    collectionIds: [],
     categoryIds: [],
     includeCategoryChildren: true,
     fromYear: null,
@@ -56,7 +58,14 @@ const states: Record<CoinFilterScope, CoinFilterState> = {
 }
 
 export function useCoinFilters(scope: CoinFilterScope): CoinFilterState {
-  return states[scope]
+  const state = states[scope]
+  const collectionIds = new URLSearchParams(window.location.search)
+    .getAll('collection_id')
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0)
+
+  if (collectionIds.length > 0) state.collectionIds = collectionIds
+  return state
 }
 
 export function validateCoinSearch(search: string): string {
@@ -77,6 +86,7 @@ export function buildCoinFilterQuery(filters: CoinFilterState): string {
   for (const id of filters.dictionarySelections.materials) params.append('material_id', String(id))
   for (const id of filters.dictionarySelections.states) params.append('state_id', String(id))
   for (const id of filters.dictionarySelections.eras) params.append('era_id', String(id))
+  for (const id of filters.collectionIds) params.append('collection_id', String(id))
   for (const id of filters.categoryIds) params.append('category_id', String(id))
 
   params.set('include_category_children', String(filters.includeCategoryChildren))
@@ -100,6 +110,7 @@ export function resetCoinFilters(filters: CoinFilterState, defaultStatus: string
   filters.dictionarySelections.materials = []
   filters.dictionarySelections.states = []
   filters.dictionarySelections.eras = []
+  filters.collectionIds = []
   filters.categoryIds = []
   filters.includeCategoryChildren = true
   filters.fromYear = null

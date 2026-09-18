@@ -106,7 +106,7 @@ Vue 3 is the frontend framework. Frontend functionality is organized primarily i
 ## D-011 — TypeScript
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 TypeScript is used for frontend development to improve maintainability and provide static typing for the growing frontend codebase.
 
@@ -115,7 +115,7 @@ TypeScript is used for frontend development to improve maintainability and provi
 ## D-012 — Vite
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Vite is the frontend development and build tool for the Vue/TypeScript application.
 
@@ -124,7 +124,7 @@ Vite is the frontend development and build tool for the Vue/TypeScript applicati
 ## D-013 — Coin Photographs Stored as Files
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Original coin photographs are stored as external files rather than SQLite BLOBs. The database stores references and metadata. Exact storage layout and backup strategy will be decided during image management implementation.
 
@@ -133,7 +133,7 @@ Original coin photographs are stored as external files rather than SQLite BLOBs.
 ## D-014 — Existing XLS/XLSX Data as Import Source
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Existing XLS/XLSX data will be imported into the application database. Exact spreadsheet structure, mappings, validation, and duplicate handling will be determined during the import phase.
 
@@ -142,7 +142,7 @@ Existing XLS/XLSX data will be imported into the application database. Exact spr
 ## D-015 — Current Development Priority
 
 **Status:** Accepted  
-**Date:** 2026-09-07
+**Date: 2026-09-07
 
 Development begins with the development environment rather than application features. The first implementation phase is **Phase 1 — Development Environment**.
 
@@ -559,12 +559,15 @@ The catalogue represents physical collection data. Accidental deletion should th
 
 ## D-030 — Coin Image Storage, Naming, and Editing Workflow
 
-**Status:** Accepted  
+**Status:** Superseded  
 **Date:** 2026-09-14
+**Superseded by:** D-034 — Collection-Aware Coin Images
 
-Original coin photographs are stored as external JPG files in a top-level `images/` directory at the same repository level as `data/`. The `images/` directory is ignored by Git and is not version-controlled.
+This decision remains the historical source for the coin image naming and manual editing workflow, but its original storage-root and directory-layout provisions are superseded by D-034.
 
-All image files are stored directly inside `images/`; separate per-coin subdirectories are not used.
+Original coin photographs are stored as external JPG files. The collection-aware filesystem location is defined by D-034; the legacy top-level `images/` directory described by the original version of this decision is no longer the current storage location.
+
+All image files are stored directly inside the applicable collection directory; separate per-coin subdirectories are not used.
 
 A coin ID is represented in image filenames as exactly six decimal digits with leading zeroes. For example, coin ID `404` is represented as `000404`.
 
@@ -596,7 +599,7 @@ The application must never silently overwrite an existing image file. When an op
 
 ### Rationale
 
-The collection already contains rectangular JPG photographs that are close to square, and the browser grid is therefore designed around square image cells. Direct flat storage in `images/` keeps the file collection simple and predictable; the six-digit coin ID provides stable lexical sorting and grouping without requiring per-coin directories.
+The collection already contains rectangular JPG photographs that are close to square, and the browser grid is therefore designed around square image cells. Collection-level storage keeps the file collection separated by collection without requiring per-coin directories; the six-digit coin ID provides stable lexical sorting and grouping within each collection.
 
 Requiring an awers and rewers at save time reflects the domain model: both sides are essential primary photographs of a coin. Allowing temporary removal during editing makes replacement practical without permitting an incomplete saved coin.
 
@@ -606,8 +609,7 @@ Keeping image metadata in SQLite while retaining the actual JPG files on disk se
 
 ### Consequences
 
-- The repository uses a top-level `images/` directory alongside `data/` for application image data.
-- Git must ignore `/images/`.
+- The collection-aware storage root and directory layout are defined by D-034.
 - Image filenames use the six-digit coin ID and the approved suffix format.
 - A saved coin has one current primary obverse image and one current primary reverse image.
 - Additional images are represented as sequential numbered files for the same coin.
@@ -719,3 +721,170 @@ Keeping the collection number separate from the internal database ID preserves t
 - The internal coin ID remains the database identity.
 - Collection number changes are handled through the normal coin editing workflow.
 - Future uniqueness or formatting rules for collection numbers would require a separate explicit decision.
+
+---
+
+## D-033 — Collections as a First-Class Entity
+
+**Status:** Accepted  
+**Date:** 2026-09-15
+
+The catalogue uses collections as first-class database entities. One SQLite database stores all collections and all coins.
+
+The conceptual relationship is:
+
+```text
+collection
+-----------
+id
+name
+description
+created_at
+updated_at
+
+coin
+-----------
+id
+collection_id → collection.id
+collection_number
+...
+```
+
+Each physical coin remains represented by exactly one `coin` row.
+
+Each coin belongs to exactly one collection.
+
+A collection has:
+
+- a technical `id`;
+- a required unique `name`;
+- an optional `description`;
+- `created_at`;
+- `updated_at`.
+
+Collection names must be unique.
+
+Empty collections are allowed.
+
+A collection containing coins cannot be deleted. Coins must first be moved to another collection. An empty collection may be deleted.
+
+Existing coins are assigned to one default collection during migration, for example `Default Collection`.
+
+Categories remain shared across all collections. Collections do not create separate category namespaces.
+
+### Rationale
+
+Collections represent an organizational boundary for groups of physical coins while preserving one shared catalogue database. Keeping the relationship directly on `coin` makes collection membership explicit without duplicating the coin schema or maintaining separate databases.
+
+Shared categories allow the existing classification system to remain independent from collection membership.
+
+### Consequences
+
+- A new `collection` database table is required.
+- `coin.collection_id` is required.
+- Existing coin data requires migration to a default collection.
+- Collection names require a database-level uniqueness rule.
+- Empty collections are valid.
+- Non-empty collections cannot be deleted through normal application functionality.
+- Categories remain global and shared.
+
+---
+
+## D-034 — Collection-Aware Coin Images
+
+**Status:** Accepted  
+**Date:** 2026-09-15
+
+Coin photographs remain external JPG files, but image storage becomes collection-aware.
+
+The filesystem layout is:
+
+```text
+data/
+├── coin-catalog.db
+└── images/
+    ├── collection-001/
+    │   ├── 000404 - awers.jpg
+    │   ├── 000404 - rewers.jpg
+    │   ├── 000405 - awers.jpg
+    │   └── ...
+    └── collection-002/
+        ├── 000001 - awers.jpg
+        └── ...
+```
+
+Only one collection directory level is used. Per-coin subdirectories are not used.
+
+Within a collection, the existing flat filename convention remains in effect.
+
+All `coin_image` records associated with a coin belong to that coin and therefore move with the coin when the coin changes collection.
+
+A `coin_image.filename` value must correspond to the actual filename on disk.
+
+The image file must be located in the directory corresponding to the coin's current collection.
+
+### Rationale
+
+Collection-level directories separate image files belonging to different collections without introducing a large number of per-coin directories. The existing six-digit coin-ID naming convention remains useful within each collection.
+
+### Consequences
+
+- Image storage moves from a single flat `images/` directory to collection directories.
+- Per-coin image directories are explicitly not used.
+- Existing image filename conventions remain unchanged apart from their collection directory.
+- Image-management code must resolve the collection through the coin relationship.
+- Filesystem/database integrity must include collection-directory correctness.
+
+---
+
+## D-035 — Moving a Coin Creates a New Technical Coin ID
+
+**Status:** Accepted  
+**Date:** 2026-09-15
+
+Moving a coin between collections creates a new `coin.id` in the target collection. The original technical coin ID is not preserved.
+
+For example:
+
+```text
+source:
+coin.id = 404
+collection = Collection A
+
+target:
+coin.id = 731
+collection = Collection B
+```
+
+The new technical ID is generated by SQLite using the normal `coin.id` mechanism. No separate ID generator is introduced.
+
+The moved coin preserves its user-facing `collection_number`.
+
+`collection_number` remains fully controlled manually by the user and is independent from the technical `coin.id`. Moving a coin does not automatically change or regenerate `collection_number`.
+
+All associated `coin_image` records are recreated for the new coin ID, and the corresponding JPG files are renamed using the new technical ID.
+
+A target filename must never overwrite an existing file. If the initially generated target ID would result in a collision, the operation must select another valid new SQL coin ID before finalizing the move.
+
+The original coin record and original image files remain in place until the target record and target files have been successfully prepared.
+
+The move is considered successful only when the new coin, its image metadata, and its image files are complete and consistent.
+
+If the move cannot be completed safely, the operation must return the system to the exact pre-move state.
+
+SQLite transaction management alone is insufficient because filesystem operations are outside the database transaction. The implementation therefore requires a deliberate database/filesystem operation with temporary files and compensating rollback.
+
+### Rationale
+
+The technical `coin.id` is a global database identity, while a move between collections represents creation of the coin's representation in another collection context. Generating a new SQL ID also provides a new, collision-free basis for the physical filenames.
+
+Keeping `collection_number` unchanged preserves the user's own identifier independently of technical database identity.
+
+### Consequences
+
+- Coin moves cannot be implemented as a simple `UPDATE coin SET collection_id = ...`.
+- The move operation must create a new technical coin record.
+- Image filenames change when the technical ID changes.
+- The old record and files must remain intact until the target state is ready.
+- Rollback/compensation is a mandatory part of the move implementation.
+- Real failure-injection tests are required for the move workflow.

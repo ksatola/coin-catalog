@@ -1,11 +1,14 @@
 import { expect, test } from '@playwright/test'
 
 const coinId = 505
-const coin = { id: coinId, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Moneta testowa', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
+const coin = { id: coinId, collection_id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Moneta testowa', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 const categories = [
   { id: 1, name: 'Polska', description: null, created_at: '', updated_at: '' },
   { id: 2, name: 'II RP', description: null, created_at: '', updated_at: '' },
   { id: 3, name: 'PRL', description: null, created_at: '', updated_at: '' },
+]
+const collections = [
+  { id: 1, name: 'Główna kolekcja', description: null, coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 0, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
 ]
 const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
   countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [{ id: 1, name: '1 złoty' }],
@@ -37,6 +40,14 @@ async function mockCreateApi(page: import('@playwright/test').Page, assignedCate
   await page.route('**/api/categories', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(categories) })
   })
+  await page.route('**/api/collections', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collections) })
+      return
+    }
+    const created = { ...collections[0], id: 2, name: 'Nowa kolekcja' }
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) })
+  })
   await page.route('**/api/coins', async (route) => {
     if (route.request().method() === 'POST') await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(coin) })
     else await route.fallback()
@@ -61,6 +72,7 @@ test('dodanie monety pozwala przypisać kilka kategorii naraz', async ({ page })
   const assignedCategoryIds: number[] = []
   await mockCreateApi(page, assignedCategoryIds)
   await page.goto('/dodaj')
+  await expect(page.getByLabel('Wybierz kolekcję')).toHaveValue('1')
   const categorySelect = page.getByLabel('Wybierz kategorie')
   await expect(categorySelect.locator('option')).toHaveCount(3)
   await categorySelect.selectOption(['1', '2', '3'])
@@ -83,4 +95,14 @@ test('dodanie monety pozwala jednocześnie przypisać parenta i childa', async (
   await page.getByRole('button', { name: 'Dodaj monetę' }).click()
   await page.waitForURL(`/monety/${coinId}`)
   expect(assignedCategoryIds).toEqual([1, 2])
+})
+
+test('dodanie monety pozwala utworzyć kolekcję bez opuszczania formularza', async ({ page }) => {
+  const assignedCategoryIds: number[] = []
+  await mockCreateApi(page, assignedCategoryIds)
+  await page.goto('/dodaj')
+  await page.getByRole('button', { name: 'Dodaj kolekcję' }).click()
+  await page.getByLabel('Nazwa nowej kolekcji').fill('Nowa kolekcja')
+  await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
+  await expect(page.getByLabel('Wybierz kolekcję')).toHaveValue('2')
 })

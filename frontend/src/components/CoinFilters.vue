@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import type { Category, CategoryGraphItem } from '../types'
+import type { Category, CategoryGraphItem, Collection } from '../types'
 import { validateCoinSearch, type CoinFilterState } from '../composables/useCoinFilters'
 
 type DictionaryItem = { id: number; name: string }
@@ -12,6 +12,7 @@ const emit = defineEmits<{ submit: [] }>()
 
 const dictionaries = ref<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
 const categories = ref<Category[]>([])
+const collections = ref<Collection[]>([])
 const errorMessage = ref('')
 const dictionaryLabels: Record<string, string> = { countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica', materials: 'Materiał', states: 'Stan', eras: 'Era' }
 
@@ -24,17 +25,19 @@ function submit(): void {
 async function loadFilters(): Promise<void> {
   try {
     const names = Object.keys(dictionaries.value)
-    const [dictionaryResults, categoryResponse] = await Promise.all([
+    const [dictionaryResults, categoryResponse, collectionResponse] = await Promise.all([
       Promise.all(names.map(async (name) => {
         const response = await fetch(`/api/dictionaries/${name}`)
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return [name, await response.json() as DictionaryItem[]] as const
       })),
       fetch('/api/categories'),
+      fetch('/api/collections'),
     ])
-    if (!categoryResponse.ok) throw new Error(`HTTP ${categoryResponse.status}`)
+    if (!categoryResponse.ok || !collectionResponse.ok) throw new Error('Filter data request failed')
     for (const [name, items] of dictionaryResults) dictionaries.value[name] = items
     categories.value = await categoryResponse.json() as CategoryGraphItem[]
+    collections.value = await collectionResponse.json() as Collection[]
     errorMessage.value = ''
   } catch {
     errorMessage.value = 'Nie udało się pobrać danych filtrów.'
@@ -56,6 +59,11 @@ onMounted(loadFilters)
         {{ dictionaryLabels[name] }}
         <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4">
           <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
+        </select>
+      </label>
+      <label>Kolekcje
+        <select v-model="props.filters.collectionIds" multiple size="4">
+          <option v-for="collection in collections" :key="collection.id" :value="collection.id">{{ collection.name }}</option>
         </select>
       </label>
       <label>Kategorie

@@ -17,6 +17,7 @@
         <RouterLink to="/archiwum">Archiwum</RouterLink>
         <RouterLink to="/slowniki">Słowniki</RouterLink>
         <RouterLink to="/kategorie">Kategorie</RouterLink>
+        <RouterLink to="/kolekcje">Kolekcje</RouterLink>
       </div>
     </div>
   </nav>
@@ -112,7 +113,7 @@
   color: #ffffff;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .navigation-inner {
     justify-content: center;
     padding: 8px 12px;
@@ -130,9 +131,9 @@
 
   .navigation-links a {
     flex: 1;
-    padding: 9px 6px;
+    padding: 9px 5px;
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .navigation-links a.primary-link {
