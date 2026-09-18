@@ -122,6 +122,7 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
   expect(categoryResponse.status()).toBe(201)
   const categoryBody = await categoryResponse.json()
   expect(categoryBody.name).toBe('Kategoria testowa')
+  await expect(page.getByLabel('Nazwa nowej kategorii')).toHaveCount(0)
 
   const categorySelect = page.getByLabel('Wybierz kategorie')
   const createdCategory = categorySelect.getByRole('option', {
