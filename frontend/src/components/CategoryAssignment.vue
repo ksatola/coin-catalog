@@ -166,38 +166,7 @@ onMounted(load)
     </ul>
     <p v-else>Brak przypisanych kategorii.</p>
 
-    <div class="category-actions">
-      <button
-        type="button"
-        class="save-button"
-        :disabled="selectedCategoryIds.length === 0 || saving"
-        @click="attach"
-      >
-        {{ saving ? 'Zapisywanie…' : 'Zapisz kategorię' }}
-      </button>
-
-      <button type="button" class="open-button" :aria-expanded="isOpen" @click="toggle">
-        Dodaj kategorię
-      </button>
-    </div>
-
-    <div v-if="selectedCategoryIds.length > 0" class="selection">
-      <label>
-        Wybierz kategorie
-        <select v-model="selectedCategoryIds" multiple size="5">
-          <option
-            v-for="category in availableCategories()"
-            :key="category.id"
-            :value="category.id"
-          >
-            {{ category.name }}
-          </option>
-        </select>
-      </label>
-      <small>Możesz wybrać więcej niż jedną kategorię.</small>
-    </div>
-
-    <label v-else class="category-select">
+    <label class="category-select">
       <span>Wybierz kategorie</span>
       <select v-model="selectedCategoryIds" multiple size="5">
         <option
@@ -210,6 +179,21 @@ onMounted(load)
       </select>
       <small>Możesz wybrać więcej niż jedną kategorię.</small>
     </label>
+
+    <div class="category-actions">
+      <button type="button" class="open-button" :aria-expanded="isOpen" @click="toggle">
+        Dodaj kategorię
+      </button>
+
+      <button
+        type="button"
+        class="save-button"
+        :disabled="selectedCategoryIds.length === 0 || saving"
+        @click="attach"
+      >
+        {{ saving ? 'Zapisywanie…' : 'Zapisz kategorię' }}
+      </button>
+    </div>
 
     <div v-if="isOpen" class="editor">
       <label class="editor-field">
