@@ -191,6 +191,10 @@ async function mockCatalogApi(page: Page): Promise<void> {
 
   await page.route('**/api/coins?*', async (route) => {
     const params = new URL(route.request().url()).searchParams
+    if (params.get('collection_id') === '1' && !params.has('status')) {
+      await route.fallback()
+      return
+    }
     const selectedCollections = params.getAll('collection_id').map(Number)
     const status = params.get('status')
     const search = params.get('search')?.toLowerCase() ?? ''
