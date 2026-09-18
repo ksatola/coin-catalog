@@ -7,8 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog import image_storage
+from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import (
