@@ -117,7 +117,7 @@ The complete project verification beyond the checks listed above (including the 
 
 **Status:** Initial implementation complete
 
-The accepted D-030 storage convention is implemented: top-level Git-ignored `images/`, flat six-digit coin-ID filenames, primary awers/rewers images, sequential additional images, SQLite metadata, JPG serving, explicit replacement confirmation, and byte-preserving storage.
+The collection-aware image storage from D-034 is implemented: Git-ignored `data/images/collection-XXX/` directories, flat six-digit technical coin-ID filenames, primary awers/rewers images, sequential additional images, SQLite metadata, JPG serving, explicit replacement confirmation, and byte-preserving storage.
 
 Further image features remain optional future work.
 
