@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from coin_catalog.database import get_db
+from coin_catalog.image_storage import collection_images_dir
 from coin_catalog.models import Coin, Collection
 from coin_catalog.schemas import (
     CollectionCreate,
@@ -67,7 +68,16 @@ def create_collection(
     ensure_unique_name(name, session)
     collection = Collection(name=name, description=collection_data.description)
     session.add(collection)
-    session.commit()
+    session.flush()
+
+    collection_dir = collection_images_dir(collection.id)
+    try:
+        collection_dir.mkdir(parents=True, exist_ok=True)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
     session.refresh(collection)
     return collection
 
