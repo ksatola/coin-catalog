@@ -289,7 +289,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption(['1', '2'])
-    await expect(page.getByLabel('Aktywny zakres kolekcji')).toContainText('2 kolekcje (#1, #2)')
+    await expect(page.getByLabel('Aktywny zakres kolekcji')).toContainText('Monety polskie, Monety niemieckie')
   })
 
   test('filters catalog by one collection', async ({ page }) => {
