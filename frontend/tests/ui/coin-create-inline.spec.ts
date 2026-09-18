@@ -113,7 +113,15 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
 
   await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
   await page.getByLabel('Nazwa nowej kategorii').fill('Kategoria testowa')
+  const categoryResponsePromise = page.waitForResponse((response) =>
+    response.url().endsWith('/api/categories') &&
+    response.request().method() === 'POST',
+  )
   await page.getByRole('button', { name: 'Dodaj' }).last().click()
+  const categoryResponse = await categoryResponsePromise
+  expect(categoryResponse.status()).toBe(201)
+  const categoryBody = await categoryResponse.json()
+  expect(categoryBody.name).toBe('Kategoria testowa')
 
   const categorySelect = page.getByLabel('Wybierz kategorie')
   const createdCategory = categorySelect.getByRole('option', {
