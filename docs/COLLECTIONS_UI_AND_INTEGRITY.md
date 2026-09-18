@@ -210,7 +210,16 @@ The coin edit page provides the collection assignment controls described in sect
 
 Changing collection uses the existing domain move operation, including the technical coin-ID replacement and filesystem handling defined for Phase 8.
 
-## 7. Test Strategy
+## 7. Current Phase 8 Completion Notes
+
+The following agreed follow-ups are implemented in the current branch:
+
+- Creating a collection creates its required `collection-XXX` image directory before the database transaction is committed.
+- `Monety` and `Archiwum` display the active collection scope directly in the page header; an empty selection is shown as `Wszystkie kolekcje` and selected IDs are shown for one or more collections.
+- The Collections management view provides `Pokaż` for each collection and navigates to `/kolekcje/:id`.
+- Backend coverage includes collection-directory creation; frontend coverage includes active collection scope and collection-detail navigation.
+
+## 8. Test Strategy
 
 Existing collection tests must be extended rather than duplicated. The repository already contains collection CRUD, collection statistics, collection migration, coin-collection, and coin-move tests.
 
