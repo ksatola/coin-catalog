@@ -96,18 +96,20 @@ async function create(): Promise<void> {
       </select>
     </label>
 
-    <button
-      type="button"
-      class="save-button"
-      :disabled="props.selectedCollectionId === props.savedCollectionId || props.savingCollection"
-      @click="emit('save')"
-    >
-      {{ props.savingCollection ? 'Zapisywanie…' : 'Zapisz kolekcję' }}
-    </button>
+    <div class="collection-actions">
+      <button type="button" class="open-button" :aria-expanded="isOpen" @click="toggle">
+        Dodaj kolekcję
+      </button>
 
-    <button type="button" class="open-button" :aria-expanded="isOpen" @click="toggle">
-      Dodaj kolekcję
-    </button>
+      <button
+        type="button"
+        class="save-button"
+        :disabled="props.selectedCollectionId === props.savedCollectionId || props.savingCollection"
+        @click="emit('save')"
+      >
+        {{ props.savingCollection ? 'Zapisywanie…' : 'Zapisz kolekcję' }}
+      </button>
+    </div>
 
     <div v-if="isOpen" class="editor">
       <label class="editor-field">
@@ -178,6 +180,12 @@ async function create(): Promise<void> {
   background: #ffffff;
   color: #0f172a;
   font: inherit;
+}
+
+.collection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .save-button,
