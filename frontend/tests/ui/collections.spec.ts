@@ -124,6 +124,11 @@ async function mockCollectionApi(page: Page): Promise<void> {
   })
 
   await page.route('**/api/coins?collection_id=1', async (route) => {
+    const params = new URL(route.request().url()).searchParams
+    if (params.has('status')) {
+      await route.fallback()
+      return
+    }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collectionCoins) })
   })
 }
@@ -348,6 +353,7 @@ test.describe('collections', () => {
     await expect(page.getByRole('link', { name: /#404/ })).toBeVisible()
     await page.getByRole('button', { name: 'Pokaż monety' }).click()
     await expect(page).toHaveURL(/\/monety\?collection_id=1$/)
+    await page.getByRole('button', { name: '▦ Grid' }).click()
     await expect(page.getByText('#101')).toBeVisible()
     await expect(page.getByText('#404')).toBeVisible()
     await expect(page.getByText('#202')).toHaveCount(0)
