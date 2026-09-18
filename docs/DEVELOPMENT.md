@@ -133,9 +133,11 @@ Run:
 
 ```bash
 cd /workspaces/coin-catalog/backend
+uv sync --frozen
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
+uv run pyright
 ```
 
 The backend suite covers coin persistence and API behavior, dictionary CRUD and reference protection, archive/restore behavior, and category/image behavior.
@@ -148,7 +150,7 @@ The development database is:
 /workspaces/coin-catalog/data/coin-catalog.db
 ```
 
-The database is not committed to Git.
+The database is not committed to Git. Runtime image files under `data/images/` are likewise application data rather than versioned source.
 
 Run Alembic commands from the backend directory:
 
@@ -182,8 +184,6 @@ backend/src/coin_catalog/main.py
 Current API:
 
 ```text
-GET  /health
-
 GET    /collections
 POST   /collections
 GET    /collections/{collection_id}
@@ -297,7 +297,7 @@ The fixed bottom navigation contains `Monety`, `Dodaj monetę`, `Archiwum`, and 
 
 ## Current Coin Browser and Entry Flow
 
-The browser supports Grid and List layouts. Grid is the default. The active catalogue can be scoped to all, one, or multiple collections; an empty collection selection means all collections. Quick search respects the selected collection scope.
+The browser supports Grid and List layouts. Grid is the default. The active catalogue and archive can be scoped to all, one, or multiple collections; an empty collection selection means all collections. Quick search respects the selected collection scope. Collection detail views are available at `/kolekcje/:id`, and coin editing moves a coin through the collection move operation rather than changing only `collection_id`.
 
 Grid tiles open details. List rows are not clickable; actions are explicit buttons.
 
@@ -363,7 +363,7 @@ The verified UI coverage includes image replacement, cancellation, additional-im
 
 ## Recommended Local Verification
 
-For the current Phase 4 branch:
+For the current Phase 8 branch:
 
 ```bash
 cd /workspaces/coin-catalog/backend
