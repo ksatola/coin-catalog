@@ -6,7 +6,7 @@ This document records the current, verified state of the project. A task is mark
 
 ## Current Phase
 
-**Phase 8 — Collections is in progress on the working branch.**
+**Phase 8 — Collections is complete and verified on the working branch.**
 
 Phase 7 — Collection Number is complete and verified.
 
@@ -92,14 +92,16 @@ The collection number is optional, user-facing text independent from the technic
 
 ## Phase 8 — Collections
 
-**Status:** In progress
+**Status:** Complete
 
-Implemented repository functionality includes collection CRUD and statistics, collection-aware coin data and filtering, collection-aware image storage, atomic coin moves with filesystem/database compensation, collection management and detail views, collection assignment during coin creation/editing, and independent collection-save behavior in coin editing.
+Implemented and verified repository functionality includes collection CRUD and statistics, collection-aware coin data and filtering, collection-aware image storage, atomic coin moves with filesystem/database compensation, collection management and detail views, collection assignment during coin creation/editing, and independent collection-save behavior in coin editing.
 
 Verified in the current development cycle:
 
 - frontend/tests/ui/coin-edit.spec.ts — **7 tests passed** (user-reported local Playwright result);
-- frontend/tests/ui/collections.spec.ts — **9 tests passed** (user-reported local Playwright result).
+- frontend/tests/ui/collections.spec.ts — **11 tests passed** (user-reported local Playwright result);
+- backend/tests/test_image_storage.py — **7 tests passed** (user-reported local pytest result);
+- backend Ruff lint and format checks — **all checks passed** (user-reported local result).
 
 Additional Phase 8 work completed in the current cycle:
 
@@ -109,7 +111,7 @@ Additional Phase 8 work completed in the current cycle:
 - the Collections management view provides `Pokaż` navigation to `/kolekcje/:id`;
 - Playwright coverage was extended for active collection scope and collection-detail navigation.
 
-The Phase 8 backend suite and complete project verification have not yet been reported as run in the current cycle, so Phase 8 remains **in progress** rather than complete.
+The complete project verification beyond the checks listed above (including the full backend pytest suite, Pyright, frontend type-check/build, and complete Playwright suite) is **not recorded here as verified** unless separately reported by the project owner.
 
 ## Image Management
 
@@ -165,7 +167,7 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-Next step: run the remaining Phase 8 verification locally and synchronize the phase documentation with the final verified results.
+Next step: Phase 8 is complete. Continue with the next planned phase or maintenance work.
 
 ---
 
@@ -178,11 +180,13 @@ Next step: run the remaining Phase 8 verification locally and synchronize the ph
 - Recorded collection-list `Pokaż` navigation to `/kolekcje/:id`.
 - Added backend and Playwright regression coverage for the new behavior.
 
-### 2026-09-18 — Phase 8 verification update
+### 2026-09-18 — Phase 8 completion update
 
 - Recorded the user-reported Playwright result of **7 passed** for frontend/tests/ui/coin-edit.spec.ts.
-- Recorded the previously verified **9 passed** result for frontend/tests/ui/collections.spec.ts.
-- Kept Phase 8 marked **in progress** because the complete backend/project verification has not yet been reported as run in the current cycle.
+- Updated frontend/tests/ui/collections.spec.ts to the user-reported current result of **11 passed**.
+- Recorded the user-reported pytest result of **7 passed** for backend/tests/test_image_storage.py.
+- Recorded the user-reported result that backend Ruff lint and format checks pass.
+- Marked Phase 8 complete based on the verified implementation and the phase-specific verification recorded above.
 
 
 ### 2026-09-15 — Phase 7 completion
