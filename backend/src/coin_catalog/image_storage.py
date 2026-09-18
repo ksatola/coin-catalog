@@ -70,7 +70,9 @@ def find_image_storage_issues(session: Session) -> list[ImageStorageIssue]:
 def log_image_storage_issues(issues: list[ImageStorageIssue]) -> None:
     """Report consistency issues without modifying application data."""
     for issue in issues:
-        logger.warning("Image storage consistency issue [%s]: %s", issue.kind, issue.detail)
+        logger.warning(
+            "Image storage consistency issue [%s]: %s", issue.kind, issue.detail
+        )
 
 
 def ensure_image_storage(session: Session) -> list[ImageStorageIssue]:
