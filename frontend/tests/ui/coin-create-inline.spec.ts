@@ -122,7 +122,10 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
       categoryPostSeen = true
     }
   })
-  await page.getByRole('button', { name: 'Dodaj' }).last().click()
+  await page.locator('.inline-create').getByRole('button', {
+    name: 'Dodaj',
+    exact: true,
+  }).click()
   await expect.poll(() => categoryPostSeen).toBe(true)
   await expect(page.getByLabel('Nazwa nowej kategorii')).toHaveCount(0)
 
