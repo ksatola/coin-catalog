@@ -9,7 +9,7 @@ import type { CategoryGraphItem, Collection, CoinFormSubmit } from '../types'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = useRouter()
-const { markClean, markDirty, allowNavigation } = useUnsavedCoinForm()
+const { markClean, markDirty } = useUnsavedCoinForm()
 const errorMessage = ref('')
 const categories = ref<CategoryGraphItem[]>([])
 const selectedCategoryIds = ref<number[]>([])
@@ -88,7 +88,6 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
     for (const file of payload.images.additional) await uploadFile(coin.id, file, 'additional')
     await assignCategories(coin.id)
 
-    allowNavigation()
     markClean()
     errorMessage.value = ''
     await router.push(`/monety/${coin.id}`)
