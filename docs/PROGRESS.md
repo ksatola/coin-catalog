@@ -101,6 +101,14 @@ Verified in the current development cycle:
 - frontend/tests/ui/coin-edit.spec.ts — **7 tests passed** (user-reported local Playwright result);
 - frontend/tests/ui/collections.spec.ts — **9 tests passed** (user-reported local Playwright result).
 
+Additional Phase 8 work completed in the current cycle:
+
+- collection creation now creates the required `collection-XXX` image directory before committing the collection;
+- backend regression coverage verifies the collection-directory creation behavior;
+- `Monety` and `Archiwum` display the active collection scope directly in the page header;
+- the Collections management view provides `Pokaż` navigation to `/kolekcje/:id`;
+- Playwright coverage was extended for active collection scope and collection-detail navigation.
+
 The Phase 8 backend suite and complete project verification have not yet been reported as run in the current cycle, so Phase 8 remains **in progress** rather than complete.
 
 ## Image Management
@@ -157,11 +165,18 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-Next step: complete the remaining Phase 8 verification, then synchronize the phase documentation with the final verified results.
+Next step: run the remaining Phase 8 verification locally and synchronize the phase documentation with the final verified results.
 
 ---
 
 ## Change Log
+
+### 2026-09-18 — Phase 8 collection UI and filesystem update
+
+- Recorded collection-directory creation on collection creation.
+- Recorded active collection scope visibility in Monety and Archiwum.
+- Recorded collection-list `Pokaż` navigation to `/kolekcje/:id`.
+- Added backend and Playwright regression coverage for the new behavior.
 
 ### 2026-09-18 — Phase 8 verification update
 
