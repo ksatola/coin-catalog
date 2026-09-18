@@ -22,7 +22,10 @@ async function loadCategories(): Promise<void> {
   try {
     const response = await fetch('/api/categories')
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    categories.value = await response.json() as CategoryGraphItem[]
+    const loadedCategories = await response.json() as CategoryGraphItem[]
+    const loadedIds = new Set(loadedCategories.map((category) => category.id))
+    const locallyCreatedCategories = categories.value.filter((category) => !loadedIds.has(category.id))
+    categories.value = [...loadedCategories, ...locallyCreatedCategories]
     categoriesErrorMessage.value = ''
   } catch {
     categoriesErrorMessage.value = 'Nie udało się pobrać kategorii.'
