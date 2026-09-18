@@ -80,7 +80,7 @@ Implemented and verified functionality covers the collection domain/database, co
 
 Phase 8 introduced collections as a first-class organizational entity while keeping one shared SQLite database.
 
-Planned implementation:
+Implemented scope:
 
 1. Collection domain and database
    - `collection` model and table;
