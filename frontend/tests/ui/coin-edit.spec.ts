@@ -15,6 +15,11 @@ const collections = [
   { id: 2, name: 'Kolekcja 2', description: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
 ]
 
+const categories = [
+  { id: 1, name: 'Kategoria 1', description: 'Opis kategorii', created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+  { id: 2, name: 'Kategoria 2', description: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+]
+
 const coin = {
   id: 1,
   country_id: 1,
@@ -192,4 +197,93 @@ test('tworzy kolekcję z edycji monety i zapisuje jej przypisanie', async ({ pag
     target_collection_id: 3,
   })
   await expect(page.getByLabel('Kolekcja')).toHaveValue('3')
+})
+
+test('zapisuje wybraną istniejącą kategorię z edycji monety', async ({ page }) => {
+  await mockCoinEditApi(page)
+
+  let assignedCategoryIds: number[] = []
+  let attachRequest: Record<string, unknown> | null = null
+
+  await page.route('**/api/categories', async (route) => {
+    await route.fulfill({ json: categories })
+  })
+  await page.route('**/api/coins/1/categories', async (route) => {
+    if (route.request().method() === 'POST') {
+      attachRequest = route.request().postDataJSON() as Record<string, unknown>
+      assignedCategoryIds = [2]
+      await route.fulfill({ json: categories[1] })
+      return
+    }
+
+    await route.fulfill({
+      json: categories.filter((category) => assignedCategoryIds.includes(category.id)),
+    })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  await page.getByLabel('Wybierz kategorie').selectOption('2')
+  await page.getByRole('button', { name: 'Zapisz kategorię' }).click()
+
+  await expect.poll(() => attachRequest).toEqual({})
+  await expect(page.getByText('Kategoria 2')).toBeVisible()
+})
+
+test('tworzy kategorię z edycji monety i przypisuje ją do monety', async ({ page }) => {
+  await mockCoinEditApi(page)
+
+  let createdCategoryRequest: Record<string, unknown> | null = null
+  let attachRequest: Record<string, unknown> | null = null
+  let assignedCategoryIds: number[] = []
+
+  await page.route('**/api/categories', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fulfill({ json: categories })
+      return
+    }
+
+    createdCategoryRequest = route.request().postDataJSON() as Record<string, unknown>
+
+    await route.fulfill({
+      status: 201,
+      json: {
+        id: 3,
+        name: 'Nowa kategoria',
+        description: 'Nowy opis',
+        created_at: '2026-09-18T00:00:00',
+        updated_at: '2026-09-18T00:00:00',
+      },
+    })
+  })
+  await page.route('**/api/coins/1/categories/3', async (route) => {
+    attachRequest = route.request().postDataJSON() as Record<string, unknown>
+    assignedCategoryIds = [3]
+    await route.fulfill({
+      json: {
+        id: 3,
+        name: 'Nowa kategoria',
+        description: 'Nowy opis',
+        created_at: '2026-09-18T00:00:00',
+        updated_at: '2026-09-18T00:00:00',
+      },
+    })
+  })
+  await page.route('**/api/coins/1/categories', async (route) => {
+    await route.fulfill({
+      json: categories.filter((category) => assignedCategoryIds.includes(category.id)),
+    })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  await page.getByRole('button', { name: 'Dodaj kategorię' }).click()
+  await page.getByLabel('Nazwa nowej kategorii').fill('Nowa kategoria')
+  await page.locator('.editor').getByLabel('Opis').fill('Nowy opis')
+  await page.locator('.editor').getByRole('button', { name: 'Dodaj', exact: true }).click()
+
+  await expect.poll(() => createdCategoryRequest).toEqual({
+    name: 'Nowa kategoria',
+    description: 'Nowy opis',
+  })
+  await expect.poll(() => attachRequest).toEqual({})
+  await expect(page.getByText('Nowa kategoria')).toBeVisible()
 })
