@@ -209,16 +209,17 @@ test('zapisuje wybraną istniejącą kategorię z edycji monety', async ({ page 
     await route.fulfill({ json: categories })
   })
   await page.route('**/api/coins/1/categories', async (route) => {
+    await route.fulfill({
+      json: categories.filter((category) => assignedCategoryIds.includes(category.id)),
+    })
+  })
+  await page.route('**/api/coins/1/categories/2', async (route) => {
     if (route.request().method() === 'POST') {
       attachRequestCount += 1
       assignedCategoryIds = [2]
       await route.fulfill({ json: categories[1] })
       return
     }
-
-    await route.fulfill({
-      json: categories.filter((category) => assignedCategoryIds.includes(category.id)),
-    })
   })
 
   await page.goto('/monety/1/edytuj')
