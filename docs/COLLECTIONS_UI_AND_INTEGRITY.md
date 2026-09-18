@@ -255,7 +255,7 @@ The Phase 8 additions should cover the following missing behavior.
 13. Quick search respects the active collection scope.
 14. Archive uses the same collection-selection behavior.
 
-## 8. Implementation Order
+## 9. Implementation Order
 
 The agreed implementation order is:
 
@@ -279,7 +279,7 @@ Refine `/kolekcje/:id` as the collection dashboard and connect it cleanly to the
 
 Extend the existing backend and E2E collection test suites to cover the agreed filesystem, navigation, filtering, search-scope, and UI behavior. Run the complete verification suite after the changes.
 
-## 9. Follow-up Tasks — Coin Edit Save Separation
+## 10. Follow-up Tasks — Coin Edit Save Separation
 
 The following tasks were identified during review of the current coin edit save flow and are pending implementation and verification.
 
