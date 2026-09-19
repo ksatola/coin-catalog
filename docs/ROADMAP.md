@@ -134,25 +134,51 @@ Implemented scope:
    - injected-failure rollback tests;
    - Playwright coverage.
 
-## Phase 9 — Coin Browser Optimization
+## Phase 9 — Windows Standalone Packaging
+
+**Status:** Not started
+
+Planned: a portable Windows distribution that runs without Python, Node.js, uv, Docker, or Dev Container on the target machine.
+
+Target runtime:
+
+- `CoinCatalog.exe` starts the local FastAPI application;
+- the Vue frontend is built into static assets served by FastAPI;
+- SQLite remains a local database file;
+- collection-aware image storage remains under `data/images/collection-XXX/`;
+- the application opens the default browser automatically;
+- user data remains outside the bundled executable so it survives application updates.
+
+Initial implementation target:
+
+- Windows portable one-folder distribution;
+- packaged Python runtime and dependencies;
+- explicit runtime/data paths;
+- reproducible Windows build process;
+- startup/shutdown handling;
+- verification on a clean Windows environment.
+
+The first implementation should prefer a one-folder bundle because it is easier to diagnose and maintain; a single-file `.exe` can be evaluated later.
+
+## Phase 10 — Coin Browser Optimization
 
 **Status:** Future / conditional
 
 The basic browser is already implemented. Pagination or other large-collection optimization should be introduced only if actual collection size or performance requirements justify it.
 
-## Phase 10 — Backup and Export
+## Phase 11 — Backup and Export
 
 **Status:** Not started
 
 Planned: database/image backup strategy, metadata export, and full catalogue export evaluation.
 
-## Phase 11 — Testing and Quality
+## Phase 12 — Testing and Quality
 
 **Status:** Ongoing
 
 Backend and Playwright automation exists. Broader integration coverage, CI checks, and additional quality automation remain future work.
 
-## Phase 12 — Packaging and Deployment
+## Phase 13 — Packaging and Deployment
 
 **Status:** Not started
 
