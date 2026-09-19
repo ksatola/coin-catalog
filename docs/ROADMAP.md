@@ -134,31 +134,38 @@ Implemented scope:
    - injected-failure rollback tests;
    - Playwright coverage.
 
-## Phase 9 — Windows Standalone Packaging
+## Phase 9 — Cross-platform Standalone Packaging
 
 **Status:** Not started
 
-Planned: a portable Windows distribution that runs without Python, Node.js, uv, Docker, or Dev Container on the target machine.
+Planned: portable Windows and macOS distributions that run without Python, Node.js, uv, Docker, or Dev Container on the target machine.
 
 Target runtime:
 
-- `CoinCatalog.exe` starts the local FastAPI application;
+- a platform launcher starts the local FastAPI application;
 - the Vue frontend is built into static assets served by FastAPI;
 - SQLite remains a local database file;
 - collection-aware image storage remains under `data/images/collection-XXX/`;
 - the application opens the default browser automatically;
 - user data remains outside the bundled executable so it survives application updates.
 
-Initial implementation target:
+Initial implementation targets:
 
 - Windows portable one-folder distribution;
+- macOS .app distribution;
 - packaged Python runtime and dependencies;
 - explicit runtime/data paths;
-- reproducible Windows build process;
-- startup/shutdown handling;
-- verification on a clean Windows environment.
+- production Vue assets served by FastAPI;
+- reproducible native-platform build process;
+- startup/shutdown handling and browser launch;
+- verification on clean Windows and macOS environments;
+- release notes and SHA-256 checksums;
+- upgrade verification proving that user data survives application updates.
 
-The first implementation should prefer a one-folder bundle because it is easier to diagnose and maintain; a single-file `.exe` can be evaluated later.
+The detailed vision, open technical questions, candidate technologies, release workflow, and Definition of Done are documented in docs/CROSS_PLATFORM_STANDALONE_PACKAGING.md.
+
+The proposed packaging tech stack is intentionally not an accepted architectural decision yet. Candidate tools and approaches must be verified against the repository, supported target platforms, licensing, reproducibility, signing/notarization requirements, runtime behavior, and clean-machine tests before adoption.
+
 
 ## Phase 10 — Coin Browser Optimization
 
