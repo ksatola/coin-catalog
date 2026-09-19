@@ -31,7 +31,6 @@ Relevant documentation:
 - `docs/PROGRESS.md` — current implementation status.
 - `docs/ROADMAP.md` — planned development phases.
 - `docs/DEVELOPMENT.md` — detailed development environment and setup instructions.
-- `docs/GIT_WORKFLOW.md` — practical Git branching, development, and merge workflow.
 - `docs/CODING_STANDARDS.md` — coding style, quality, documentation, testing, and Git conventions.
 
 When beginning work on the project, review these documents before making significant changes.
@@ -293,7 +292,7 @@ Examples:
 
 Never rewrite published history unless explicitly requested.
 
-See `docs/GIT_WORKFLOW.md` for the practical GitHub Desktop and VS Code workflow.
+See `docs/DEVELOPMENT.md` for the practical GitHub Desktop, VS Code, branching, and merge workflow.
 
 ## 16. Documentation as Code
 
@@ -447,8 +446,6 @@ The development container may provide standalone tooling such as `pytest`, `ruff
 
 The project is currently in:
 
-**Phase 8 — Collections**
+**Phase 9 — Cross-platform Standalone Packaging**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, Phase 6 — UI Foundation, and Phase 7 — Collection Number have been completed and verified.
-
-Phase 8 adds collections as a first-class organizational entity across the database, API, collection-aware coin operations and filtering, image storage, atomic coin moves, and frontend collection management and assignment. Phase 8 implementation and the verification recorded in docs/PROGRESS.md are complete.
+Phase 8 — Collections is complete and verified. Phase 9 planning is documented in `docs/CROSS_PLATFORM_STANDALONE_PACKAGING.md`; implementation has not started.
