@@ -319,17 +319,15 @@ Coin-category assignment/removal is implemented in the coin workflow. Assigned c
 
 Image management is implemented for primary and additional photographs.
 
-The accepted storage convention uses a top-level `images/` directory, ignored by Git, with flat six-digit filenames such as:
+The accepted storage convention uses collection-aware directories under `data/images/`, with flat filenames inside each collection directory:
 
 ```text
-000404 - awers.jpg
-000404 - rewers.jpg
-000404 - 01.jpg
+data/images/collection-001/000404 - awers.jpg
+data/images/collection-001/000404 - rewers.jpg
+data/images/collection-001/000404 - 01.jpg
 ```
 
 The database stores image metadata; image contents are files, not SQLite BLOBs. Primary replacement requires explicit replacement confirmation.
-
-See [`IMAGE_STORAGE_DECISION.md`](IMAGE_STORAGE_DECISION.md).
 
 ## Manual Data Entry
 
@@ -363,7 +361,7 @@ The verified UI coverage includes image replacement, cancellation, additional-im
 
 ## Recommended Local Verification
 
-For the current Phase 8 branch:
+For the current project state:
 
 ```bash
 cd /workspaces/coin-catalog/backend
@@ -395,7 +393,7 @@ cd /workspaces/coin-catalog
 
 ## Current Scope
 
-Phase 4 is complete and currently covers:
+Phase 8 — Collections is complete. The current verified application scope includes:
 
 - coin creation and persistence;
 - dictionary-backed entry;
@@ -406,10 +404,13 @@ Phase 4 is complete and currently covers:
 - primary and additional coin images;
 - category management and category relationships;
 - coin-category assignment/removal;
+- collection management and collection-aware browsing;
+- collection-aware image storage;
+- collection-aware coin moves;
 - local development tooling;
 - automated UI coverage for the current workflows.
 
-Future work includes advanced search/filtering, richer collections/tags, backup/export, CI/CD, and deployment.
+Phase 9 — Cross-platform Standalone Packaging is planned but not implemented.
 
 ## Working Rules
 
