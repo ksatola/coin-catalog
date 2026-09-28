@@ -446,7 +446,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', purchasePriceInput, $event)" @blur="formatDecimalOnBlur('purchase_price', purchasePriceInput)" /></label>
         <label class="field-card purchase-date-field">Data zakupu
           <div class="purchase-date-control">
-            <input :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="handlePurchaseDateInput" />
+            <input :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="handlePurchaseDateInput" @change="handlePurchaseDateInput" />
             <button type="button" aria-label="Otwórz kalendarz daty zakupu" @click="openPurchaseDatePicker">📅</button>
             <input ref="purchaseDatePicker" :value="purchaseDateInput" type="date" class="purchase-date-picker" tabindex="-1" aria-hidden="true" @input="updatePurchaseDate(($event.target as HTMLInputElement).value)" />
           </div>
