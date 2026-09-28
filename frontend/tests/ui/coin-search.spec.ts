@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const coin = { id: 1, collection_id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Opis testowej monety', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 const dictionaries = {
-  countries: [{ id: 1, name: 'Kategoria testowa B' }], issuers: [], denominations: [{ id: 1, name: 'Nominał testowy' }],
+  countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 1, name: 'Nominał testowy' }],
   mints: [], materials: [], states: [], eras: [{ id: 1, name: 'AD' }],
 }
 const categories = [
