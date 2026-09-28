@@ -44,6 +44,8 @@ const emptyForm: CoinCreate = {
   literature: null,
   acquisition_method_id: null,
   acquisition_method_text: null,
+  purchase_price: null,
+  purchase_date: null,
 }
 
 const form = reactive<CoinCreate>({ ...emptyForm })
@@ -240,8 +242,9 @@ function submitForm(): void {
     return
   }
   validationMessage.value = ''
+  const payload = { ...form, from_year: form.from_year || null, from_era_id: form.from_era_id || null, to_year: form.to_year || null, to_era_id: form.to_era_id || null }
   emit('submit', {
-    coin: { ...form },
+    coin: payload,
     images: {
       avers: pendingFiles.avers,
       rewers: pendingFiles.rewers,
@@ -348,6 +351,14 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     </section>
 
     <section class="form-section">
+      <div class="section-heading"><h3>Dane zakupu</h3></div>
+      <div class="purchase-fields">
+        <label class="field-card">Cena zakupu <input v-model.number="form.purchase_price" type="number" min="0" step="0.01" /></label>
+        <label class="field-card">Data zakupu <input v-model="form.purchase_date" type="date" /></label>
+      </div>
+    </section>
+
+    <section class="form-section">
       <div class="section-heading"><h3>Sposób nabycia</h3></div>
       <div class="acquisition-fields">
         <div class="field-card">
@@ -415,7 +426,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .date-fields label { color: #334155; font-weight: 600; }
 .date-fields input,.date-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
 .text-fields { display: grid; gap: 16px; }
-.acquisition-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.acquisition-fields,.purchase-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .text-fields .field-card:last-child { min-height: 190px; }
 .video-option { display: inline-flex; align-items: center; justify-self: start; gap: 10px; padding: 12px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; color: #334155; font-weight: 600; }
 .video-option input { width: 18px; height: 18px; margin: 0; }
@@ -434,7 +445,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
   .info-grid > .field-card,.info-grid > .field-card-wide,.info-grid > .denomination-field { grid-column: auto; }
   .collection-number-field { grid-column: auto; }
   .date-fields { grid-template-columns: 1fr; }
-  .acquisition-fields { grid-template-columns: 1fr; }
+  .acquisition-fields,.purchase-fields { grid-template-columns: 1fr; }
   .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; }
 }
 @media (max-width:520px) {
