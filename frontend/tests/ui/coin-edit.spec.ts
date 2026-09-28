@@ -135,7 +135,7 @@ test('zapis danych monety nie wykonuje move', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Awers' }).fill('Nowy opis awersu')
   await page.getByRole('textbox', { name: 'Rewers' }).fill('Nowy opis rewersu')
   await page.getByRole('textbox', { name: 'Literatura' }).fill('Nowa literatura')
-  const acquisitionSelect = page.getByRole('heading', { name: 'Sposób nabycia' }).locator('..').getByRole('combobox')
+  const acquisitionSelect = page.locator('section.form-section').filter({ has: page.getByRole('heading', { name: 'Sposób nabycia' }) }).getByRole('combobox')
   const dictionaryOption = acquisitionSelect.locator('option').nth(1)
   await acquisitionSelect.selectOption(await dictionaryOption.getAttribute('value') ?? '')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
