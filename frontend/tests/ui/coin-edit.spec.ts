@@ -149,6 +149,8 @@ test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
   })
 
   await page.goto('/monety/1/edytuj')
+  await expect(page.getByLabel('Cena zakupu')).toHaveValue('125.5')
+  await expect(page.getByLabel('Data zakupu')).toHaveValue('2026-09-20')
   await page.getByRole('textbox', { name: 'Własny tekst' }).fill('Zakup od prywatnego kolekcjonera')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
