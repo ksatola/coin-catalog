@@ -41,7 +41,7 @@ Dodajemy trzy opcjonalne pola tekstowe:
 - `purchase_price` — Cena zakupu, opcjonalna
 - `purchase_date` — Data zakupu, opcjonalna
 
-Są to opisy tekstowe. Zdjęcia awersu/rewersu pozostają osobnym mechanizmem.
+Awers, Rewers i Literatura są opisami tekstowymi. Cena i data zakupu są osobnymi, opcjonalnymi polami. Zdjęcia awersu/rewersu pozostają osobnym mechanizmem.
 
 ### Sposób nabycia
 
@@ -122,9 +122,8 @@ Nie dodajemy na tym etapie:
 
 - [x] Zakres uzgodniony
 - [x] Branch utworzony
-- [x] Tymczasowy zakres zapisany w repozytorium
+- [x] Tymczasowy zakres zapisany w repozytorium 
 - [ ] Implementacja backendu
-- [ ] Cena i data zakupu
 - [ ] Migracja bazy
 - [ ] Implementacja frontendu
 - [ ] Testy backendu
