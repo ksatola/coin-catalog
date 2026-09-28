@@ -1,14 +1,14 @@
 """add coin descriptions and acquisition method
 
 Revision ID: a4b5c6d7e8f9
-Revises: 9c7e1a2b4d6f
+Revises: c3d4e5f6a7b8
 """
 
 import sqlalchemy as sa
 from alembic import op
 
 revision = "a4b5c6d7e8f9"
-down_revision = "9c7e1a2b4d6f"
+down_revision = "c3d4e5f6a7b8"
 branch_labels = None
 depends_on = None
 
