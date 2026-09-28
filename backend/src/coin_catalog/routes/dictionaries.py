@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from coin_catalog.database import get_db
 from coin_catalog.models import (
+    AcquisitionMethod,
     Coin,
     Country,
     Denomination,
@@ -25,6 +26,7 @@ DICTIONARIES = {
     "materials": Material,
     "states": State,
     "eras": Era,
+    "acquisition_methods": AcquisitionMethod,
 }
 
 DICTIONARY_COIN_USAGE = {
@@ -35,6 +37,7 @@ DICTIONARY_COIN_USAGE = {
     "materials": (Coin.material_id,),
     "states": (Coin.state_id,),
     "eras": (Coin.from_era_id, Coin.to_era_id),
+    "acquisition_methods": (Coin.acquisition_method_id,),
 }
 
 
