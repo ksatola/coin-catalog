@@ -38,6 +38,8 @@ Dodajemy trzy opcjonalne pola tekstowe:
 - `avers_description` — Awers
 - `revers_description` — Rewers
 - `literature` — Literatura
+- `purchase_price` — Cena zakupu, opcjonalna
+- `purchase_date` — Data zakupu, opcjonalna
 
 Są to opisy tekstowe. Zdjęcia awersu/rewersu pozostają osobnym mechanizmem.
 
@@ -57,6 +59,7 @@ Szczegółowy model danych słownika zostanie ustalony podczas implementacji po 
 ### Backend
 
 - zmiana modelu `Coin`,
+- dodanie opcjonalnej ceny i daty zakupu,
 - aktualizacja schematów create/update/response,
 - zmiana wymagalności pól datowania,
 - dodanie obsługi słownika sposobów nabycia,
@@ -68,6 +71,7 @@ Szczegółowy model danych słownika zostanie ustalony podczas implementacji po 
 ### Frontend
 
 - pola tekstowe Awers, Rewers i Literatura,
+- opcjonalna cena i data zakupu,
 - hybrydowe pole Sposób nabycia,
 - wybór wartości ze słownika,
 - dodawanie nowej wartości do słownika bez opuszczania formularza,
@@ -105,8 +109,6 @@ Po implementacji i weryfikacji:
 
 Nie dodajemy na tym etapie:
 
-- ceny zakupu,
-- daty zakupu,
 - dodatkowych pól provenance,
 - typów/odmian,
 - numerów katalogowych,
@@ -122,6 +124,7 @@ Nie dodajemy na tym etapie:
 - [x] Branch utworzony
 - [x] Tymczasowy zakres zapisany w repozytorium
 - [ ] Implementacja backendu
+- [ ] Cena i data zakupu
 - [ ] Migracja bazy
 - [ ] Implementacja frontendu
 - [ ] Testy backendu
