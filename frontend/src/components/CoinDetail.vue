@@ -1,14 +1,4 @@
 <script setup lang="ts">
-const sourceUrl = computed(() => {
-  const value = coin.value.source?.trim() ?? ''
-  if (!value) return null
-  try {
-    const url = new URL(value)
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null
-  } catch {
-    return null
-  }
-})
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -19,6 +9,17 @@ type DictionaryItem = { id: number; name: string }
 type Dictionaries = { countries: DictionaryItem[]; issuers: DictionaryItem[]; denominations: DictionaryItem[]; mints: DictionaryItem[]; materials: DictionaryItem[]; states: DictionaryItem[]; eras: DictionaryItem[]; acquisition_methods: DictionaryItem[] }
 
 const props = defineProps<{ coin: Coin }>()
+const sourceUrl = computed(() => {
+  const value = props.coin.source?.trim() ?? ''
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null
+  } catch {
+    return null
+  }
+})
+
 const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [], acquisition_methods: [] })
 const collection = ref<Collection | null>(null)
 const collectionErrorMessage = ref('')
