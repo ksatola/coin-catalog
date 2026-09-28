@@ -8,6 +8,7 @@ const dictionaries = {
   materials: [],
   states: [],
   eras: [{ id: 1, name: 'Era testowa' }],
+  acquisition_methods: [{ id: 1, name: 'Dom Aukcyjny Testowy' }],
 }
 
 const collections = [
@@ -33,6 +34,11 @@ const coin = {
   material_id: null,
   state_id: null,
   description: 'Opis monety',
+  avers_description: 'Opis awersu',
+  revers_description: 'Opis rewersu',
+  literature: 'Literatura testowa',
+  acquisition_method_id: 1,
+  acquisition_method_text: null,
   weight: null,
   diameter: null,
   collection_number: '1',
@@ -118,6 +124,10 @@ test('zapis danych monety nie wykonuje move', async ({ page }) => {
 
   await page.goto('/monety/1/edytuj')
   await page.getByLabel('Opis').fill('Nowy opis')
+  await page.getByRole('textbox', { name: 'Awers' }).fill('Nowy opis awersu')
+  await page.getByRole('textbox', { name: 'Rewers' }).fill('Nowy opis rewersu')
+  await page.getByRole('textbox', { name: 'Literatura' }).fill('Nowa literatura')
+  await page.getByLabel('Wartość ze słownika').selectOption('1')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect(page).toHaveURL('/monety/1')
