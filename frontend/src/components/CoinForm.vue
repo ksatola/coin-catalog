@@ -71,6 +71,31 @@ const imageErrorMessage = ref('')
 const weightInput = ref('')
 const diameterInput = ref('')
 const purchasePriceInput = ref('')
+const purchaseDateInput = ref('')
+const purchaseDatePicker = ref<HTMLInputElement | null>(null)
+const purchaseDateError = ref('')
+
+function isValidPurchaseDate(value: string): boolean {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false
+  const [year, month, day] = value.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+}
+
+function updatePurchaseDate(value: string): void {
+  purchaseDateInput.value = value
+  form.purchase_date = value || null
+  purchaseDateError.value = value && !isValidPurchaseDate(value)
+    ? 'Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.'
+    : ''
+}
+
+function openPurchaseDatePicker(): void {
+  const picker = purchaseDatePicker.value
+  if (!picker) return
+  if (typeof picker.showPicker === 'function') picker.showPicker()
+  else picker.click()
+}
 
 function formatDecimalInput(value: number | null): string {
   return value === null ? '' : Number(value).toFixed(2)
@@ -281,8 +306,13 @@ function submitForm(): void {
     validationMessage.value = 'Dodaj zdjęcie rewersu.'
     return
   }
+  if (purchaseDateInput.value && !isValidPurchaseDate(purchaseDateInput.value)) {
+    purchaseDateError.value = 'Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.'
+    validationMessage.value = 'Popraw datę zakupu.'
+    return
+  }
   validationMessage.value = ''
-  const payload = { ...form, from_year: form.from_year || null, from_era_id: form.from_era_id || null, to_year: form.to_year || null, to_era_id: form.to_era_id || null, purchase_date: form.purchase_date || null }
+  const payload = { ...form, from_year: form.from_year || null, from_era_id: form.from_era_id || null, to_year: form.to_year || null, to_era_id: form.to_era_id || null, purchase_date: purchaseDateInput.value || null }
   emit('submit', {
     coin: payload,
     images: {
@@ -305,6 +335,8 @@ function loadCoinIntoForm(coin: Coin | null | undefined): void {
   weightInput.value = formatDecimalInput(form.weight)
   diameterInput.value = formatDecimalInput(form.diameter)
   purchasePriceInput.value = formatDecimalInput(form.purchase_price)
+  purchaseDateInput.value = form.purchase_date ?? ''
+  purchaseDateError.value = ''
   validationMessage.value = ''
   void loadCoinImages(coin)
 }
@@ -408,7 +440,14 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
       <div class="section-heading"><h3>Dane zakupu</h3></div>
       <div class="purchase-fields">
         <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', purchasePriceInput, $event)" @blur="formatDecimalOnBlur('purchase_price', purchasePriceInput)" /></label>
-        <label class="field-card">Data zakupu <input v-model="form.purchase_date" type="date" /></label>
+        <label class="field-card purchase-date-field">Data zakupu
+          <div class="purchase-date-control">
+            <input :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="updatePurchaseDate(($event.target as HTMLInputElement).value)" />
+            <button type="button" aria-label="Otwórz kalendarz daty zakupu" @click="openPurchaseDatePicker">📅</button>
+            <input ref="purchaseDatePicker" :value="purchaseDateInput" type="date" class="purchase-date-picker" tabindex="-1" aria-hidden="true" @input="updatePurchaseDate(($event.target as HTMLInputElement).value)" />
+          </div>
+          <span v-if="purchaseDateError" id="purchase-date-error" class="field-error">{{ purchaseDateError }}</span>
+        </label>
       </div>
     </section>
 
@@ -488,6 +527,10 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .date-fields label { color: #334155; font-weight: 600; }
 .date-fields input,.date-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
 .acquisition-field { gap: 12px; }.acquisition-field textarea { min-height: 180px; }.acquisition-tools { display: grid; grid-template-columns: minmax(0,1fr) 32px; gap: 8px; align-items: start; }.acquisition-tools select { box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#0f172a;font:inherit; } .purchase-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.purchase-date-control { display: grid; grid-template-columns: minmax(0,1fr) 44px; gap: 8px; align-items: center; }
+.purchase-date-control button { min-height: 44px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; cursor: pointer; font-size: 1.05rem; }
+.purchase-date-picker { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.field-error { color: #b91c1c; font-size: .82rem; font-weight: 600; }
 .video-option { display: inline-flex; align-items: center; justify-self: start; gap: 10px; padding: 12px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; color: #334155; font-weight: 600; }
 .video-option input { width: 18px; height: 18px; margin: 0; }
 .form-message { padding: 12px 14px; border-radius: 8px; font-size: .9rem; }
