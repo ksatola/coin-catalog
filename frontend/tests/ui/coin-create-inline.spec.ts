@@ -13,7 +13,7 @@ const dictionaries = {
 const categories = [
   {
     id: 10,
-    name: 'Monety',
+    name: 'Kategoria testowa',
     description: null,
     parent_ids: [],
     child_ids: [],
