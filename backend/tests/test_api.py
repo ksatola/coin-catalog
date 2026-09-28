@@ -140,6 +140,8 @@ def test_coin_description_and_acquisition_crud(
             "revers_description": "Orzeł na rewersie",
             "literature": "Katalog testowy, poz. 123",
             "acquisition_method_id": acquisition_method_id,
+            "purchase_price": 125.50,
+            "purchase_date": "2026-09-20",
         },
     )
     assert response.status_code == 201
@@ -150,6 +152,8 @@ def test_coin_description_and_acquisition_crud(
     assert response.json()["to_era_id"] is None
     assert response.json()["acquisition_method_id"] == acquisition_method_id
     assert response.json()["acquisition_method_text"] is None
+    assert response.json()["purchase_price"] == 125.50
+    assert response.json()["purchase_date"] == "2026-09-20"
 
     response = client.put(
         f"/coins/{coin_id}",
@@ -162,6 +166,8 @@ def test_coin_description_and_acquisition_crud(
             "literature": "Nowa literatura",
             "acquisition_method_id": None,
             "acquisition_method_text": "Zakup od prywatnego kolekcjonera",
+            "purchase_price": 99.99,
+            "purchase_date": "2026-09-21",
         },
     )
     assert response.status_code == 200
@@ -171,6 +177,8 @@ def test_coin_description_and_acquisition_crud(
     assert data["literature"] == "Nowa literatura"
     assert data["acquisition_method_id"] is None
     assert data["acquisition_method_text"] == "Zakup od prywatnego kolekcjonera"
+    assert data["purchase_price"] == 99.99
+    assert data["purchase_date"] == "2026-09-21"
 
     response = client.get(f"/coins/{coin_id}")
     assert response.status_code == 200
@@ -191,6 +199,8 @@ def test_coin_description_and_acquisition_crud(
             "literature": None,
             "acquisition_method_id": None,
             "acquisition_method_text": None,
+            "purchase_price": None,
+            "purchase_date": None,
         },
     )
     assert response.status_code == 200
@@ -200,6 +210,8 @@ def test_coin_description_and_acquisition_crud(
     assert data["literature"] is None
     assert data["acquisition_method_id"] is None
     assert data["acquisition_method_text"] is None
+    assert data["purchase_price"] is None
+    assert data["purchase_date"] is None
 
 
 def test_update_coin_collection_number(
