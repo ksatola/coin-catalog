@@ -77,7 +77,10 @@ const purchaseDateError = ref('')
 
 function isValidPurchaseDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-  const [year, month, day] = value.split('-').map(Number)
+  const parts = value.split('-').map(Number)
+  if (parts.length !== 3) return false
+  const [year, month, day] = parts
+  if (year === undefined || month === undefined || day === undefined) return false
   const date = new Date(Date.UTC(year, month - 1, day))
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
 }
@@ -112,21 +115,20 @@ function parseDecimalInput(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-function updateDecimalInput(
-  field: 'weight' | 'diameter' | 'purchase_price',
-  inputRef: typeof weightInput,
-  event: Event,
-): void {
+function decimalInputRef(field: 'weight' | 'diameter' | 'purchase_price') {
+  if (field === 'weight') return weightInput
+  if (field === 'diameter') return diameterInput
+  return purchasePriceInput
+}
+
+function updateDecimalInput(field: 'weight' | 'diameter' | 'purchase_price', event: Event): void {
   const value = (event.target as HTMLInputElement).value
-  inputRef.value = value
+  decimalInputRef(field).value = value
   form[field] = parseDecimalInput(value)
 }
 
-function formatDecimalOnBlur(
-  field: 'weight' | 'diameter' | 'purchase_price',
-  inputRef: typeof weightInput,
-): void {
-  inputRef.value = formatDecimalInput(form[field])
+function formatDecimalOnBlur(field: 'weight' | 'diameter' | 'purchase_price'): void {
+  decimalInputRef(field).value = formatDecimalInput(form[field])
 }
 
 const isEditing = () => props.coin !== null && props.coin !== undefined
@@ -426,7 +428,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         </div>
         <div class="field-card material-field"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
-        <label class="field-card">Waga [g] <input :value="weightInput" type="text" inputmode="decimal" @input="updateDecimalInput('weight', weightInput, $event)" @blur="formatDecimalOnBlur('weight', weightInput)" /></label>
+        <label class="field-card">Waga [g] <input :value="weightInput" type="text" inputmode="decimal" @input="updateDecimalInput('weight', $event)" @blur="formatDecimalOnBlur('weight')" /></label>
         <label class="field-card">Średnica [mm] <input :value="diameterInput" type="text" inputmode="decimal" @input="updateDecimalInput('diameter', diameterInput, $event)" @blur="formatDecimalOnBlur('diameter', diameterInput)" /></label>
       </div>
     </section>
@@ -443,7 +445,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     <section class="form-section">
       <div class="section-heading"><h3>Dane zakupu</h3></div>
       <div class="purchase-fields">
-        <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', purchasePriceInput, $event)" @blur="formatDecimalOnBlur('purchase_price', purchasePriceInput)" /></label>
+        <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', $event)" @blur="formatDecimalOnBlur('purchase_price')" /></label>
         <div class="field-card purchase-date-field">
           <label for="purchase-date">Data zakupu</label>
           <div class="purchase-date-control">
