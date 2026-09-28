@@ -125,9 +125,9 @@ Nie dodajemy na tym etapie:
 - [x] Zakres uzgodniony
 - [x] Branch utworzony
 - [x] Tymczasowy zakres zapisany w repozytorium 
-- [ ] Implementacja backendu
-- [ ] Migracja bazy
-- [ ] Implementacja frontendu
+- [x] Implementacja backendu
+- [x] Migracja bazy
+- [x] Implementacja frontendu
 - [ ] Testy backendu
 - [ ] Testy Playwright
 - [ ] Weryfikacja całości
