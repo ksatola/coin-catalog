@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -272,6 +272,8 @@ class Coin(Base):
     literature: Mapped[str | None] = mapped_column(Text)
     acquisition_method_id: Mapped[int | None] = mapped_column(ForeignKey("acquisition_method.id"))
     acquisition_method_text: Mapped[str | None] = mapped_column(Text)
+    purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    purchase_date: Mapped[date | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
