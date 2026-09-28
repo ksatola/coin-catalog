@@ -15,6 +15,7 @@ type Dictionaries = {
   materials: DictionaryItem[]
   states: DictionaryItem[]
   eras: DictionaryItem[]
+  acquisition_methods: DictionaryItem[]
 }
 
 const props = defineProps<{ coin?: Coin | null; imageCoinId?: number }>()
@@ -25,10 +26,10 @@ const emptyForm: CoinCreate = {
   country_id: 0,
   issuer_id: null,
   denomination_id: 0,
-  from_year: 0,
-  from_era_id: 0,
-  to_year: 0,
-  to_era_id: 0,
+  from_year: null,
+  from_era_id: null,
+  to_year: null,
+  to_era_id: null,
   mint_id: null,
   material_id: null,
   state_id: null,
@@ -38,10 +39,15 @@ const emptyForm: CoinCreate = {
   collection_number: null,
   has_video: false,
   source: null,
+  avers_description: null,
+  revers_description: null,
+  literature: null,
+  acquisition_method_id: null,
+  acquisition_method_text: null,
 }
 
 const form = reactive<CoinCreate>({ ...emptyForm })
-const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
+const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [], acquisition_methods: [] })
 const locallyCreatedDictionaryItems: Record<keyof Dictionaries, Set<number>> = {
   countries: new Set(),
   issuers: new Set(),
@@ -50,6 +56,7 @@ const locallyCreatedDictionaryItems: Record<keyof Dictionaries, Set<number>> = {
   materials: new Set(),
   states: new Set(),
   eras: new Set(),
+  acquisition_methods: new Set(),
 }
 const primaryImages = reactive<{ avers: CoinImage | null; rewers: CoinImage | null }>({ avers: null, rewers: null })
 const additionalImages = ref<CoinImage[]>([])
@@ -164,6 +171,7 @@ async function loadDictionaries(): Promise<void> {
     const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all([
       loadDictionary('countries'), loadDictionary('issuers'), loadDictionary('denominations'),
       loadDictionary('mints'), loadDictionary('materials'), loadDictionary('states'), loadDictionary('eras'),
+      loadDictionary('acquisition_methods'),
     ])
     mergeLoadedDictionaryItems('countries', countries)
     mergeLoadedDictionaryItems('issuers', issuers)
@@ -172,6 +180,7 @@ async function loadDictionaries(): Promise<void> {
     mergeLoadedDictionaryItems('materials', materials)
     mergeLoadedDictionaryItems('states', states)
     mergeLoadedDictionaryItems('eras', eras)
+    mergeLoadedDictionaryItems('acquisition_methods', acquisition_methods)
     loadErrorMessage.value = ''
   } catch {
     loadErrorMessage.value = 'Nie udało się pobrać słowników.'
@@ -191,6 +200,14 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
     if (!form.from_era_id) form.from_era_id = item.id
     else form.to_era_id = item.id
   }
+  if (name === 'acquisition_methods') {
+    form.acquisition_method_id = item.id
+    form.acquisition_method_text = null
+  }
+  if (name === 'acquisition_methods') {
+    form.acquisition_method_id = item.id
+    form.acquisition_method_text = null
+  }
   await nextTick()
   if (name === 'countries') form.country_id = item.id
   if (name === 'issuers') form.issuer_id = item.id
@@ -205,8 +222,16 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
   markDirty()
 }
 
+function selectAcquisitionMethod(): void {
+  form.acquisition_method_text = null
+}
+
+function enterAcquisitionText(): void {
+  if (form.acquisition_method_text?.trim()) form.acquisition_method_id = null
+}
+
 function submitForm(): void {
-  if (!form.country_id || !form.denomination_id || !form.from_era_id || !form.to_era_id) {
+  if (!form.country_id || !form.denomination_id) {
     validationMessage.value = 'Uzupełnij wymagane pola.'
     return
   }
@@ -304,8 +329,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <div class="field-card"><label for="country">Kraj</label><div class="select-with-add"><select id="country" v-model.number="form.country_id" required @click.stop><option :value="0">Wybierz kraj</option><option v-for="item in dictionaries.countries" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="countries" label="kraj" @created="addDictionaryItem('countries', $event)" /></div></div>
         <div class="field-card"><label for="issuer">Emitent</label><div class="select-with-add"><select id="issuer" v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" /></div></div>
         <div class="field-card denomination-field"><label for="denomination">Nominał</label><div class="select-with-add"><select id="denomination" v-model.number="form.denomination_id" required @click.stop><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="denominations" label="nominał" @created="addDictionaryItem('denominations', $event)" /></div></div>
-        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="from-era">Era od</label><div class="select-with-add"><select id="from-era" v-model.number="form.from_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok od <input v-model.number="form.from_year" type="number" required /></label></div></div>
-        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="to-era">Era do</label><div class="select-with-add"><select id="to-era" v-model.number="form.to_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok do <input v-model.number="form.to_year" type="number" required /></label></div></div>
+        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="from-era">Era od</label><div class="select-with-add"><select id="from-era" v-model.number="form.from_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok od <input v-model.number="form.from_year" type="number" /></label></div></div>
+        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="to-era">Era do</label><div class="select-with-add"><select id="to-era" v-model.number="form.to_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok do <input v-model.number="form.to_year" type="number" /></label></div></div>
         <div class="field-card"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></div>
         <div class="field-card"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
@@ -320,6 +345,26 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
       <div class="text-fields">
         <label class="field-card">Źródło<textarea v-model="form.source" rows="4" /></label>
         <label class="field-card">Opis<textarea v-model="form.description" /></label>
+        <label class="field-card">Awers<textarea v-model="form.avers_description" /></label>
+        <label class="field-card">Rewers<textarea v-model="form.revers_description" /></label>
+        <label class="field-card">Literatura<textarea v-model="form.literature" /></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-heading"><h3>Sposób nabycia</h3></div>
+      <div class="acquisition-fields">
+        <div class="field-card">
+          <label for="acquisition-method">Wartość ze słownika</label>
+          <div class="select-with-add">
+            <select id="acquisition-method" v-model="form.acquisition_method_id" @change="selectAcquisitionMethod" @click.stop>
+              <option :value="null">— własny tekst —</option>
+              <option v-for="item in dictionaries.acquisition_methods" :key="item.id" :value="item.id">{{ item.name }}</option>
+            </select>
+            <InlineDictionaryCreate dictionary-name="acquisition_methods" label="sposób nabycia" @created="addDictionaryItem('acquisition_methods', $event)" />
+          </div>
+        </div>
+        <label class="field-card">Własny tekst<textarea v-model="form.acquisition_method_text" @input="enterAcquisitionText" placeholder="Np. dom aukcyjny lub dowolny opis sposobu nabycia" /></label>
       </div>
     </section>
 
@@ -374,6 +419,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .date-fields label { color: #334155; font-weight: 600; }
 .date-fields input,.date-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
 .text-fields { display: grid; gap: 16px; }
+.acquisition-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .text-fields .field-card:last-child { min-height: 190px; }
 .video-option { display: inline-flex; align-items: center; justify-self: start; gap: 10px; padding: 12px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; color: #334155; font-weight: 600; }
 .video-option input { width: 18px; height: 18px; margin: 0; }
@@ -392,6 +438,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
   .info-grid > .field-card,.info-grid > .field-card-wide,.info-grid > .denomination-field { grid-column: auto; }
   .collection-number-field { grid-column: auto; }
   .date-fields { grid-template-columns: 1fr; }
+  .acquisition-fields { grid-template-columns: 1fr; }
   .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; }
 }
 @media (max-width:520px) {
