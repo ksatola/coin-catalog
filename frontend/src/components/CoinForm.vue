@@ -366,6 +366,14 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     </section>
 
     <section class="form-section">
+      <div class="section-heading"><h3>Awers / Rewers</h3></div>
+      <div class="primary-description-fields">
+        <label class="field-card primary-description-field">Awers<textarea v-model="form.avers_description" /></label>
+        <label class="field-card primary-description-field">Rewers<textarea v-model="form.revers_description" /></label>
+      </div>
+    </section>
+
+    <section class="form-section">
       <div class="section-heading"><h3>Informacje</h3></div>
       <div class="info-grid">
         <label class="field-card collection-number-field" for="collection-number">Numer w kolekcji <input id="collection-number" v-model="form.collection_number" type="text" /></label>
@@ -384,14 +392,6 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
         <label class="field-card">Waga [g] <input :value="weightInput" type="text" inputmode="decimal" @input="updateDecimalInput('weight', weightInput, $event)" @blur="formatDecimalOnBlur('weight', weightInput)" /></label>
         <label class="field-card">Średnica [mm] <input :value="diameterInput" type="text" inputmode="decimal" @input="updateDecimalInput('diameter', diameterInput, $event)" @blur="formatDecimalOnBlur('diameter', diameterInput)" /></label>
-      </div>
-    </section>
-
-    <section class="form-section">
-      <div class="section-heading"><h3>Awers / Rewers</h3></div>
-      <div class="primary-description-fields">
-        <label class="field-card primary-description-field">Awers<textarea v-model="form.avers_description" /></label>
-        <label class="field-card primary-description-field">Rewers<textarea v-model="form.revers_description" /></label>
       </div>
     </section>
 
