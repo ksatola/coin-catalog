@@ -68,6 +68,37 @@ const pendingAdditionalPreviewUrls = ref<string[]>([])
 const validationMessage = ref('')
 const loadErrorMessage = ref('')
 const imageErrorMessage = ref('')
+const weightInput = ref('')
+const diameterInput = ref('')
+const purchasePriceInput = ref('')
+
+function formatDecimalInput(value: number | null): string {
+  return value === null ? '' : Number(value).toFixed(2)
+}
+
+function parseDecimalInput(value: string): number | null {
+  const normalized = value.trim().replace(',', '.')
+  if (!normalized) return null
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function updateDecimalInput(
+  field: 'weight' | 'diameter' | 'purchase_price',
+  inputRef: typeof weightInput,
+  event: Event,
+): void {
+  const value = (event.target as HTMLInputElement).value
+  inputRef.value = value
+  form[field] = parseDecimalInput(value)
+}
+
+function formatDecimalOnBlur(
+  field: 'weight' | 'diameter' | 'purchase_price',
+  inputRef: typeof weightInput,
+): void {
+  inputRef.value = formatDecimalInput(form[field])
+}
 
 const isEditing = () => props.coin !== null && props.coin !== undefined
 
@@ -271,6 +302,9 @@ function handleEnterKey(event: KeyboardEvent): void {
 function loadCoinIntoForm(coin: Coin | null | undefined): void {
   markClean()
   Object.assign(form, coin ? { ...coin } : { ...emptyForm })
+  weightInput.value = formatDecimalInput(form.weight)
+  diameterInput.value = formatDecimalInput(form.diameter)
+  purchasePriceInput.value = formatDecimalInput(form.purchase_price)
   validationMessage.value = ''
   void loadCoinImages(coin)
 }
@@ -348,8 +382,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
           </div>
         </div>
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
-        <label class="field-card">Waga [g] <input v-model.number="form.weight" type="number" step="0.01" min="0" /></label>
-        <label class="field-card">Średnica [mm] <input v-model.number="form.diameter" type="number" step="0.01" min="0" /></label>
+        <label class="field-card">Waga [g] <input :value="weightInput" type="text" inputmode="decimal" @input="updateDecimalInput('weight', weightInput, $event)" @blur="formatDecimalOnBlur('weight', weightInput)" /></label>
+        <label class="field-card">Średnica [mm] <input :value="diameterInput" type="text" inputmode="decimal" @input="updateDecimalInput('diameter', diameterInput, $event)" @blur="formatDecimalOnBlur('diameter', diameterInput)" /></label>
       </div>
     </section>
 
@@ -373,7 +407,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     <section class="form-section">
       <div class="section-heading"><h3>Dane zakupu</h3></div>
       <div class="purchase-fields">
-        <label class="field-card">Cena zakupu <input v-model.number="form.purchase_price" type="number" min="0" step="0.01" /></label>
+        <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', purchasePriceInput, $event)" @blur="formatDecimalOnBlur('purchase_price', purchasePriceInput)" /></label>
         <label class="field-card">Data zakupu <input v-model="form.purchase_date" type="date" /></label>
       </div>
     </section>
