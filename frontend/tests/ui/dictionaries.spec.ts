@@ -2,7 +2,10 @@ import { expect, test } from '@playwright/test'
 
 test('zarządza słownikiem sposobów nabycia', async ({ page }) => {
   let nextId = 100
-  const items = [{ id: 1, name: 'Dom aukcyjny' }]
+  const initialName = 'Początkowy sposób nabycia'
+  const createdName = 'Utworzony sposób nabycia'
+  const renamedName = 'Przemianowany sposób nabycia'
+  const items = [{ id: 1, name: initialName }]
 
   await page.route('**/api/dictionaries/*', async (route) => {
     const url = new URL(route.request().url())
@@ -66,17 +69,17 @@ test('zarządza słownikiem sposobów nabycia', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Sposoby nabycia' }).click()
   await expect(page.getByRole('heading', { name: 'Sposoby nabycia' })).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'Dom aukcyjny' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: initialName })).toBeVisible()
 
-  await page.getByPlaceholder('Nazwa').fill('Zakup od kolekcjonera')
+  await page.getByPlaceholder('Nazwa').fill(createdName)
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
   await expect(page.getByRole('cell', { name: 'Zakup od kolekcjonera' })).toBeVisible()
 
-  const createdRow = page.locator('tr', { hasText: 'Zakup od kolekcjonera' })
+  const createdRow = page.locator('tr', { hasText: createdName })
   await createdRow.getByRole('button', { name: 'Edytuj' }).click()
-  await page.getByPlaceholder('Nazwa').fill('Zakup prywatny')
+  await page.getByPlaceholder('Nazwa').fill(renamedName)
   await page.getByRole('button', { name: 'Zapisz', exact: true }).click()
-  await expect(page.getByRole('cell', { name: 'Zakup prywatny' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: renamedName })).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Zakup od kolekcjonera' })).toHaveCount(0)
 
   page.once('dialog', (dialog) => dialog.accept())
