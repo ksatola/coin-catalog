@@ -24,8 +24,8 @@ function formatYear(year: number | null, eraId: number | null): string { if (yea
 function formatDateRange(): string { const from = formatYear(props.coin.from_year, props.coin.from_era_id); const to = formatYear(props.coin.to_year, props.coin.to_era_id); if (from === '—' && to === '—') return '—'; if (to === '—') return from; if (from === '—') return to; return `${from} – ${to}` }
 async function loadDictionary(dictionaryNameKey: keyof Dictionaries): Promise<DictionaryItem[]> { const response = await fetch(`/api/dictionaries/${dictionaryNameKey}`); if (!response.ok) throw new Error(`HTTP ${response.status}`); return await response.json() as DictionaryItem[] }
 async function loadDictionaries(): Promise<void> {
-  const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all(['countries','issuers','denominations','mints','materials','states','eras','acquisition_methods'].map((name) => loadDictionary(name as keyof Dictionaries)))
-  dictionaries.countries = countries ?? []; dictionaries.issuers = issuers ?? []; dictionaries.denominations = denominations ?? []; dictionaries.mints = mints ?? []; dictionaries.materials = materials ?? []; dictionaries.states = states ?? []; dictionaries.eras = eras ?? []
+  const [countries, issuers, denominations, mints, materials, states, eras, acquisition_methods] = await Promise.all(['countries','issuers','denominations','mints','materials','states','eras','acquisition_methods'].map((name) => loadDictionary(name as keyof Dictionaries)))
+  dictionaries.countries = countries ?? []; dictionaries.issuers = issuers ?? []; dictionaries.denominations = denominations ?? []; dictionaries.mints = mints ?? []; dictionaries.materials = materials ?? []; dictionaries.states = states ?? []; dictionaries.eras = eras ?? []; dictionaries.acquisition_methods = acquisition_methods ?? []
 }
 async function loadCollection(): Promise<void> {
   try {
@@ -83,6 +83,8 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
         <div class="detail-item"><dt>Wideo</dt><dd>{{ coin.has_video ? 'Tak' : 'Nie' }}</dd></div>
         <div class="detail-item"><dt>Status</dt><dd>{{ coin.is_deleted ? 'Zarchiwizowana' : 'Aktywna' }}</dd></div>
         <div class="detail-item"><dt>Sposób nabycia</dt><dd>{{ coin.acquisition_method_text || dictionaryName(dictionaries.acquisition_methods, coin.acquisition_method_id) }}</dd></div>
+        <div class="detail-item"><dt>Cena zakupu</dt><dd>{{ coin.purchase_price !== null ? `${Number(coin.purchase_price).toFixed(2)}` : "—" }}</dd></div>
+        <div class="detail-item"><dt>Data zakupu</dt><dd>{{ coin.purchase_date ?? "—" }}</dd></div>
       </dl>
     </section>
 
