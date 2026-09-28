@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -52,7 +52,7 @@ class Mint(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list[Coin]] = relationship(back_populates="coins")
+    coins: Mapped[list[Coin]] = relationship(back_populates="mint_coins")
 
 
 class Material(Base):
@@ -61,7 +61,7 @@ class Material(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list[Coin]] = relationship(back_populates="coins")
+    coins: Mapped[list[Coin]] = relationship(back_populates="material_coins")
 
 
 class State(Base):
@@ -70,7 +70,7 @@ class State(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
-    coins: Mapped[list[Coin]] = relationship(back_populates="coins")
+    coins: Mapped[list[Coin]] = relationship(back_populates="state_coins")
 
 
 class Era(Base):
@@ -288,9 +288,9 @@ class Coin(Base):
         back_populates="to_coins",
         foreign_keys=[to_era_id],
     )
-    mint: Mapped[Mint | None] = relationship(back_populates="coins")
-    material: Mapped[Material | None] = relationship(back_populates="coins")
-    state: Mapped[State | None] = relationship(back_populates="coins")
+    mint: Mapped[Mint | None] = relationship(back_populates="mint_coins")
+    material: Mapped[Material | None] = relationship(back_populates="material_coins")
+    state: Mapped[State | None] = relationship(back_populates="state_coins")
     acquisition_method: Mapped[AcquisitionMethod | None] = relationship(back_populates="coins")
     categories: Mapped[list[Category]] = relationship(
         "Category",
