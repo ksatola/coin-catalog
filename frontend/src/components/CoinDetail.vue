@@ -96,9 +96,9 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
     </section>
 
     <section class="text-section">
-      <div class="text-panel-source"><h2>Źródło</h2><p>{{ coin.source ?? '—' }}</p></div>
       <div class="text-panel-description"><h2>Opis</h2><p>{{ coin.description ?? '—' }}</p></div>
       <div class="text-panel-literature"><h2>Literatura</h2><p>{{ coin.literature ?? '—' }}</p></div>
+      <div class="text-panel-source"><h2>Źródło</h2><p>{{ coin.source ?? '—' }}</p></div>
       <div class="text-panel-acquisition"><h2>Sposób nabycia</h2><p>{{ coin.acquisition_method_text || dictionaryName(dictionaries.acquisition_methods, coin.acquisition_method_id) }}</p></div>
     </section>
     <CoinCategoriesReadOnly :coin-id="coin.id" />
