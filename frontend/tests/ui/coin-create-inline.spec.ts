@@ -169,7 +169,7 @@ test('waliduje datę zakupu w formularzu dodawania monety', async ({ page }) => 
 
   await page.goto('/dodaj')
 
-  const dateInput = page.getByLabel('Data zakupu').getByRole('textbox')
+  const dateInput = page.getByRole('textbox', { name: 'Data zakupu' })
   await dateInput.fill('2026-02-30')
 
   await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toBeVisible()
