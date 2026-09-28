@@ -33,12 +33,13 @@ Aktualny formularz frontendowy wymaga również zdjęcia awersu i rewersu przy z
 
 ### Nowe pola tekstowe
 
-Dodajemy trzy opcjonalne pola tekstowe:
+Dodajemy pięć opcjonalnych pól:
 
 - `avers_description` — Awers
 - `revers_description` — Rewers
 - `literature` — Literatura
-
+- `purchase_price` — Cena zakupu
+- `purchase_date` — Data zakupu
 
 ### Sposób nabycia
 
@@ -67,6 +68,7 @@ Szczegółowy model danych słownika zostanie ustalony podczas implementacji po 
 ### Frontend
 
 - pola tekstowe Awers, Rewers i Literatura,
+- pola Cena zakupu i Data zakupu,
 - hybrydowe pole Sposób nabycia,
 - wybór wartości ze słownika,
 - dodawanie nowej wartości do słownika bez opuszczania formularza,
@@ -86,6 +88,7 @@ Szczegółowy model danych słownika zostanie ustalony podczas implementacji po 
 ### Testy frontend / Playwright
 
 - zapis i edycja Awers/Rewers/Literatura,
+- zapis i edycja Ceny zakupu/Daty zakupu,
 - zapis bez datowania,
 - wybór istniejącego sposobu nabycia,
 - dodanie nowego sposobu nabycia,
