@@ -6,10 +6,10 @@ import CoinCategoriesReadOnly from './CoinCategoriesReadOnly.vue'
 import type { Coin, CoinImage, Collection } from '../types'
 
 type DictionaryItem = { id: number; name: string }
-type Dictionaries = { countries: DictionaryItem[]; issuers: DictionaryItem[]; denominations: DictionaryItem[]; mints: DictionaryItem[]; materials: DictionaryItem[]; states: DictionaryItem[]; eras: DictionaryItem[] }
+type Dictionaries = { countries: DictionaryItem[]; issuers: DictionaryItem[]; denominations: DictionaryItem[]; mints: DictionaryItem[]; materials: DictionaryItem[]; states: DictionaryItem[]; eras: DictionaryItem[]; acquisition_methods: DictionaryItem[] }
 
 const props = defineProps<{ coin: Coin }>()
-const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
+const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [], acquisition_methods: [] })
 const collection = ref<Collection | null>(null)
 const collectionErrorMessage = ref('')
 const primaryImages = reactive<{ avers: CoinImage | null; rewers: CoinImage | null }>({ avers: null, rewers: null })
@@ -20,11 +20,11 @@ const allImages = computed<CoinImage[]>(() => [primaryImages.avers, primaryImage
 const selectedImage = computed(() => selectedImageIndex.value === null ? null : allImages.value[selectedImageIndex.value] ?? null)
 
 function dictionaryName(items: DictionaryItem[], id: number | null): string { if (id === null) return '—'; return items.find((item) => item.id === id)?.name ?? `#${id}` }
-function formatYear(year: number, eraId: number): string { const era = dictionaryName(dictionaries.eras, eraId); return `${year} ${era === '—' ? '' : era}`.trim() }
-function formatDateRange(): string { return `${formatYear(props.coin.from_year, props.coin.from_era_id)} – ${formatYear(props.coin.to_year, props.coin.to_era_id)}` }
+function formatYear(year: number | null, eraId: number | null): string { if (year === null) return '—'; const era = dictionaryName(dictionaries.eras, eraId); return `${year} ${era === '—' ? '' : era}`.trim() }
+function formatDateRange(): string { const from = formatYear(props.coin.from_year, props.coin.from_era_id); const to = formatYear(props.coin.to_year, props.coin.to_era_id); if (from === '—' && to === '—') return '—'; if (to === '—') return from; if (from === '—') return to; return `${from} – ${to}` }
 async function loadDictionary(dictionaryNameKey: keyof Dictionaries): Promise<DictionaryItem[]> { const response = await fetch(`/api/dictionaries/${dictionaryNameKey}`); if (!response.ok) throw new Error(`HTTP ${response.status}`); return await response.json() as DictionaryItem[] }
 async function loadDictionaries(): Promise<void> {
-  const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all(['countries','issuers','denominations','mints','materials','states','eras'].map((name) => loadDictionary(name as keyof Dictionaries)))
+  const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all(['countries','issuers','denominations','mints','materials','states','eras','acquisition_methods'].map((name) => loadDictionary(name as keyof Dictionaries)))
   dictionaries.countries = countries ?? []; dictionaries.issuers = issuers ?? []; dictionaries.denominations = denominations ?? []; dictionaries.mints = mints ?? []; dictionaries.materials = materials ?? []; dictionaries.states = states ?? []; dictionaries.eras = eras ?? []
 }
 async function loadCollection(): Promise<void> {
@@ -82,10 +82,11 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
         <div class="detail-item"><dt>Średnica</dt><dd>{{ coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : '—' }}</dd></div>
         <div class="detail-item"><dt>Wideo</dt><dd>{{ coin.has_video ? 'Tak' : 'Nie' }}</dd></div>
         <div class="detail-item"><dt>Status</dt><dd>{{ coin.is_deleted ? 'Zarchiwizowana' : 'Aktywna' }}</dd></div>
+        <div class="detail-item"><dt>Sposób nabycia</dt><dd>{{ coin.acquisition_method_text || dictionaryName(dictionaries.acquisition_methods, coin.acquisition_method_id) }}</dd></div>
       </dl>
     </section>
 
-    <section class="text-section"><div><h2>Źródło</h2><p>{{ coin.source ?? '—' }}</p></div><div><h2>Opis</h2><p>{{ coin.description ?? '—' }}</p></div></section>
+    <section class="text-section"><div><h2>Źródło</h2><p>{{ coin.source ?? '—' }}</p></div><div><h2>Opis</h2><p>{{ coin.description ?? '—' }}</p></div><div><h2>Awers</h2><p>{{ coin.avers_description ?? '—' }}</p></div><div><h2>Rewers</h2><p>{{ coin.revers_description ?? '—' }}</p></div><div><h2>Literatura</h2><p>{{ coin.literature ?? '—' }}</p></div></section>
     <CoinCategoriesReadOnly :coin-id="coin.id" />
 
     <div v-if="selectedImage" class="image-viewer" role="dialog" aria-modal="true" aria-label="Podgląd zdjęcia" @click.self="closeImage">
