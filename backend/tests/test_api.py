@@ -178,7 +178,7 @@ def test_coin_description_and_acquisition_crud(
     assert data["literature"] == "Nowa literatura"
     assert data["acquisition_method_id"] is None
     assert data["acquisition_method_text"] == "Zakup od prywatnego kolekcjonera"
-    assert data["purchase_price"] == 150.0
+    assert Decimal(data["purchase_price"]) == Decimal("150.0")
     assert data["purchase_date"] == "2026-09-27"
 
     response = client.get(f"/coins/{coin_id}")
