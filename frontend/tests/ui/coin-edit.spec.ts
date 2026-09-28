@@ -39,6 +39,8 @@ const coin = {
   literature: 'Literatura testowa',
   acquisition_method_id: 1,
   acquisition_method_text: null,
+  purchase_price: 125.5,
+  purchase_date: '2026-09-20',
   weight: null,
   diameter: null,
   collection_number: '1',
