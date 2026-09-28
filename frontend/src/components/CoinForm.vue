@@ -468,7 +468,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     .info-grid .dating-field { grid-column: span 2; }
 .collection-number-field { grid-column: span 1; }
 .field-card-label { color: #334155; font-weight: 600; }
-.dating-fields { display: grid; gap: 10px; }
+.dating-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .dating-fields > div { display: grid; gap: 6px; }
 .dating-fields > div > label { color: #64748b; font-size: .82rem; font-weight: 600; }
 .primary-description-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
