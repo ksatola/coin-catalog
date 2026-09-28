@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -49,6 +50,8 @@ class CoinCreate(BaseModel):
     literature: str | None = None
     acquisition_method_id: int | None = None
     acquisition_method_text: str | None = None
+    purchase_price: Decimal | None = None
+    purchase_date: date | None = None
 
 
 class CoinUpdate(CoinCreate):
