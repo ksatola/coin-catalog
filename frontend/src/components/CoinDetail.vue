@@ -1,4 +1,14 @@
 <script setup lang="ts">
+const sourceUrl = computed(() => {
+  const value = coin.value.source?.trim() ?? ''
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null
+  } catch {
+    return null
+  }
+})
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -98,7 +108,7 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
     <section class="text-section">
       <div class="text-panel-description"><h2>Opis</h2><p>{{ coin.description ?? '—' }}</p></div>
       <div class="text-panel-literature"><h2>Literatura</h2><p>{{ coin.literature ?? '—' }}</p></div>
-      <div class="text-panel-source"><h2>Źródło</h2><p>{{ coin.source ?? '—' }}</p></div>
+      <div class="text-panel-source"><h2>Źródło</h2><p v-if="sourceUrl"><a :href="sourceUrl" target="_blank" rel="noopener noreferrer">{{ sourceUrl }}</a></p><p v-else>{{ coin.source ?? '—' }}</p></div>
       <div class="text-panel-acquisition"><h2>Sposób nabycia</h2><p>{{ coin.acquisition_method_text || dictionaryName(dictionaries.acquisition_methods, coin.acquisition_method_id) }}</p></div>
     </section>
     <CoinCategoriesReadOnly :coin-id="coin.id" />
