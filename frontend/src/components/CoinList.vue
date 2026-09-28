@@ -17,7 +17,7 @@ function dictionaryName(items: DictionaryItem[], id: number | null): string | nu
   if (id === null) return null
   return items.find((item) => item.id === id)?.name ?? null
 }
-function formatYear(year: number, eraId: number): string { const era = dictionaryName(dictionaries.eras, eraId); return era ? `${year} ${era}` : `${year}` }
+function formatYear(year: number | null, eraId: number | null): string { if (year === null) return '—'; const era = dictionaryName(dictionaries.eras, eraId); return era ? `${year} ${era}` : `${year}` }
 function formatRange(coin: Coin): string { return `${formatYear(coin.from_year, coin.from_era_id)} – ${formatYear(coin.to_year, coin.to_era_id)}` }
 function formatDetails(coin: Coin): string[] {
   return [dictionaryName(dictionaries.materials, coin.material_id), dictionaryName(dictionaries.states, coin.state_id), coin.weight !== null ? `${Number(coin.weight).toFixed(2)} g` : null, coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : null].filter((value): value is string => Boolean(value))
