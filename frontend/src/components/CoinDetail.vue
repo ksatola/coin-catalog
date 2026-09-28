@@ -92,7 +92,7 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
       <h2>Informacje</h2>
       <div class="details-row details-row-primary">
         <dl class="details-grid details-grid-four">
-          <div class="detail-item"><dt>Kolekcja</dt><dd><RouterLink v-if="collection" :to=`/kolekcje/${collection.id}`>{{ collection.name }}</RouterLink><span v-else>Ładowanie…</span></dd></div>
+          <div class="detail-item"><dt>Kolekcja</dt><dd><RouterLink v-if="collection" :to="`/kolekcje/${collection.id}`">{{ collection.name }}</RouterLink><span v-else>Ładowanie…</span></dd></div>
           <div class="detail-item"><dt>Numer w kolekcji</dt><dd>{{ coin.collection_number ?? '—' }}</dd></div>
           <div class="detail-item"><dt>Kraj</dt><dd>{{ dictionaryName(dictionaries.countries, coin.country_id) }}</dd></div>
           <div class="detail-item"><dt>Emitent</dt><dd>{{ dictionaryName(dictionaries.issuers, coin.issuer_id) }}</dd></div>
