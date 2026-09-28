@@ -7,7 +7,7 @@ test('zarządza słownikiem sposobów nabycia', async ({ page }) => {
   const renamedName = 'Przemianowany sposób nabycia'
   const items = [{ id: 1, name: initialName }]
 
-  await page.route('**/api/dictionaries/*', async (route) => {
+  await page.route('**/api/dictionaries/**', async (route) => {
     const url = new URL(route.request().url())
     const parts = url.pathname.split('/').filter(Boolean)
     const itemId = parts.length === 4 ? Number(parts[3]) : null
