@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test'
 
 const dictionaries = {
   countries: [{ id: 1, name: 'Kraj testowy A' }, { id: 2, name: 'Kraj testowy B' }],
-  issuers: [],
+  issuers: [{ id: 1, name: 'Emitent testowy' }],
   denominations: [{ id: 1, name: 'Nominał testowy' }],
-  mints: [],
+  mints: [{ id: 1, name: 'Mennica testowa' }],
   materials: [],
-  states: [],
+  states: [{ id: 1, name: 'Stan testowy' }],
   eras: [{ id: 1, name: 'Era testowa' }],
   acquisition_methods: [{ id: 1, name: 'Dom Aukcyjny Testowy' }],
 }
@@ -24,15 +24,15 @@ const categories = [
 const coin = {
   id: 1,
   country_id: 1,
-  issuer_id: null,
+  issuer_id: 1,
   denomination_id: 1,
   from_year: 2000,
   from_era_id: 1,
   to_year: 2000,
   to_era_id: 1,
-  mint_id: null,
+  mint_id: 1,
   material_id: null,
-  state_id: null,
+  state_id: 1,
   description: 'Opis monety',
   avers_description: 'Opis awersu',
   revers_description: 'Opis rewersu',
@@ -44,6 +44,7 @@ const coin = {
   weight: null,
   diameter: null,
   collection_number: '1',
+  source: 'https://example.com/moneta',
   has_video: false,
   archived: false,
   collection_id: 1,
@@ -232,6 +233,32 @@ test('odczytuje dane zakupu w szczegółach monety', async ({ page }) => {
   await page.goto('/monety/1')
   await expect(page.getByText('250.00')).toBeVisible()
   await expect(page.getByText('2026-09-28')).toBeVisible()
+})
+
+test('read-only wyświetla komplet nowych danych monety', async ({ page }) => {
+  await mockCoinEditApi(page)
+  await page.goto('/monety/1')
+
+  await expect(page.getByText('Opis awersu')).toBeVisible()
+  await expect(page.getByText('Opis rewersu')).toBeVisible()
+  await expect(page.getByText('Literatura testowa')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'https://example.com/moneta' })).toBeVisible()
+  await expect(page.getByText('Dom Aukcyjny Testowy')).toBeVisible()
+
+  const information = page.getByRole('heading', { name: 'Informacje' }).locator('..')
+  await expect(information.getByText('Kolekcja 1')).toBeVisible()
+  await expect(information.getByText('Kraj testowy A')).toBeVisible()
+  await expect(information.getByText('Emitent testowy')).toBeVisible()
+  await expect(information.getByText('Mennica testowa')).toBeVisible()
+  await expect(information.getByText('Nominał testowy')).toBeVisible()
+  await expect(information.getByText('2000 Era testowa – 2000 Era testowa')).toBeVisible()
+  await expect(information.getByText('Stan testowy')).toBeVisible()
+
+  const rows = information.locator('.details-row')
+  await expect(rows).toHaveCount(2)
+  await expect(rows.nth(0).locator('.detail-item')).toHaveCount(4)
+  await expect(rows.nth(1).locator('.detail-item')).toHaveCount(6)
+  await expect(rows.nth(0).locator('.detail-item-issuer-wide')).toHaveCSS('grid-column', 'span 3')
 })
 
 test('pozwala zapisać monetę bez datowania', async ({ page }) => {
