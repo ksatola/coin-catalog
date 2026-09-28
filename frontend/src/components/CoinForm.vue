@@ -474,7 +474,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .primary-description-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .primary-description-field textarea { min-height: 190px; }
 .text-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto auto; grid-template-areas: "description literature" "description source"; gap: 16px; }
-.text-fields .text-panel-description { grid-area: description; }
+.text-fields .text-panel-description { grid-area: description; grid-template-rows: auto 1fr; }
+.text-fields .text-panel-description textarea { height: 100%; min-height: 0; }
 .text-fields .text-panel-literature { grid-area: literature; }
 .text-fields .text-panel-source { grid-area: source; }
 .text-fields .field-card { min-height: 190px; }
