@@ -214,18 +214,27 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
     else form.to_era_id = item.id
   }
   if (name === 'acquisition_methods') {
-    form.acquisition_method_id = item.id
-    form.acquisition_method_text = null
+    insertAcquisitionMethod(item)
   }
   markDirty()
 }
 
-function selectAcquisitionMethod(): void {
-  form.acquisition_method_text = null
+function insertAcquisitionMethod(item: DictionaryItem): void {
+  const current = form.acquisition_method_text?.trim() ?? ''
+  form.acquisition_method_text = current ? `${current}\n${item.name}` : item.name
+  form.acquisition_method_id = null
+  markDirty()
+}
+
+function insertSelectedAcquisitionMethod(): void {
+  if (form.acquisition_method_id === null) return
+  const item = dictionaries.acquisition_methods.find((entry) => entry.id === form.acquisition_method_id)
+  if (item) insertAcquisitionMethod(item)
+  form.acquisition_method_id = null
 }
 
 function enterAcquisitionText(): void {
-  if (form.acquisition_method_text?.trim()) form.acquisition_method_id = null
+  form.acquisition_method_id = null
 }
 
 function submitForm(): void {
@@ -333,7 +342,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <div class="field-card"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></div>
         <div class="field-card"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
-        <label class="field-card">Waga [g] <input v-model.number="form.weight" type="number" step="0.001" min="0" /></label>
+        <label class="field-card">Waga [g] <input v-model.number="form.weight" type="number" step="0.01" min="0" /></label>
         <label class="field-card">Średnica [mm] <input v-model.number="form.diameter" type="number" step="0.01" min="0" /></label>
         <label class="field-card collection-number-field" for="collection-number">Numer kolekcji <input id="collection-number" v-model="form.collection_number" type="text" /></label>
       </div>
@@ -360,18 +369,16 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 
     <section class="form-section">
       <div class="section-heading"><h3>Sposób nabycia</h3></div>
-      <div class="acquisition-fields">
-        <div class="field-card">
-          <label for="acquisition-method">Wartość ze słownika</label>
-          <div class="select-with-add">
-            <select id="acquisition-method" v-model.number="form.acquisition_method_id" @change="selectAcquisitionMethod" @click.stop>
-              <option :value="null">— własny tekst —</option>
-              <option v-for="item in dictionaries.acquisition_methods" :key="item.id" :value="item.id">{{ item.name }}</option>
-            </select>
-            <InlineDictionaryCreate dictionary-name="acquisition_methods" label="sposób nabycia" @created="addDictionaryItem('acquisition_methods', $event)" />
-          </div>
+      <div class="field-card acquisition-field">
+        <label for="acquisition-method-text">Sposób nabycia</label>
+        <textarea id="acquisition-method-text" v-model="form.acquisition_method_text" @input="enterAcquisitionText" placeholder="Wpisz sposób nabycia. Możesz dodać kilka pozycji w osobnych wierszach." />
+        <div class="acquisition-tools">
+          <select id="acquisition-method" v-model.number="form.acquisition_method_id" @change="insertSelectedAcquisitionMethod" @click.stop>
+            <option :value="null">Dodaj wartość ze słownika…</option>
+            <option v-for="item in dictionaries.acquisition_methods" :key="item.id" :value="item.id">{{ item.name }}</option>
+          </select>
+          <InlineDictionaryCreate dictionary-name="acquisition_methods" label="sposób nabycia" @created="addDictionaryItem('acquisition_methods', $event)" />
         </div>
-        <label class="field-card">Własny tekst<textarea v-model="form.acquisition_method_text" @input="enterAcquisitionText" placeholder="Np. dom aukcyjny lub dowolny opis sposobu nabycia" /></label>
       </div>
     </section>
 
@@ -414,8 +421,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .info-grid > .field-card:nth-child(1),.info-grid > .field-card:nth-child(2) { grid-column: span 3; }
 .info-grid > .denomination-field { grid-column: span 2; }
 .info-grid > .field-card-wide { grid-column: span 2; }
-.info-grid > .field-card:nth-child(6),.info-grid > .field-card:nth-child(7) { grid-column: span 3; }
-.info-grid > .field-card:nth-child(8),.info-grid > .field-card:nth-child(9),.info-grid > .field-card:nth-child(10) { grid-column: span 2; }
+.info-grid > .field-card:nth-child(6),.info-grid > .field-card:nth-child(7),.info-grid > .field-card:nth-child(8) { grid-column: span 2; }
+.info-grid > .field-card:nth-child(9),.info-grid > .field-card:nth-child(10),.info-grid > .field-card:nth-child(11) { grid-column: span 2; }
 .collection-number-field { grid-column: span 2; }
 .field-card input,.field-card select,.field-card textarea { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
 .field-card textarea { min-height: 160px; resize: vertical; }
@@ -426,7 +433,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .date-fields label { color: #334155; font-weight: 600; }
 .date-fields input,.date-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
 .text-fields { display: grid; gap: 16px; }
-.acquisition-fields,.purchase-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.acquisition-field { gap: 12px; }.acquisition-field textarea { min-height: 180px; }.acquisition-tools { display: grid; grid-template-columns: minmax(0,1fr) 32px; gap: 8px; align-items: start; }.acquisition-tools select { box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#0f172a;font:inherit; } .purchase-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .text-fields .field-card:last-child { min-height: 190px; }
 .video-option { display: inline-flex; align-items: center; justify-self: start; gap: 10px; padding: 12px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; color: #334155; font-weight: 600; }
 .video-option input { width: 18px; height: 18px; margin: 0; }
@@ -445,7 +452,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
   .info-grid > .field-card,.info-grid > .field-card-wide,.info-grid > .denomination-field { grid-column: auto; }
   .collection-number-field { grid-column: auto; }
   .date-fields { grid-template-columns: 1fr; }
-  .acquisition-fields,.purchase-fields { grid-template-columns: 1fr; }
+  .purchase-fields { grid-template-columns: 1fr; }
   .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; }
 }
 @media (max-width:520px) {
