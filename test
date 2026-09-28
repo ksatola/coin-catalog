@@ -92,6 +92,7 @@ run_frontend_build() {
 
     (
         cd "$ROOT_DIR/frontend"
+        npm run type-check
         npm run build
     )
 }
