@@ -201,6 +201,8 @@ def test_coin_description_and_acquisition_crud(
             "literature": None,
             "acquisition_method_id": None,
             "acquisition_method_text": None,
+            "purchase_price": None,
+            "purchase_date": None,
         },
     )
     assert response.status_code == 200
