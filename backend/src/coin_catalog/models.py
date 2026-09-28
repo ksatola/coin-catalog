@@ -6,8 +6,8 @@ from decimal import Decimal
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
-    DateTime,
     Date,
+    DateTime,
     ForeignKey,
     Integer,
     Numeric,
