@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
+    Date,
     ForeignKey,
     Integer,
     Numeric,
@@ -273,7 +274,7 @@ class Coin(Base):
     acquisition_method_id: Mapped[int | None] = mapped_column(ForeignKey("acquisition_method.id"))
     acquisition_method_text: Mapped[str | None] = mapped_column(Text)
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
-    purchase_date: Mapped[date | None] = mapped_column(DateTime)
+    purchase_date: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
