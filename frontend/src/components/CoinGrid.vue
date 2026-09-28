@@ -44,7 +44,8 @@ function dictionaryName(items: DictionaryItem[], id: number | null): string | nu
   return items.find((item) => item.id === id)?.name ?? null
 }
 
-function formatYear(year: number, eraId: number): string {
+function formatYear(year: number | null, eraId: number | null): string {
+  if (year === null) return '—'
   const era = dictionaryName(dictionaries.value.eras, eraId)
   return era ? `${year} ${era}` : `${year}`
 }
