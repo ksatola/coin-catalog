@@ -11,7 +11,7 @@ const dictionaries = {
 }
 
 const categories = [
-  { id: 10, name: 'Monety', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' },
+  { id: 10, name: 'Kategoria testowa', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' },
 ]
 
 async function mockCreateView(page: import('@playwright/test').Page): Promise<void> {
@@ -42,7 +42,7 @@ test('niezmieniony formularz dodawania monety nie pyta przy nawigacji', async ({
   })
 
   await page.goto('/dodaj')
-  await page.getByRole('link', { name: 'Monety' }).click()
+  await page.getByRole('link', { name: 'Kategoria testowa' }).click()
 
   await expect(page).toHaveURL('/monety')
   expect(dialogCount).toBe(0)
@@ -59,7 +59,7 @@ test('odrzucenie potwierdzenia pozostawia dane formularza dodawania monety', asy
 
   await page.goto('/dodaj')
   await page.getByLabel('Opis').fill('Niezapisane dane')
-  await page.getByRole('link', { name: 'Monety' }).click()
+  await page.getByRole('link', { name: 'Kategoria testowa' }).click()
 
   await expect(page).toHaveURL('/dodaj')
   await expect(page.getByLabel('Opis')).toHaveValue('Niezapisane dane')
@@ -75,7 +75,7 @@ test('potwierdzenie opuszczenia usuwa niezapisany formularz i pozwala nawigować
 
   await page.goto('/dodaj')
   await page.getByLabel('Opis').fill('Dane do utraty')
-  await page.getByRole('link', { name: 'Monety' }).click()
+  await page.getByRole('link', { name: 'Kategoria testowa' }).click()
 
   await expect(page).toHaveURL('/monety')
   await page.getByRole('link', { name: 'Dodaj monetę' }).click()
