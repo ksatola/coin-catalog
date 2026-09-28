@@ -429,7 +429,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <div class="field-card material-field"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
         <label class="field-card">Waga [g] <input :value="weightInput" type="text" inputmode="decimal" @input="updateDecimalInput('weight', $event)" @blur="formatDecimalOnBlur('weight')" /></label>
-        <label class="field-card">Średnica [mm] <input :value="diameterInput" type="text" inputmode="decimal" @input="updateDecimalInput('diameter', diameterInput, $event)" @blur="formatDecimalOnBlur('diameter', diameterInput)" /></label>
+        <label class="field-card">Średnica [mm] <input :value="diameterInput" type="text" inputmode="decimal" @input="updateDecimalInput('diameter', $event)" @blur="formatDecimalOnBlur('diameter')" /></label>
       </div>
     </section>
 
