@@ -1,5 +1,4 @@
 from collections.abc import Generator
-from datetime import date
 from pathlib import Path
 
 import pytest
