@@ -21,6 +21,7 @@ from coin_catalog.models import (
 )
 
 DICTIONARY_NAMES = (
+    "acquisition_methods",
     "countries",
     "issuers",
     "denominations",
@@ -113,6 +114,89 @@ def test_create_coin(client: TestClient, reference_data: dict[str, int]) -> None
     assert data["description"] == "Test coin"
     assert data["collection_number"] == "KC-001"
     assert data["is_deleted"] is False
+
+
+def test_coin_description_and_acquisition_crud(
+    client: TestClient,
+    reference_data: dict[str, int],
+) -> None:
+    dictionary_response = client.post(
+        "/dictionaries/acquisition_methods",
+        json={"name": "Dom Aukcyjny Testowy"},
+    )
+    assert dictionary_response.status_code == 201
+    acquisition_method_id = dictionary_response.json()["id"]
+
+    response = client.post(
+        "/coins",
+        json={
+            "collection_id": reference_data["collection_id"],
+            "country_id": reference_data["country_id"],
+            "denomination_id": reference_data["denomination_id"],
+            "avers_description": "Portret władcy",
+            "revers_description": "Orzeł na rewersie",
+            "literature": "Katalog testowy, poz. 123",
+            "acquisition_method_id": acquisition_method_id,
+        },
+    )
+    assert response.status_code == 201
+    coin_id = response.json()["id"]
+    assert response.json()["from_year"] is None
+    assert response.json()["from_era_id"] is None
+    assert response.json()["to_year"] is None
+    assert response.json()["to_era_id"] is None
+    assert response.json()["acquisition_method_id"] == acquisition_method_id
+    assert response.json()["acquisition_method_text"] is None
+
+    response = client.put(
+        f"/coins/{coin_id}",
+        json={
+            "collection_id": reference_data["collection_id"],
+            "country_id": reference_data["country_id"],
+            "denomination_id": reference_data["denomination_id"],
+            "avers_description": "Nowy opis awersu",
+            "revers_description": None,
+            "literature": "Nowa literatura",
+            "acquisition_method_id": None,
+            "acquisition_method_text": "Zakup od prywatnego kolekcjonera",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["avers_description"] == "Nowy opis awersu"
+    assert data["revers_description"] is None
+    assert data["literature"] == "Nowa literatura"
+    assert data["acquisition_method_id"] is None
+    assert data["acquisition_method_text"] == "Zakup od prywatnego kolekcjonera"
+
+    response = client.get(f"/coins/{coin_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["avers_description"] == "Nowy opis awersu"
+    assert data["revers_description"] is None
+    assert data["literature"] == "Nowa literatura"
+    assert data["acquisition_method_text"] == "Zakup od prywatnego kolekcjonera"
+
+    response = client.put(
+        f"/coins/{coin_id}",
+        json={
+            "collection_id": reference_data["collection_id"],
+            "country_id": reference_data["country_id"],
+            "denomination_id": reference_data["denomination_id"],
+            "avers_description": None,
+            "revers_description": None,
+            "literature": None,
+            "acquisition_method_id": None,
+            "acquisition_method_text": None,
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["avers_description"] is None
+    assert data["revers_description"] is None
+    assert data["literature"] is None
+    assert data["acquisition_method_id"] is None
+    assert data["acquisition_method_text"] is None
 
 
 def test_update_coin_collection_number(
