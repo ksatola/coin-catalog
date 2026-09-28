@@ -130,7 +130,9 @@ test('zapis danych monety nie wykonuje move', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Awers' }).fill('Nowy opis awersu')
   await page.getByRole('textbox', { name: 'Rewers' }).fill('Nowy opis rewersu')
   await page.getByRole('textbox', { name: 'Literatura' }).fill('Nowa literatura')
-  await page.getByLabel('Wartość ze słownika').selectOption('1')
+  const acquisitionSelect = page.getByRole('heading', { name: 'Sposób nabycia' }).locator('..').getByRole('combobox')
+  const dictionaryOption = acquisitionSelect.locator('option').nth(1)
+  await acquisitionSelect.selectOption(await dictionaryOption.getAttribute('value') ?? '')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect(page).toHaveURL('/monety/1')
@@ -150,7 +152,7 @@ test('zapisuje dane zakupu', async ({ page }) => {
   await page.goto('/monety/1/edytuj')
   await page.getByLabel('Cena zakupu').fill('175.50')
   await expect(page.getByRole('button', { name: 'Otwórz kalendarz daty zakupu' })).toBeVisible()
-  await page.getByLabel('Data zakupu').getByRole('textbox').fill('2026-09-27')
+  await page.getByRole('textbox', { name: 'Data zakupu' }).fill('2026-09-27')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect.poll(() => updatePayload).toMatchObject({
@@ -170,7 +172,7 @@ test('waliduje ręcznie wpisaną datę zakupu', async ({ page }) => {
   })
 
   await page.goto('/monety/1/edytuj')
-  const dateInput = page.getByLabel('Data zakupu').getByRole('textbox')
+  const dateInput = page.getByRole('textbox', { name: 'Data zakupu' })
   await dateInput.fill('2026-02-29')
   await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toBeVisible()
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
@@ -225,13 +227,14 @@ test('dodaje nowy sposób nabycia do słownika', async ({ page }) => {
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
 
   await expect.poll(() => createdPayload).toEqual({ name: 'Nowy dom aukcyjny' })
-  await expect(page.getByLabel('Wartość ze słownika')).toHaveValue('2')
+  const acquisitionSelect = page.getByRole('heading', { name: 'Sposób nabycia' }).locator('..').getByRole('combobox')
+  await expect(acquisitionSelect.locator('option:checked')).toHaveText('Nowy dom aukcyjny')
 })
 
 test('odczytuje dane zakupu w szczegółach monety', async ({ page }) => {
   await mockCoinEditApi(page)
   await page.goto('/monety/1')
-  await expect(page.getByText('250.00')).toBeVisible()
+  await expect(page.getByText('250.00', { exact: true })).toBeVisible()
   await expect(page.getByText('2026-09-28')).toBeVisible()
 })
 
