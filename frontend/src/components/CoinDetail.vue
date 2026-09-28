@@ -83,6 +83,8 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
         <div class="detail-item"><dt>Wideo</dt><dd>{{ coin.has_video ? 'Tak' : 'Nie' }}</dd></div>
         <div class="detail-item"><dt>Status</dt><dd>{{ coin.is_deleted ? 'Zarchiwizowana' : 'Aktywna' }}</dd></div>
         <div class="detail-item"><dt>Sposób nabycia</dt><dd>{{ coin.acquisition_method_text || dictionaryName(dictionaries.acquisition_methods, coin.acquisition_method_id) }}</dd></div>
+        <div class="detail-item"><dt>Cena zakupu</dt><dd>{{ coin.purchase_price !== null ? Number(coin.purchase_price).toFixed(2) : '—' }}</dd></div>
+        <div class="detail-item"><dt>Data zakupu</dt><dd>{{ coin.purchase_date ?? '—' }}</dd></div>
       </dl>
     </section>
 
