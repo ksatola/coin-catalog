@@ -1,5 +1,5 @@
-from decimal import Decimal
 from collections.abc import Generator
+from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
@@ -77,7 +77,17 @@ def reference_data(session: Session) -> dict[str, int]:
     acquisition_method = AcquisitionMethod(name="Test Acquisition")
 
     session.add_all(
-        [collection, country, issuer, denomination, mint, material, state, era, acquisition_method],
+        [
+            collection,
+            country,
+            issuer,
+            denomination,
+            mint,
+            material,
+            state,
+            era,
+            acquisition_method,
+        ],
     )
     session.commit()
 

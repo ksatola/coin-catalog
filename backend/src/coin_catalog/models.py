@@ -271,7 +271,9 @@ class Coin(Base):
     avers_description: Mapped[str | None] = mapped_column(Text)
     revers_description: Mapped[str | None] = mapped_column(Text)
     literature: Mapped[str | None] = mapped_column(Text)
-    acquisition_method_id: Mapped[int | None] = mapped_column(ForeignKey("acquisition_method.id"))
+    acquisition_method_id: Mapped[int | None] = mapped_column(
+        ForeignKey("acquisition_method.id")
+    )
     acquisition_method_text: Mapped[str | None] = mapped_column(Text)
     purchase_price: Mapped[Decimal | None] = mapped_column(Numeric)
     purchase_date: Mapped[date | None] = mapped_column(Date)
@@ -302,7 +304,9 @@ class Coin(Base):
     mint: Mapped[Mint | None] = relationship(back_populates="coins")
     material: Mapped[Material | None] = relationship(back_populates="coins")
     state: Mapped[State | None] = relationship(back_populates="coins")
-    acquisition_method: Mapped[AcquisitionMethod | None] = relationship(back_populates="coins")
+    acquisition_method: Mapped[AcquisitionMethod | None] = relationship(
+        back_populates="coins"
+    )
     categories: Mapped[list[Category]] = relationship(
         "Category",
         secondary="coin_category",

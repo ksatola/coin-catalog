@@ -35,12 +35,8 @@ def upgrade() -> None:
             existing_type=sa.Integer(),
             nullable=True,
         )
-        batch_op.add_column(
-            sa.Column("purchase_price", sa.Numeric(), nullable=True)
-        )
-        batch_op.add_column(
-            sa.Column("purchase_date", sa.Date(), nullable=True)
-        )
+        batch_op.add_column(sa.Column("purchase_price", sa.Numeric(), nullable=True))
+        batch_op.add_column(sa.Column("purchase_date", sa.Date(), nullable=True))
 
 
 def downgrade() -> None:

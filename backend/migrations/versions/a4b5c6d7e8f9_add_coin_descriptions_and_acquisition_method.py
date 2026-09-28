@@ -25,9 +25,7 @@ def upgrade() -> None:
         )
 
     with op.batch_alter_table("coin") as batch_op:
-        existing_columns = {
-            column["name"] for column in inspector.get_columns("coin")
-        }
+        existing_columns = {column["name"] for column in inspector.get_columns("coin")}
         if "avers_description" not in existing_columns:
             batch_op.add_column(
                 sa.Column("avers_description", sa.Text(), nullable=True)
