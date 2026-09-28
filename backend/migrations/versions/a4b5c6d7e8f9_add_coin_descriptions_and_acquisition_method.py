@@ -32,9 +32,13 @@ def upgrade() -> None:
         ),
     )
     op.add_column("coin", sa.Column("acquisition_method_text", sa.Text(), nullable=True))
+    op.add_column("coin", sa.Column("purchase_price", sa.Numeric(12, 2), nullable=True))
+    op.add_column("coin", sa.Column("purchase_date", sa.Date(), nullable=True))
 
 
 def downgrade() -> None:
+    op.drop_column("coin", "purchase_date")
+    op.drop_column("coin", "purchase_price")
     op.drop_column("coin", "acquisition_method_text")
     op.drop_column("coin", "acquisition_method_id")
     op.drop_column("coin", "literature")
