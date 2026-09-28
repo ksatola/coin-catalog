@@ -53,7 +53,7 @@ test('Dodaj monetę: pole numeru kolekcji przyjmuje wartość', async ({ page })
   await page.goto('/dodaj')
   await expect(page.locator('h1')).toHaveText('Dodaj monetę')
 
-  const collectionNumber = page.getByLabel('Numer kolekcji')
+  const collectionNumber = page.getByLabel('Numer w kolekcji')
   await collectionNumber.fill('KC-001')
   await expect(collectionNumber).toHaveValue('KC-001')
 })
@@ -99,8 +99,8 @@ test('Edytuj monetę: ładuje i wysyła zmieniony numer kolekcji', async ({ page
 
   await page.goto('/monety/1/edytuj')
   await expect(page.getByRole('heading', { name: 'Edytuj monetę' })).toBeVisible()
-  await expect(page.getByLabel('Numer kolekcji')).toHaveValue('KC-001')
-  await page.getByLabel('Numer kolekcji').fill('KC-002')
+  await expect(page.getByLabel('Numer w kolekcji')).toHaveValue('KC-001')
+  await page.getByLabel('Numer w kolekcji').fill('KC-002')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect.poll(() => requestBody).not.toBeNull()
