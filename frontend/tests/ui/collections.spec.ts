@@ -27,8 +27,8 @@ type CatalogCoin = {
 const initialCollections: Collection[] = [
   {
     id: 1,
-    name: 'Monety polskie',
-    description: 'Kolekcja podstawowa',
+    name: 'Kolekcja testowa A',
+    description: 'Opis kolekcji testowej',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
     coin_count: 428,
@@ -42,15 +42,15 @@ const initialCollections: Collection[] = [
 ]
 
 const collectionCoins = [
-  { id: 404, collection_id: 1, collection_number: 'PL-0404', from_year: 1924, to_year: 1924 },
+  { id: 404, collection_id: 1, collection_number: 'TEST-0404', from_year: 1924, to_year: 1924 },
 ]
 
 const catalogCoins: CatalogCoin[] = [
-  { id: 101, collection_id: 1, collection_number: 'PL-0101', from_year: 1924, to_year: 1924, archived: false },
-  { id: 202, collection_id: 2, collection_number: 'DE-0202', from_year: 1925, to_year: 1925, archived: false },
-  { id: 303, collection_id: 3, collection_number: 'EU-0303', from_year: 1926, to_year: 1926, archived: false },
-  { id: 404, collection_id: 1, collection_number: 'PL-0404', from_year: 1924, to_year: 1924, archived: false },
-  { id: 505, collection_id: 2, collection_number: 'DE-0505', from_year: 1930, to_year: 1930, archived: true },
+  { id: 101, collection_id: 1, collection_number: 'TEST-0101', from_year: 1924, to_year: 1924, archived: false },
+  { id: 202, collection_id: 2, collection_number: 'TEST-0202', from_year: 1925, to_year: 1925, archived: false },
+  { id: 303, collection_id: 3, collection_number: 'TEST-0303', from_year: 1926, to_year: 1926, archived: false },
+  { id: 404, collection_id: 1, collection_number: 'TEST-0404', from_year: 1924, to_year: 1924, archived: false },
+  { id: 505, collection_id: 2, collection_number: 'TEST-0505', from_year: 1930, to_year: 1930, archived: true },
 ]
 
 function cloneCollections(): Collection[] {
@@ -138,7 +138,7 @@ async function mockCatalogApi(page: Page): Promise<void> {
     ...initialCollections,
     {
       id: 2,
-      name: 'Monety niemieckie',
+      name: 'Kolekcja testowa B',
       description: null,
       created_at: '2026-01-02T00:00:00Z',
       updated_at: '2026-01-02T00:00:00Z',
@@ -152,7 +152,7 @@ async function mockCatalogApi(page: Page): Promise<void> {
     },
     {
       id: 3,
-      name: 'Monety europejskie',
+      name: 'Kolekcja testowa C',
       description: null,
       created_at: '2026-01-03T00:00:00Z',
       updated_at: '2026-01-03T00:00:00Z',
@@ -167,13 +167,13 @@ async function mockCatalogApi(page: Page): Promise<void> {
   ]
 
   const dictionaries = {
-    countries: [{ id: 1, name: 'Polska' }],
+    countries: [{ id: 1, name: 'Kraj testowy' }],
     issuers: [],
-    denominations: [{ id: 1, name: '1 zł' }],
+    denominations: [{ id: 1, name: 'Nominał testowy' }],
     mints: [],
     materials: [],
     states: [],
-    eras: [{ id: 1, name: 'II RP' }],
+    eras: [{ id: 1, name: 'Era testowa' }],
   }
 
   await page.route('**/api/collections', async (route) => {
@@ -230,7 +230,7 @@ test.describe('collections', () => {
     await page.goto('/kolekcje')
 
     await expect(page.getByRole('heading', { name: 'Kolekcje' })).toBeVisible()
-    await page.getByRole('button', { name: 'Monety polskie' }).click()
+    await page.getByRole('button', { name: 'Kolekcja testowa A' }).click()
     await expect(page.getByText('428', { exact: true })).toBeVisible()
     await expect(page.getByText('791', { exact: true })).toBeVisible()
     await expect(page.getByText('17', { exact: true })).toBeVisible()
@@ -265,18 +265,18 @@ test.describe('collections', () => {
     await mockCollectionApi(page)
     await page.goto('/kolekcje')
 
-    await page.getByRole('button', { name: 'Monety polskie' }).click()
+    await page.getByRole('button', { name: 'Kolekcja testowa A' }).click()
     await page.getByRole('button', { name: 'Pokaż', exact: true }).click()
 
     await expect(page).toHaveURL('/kolekcje/1')
-    await expect(page.getByRole('heading', { name: 'Monety polskie' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Kolekcja testowa A' })).toBeVisible()
   })
 
   test('shows collection detail and its coins', async ({ page }) => {
     await mockCollectionApi(page)
     await page.goto('/kolekcje/1')
 
-    await expect(page.getByRole('heading', { name: 'Monety polskie' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Kolekcja testowa A' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Monety w kolekcji' })).toBeVisible()
     await expect(page.locator('.coin-row')).toHaveCount(1)
     await expect(page.locator('.coin-row')).toContainText('#404')
@@ -294,7 +294,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption(['1', '2'])
-    await expect(page.getByLabel('Aktywny zakres kolekcji')).toContainText('Monety polskie, Monety niemieckie')
+    await expect(page.getByLabel('Aktywny zakres kolekcji')).toContainText('Kolekcja testowa A, Kolekcja testowa B')
   })
 
   test('filters catalog by one collection', async ({ page }) => {
@@ -353,7 +353,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
-    await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('PL-0404')
+    await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('TEST-0404')
     await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
     await expect(page.getByText('#404')).toBeVisible()
