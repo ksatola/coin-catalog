@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 const dictionaries = {
-  countries: [{ id: 1, name: 'Polska' }],
+  countries: [{ id: 1, name: 'Kraj testowy' }],
   issuers: [],
-  denominations: [{ id: 2, name: '1 grosz' }],
+  denominations: [{ id: 2, name: 'Nominał testowy' }],
   mints: [],
   materials: [],
   states: [],
