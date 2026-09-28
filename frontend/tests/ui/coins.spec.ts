@@ -7,7 +7,7 @@ const oldImage = { id: 10, coin_id: coinId, filename: '000404 - awers.jpg', kind
 const rewersImage = { id: 11, coin_id: coinId, filename: '000404 - rewers.jpg', kind: 'rewers', sort_order: 1 }
 const coin = { id: coinId, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, collection_id: collectionId, state_id: null, description: 'Moneta testowa', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
-  countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [{ id: 1, name: '1 złoty' }], mints: [], materials: [], states: [],
+  countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 1, name: 'Nominał testowy' }], mints: [], materials: [], states: [],
   eras: [{ id: 1, name: 'Współczesna' }, { id: 2, name: 'AD' }],
 }
 type UploadCall = { kind: string; replace: boolean }
