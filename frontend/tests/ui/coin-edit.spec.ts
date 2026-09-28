@@ -157,6 +157,34 @@ test('zapisuje dane zakupu', async ({ page }) => {
   })
 })
 
+test('waliduje ręcznie wpisaną datę zakupu', async ({ page }) => {
+  await mockCoinEditApi(page)
+  let updatePayload: Record<string, unknown> | null = null
+  await page.route('**/api/coins/1', async (route) => {
+    if (route.request().method() === 'PUT') {
+      updatePayload = route.request().postDataJSON() as Record<string, unknown>
+    }
+    await route.fulfill({ json: coin })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  const dateInput = page.getByLabel('Data zakupu').getByRole('textbox')
+  await dateInput.fill('2026-02-29')
+  await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toBeVisible()
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  expect(updatePayload).toBeNull()
+  await expect(page.getByText('Popraw datę zakupu.')).toBeVisible()
+
+  await dateInput.fill('2026-09-27')
+  await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  await expect.poll(() => updatePayload).toMatchObject({
+    purchase_date: '2026-09-27',
+  })
+})
+
 test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
   await mockCoinEditApi(page)
   let updatePayload: Record<string, unknown> | null = null
