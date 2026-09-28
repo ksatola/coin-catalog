@@ -339,8 +339,9 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <div class="field-card denomination-field"><label for="denomination">Nominał</label><div class="select-with-add"><select id="denomination" v-model.number="form.denomination_id" required @click.stop><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="denominations" label="nominał" @created="addDictionaryItem('denominations', $event)" /></div></div>
         <div class="field-card field-card-wide"><div class="date-fields"><div><label for="from-era">Era od</label><div class="select-with-add"><select id="from-era" v-model.number="form.from_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok od <input v-model.number="form.from_year" type="number" /></label></div></div>
         <div class="field-card field-card-wide"><div class="date-fields"><div><label for="to-era">Era do</label><div class="select-with-add"><select id="to-era" v-model.number="form.to_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok do <input v-model.number="form.to_year" type="number" /></label></div></div>
-        <div class="field-card"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></div>
-        <div class="field-card"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
+        <label class="field-card mint-field"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></label>
+        <label class="field-card material-field"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></label>
+        <label class="field-card collection-number-field" for="collection-number">Numer kolekcji <input id="collection-number" v-model="form.collection_number" type="text" /></label>
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
         <label class="field-card">Waga [g] <input v-model.number="form.weight" type="number" step="0.01" min="0" /></label>
         <label class="field-card">Średnica [mm] <input v-model.number="form.diameter" type="number" step="0.01" min="0" /></label>
@@ -421,7 +422,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .info-grid > .field-card:nth-child(1),.info-grid > .field-card:nth-child(2) { grid-column: span 3; }
 .info-grid > .denomination-field { grid-column: span 2; }
 .info-grid > .field-card-wide { grid-column: span 2; }
-.info-grid > .field-card:nth-child(6),.info-grid > .field-card:nth-child(7),.info-grid > .field-card:nth-child(8) { grid-column: span 2; }
+.info-grid > .mint-field,.info-grid > .material-field,.info-grid > .collection-number-field { grid-column: span 2; }
 .info-grid > .field-card:nth-child(9),.info-grid > .field-card:nth-child(10),.info-grid > .field-card:nth-child(11) { grid-column: span 2; }
 .collection-number-field { grid-column: span 2; }
 .field-card input,.field-card select,.field-card textarea { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
@@ -449,7 +450,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
   .coin-form { padding: 16px 0 32px; }
   .form-section { padding: 18px; }
   .primary-image-fields,.info-grid { grid-template-columns: 1fr; }
-  .info-grid > .field-card,.info-grid > .field-card-wide,.info-grid > .denomination-field { grid-column: auto; }
+  .info-grid > .field-card,.info-grid > .field-card-wide,.info-grid > .denomination-field,.info-grid > .mint-field,.info-grid > .material-field { grid-column: auto; }
   .collection-number-field { grid-column: auto; }
   .date-fields { grid-template-columns: 1fr; }
   .purchase-fields { grid-template-columns: 1fr; }
