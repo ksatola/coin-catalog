@@ -148,7 +148,8 @@ test('zapisuje dane zakupu', async ({ page }) => {
 
   await page.goto('/monety/1/edytuj')
   await page.getByLabel('Cena zakupu').fill('175.50')
-  await page.getByLabel('Data zakupu').fill('2026-09-27')
+  await expect(page.getByRole('button', { name: 'Otwórz kalendarz daty zakupu' })).toBeVisible()
+  await page.getByLabel('Data zakupu').getByRole('textbox').fill('2026-09-27')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect.poll(() => updatePayload).toMatchObject({
