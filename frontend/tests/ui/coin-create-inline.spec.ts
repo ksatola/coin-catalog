@@ -144,3 +144,36 @@ test('dodaje słownik i kategorię bez utraty danych formularza', async ({ page 
     'Dane wpisane przed utworzeniem słownika',
   )
 })
+
+
+test('waliduje datę zakupu w formularzu dodawania monety', async ({ page }) => {
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []),
+    })
+  })
+
+  await page.route('**/api/categories', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(categories) })
+  })
+  await page.route('**/api/collections', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ id: 1, name: 'Kolekcja testowa', description: null, created_at: '', updated_at: '' }]),
+    })
+  })
+
+  await page.goto('/dodaj')
+
+  const dateInput = page.getByRole('textbox', { name: 'Data zakupu' })
+  await dateInput.fill('2026-02-30')
+
+  await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toBeVisible()
+
+  await dateInput.fill('2026-09-28')
+  await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toHaveCount(0)
+})

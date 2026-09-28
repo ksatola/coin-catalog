@@ -55,10 +55,10 @@ export interface CoinCreate {
   country_id: number
   issuer_id: number | null
   denomination_id: number
-  from_year: number
-  from_era_id: number
-  to_year: number
-  to_era_id: number
+  from_year: number | null
+  from_era_id: number | null
+  to_year: number | null
+  to_era_id: number | null
   mint_id: number | null
   material_id: number | null
   state_id: number | null
@@ -69,6 +69,13 @@ export interface CoinCreate {
   collection_number: string | null
   has_video: boolean
   source: string | null
+  avers_description: string | null
+  revers_description: string | null
+  literature: string | null
+  acquisition_method_id: number | null
+  acquisition_method_text: string | null
+  purchase_price: number | null
+  purchase_date: string | null
 }
 
 export interface Coin extends CoinCreate {

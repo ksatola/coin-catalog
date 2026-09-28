@@ -14,6 +14,7 @@ const dictionaries = [
   { key: 'materials', label: 'Materiały' },
   { key: 'states', label: 'Stany zachowania' },
   { key: 'eras', label: 'Ery' },
+  { key: 'acquisition_methods', label: 'Sposoby nabycia' },
 ] as const
 
 const selectedDictionary = ref<(typeof dictionaries)[number]['key']>('countries')

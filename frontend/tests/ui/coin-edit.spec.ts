@@ -2,12 +2,13 @@ import { expect, test } from '@playwright/test'
 
 const dictionaries = {
   countries: [{ id: 1, name: 'Kraj testowy A' }, { id: 2, name: 'Kraj testowy B' }],
-  issuers: [],
+  issuers: [{ id: 1, name: 'Emitent testowy' }],
   denominations: [{ id: 1, name: 'Nominał testowy' }],
-  mints: [],
+  mints: [{ id: 1, name: 'Mennica testowa' }],
   materials: [],
-  states: [],
+  states: [{ id: 1, name: 'Stan testowy' }],
   eras: [{ id: 1, name: 'Era testowa' }],
+  acquisition_methods: [{ id: 1, name: 'Dom Aukcyjny Testowy' }],
 }
 
 const collections = [
@@ -23,19 +24,27 @@ const categories = [
 const coin = {
   id: 1,
   country_id: 1,
-  issuer_id: null,
+  issuer_id: 1,
   denomination_id: 1,
   from_year: 2000,
   from_era_id: 1,
   to_year: 2000,
   to_era_id: 1,
-  mint_id: null,
+  mint_id: 1,
   material_id: null,
-  state_id: null,
+  state_id: 1,
   description: 'Opis monety',
+  avers_description: 'Opis awersu',
+  revers_description: 'Opis rewersu',
+  literature: 'Literatura testowa',
+  acquisition_method_id: 1,
+  acquisition_method_text: null,
+  purchase_price: 250,
+  purchase_date: '2026-09-28',
   weight: null,
   diameter: null,
   collection_number: '1',
+  source: 'https://example.com/moneta',
   has_video: false,
   archived: false,
   collection_id: 1,
@@ -57,6 +66,11 @@ async function mockCoinEditApi(page: Parameters<typeof test>[0]['page']): Promis
   })
   await page.route('**/api/categories*', async (route) => await route.fulfill({ json: [] }))
   await page.route('**/api/collections', async (route) => await route.fulfill({ json: collections }))
+  await page.route('**/api/collections/*', async (route) => {
+    const id = Number(new URL(route.request().url()).pathname.split('/').pop())
+    const collection = collections.find((item) => item.id === id)
+    await route.fulfill({ status: collection ? 200 : 404, json: collection ?? { detail: 'Not found' } })
+  })
   await page.route('**/api/coins/1/images', async (route) => await route.fulfill({ json: coinImages }))
   await page.route('**/api/coins/2/images', async (route) => await route.fulfill({ json: movedCoinImages }))
   await page.route('**/api/coins/1', async (route) => await route.fulfill({ json: coin }))
@@ -118,10 +132,148 @@ test('zapis danych monety nie wykonuje move', async ({ page }) => {
 
   await page.goto('/monety/1/edytuj')
   await page.getByLabel('Opis').fill('Nowy opis')
+  await page.getByRole('textbox', { name: 'Awers' }).fill('Nowy opis awersu')
+  await page.getByRole('textbox', { name: 'Rewers' }).fill('Nowy opis rewersu')
+  await page.getByRole('textbox', { name: 'Literatura' }).fill('Nowa literatura')
+  const acquisitionSelect = page.locator('section.form-section').filter({ has: page.getByRole('heading', { name: 'Sposób nabycia' }) }).getByRole('combobox')
+  const dictionaryOption = acquisitionSelect.locator('option').nth(1)
+  await acquisitionSelect.selectOption(await dictionaryOption.getAttribute('value') ?? '')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect(page).toHaveURL('/monety/1')
   expect(moveRequestCount).toBe(0)
+})
+
+test('zapisuje dane zakupu', async ({ page }) => {
+  await mockCoinEditApi(page)
+  let updatePayload: Record<string, unknown> | null = null
+  await page.route('**/api/coins/1', async (route) => {
+    if (route.request().method() === 'PUT') {
+      updatePayload = route.request().postDataJSON() as Record<string, unknown>
+    }
+    await route.fulfill({ json: coin })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  await page.getByLabel('Cena zakupu').fill('175.50')
+  await expect(page.getByRole('button', { name: 'Otwórz kalendarz daty zakupu' })).toBeVisible()
+  await page.getByRole('textbox', { name: 'Data zakupu' }).fill('2026-09-27')
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  await expect.poll(() => updatePayload).toMatchObject({
+    purchase_price: 175.5,
+    purchase_date: '2026-09-27',
+  })
+})
+
+test('waliduje ręcznie wpisaną datę zakupu', async ({ page }) => {
+  await mockCoinEditApi(page)
+  let updatePayload: Record<string, unknown> | null = null
+  await page.route('**/api/coins/1', async (route) => {
+    if (route.request().method() === 'PUT') {
+      updatePayload = route.request().postDataJSON() as Record<string, unknown>
+    }
+    await route.fulfill({ json: coin })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  const dateInput = page.getByRole('textbox', { name: 'Data zakupu' })
+  await dateInput.fill('2026-02-29')
+  await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toBeVisible()
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  expect(updatePayload).toBeNull()
+  await expect(page.getByText('Popraw datę zakupu.')).toBeVisible()
+
+  await dateInput.fill('2026-09-27')
+  await expect(page.getByText('Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  await expect.poll(() => updatePayload).toMatchObject({
+    purchase_date: '2026-09-27',
+  })
+})
+
+test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
+  await mockCoinEditApi(page)
+  let updatePayload: Record<string, unknown> | null = null
+  await page.route('**/api/coins/1', async (route) => {
+    if (route.request().method() === 'PUT') {
+      updatePayload = route.request().postDataJSON() as Record<string, unknown>
+    }
+    await route.fulfill({ json: coin })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  await page.getByRole('textbox', { name: 'Sposób nabycia' }).fill('Zakup od prywatnego kolekcjonera')
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  await expect.poll(() => updatePayload).toMatchObject({
+    acquisition_method_id: null,
+    acquisition_method_text: 'Zakup od prywatnego kolekcjonera',
+  })
+})
+
+test('dodaje nowy sposób nabycia do słownika', async ({ page }) => {
+  await mockCoinEditApi(page)
+  let createdPayload: Record<string, unknown> | null = null
+  await page.route('**/api/dictionaries/acquisition_methods', async (route) => {
+    if (route.request().method() === 'POST') {
+      createdPayload = route.request().postDataJSON() as Record<string, unknown>
+      await route.fulfill({ status: 201, json: { id: 2, name: 'Nowy dom aukcyjny' } })
+      return
+    }
+    await route.fulfill({ json: dictionaries.acquisition_methods })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  await page.getByRole('button', { name: 'Dodaj sposób nabycia' }).click()
+  await page.getByLabel('Nowy wpis w sposób nabycia').fill('Nowy dom aukcyjny')
+  await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
+
+  await expect.poll(() => createdPayload).toEqual({ name: 'Nowy dom aukcyjny' })
+  await expect(page.getByRole('textbox', { name: 'Sposób nabycia' })).toHaveValue('Nowy dom aukcyjny')
+})
+
+
+test('read-only wyświetla komplet nowych danych monety', async ({ page }) => {
+  await mockCoinEditApi(page)
+  await page.goto('/monety/1')
+
+  await expect(page.getByText('Opis awersu')).toBeVisible()
+  await expect(page.getByText('Opis rewersu')).toBeVisible()
+  await expect(page.getByText('Literatura testowa')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'https://example.com/moneta' })).toBeVisible()
+  await expect(page.getByText('Dom Aukcyjny Testowy')).toBeVisible()
+
+  const information = page.getByRole('heading', { name: 'Informacje' }).locator('..')
+  await expect(information.getByText('Kolekcja 1')).toBeVisible()
+  await expect(information.getByText('Kraj testowy A')).toBeVisible()
+  await expect(information.getByText('Emitent testowy')).toBeVisible()
+  await expect(information.getByText('Mennica testowa')).toBeVisible()
+  await expect(information.getByText('Nominał testowy')).toBeVisible()
+  await expect(information.getByText('2000 Era testowa – 2000 Era testowa')).toBeVisible()
+  await expect(information.getByText('Stan testowy')).toBeVisible()
+
+  const rows = information.locator('.details-row')
+  await expect(rows).toHaveCount(2)
+  await expect(rows.nth(0).locator('.detail-item')).toHaveCount(4)
+  await expect(rows.nth(1).locator('.detail-item')).toHaveCount(6)
+  await expect(rows.nth(0).locator('.detail-item-issuer-wide')).toHaveCSS('grid-column', 'span 3')
+})
+
+test('pozwala zapisać monetę bez datowania', async ({ page }) => {
+  await mockCoinEditApi(page)
+  const undatedCoin = { ...coin, from_year: null, from_era_id: null, to_year: null, to_era_id: null }
+  await page.route('**/api/coins/1', async (route) => {
+    await route.fulfill({ json: route.request().method() === 'PUT' ? undatedCoin : undatedCoin })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  await page.getByRole('textbox', { name: 'Opis' }).fill('Moneta bez datowania')
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  await expect(page).toHaveURL('/monety/1')
 })
 
 test('po przeniesieniu kolekcji zapis danych używa nowego id monety', async ({ page }) => {

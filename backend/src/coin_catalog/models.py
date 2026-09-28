@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
@@ -227,6 +228,15 @@ class CoinImage(Base):
     coin: Mapped[Coin] = relationship(back_populates="images")
 
 
+class AcquisitionMethod(Base):
+    __tablename__ = "acquisition_method"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+
+    coins: Mapped[list[Coin]] = relationship(back_populates="acquisition_method")
+
+
 class Coin(Base):
     __tablename__ = "coin"
 
@@ -246,10 +256,10 @@ class Coin(Base):
     denomination_id: Mapped[int] = mapped_column(
         ForeignKey("denomination.id"), nullable=False
     )
-    from_year: Mapped[int] = mapped_column(Integer, nullable=False)
-    from_era_id: Mapped[int] = mapped_column(ForeignKey("era.id"), nullable=False)
-    to_year: Mapped[int] = mapped_column(Integer, nullable=False)
-    to_era_id: Mapped[int] = mapped_column(ForeignKey("era.id"), nullable=False)
+    from_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    from_era_id: Mapped[int | None] = mapped_column(ForeignKey("era.id"), nullable=True)
+    to_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    to_era_id: Mapped[int | None] = mapped_column(ForeignKey("era.id"), nullable=True)
     mint_id: Mapped[int | None] = mapped_column(ForeignKey("mint.id"))
     material_id: Mapped[int | None] = mapped_column(ForeignKey("material.id"))
     state_id: Mapped[int | None] = mapped_column(ForeignKey("state.id"))
@@ -258,6 +268,15 @@ class Coin(Base):
     diameter: Mapped[Decimal | None] = mapped_column(Numeric)
     has_video: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     source: Mapped[str | None] = mapped_column(Text)
+    avers_description: Mapped[str | None] = mapped_column(Text)
+    revers_description: Mapped[str | None] = mapped_column(Text)
+    literature: Mapped[str | None] = mapped_column(Text)
+    acquisition_method_id: Mapped[int | None] = mapped_column(
+        ForeignKey("acquisition_method.id")
+    )
+    acquisition_method_text: Mapped[str | None] = mapped_column(Text)
+    purchase_price: Mapped[Decimal | None] = mapped_column(Numeric)
+    purchase_date: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -274,17 +293,20 @@ class Coin(Base):
     country: Mapped[Country] = relationship(back_populates="coins")
     issuer: Mapped[Issuer | None] = relationship(back_populates="coins")
     denomination: Mapped[Denomination] = relationship(back_populates="coins")
-    from_era: Mapped[Era] = relationship(
+    from_era: Mapped[Era | None] = relationship(
         back_populates="from_coins",
         foreign_keys=[from_era_id],
     )
-    to_era: Mapped[Era] = relationship(
+    to_era: Mapped[Era | None] = relationship(
         back_populates="to_coins",
         foreign_keys=[to_era_id],
     )
     mint: Mapped[Mint | None] = relationship(back_populates="coins")
     material: Mapped[Material | None] = relationship(back_populates="coins")
     state: Mapped[State | None] = relationship(back_populates="coins")
+    acquisition_method: Mapped[AcquisitionMethod | None] = relationship(
+        back_populates="coins"
+    )
     categories: Mapped[list[Category]] = relationship(
         "Category",
         secondary="coin_category",

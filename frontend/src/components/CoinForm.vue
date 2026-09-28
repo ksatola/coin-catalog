@@ -15,6 +15,7 @@ type Dictionaries = {
   materials: DictionaryItem[]
   states: DictionaryItem[]
   eras: DictionaryItem[]
+  acquisition_methods: DictionaryItem[]
 }
 
 const props = defineProps<{ coin?: Coin | null; imageCoinId?: number }>()
@@ -25,10 +26,10 @@ const emptyForm: CoinCreate = {
   country_id: 0,
   issuer_id: null,
   denomination_id: 0,
-  from_year: 0,
-  from_era_id: 0,
-  to_year: 0,
-  to_era_id: 0,
+  from_year: null,
+  from_era_id: null,
+  to_year: null,
+  to_era_id: null,
   mint_id: null,
   material_id: null,
   state_id: null,
@@ -38,10 +39,17 @@ const emptyForm: CoinCreate = {
   collection_number: null,
   has_video: false,
   source: null,
+  avers_description: null,
+  revers_description: null,
+  literature: null,
+  acquisition_method_id: null,
+  acquisition_method_text: null,
+  purchase_price: null,
+  purchase_date: null,
 }
 
 const form = reactive<CoinCreate>({ ...emptyForm })
-const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
+const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [], acquisition_methods: [] })
 const locallyCreatedDictionaryItems: Record<keyof Dictionaries, Set<number>> = {
   countries: new Set(),
   issuers: new Set(),
@@ -50,6 +58,7 @@ const locallyCreatedDictionaryItems: Record<keyof Dictionaries, Set<number>> = {
   materials: new Set(),
   states: new Set(),
   eras: new Set(),
+  acquisition_methods: new Set(),
 }
 const primaryImages = reactive<{ avers: CoinImage | null; rewers: CoinImage | null }>({ avers: null, rewers: null })
 const additionalImages = ref<CoinImage[]>([])
@@ -59,6 +68,68 @@ const pendingAdditionalPreviewUrls = ref<string[]>([])
 const validationMessage = ref('')
 const loadErrorMessage = ref('')
 const imageErrorMessage = ref('')
+const weightInput = ref('')
+const diameterInput = ref('')
+const purchasePriceInput = ref('')
+const purchaseDateInput = ref('')
+const purchaseDatePicker = ref<HTMLInputElement | null>(null)
+const purchaseDateError = ref('')
+
+function isValidPurchaseDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const parts = value.split('-').map(Number)
+  if (parts.length !== 3) return false
+  const [year, month, day] = parts
+  if (year === undefined || month === undefined || day === undefined) return false
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+}
+
+function handlePurchaseDateInput(event: Event): void {
+  updatePurchaseDate((event.target as HTMLInputElement).value)
+}
+
+function updatePurchaseDate(value: string): void {
+  purchaseDateInput.value = value
+  form.purchase_date = value || null
+  purchaseDateError.value = value && !isValidPurchaseDate(value)
+    ? 'Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.'
+    : ''
+}
+
+function openPurchaseDatePicker(): void {
+  const picker = purchaseDatePicker.value
+  if (!picker) return
+  if (typeof picker.showPicker === 'function') picker.showPicker()
+  else picker.click()
+}
+
+function formatDecimalInput(value: number | null): string {
+  return value === null ? '' : Number(value).toFixed(2)
+}
+
+function parseDecimalInput(value: string): number | null {
+  const normalized = value.trim().replace(',', '.')
+  if (!normalized) return null
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function decimalInputRef(field: 'weight' | 'diameter' | 'purchase_price') {
+  if (field === 'weight') return weightInput
+  if (field === 'diameter') return diameterInput
+  return purchasePriceInput
+}
+
+function updateDecimalInput(field: 'weight' | 'diameter' | 'purchase_price', event: Event): void {
+  const value = (event.target as HTMLInputElement).value
+  decimalInputRef(field).value = value
+  form[field] = parseDecimalInput(value)
+}
+
+function formatDecimalOnBlur(field: 'weight' | 'diameter' | 'purchase_price'): void {
+  decimalInputRef(field).value = formatDecimalInput(form[field])
+}
 
 const isEditing = () => props.coin !== null && props.coin !== undefined
 
@@ -161,9 +232,10 @@ function mergeLoadedDictionaryItems(name: keyof Dictionaries, loadedItems: Dicti
 
 async function loadDictionaries(): Promise<void> {
   try {
-    const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all([
+    const [countries, issuers, denominations, mints, materials, states, eras, acquisition_methods] = await Promise.all([
       loadDictionary('countries'), loadDictionary('issuers'), loadDictionary('denominations'),
       loadDictionary('mints'), loadDictionary('materials'), loadDictionary('states'), loadDictionary('eras'),
+      loadDictionary('acquisition_methods'),
     ])
     mergeLoadedDictionaryItems('countries', countries)
     mergeLoadedDictionaryItems('issuers', issuers)
@@ -172,6 +244,7 @@ async function loadDictionaries(): Promise<void> {
     mergeLoadedDictionaryItems('materials', materials)
     mergeLoadedDictionaryItems('states', states)
     mergeLoadedDictionaryItems('eras', eras)
+    mergeLoadedDictionaryItems('acquisition_methods', acquisition_methods)
     loadErrorMessage.value = ''
   } catch {
     loadErrorMessage.value = 'Nie udało się pobrać słowników.'
@@ -202,11 +275,32 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
     if (!form.from_era_id) form.from_era_id = item.id
     else form.to_era_id = item.id
   }
+  if (name === 'acquisition_methods') {
+    insertAcquisitionMethod(item)
+  }
   markDirty()
 }
 
+function insertAcquisitionMethod(item: DictionaryItem): void {
+  const current = form.acquisition_method_text?.trim() ?? ''
+  form.acquisition_method_text = current ? `${current}\n${item.name}` : item.name
+  form.acquisition_method_id = null
+  markDirty()
+}
+
+function insertSelectedAcquisitionMethod(): void {
+  if (form.acquisition_method_id === null) return
+  const item = dictionaries.acquisition_methods.find((entry) => entry.id === form.acquisition_method_id)
+  if (item) insertAcquisitionMethod(item)
+  form.acquisition_method_id = null
+}
+
+function enterAcquisitionText(): void {
+  form.acquisition_method_id = null
+}
+
 function submitForm(): void {
-  if (!form.country_id || !form.denomination_id || !form.from_era_id || !form.to_era_id) {
+  if (!form.country_id || !form.denomination_id) {
     validationMessage.value = 'Uzupełnij wymagane pola.'
     return
   }
@@ -218,9 +312,15 @@ function submitForm(): void {
     validationMessage.value = 'Dodaj zdjęcie rewersu.'
     return
   }
+  if (purchaseDateInput.value && !isValidPurchaseDate(purchaseDateInput.value)) {
+    purchaseDateError.value = 'Data zakupu musi mieć format YYYY-MM-DD i być poprawną datą.'
+    validationMessage.value = 'Popraw datę zakupu.'
+    return
+  }
   validationMessage.value = ''
+  const payload = { ...form, from_year: form.from_year || null, from_era_id: form.from_era_id || null, to_year: form.to_year || null, to_era_id: form.to_era_id || null, purchase_date: purchaseDateInput.value || null }
   emit('submit', {
-    coin: { ...form },
+    coin: payload,
     images: {
       avers: pendingFiles.avers,
       rewers: pendingFiles.rewers,
@@ -238,6 +338,11 @@ function handleEnterKey(event: KeyboardEvent): void {
 function loadCoinIntoForm(coin: Coin | null | undefined): void {
   markClean()
   Object.assign(form, coin ? { ...coin } : { ...emptyForm })
+  weightInput.value = formatDecimalInput(form.weight)
+  diameterInput.value = formatDecimalInput(form.diameter)
+  purchasePriceInput.value = formatDecimalInput(form.purchase_price)
+  purchaseDateInput.value = form.purchase_date ?? ''
+  purchaseDateError.value = ''
   validationMessage.value = ''
   void loadCoinImages(coin)
 }
@@ -299,27 +404,72 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
     </section>
 
     <section class="form-section">
+      <div class="section-heading"><h3>Awers / Rewers</h3></div>
+      <div class="primary-description-fields">
+        <label class="field-card primary-description-field">Awers<textarea v-model="form.avers_description" /></label>
+        <label class="field-card primary-description-field">Rewers<textarea v-model="form.revers_description" /></label>
+      </div>
+    </section>
+
+    <section class="form-section">
       <div class="section-heading"><h3>Informacje</h3></div>
       <div class="info-grid">
+        <label class="field-card collection-number-field" for="collection-number">Numer w kolekcji <input id="collection-number" v-model="form.collection_number" type="text" /></label>
         <div class="field-card"><label for="country">Kraj</label><div class="select-with-add"><select id="country" v-model.number="form.country_id" required @click.stop><option :value="0">Wybierz kraj</option><option v-for="item in dictionaries.countries" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="countries" label="kraj" @created="addDictionaryItem('countries', $event)" /></div></div>
-        <div class="field-card"><label for="issuer">Emitent</label><div class="select-with-add"><select id="issuer" v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" /></div></div>
+        <div class="field-card issuer-field"><label for="issuer">Emitent</label><div class="select-with-add"><select id="issuer" v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" /></div></div>
+        <div class="field-card mint-field"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></div>
         <div class="field-card denomination-field"><label for="denomination">Nominał</label><div class="select-with-add"><select id="denomination" v-model.number="form.denomination_id" required @click.stop><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="denominations" label="nominał" @created="addDictionaryItem('denominations', $event)" /></div></div>
-        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="from-era">Era od</label><div class="select-with-add"><select id="from-era" v-model.number="form.from_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok od <input v-model.number="form.from_year" type="number" required /></label></div></div>
-        <div class="field-card field-card-wide"><div class="date-fields"><div><label for="to-era">Era do</label><div class="select-with-add"><select id="to-era" v-model.number="form.to_era_id" required @click.stop><option :value="0">Wybierz erę</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div></div><label>Rok do <input v-model.number="form.to_year" type="number" required /></label></div></div>
-        <div class="field-card"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></div>
-        <div class="field-card"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
+        <div class="field-card dating-field">
+          <span class="field-card-label">Datowanie</span>
+          <div class="dating-fields">
+            <div><label for="from-era">Od</label><div class="date-fields"><div class="select-with-add"><select id="from-era" aria-label="Era od" v-model.number="form.from_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div><input v-model.number="form.from_year" type="number" aria-label="Rok od" /></div></div>
+            <div><label for="to-era">Do</label><div class="date-fields"><div class="select-with-add"><select id="to-era" aria-label="Era do" v-model.number="form.to_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div><input v-model.number="form.to_year" type="number" aria-label="Rok do" /></div></div>
+          </div>
+        </div>
+        <div class="field-card material-field"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
         <div class="field-card"><label for="state">Stan zachowania</label><div class="select-with-add"><select id="state" v-model="form.state_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.states" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="states" label="stan" @created="addDictionaryItem('states', $event)" /></div></div>
-        <label class="field-card">Waga [g] <input v-model.number="form.weight" type="number" step="0.001" min="0" /></label>
-        <label class="field-card">Średnica [mm] <input v-model.number="form.diameter" type="number" step="0.01" min="0" /></label>
-        <label class="field-card collection-number-field" for="collection-number">Numer kolekcji <input id="collection-number" v-model="form.collection_number" type="text" /></label>
+        <label class="field-card">Waga [g] <input :value="weightInput" type="text" inputmode="decimal" @input="updateDecimalInput('weight', $event)" @blur="formatDecimalOnBlur('weight')" /></label>
+        <label class="field-card">Średnica [mm] <input :value="diameterInput" type="text" inputmode="decimal" @input="updateDecimalInput('diameter', $event)" @blur="formatDecimalOnBlur('diameter')" /></label>
       </div>
     </section>
 
     <section class="form-section">
       <div class="section-heading"><h3>Źródło i opis</h3></div>
       <div class="text-fields">
-        <label class="field-card">Źródło<textarea v-model="form.source" rows="4" /></label>
-        <label class="field-card">Opis<textarea v-model="form.description" /></label>
+        <label class="field-card text-panel-description">Opis<textarea v-model="form.description" /></label>
+        <label class="field-card text-panel-literature">Literatura<textarea v-model="form.literature" /></label>
+        <label class="field-card text-panel-source">Źródło<textarea v-model="form.source" rows="4" /></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-heading"><h3>Dane zakupu</h3></div>
+      <div class="purchase-fields">
+        <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', $event)" @blur="formatDecimalOnBlur('purchase_price')" /></label>
+        <fieldset class="field-card purchase-date-field">
+          <legend>Data zakupu</legend>
+          <div class="purchase-date-control">
+            <input id="purchase-date" :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-label="Data zakupu" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="handlePurchaseDateInput" />
+            <button type="button" aria-label="Otwórz kalendarz daty zakupu" @click="openPurchaseDatePicker">📅</button>
+            <input ref="purchaseDatePicker" :value="purchaseDateInput" type="date" class="purchase-date-picker" tabindex="-1" aria-hidden="true" @input="handlePurchaseDateInput" @change="handlePurchaseDateInput" />
+          </div>
+          <span v-if="purchaseDateError" id="purchase-date-error" class="field-error">{{ purchaseDateError }}</span>
+        </fieldset>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="section-heading"><h3>Sposób nabycia</h3></div>
+      <div class="field-card acquisition-field">
+        <label for="acquisition-method-text">Sposób nabycia</label>
+        <textarea id="acquisition-method-text" v-model="form.acquisition_method_text" @input="enterAcquisitionText" placeholder="Wpisz sposób nabycia. Możesz dodać kilka pozycji w osobnych wierszach." />
+        <div class="acquisition-tools">
+          <select id="acquisition-method" v-model.number="form.acquisition_method_id" @change="insertSelectedAcquisitionMethod" @click.stop>
+            <option :value="null">Dodaj wartość ze słownika…</option>
+            <option v-for="item in dictionaries.acquisition_methods" :key="item.id" :value="item.id">{{ item.name }}</option>
+          </select>
+          <InlineDictionaryCreate dictionary-name="acquisition_methods" label="sposób nabycia" @created="addDictionaryItem('acquisition_methods', $event)" />
+        </div>
       </div>
     </section>
 
@@ -357,24 +507,37 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .additional-image-card img { display: block; width: 122px; height: 100px; object-fit: contain; border-radius: 6px; background: #fff; }
 .additional-image-card figcaption { margin-top: 6px; font-size: .75rem; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .additional-image-card button { margin-top: 6px; padding: 5px 8px; font-size: .75rem; }
-.info-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 16px; }
+.info-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
 .field-card { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #334155; font-weight: 600; }
-.info-grid > .field-card:nth-child(1),.info-grid > .field-card:nth-child(2) { grid-column: span 3; }
-.info-grid > .denomination-field { grid-column: span 2; }
-.info-grid > .field-card-wide { grid-column: span 2; }
-.info-grid > .field-card:nth-child(6),.info-grid > .field-card:nth-child(7) { grid-column: span 3; }
-.info-grid > .field-card:nth-child(8),.info-grid > .field-card:nth-child(9),.info-grid > .field-card:nth-child(10) { grid-column: span 2; }
-.collection-number-field { grid-column: span 2; }
+.info-grid > .field-card { grid-column: span 1; }
+.info-grid .issuer-field { grid-column: span 2; }
+    .info-grid .dating-field { grid-column: span 2; }
+.collection-number-field { grid-column: span 1; }
+.field-card-label { color: #334155; font-weight: 600; }
+.dating-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.dating-fields > div { display: grid; gap: 6px; }
+.dating-fields > div > label { color: #64748b; font-size: .82rem; font-weight: 600; }
+.primary-description-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.primary-description-field textarea { min-height: 190px; }
+.text-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: auto auto; grid-template-areas: "description literature" "description source"; gap: 16px; }
+.text-fields .text-panel-description { grid-area: description; grid-template-rows: auto 1fr; }
+.text-fields .text-panel-description textarea { height: 100%; min-height: 0; }
+.text-fields .text-panel-literature { grid-area: literature; }
+.text-fields .text-panel-source { grid-area: source; }
+.text-fields .field-card { min-height: 190px; }
 .field-card input,.field-card select,.field-card textarea { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
 .field-card textarea { min-height: 160px; resize: vertical; }
 .select-with-add { display: grid; grid-template-columns: minmax(0,1fr) 32px; gap: 8px; align-items: start; }
 .select-with-add :deep(.inline-create) { margin-top: 0; }
-.date-fields { display: grid; grid-template-columns: minmax(0,1fr) 110px; gap: 12px; align-items: start; }
+.date-fields { display: grid; grid-template-columns: minmax(0,1fr) 90px; gap: 8px; align-items: start; }
 .date-fields > div,.date-fields > label { display: grid; gap: 8px; }
 .date-fields label { color: #334155; font-weight: 600; }
 .date-fields input,.date-fields select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; }
-.text-fields { display: grid; gap: 16px; }
-.text-fields .field-card:last-child { min-height: 190px; }
+.acquisition-field { gap: 12px; }.acquisition-field textarea { min-height: 180px; }.acquisition-tools { display: grid; grid-template-columns: minmax(0,1fr) 32px; gap: 8px; align-items: start; }.acquisition-tools select { box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#0f172a;font:inherit; } .purchase-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.purchase-date-control { display: grid; grid-template-columns: minmax(0,1fr) 44px; gap: 8px; align-items: center; }
+.purchase-date-control button { min-height: 44px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; cursor: pointer; font-size: 1.05rem; }
+.purchase-date-picker { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.field-error { color: #b91c1c; font-size: .82rem; font-weight: 600; }
 .video-option { display: inline-flex; align-items: center; justify-self: start; gap: 10px; padding: 12px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; color: #334155; font-weight: 600; }
 .video-option input { width: 18px; height: 18px; margin: 0; }
 .form-message { padding: 12px 14px; border-radius: 8px; font-size: .9rem; }
@@ -388,10 +551,11 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 @media (max-width:800px) {
   .coin-form { padding: 16px 0 32px; }
   .form-section { padding: 18px; }
-  .primary-image-fields,.info-grid { grid-template-columns: 1fr; }
-  .info-grid > .field-card,.info-grid > .field-card-wide,.info-grid > .denomination-field { grid-column: auto; }
+   .primary-image-fields,.primary-description-fields,.info-grid { grid-template-columns: 1fr; }
+  .info-grid > .field-card,.info-grid > .dating-field,.info-grid > .denomination-field,.info-grid > .mint-field,.info-grid > .material-field { grid-column: auto; }
   .collection-number-field { grid-column: auto; }
   .date-fields { grid-template-columns: 1fr; }
+  .purchase-fields { grid-template-columns: 1fr; }
   .primary-image-card :deep(.image-drop-zone) { height: min(70vw,360px); min-height: 240px; }
 }
 @media (max-width:520px) {

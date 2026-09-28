@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -33,10 +33,10 @@ class CoinCreate(BaseModel):
     country_id: int
     issuer_id: int | None = None
     denomination_id: int
-    from_year: int
-    from_era_id: int
-    to_year: int
-    to_era_id: int
+    from_year: int | None = None
+    from_era_id: int | None = None
+    to_year: int | None = None
+    to_era_id: int | None = None
     mint_id: int | None = None
     material_id: int | None = None
     state_id: int | None = None
@@ -45,6 +45,13 @@ class CoinCreate(BaseModel):
     diameter: Decimal | None = None
     has_video: bool = False
     source: str | None = None
+    avers_description: str | None = None
+    revers_description: str | None = None
+    literature: str | None = None
+    acquisition_method_id: int | None = None
+    acquisition_method_text: str | None = None
+    purchase_price: Decimal | None = None
+    purchase_date: date | None = None
 
 
 class CoinUpdate(CoinCreate):
