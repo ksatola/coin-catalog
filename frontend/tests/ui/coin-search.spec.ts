@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test'
 
-const coin = { id: 1, collection_id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Polski grosz', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
+const coin = { id: 1, collection_id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Opis testowej monety', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 const dictionaries = {
-  countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [{ id: 1, name: '1 grosz' }],
+  countries: [{ id: 1, name: 'Kategoria testowa B' }], issuers: [], denominations: [{ id: 1, name: 'Nominał testowy' }],
   mints: [], materials: [], states: [], eras: [{ id: 1, name: 'AD' }],
 }
 const categories = [
-  { id: 1, name: 'Monety', description: null, parent_ids: [], child_ids: [2], created_at: '', updated_at: '' },
-  { id: 2, name: 'Polska', description: null, parent_ids: [1], child_ids: [], created_at: '', updated_at: '' },
+  { id: 1, name: 'Kategoria testowa A', description: null, parent_ids: [], child_ids: [2], created_at: '', updated_at: '' },
+  { id: 2, name: 'Kategoria testowa B', description: null, parent_ids: [1], child_ids: [], created_at: '', updated_at: '' },
 ]
 const collections = [
-  { id: 1, name: 'Główna kolekcja', description: null, coin_count: 1, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 1, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
-  { id: 2, name: 'Monety polskie', description: null, coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 0, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
+  { id: 1, name: 'Kolekcja testowa A', description: null, coin_count: 1, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 1, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
+  { id: 2, name: 'Kolekcja testowa B', description: null, coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 0, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
 ]
 
 async function openAdvancedFilters(page: import('@playwright/test').Page): Promise<void> {
