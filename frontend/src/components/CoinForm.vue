@@ -422,8 +422,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <div class="field-card dating-field">
           <span class="field-card-label">Datowanie</span>
           <div class="dating-fields">
-            <div><label for="from-era">Od</label><div class="date-fields"><div class="select-with-add"><select id="from-era" v-model.number="form.from_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div><input v-model.number="form.from_year" type="number" aria-label="Rok od" /></div></div>
-            <div><label for="to-era">Do</label><div class="date-fields"><div class="select-with-add"><select id="to-era" v-model.number="form.to_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div><input v-model.number="form.to_year" type="number" aria-label="Rok do" /></div></div>
+            <div><label for="from-era">Od</label><div class="date-fields"><div class="select-with-add"><select id="from-era" aria-label="Era od" v-model.number="form.from_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div><input v-model.number="form.from_year" type="number" aria-label="Rok od" /></div></div>
+            <div><label for="to-era">Do</label><div class="date-fields"><div class="select-with-add"><select id="to-era" aria-label="Era do" v-model.number="form.to_era_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.eras" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="eras" label="erę" @created="addDictionaryItem('eras', $event)" /></div><input v-model.number="form.to_year" type="number" aria-label="Rok do" /></div></div>
           </div>
         </div>
         <div class="field-card material-field"><label for="material">Materiał</label><div class="select-with-add"><select id="material" v-model="form.material_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.materials" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="materials" label="materiał" @created="addDictionaryItem('materials', $event)" /></div></div>
@@ -446,15 +446,15 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
       <div class="section-heading"><h3>Dane zakupu</h3></div>
       <div class="purchase-fields">
         <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', $event)" @blur="formatDecimalOnBlur('purchase_price')" /></label>
-        <div class="field-card purchase-date-field">
-          <label for="purchase-date">Data zakupu</label>
+        <fieldset class="field-card purchase-date-field">
+          <legend>Data zakupu</legend>
           <div class="purchase-date-control">
-            <input id="purchase-date" :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="handlePurchaseDateInput" />
+            <input id="purchase-date" :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-label="Data zakupu" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="handlePurchaseDateInput" />
             <button type="button" aria-label="Otwórz kalendarz daty zakupu" @click="openPurchaseDatePicker">📅</button>
             <input ref="purchaseDatePicker" :value="purchaseDateInput" type="date" class="purchase-date-picker" tabindex="-1" aria-hidden="true" @input="handlePurchaseDateInput" @change="handlePurchaseDateInput" />
           </div>
           <span v-if="purchaseDateError" id="purchase-date-error" class="field-error">{{ purchaseDateError }}</span>
-        </div>
+        </fieldset>
       </div>
     </section>
 
