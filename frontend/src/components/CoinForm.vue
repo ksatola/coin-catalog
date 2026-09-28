@@ -44,6 +44,8 @@ const emptyForm: CoinCreate = {
   literature: null,
   acquisition_method_id: null,
   acquisition_method_text: null,
+  purchase_price: null,
+  purchase_date: null,
 }
 
 const form = reactive<CoinCreate>({ ...emptyForm })
@@ -200,10 +202,6 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
     if (!form.from_era_id) form.from_era_id = item.id
     else form.to_era_id = item.id
   }
-  if (name === 'acquisition_methods') {
-    form.acquisition_method_id = item.id
-    form.acquisition_method_text = null
-  }
   await nextTick()
   if (name === 'countries') form.country_id = item.id
   if (name === 'issuers') form.issuer_id = item.id
@@ -337,6 +335,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <label class="field-card">Waga [g] <input v-model.number="form.weight" type="number" step="0.001" min="0" /></label>
         <label class="field-card">Średnica [mm] <input v-model.number="form.diameter" type="number" step="0.01" min="0" /></label>
         <label class="field-card collection-number-field" for="collection-number">Numer kolekcji <input id="collection-number" v-model="form.collection_number" type="text" /></label>
+        <label class="field-card">Cena zakupu <input v-model.number="form.purchase_price" type="number" step="0.01" min="0" /></label>
+        <label class="field-card">Data zakupu <input v-model="form.purchase_date" type="date" /></label>
       </div>
     </section>
 
