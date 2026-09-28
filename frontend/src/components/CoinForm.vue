@@ -168,7 +168,7 @@ function mergeLoadedDictionaryItems(name: keyof Dictionaries, loadedItems: Dicti
 
 async function loadDictionaries(): Promise<void> {
   try {
-    const [countries, issuers, denominations, mints, materials, states, eras] = await Promise.all([
+    const [countries, issuers, denominations, mints, materials, states, eras, acquisition_methods] = await Promise.all([
       loadDictionary('countries'), loadDictionary('issuers'), loadDictionary('denominations'),
       loadDictionary('mints'), loadDictionary('materials'), loadDictionary('states'), loadDictionary('eras'),
       loadDictionary('acquisition_methods'),
@@ -204,10 +204,6 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
     form.acquisition_method_id = item.id
     form.acquisition_method_text = null
   }
-  if (name === 'acquisition_methods') {
-    form.acquisition_method_id = item.id
-    form.acquisition_method_text = null
-  }
   await nextTick()
   if (name === 'countries') form.country_id = item.id
   if (name === 'issuers') form.issuer_id = item.id
@@ -218,6 +214,10 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
   if (name === 'eras') {
     if (!form.from_era_id) form.from_era_id = item.id
     else form.to_era_id = item.id
+  }
+  if (name === 'acquisition_methods') {
+    form.acquisition_method_id = item.id
+    form.acquisition_method_text = null
   }
   markDirty()
 }
@@ -357,7 +357,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <div class="field-card">
           <label for="acquisition-method">Wartość ze słownika</label>
           <div class="select-with-add">
-            <select id="acquisition-method" v-model="form.acquisition_method_id" @change="selectAcquisitionMethod" @click.stop>
+            <select id="acquisition-method" v-model.number="form.acquisition_method_id" @change="selectAcquisitionMethod" @click.stop>
               <option :value="null">— własny tekst —</option>
               <option v-for="item in dictionaries.acquisition_methods" :key="item.id" :value="item.id">{{ item.name }}</option>
             </select>
