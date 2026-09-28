@@ -73,17 +73,17 @@ test('zarządza słownikiem sposobów nabycia', async ({ page }) => {
 
   await page.getByPlaceholder('Nazwa').fill(createdName)
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
-  await expect(page.getByRole('cell', { name: 'Zakup od kolekcjonera' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: createdName })).toBeVisible()
 
   const createdRow = page.locator('tr', { hasText: createdName })
   await createdRow.getByRole('button', { name: 'Edytuj' }).click()
   await page.getByPlaceholder('Nazwa').fill(renamedName)
   await page.getByRole('button', { name: 'Zapisz', exact: true }).click()
   await expect(page.getByRole('cell', { name: renamedName })).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'Zakup od kolekcjonera' })).toHaveCount(0)
+  await expect(page.getByRole('cell', { name: createdName })).toHaveCount(0)
 
   page.once('dialog', (dialog) => dialog.accept())
-  const updatedRow = page.locator('tr', { hasText: 'Zakup prywatny' })
+  const updatedRow = page.locator('tr', { hasText: renamedName })
   await updatedRow.getByRole('button', { name: 'Usuń' }).click()
-  await expect(page.getByRole('cell', { name: 'Zakup prywatny' })).toHaveCount(0)
+  await expect(page.getByRole('cell', { name: renamedName })).toHaveCount(0)
 })
