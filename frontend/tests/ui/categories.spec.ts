@@ -14,7 +14,7 @@ const initialCategories: Category[] = [
   { id: 1, name: 'Kategoria testowa A', description: 'Opis kategorii testowej', created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', parent_ids: [], child_ids: [2] },
   { id: 2, name: 'Kategoria testowa B', description: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', parent_ids: [1], child_ids: [] },
   { id: 3, name: 'Kategoria testowa C', description: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', parent_ids: [], child_ids: [] },
-  { id: 4, name: 'IKategoria testowa B', description: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', parent_ids: [], child_ids: [] },
+  { id: 4, name: 'Kategoria testowa D', description: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', parent_ids: [], child_ids: [] },
 ]
 
 function cloneCategories(): Category[] {
@@ -151,7 +151,7 @@ test('widok kategorii pokazuje relacje rodziców i dzieci dla wszystkich kategor
   await expectRelations(page, 'Kategoria testowa A', '—', 'Kategoria testowa B')
   await expectRelations(page, 'Kategoria testowa B', 'Kategoria testowa A', '—')
   await expectRelations(page, 'Kategoria testowa C', '—', '—')
-  await expectRelations(page, 'IKategoria testowa B', '—', '—')
+  await expectRelations(page, 'Kategoria testowa D', '—', '—')
 })
 
 test('widok kategorii pozwala wybrać istniejącą kategorię i edytować jej dane', async ({ page }) => {
@@ -218,9 +218,9 @@ test('istniejąca kategoria pozwala przypisać wielu rodziców', async ({ page }
   await selectCategory(page, 'Kategoria testowa A')
   await page.locator('.relation-controls select').nth(0).selectOption(['3', '4'])
   await page.getByRole('button', { name: 'Dodaj rodziców' }).click()
-  await expectRelations(page, 'Kategoria testowa A', 'Kategoria testowa C, IKategoria testowa B', 'Kategoria testowa B')
+  await expectRelations(page, 'Kategoria testowa A', 'Kategoria testowa C, Kategoria testowa D', 'Kategoria testowa B')
   await expectRelations(page, 'Kategoria testowa C', '—', 'Kategoria testowa A')
-  await expectRelations(page, 'IKategoria testowa B', '—', 'Kategoria testowa A')
+  await expectRelations(page, 'Kategoria testowa D', '—', 'Kategoria testowa A')
 })
 
 test('istniejąca kategoria pozwala przypisać wielu dzieci', async ({ page }) => {
@@ -229,9 +229,9 @@ test('istniejąca kategoria pozwala przypisać wielu dzieci', async ({ page }) =
   await selectCategory(page, 'Kategoria testowa A')
   await page.locator('.relation-controls select').nth(1).selectOption(['3', '4'])
   await page.getByRole('button', { name: 'Dodaj dzieci' }).click()
-  await expectRelations(page, 'Kategoria testowa A', '—', 'Kategoria testowa B, Kategoria testowa C, IKategoria testowa B')
+  await expectRelations(page, 'Kategoria testowa A', '—', 'Kategoria testowa B, Kategoria testowa C, Kategoria testowa D')
   await expectRelations(page, 'Kategoria testowa C', 'Kategoria testowa A', '—')
-  await expectRelations(page, 'IKategoria testowa B', 'Kategoria testowa A', '—')
+  await expectRelations(page, 'Kategoria testowa D', 'Kategoria testowa A', '—')
 })
 
 test('usunięcie rodzica aktualizuje relacje w widoku kategorii', async ({ page }) => {
