@@ -205,7 +205,7 @@ test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
   })
 
   await page.goto('/monety/1/edytuj')
-  await page.getByLabel('Sposób nabycia').fill('Zakup od prywatnego kolekcjonera')
+  await page.getByRole('textbox', { name: 'Sposób nabycia' }).fill('Zakup od prywatnego kolekcjonera')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect.poll(() => updatePayload).toMatchObject({
@@ -232,8 +232,7 @@ test('dodaje nowy sposób nabycia do słownika', async ({ page }) => {
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
 
   await expect.poll(() => createdPayload).toEqual({ name: 'Nowy dom aukcyjny' })
-  const acquisitionSelect = page.getByRole('heading', { name: 'Sposób nabycia' }).locator('..').getByRole('combobox')
-  await expect(acquisitionSelect.locator('option:checked')).toHaveText('Nowy dom aukcyjny')
+  await expect(page.getByRole('textbox', { name: 'Sposób nabycia' })).toContainText('Nowy dom aukcyjny')
 })
 
 test('odczytuje dane zakupu w szczegółach monety', async ({ page }) => {
