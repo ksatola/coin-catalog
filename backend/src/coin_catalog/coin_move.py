@@ -104,6 +104,8 @@ def move_coin(
             literature=source_coin.literature,
             acquisition_method_id=source_coin.acquisition_method_id,
             acquisition_method_text=source_coin.acquisition_method_text,
+            purchase_price=source_coin.purchase_price,
+            purchase_date=source_coin.purchase_date,
             created_at=source_coin.created_at,
             updated_at=source_coin.updated_at,
             categories=list(source_coin.categories),
