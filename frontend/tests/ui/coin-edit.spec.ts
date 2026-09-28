@@ -129,6 +129,8 @@ test('zapis danych monety nie wykonuje move', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Awers' }).fill('Nowy opis awersu')
   await page.getByRole('textbox', { name: 'Rewers' }).fill('Nowy opis rewersu')
   await page.getByRole('textbox', { name: 'Literatura' }).fill('Nowa literatura')
+  await page.getByLabel('Cena zakupu').fill('99.99')
+  await page.getByLabel('Data zakupu').fill('2026-09-21')
   await page.getByLabel('Wartość ze słownika').selectOption('1')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
