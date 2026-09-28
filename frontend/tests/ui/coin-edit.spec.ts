@@ -39,8 +39,6 @@ const coin = {
   literature: 'Literatura testowa',
   acquisition_method_id: 1,
   acquisition_method_text: null,
-  purchase_price: 125.5,
-  purchase_date: '2026-09-20',
   weight: null,
   diameter: null,
   collection_number: '1',
@@ -129,8 +127,6 @@ test('zapis danych monety nie wykonuje move', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Awers' }).fill('Nowy opis awersu')
   await page.getByRole('textbox', { name: 'Rewers' }).fill('Nowy opis rewersu')
   await page.getByRole('textbox', { name: 'Literatura' }).fill('Nowa literatura')
-  await page.getByLabel('Cena zakupu').fill('99.99')
-  await page.getByLabel('Data zakupu').fill('2026-09-21')
   await page.getByLabel('Wartość ze słownika').selectOption('1')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
@@ -149,8 +145,6 @@ test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
   })
 
   await page.goto('/monety/1/edytuj')
-  await expect(page.getByLabel('Cena zakupu')).toHaveValue('125.5')
-  await expect(page.getByLabel('Data zakupu')).toHaveValue('2026-09-20')
   await page.getByRole('textbox', { name: 'Własny tekst' }).fill('Zakup od prywatnego kolekcjonera')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
