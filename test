@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+    cat <<'EOF'
+Usage:
+  ./test [suite] [arguments...]
+
+Suites:
+  all             Run the complete test and quality suite (default)
+  backend         Run backend pytest
+  frontend        Run frontend type-check, build, and Playwright tests
+  ui              Run Playwright UI tests only
+  build           Run the frontend production build
+  typecheck       Run backend Pyright and frontend type-check
+  lint            Run backend Ruff checks
+
+Examples:
+  ./test
+  ./test all
+  ./test backend
+  ./test backend tests/test_api.py
+  ./test frontend
+  ./test ui
+  ./test ui collections.spec.ts
+  ./test ui collections.spec.ts -g "creates a collection"
+  ./test build
+  ./test typecheck
+  ./test lint
+
+The Playwright configuration starts the backend and frontend test servers
+automatically when UI tests are run.
+EOF
+}
+
+run_backend() {
+    echo
+    echo "========================================"
+    echo "        Backend tests"
+    echo "========================================"
+    echo
+
+    (
+        cd "$ROOT_DIR/backend"
+        uv sync --frozen
+        uv run pytest "$@"
+    )
+}
+
+run_lint() {
+    echo
+    echo "========================================"
+    echo "        Backend lint"
+    echo "========================================"
+    echo
+
+    (
+        cd "$ROOT_DIR/backend"
+        uv sync --frozen
+        uv run ruff check .
+        uv run ruff format --check .
+    )
+}
+
+run_typecheck() {
+    echo
+    echo "========================================"
+    echo "        Type checks"
+    echo "========================================"
+    echo
+
+    (
+        cd "$ROOT_DIR/backend"
+        uv sync --frozen
+        uv run pyright
+    )
+
+    (
+        cd "$ROOT_DIR/frontend"
+        npm run type-check
+    )
+}
+
+run_frontend_build() {
+    echo
+    echo "========================================"
+    echo "        Frontend build"
+    echo "========================================"
+    echo
+
+    (
+        cd "$ROOT_DIR/frontend"
+        npm run build
+    )
+}
+
+run_ui() {
+    echo
+    echo "========================================"
+    echo "        Playwright UI tests"
+    echo "========================================"
+    echo
+
+    (
+        cd "$ROOT_DIR/frontend"
+        npm run test:ui -- "$@"
+    )
+}
+
+run_all() {
+    run_backend
+    run_lint
+    run_typecheck
+    run_frontend_build
+    run_ui
+
+    echo
+    echo "========================================"
+    echo "        All checks passed"
+    echo "========================================"
+}
+
+if [[ $# -eq 0 ]]; then
+    run_all
+    exit 0
+fi
+
+suite="$1"
+shift
+
+case "$suite" in
+    --help|-h|help)
+        usage
+        ;;
+    all)
+        if [[ $# -ne 0 ]]; then
+            echo "Error: 'all' does not accept additional arguments." >&2
+            usage >&2
+            exit 2
+        fi
+        run_all
+        ;;
+    backend)
+        run_backend "$@"
+        ;;
+    frontend)
+        if [[ $# -ne 0 ]]; then
+            echo "Error: 'frontend' does not accept additional arguments." >&2
+            usage >&2
+            exit 2
+        fi
+        run_frontend_build
+        run_ui
+        ;;
+    ui)
+        run_ui "$@"
+        ;;
+    build)
+        if [[ $# -ne 0 ]]; then
+            echo "Error: 'build' does not accept additional arguments." >&2
+            usage >&2
+            exit 2
+        fi
+        run_frontend_build
+        ;;
+    typecheck)
+        if [[ $# -ne 0 ]]; then
+            echo "Error: 'typecheck' does not accept additional arguments." >&2
+            usage >&2
+            exit 2
+        fi
+        run_typecheck
+        ;;
+    lint)
+        if [[ $# -ne 0 ]]; then
+            echo "Error: 'lint' does not accept additional arguments." >&2
+            usage >&2
+            exit 2
+        fi
+        run_lint
+        ;;
+    *)
+        echo "Error: unknown test suite '$suite'." >&2
+        usage >&2
+        exit 2
+        ;;
+esac
