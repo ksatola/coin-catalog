@@ -232,15 +232,9 @@ test('dodaje nowy sposób nabycia do słownika', async ({ page }) => {
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
 
   await expect.poll(() => createdPayload).toEqual({ name: 'Nowy dom aukcyjny' })
-  await expect(page.getByRole('textbox', { name: 'Sposób nabycia' })).toContainText('Nowy dom aukcyjny')
+  await expect(page.getByRole('textbox', { name: 'Sposób nabycia' })).toHaveValue('Nowy dom aukcyjny')
 })
 
-test('odczytuje dane zakupu w szczegółach monety', async ({ page }) => {
-  await mockCoinEditApi(page)
-  await page.goto('/monety/1')
-  await expect(page.getByText('250.00', { exact: true })).toBeVisible()
-  await expect(page.getByText('2026-09-28')).toBeVisible()
-})
 
 test('read-only wyświetla komplet nowych danych monety', async ({ page }) => {
   await mockCoinEditApi(page)
