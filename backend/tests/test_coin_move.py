@@ -1,3 +1,4 @@
+from decimal import Decimal
 from collections.abc import Generator
 from datetime import date
 from pathlib import Path
@@ -220,7 +221,7 @@ def test_move_coin_recreates_coin_images_and_preserves_data(
     assert moved["revers_description"] == "Rewers do przeniesienia"
     assert moved["literature"] == "Literatura do przeniesienia"
     assert moved["acquisition_method_text"] == "Dom aukcyjny do przeniesienia"
-    assert moved["purchase_price"] == 250.0
+    assert Decimal(moved["purchase_price"]) == Decimal("250.0")
     assert moved["purchase_date"] == "2026-09-28"
 
     new_id = moved["id"]
