@@ -11,7 +11,7 @@ const collections = [
   { id: 1, name: 'Kolekcja testowa', description: null, coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 0, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
 ]
 const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
-  countries: [{ id: 1, name: 'Kategoria testowa A' }], issuers: [], denominations: [{ id: 1, name: '1 złoty' }],
+  countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 1, name: 'Nominał testowy' }],
   mints: [], materials: [], states: [], eras: [{ id: 1, name: 'Współczesna' }],
 }
 
