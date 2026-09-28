@@ -1,3 +1,4 @@
+from decimal import Decimal
 from collections.abc import Generator
 
 import pytest
@@ -152,7 +153,7 @@ def test_coin_description_and_acquisition_crud(
     assert response.json()["to_era_id"] is None
     assert response.json()["acquisition_method_id"] == acquisition_method_id
     assert response.json()["acquisition_method_text"] is None
-    assert response.json()["purchase_price"] == 123.45
+    assert Decimal(response.json()["purchase_price"]) == Decimal("123.45")
     assert response.json()["purchase_date"] == "2026-09-28"
 
     response = client.put(
