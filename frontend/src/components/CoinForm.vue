@@ -82,6 +82,10 @@ function isValidPurchaseDate(value: string): boolean {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
 }
 
+function handlePurchaseDateInput(event: Event): void {
+  updatePurchaseDate((event.target as HTMLInputElement).value)
+}
+
 function updatePurchaseDate(value: string): void {
   purchaseDateInput.value = value
   form.purchase_date = value || null
@@ -442,7 +446,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', purchasePriceInput, $event)" @blur="formatDecimalOnBlur('purchase_price', purchasePriceInput)" /></label>
         <label class="field-card purchase-date-field">Data zakupu
           <div class="purchase-date-control">
-            <input :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="updatePurchaseDate(($event.target as HTMLInputElement).value)" />
+            <input :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="handlePurchaseDateInput" />
             <button type="button" aria-label="Otwórz kalendarz daty zakupu" @click="openPurchaseDatePicker">📅</button>
             <input ref="purchaseDatePicker" :value="purchaseDateInput" type="date" class="purchase-date-picker" tabindex="-1" aria-hidden="true" @input="updatePurchaseDate(($event.target as HTMLInputElement).value)" />
           </div>
