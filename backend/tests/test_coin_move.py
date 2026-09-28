@@ -1,5 +1,5 @@
-from decimal import Decimal
 from collections.abc import Generator
+from decimal import Decimal
 from datetime import date
 from pathlib import Path
 
