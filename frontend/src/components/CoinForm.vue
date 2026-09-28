@@ -461,9 +461,10 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .additional-image-card img { display: block; width: 122px; height: 100px; object-fit: contain; border-radius: 6px; background: #fff; }
 .additional-image-card figcaption { margin-top: 6px; font-size: .75rem; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .additional-image-card button { margin-top: 6px; padding: 5px 8px; font-size: .75rem; }
-.info-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 16px; }
+.info-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
 .field-card { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #334155; font-weight: 600; }
 .info-grid > .field-card { grid-column: span 1; }
+.info-grid .dating-field { grid-column: span 3; }
 .collection-number-field { grid-column: span 1; }
 .field-card-label { color: #334155; font-weight: 600; }
 .dating-fields { display: grid; gap: 10px; }
