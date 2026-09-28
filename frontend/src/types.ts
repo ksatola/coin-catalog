@@ -74,6 +74,8 @@ export interface CoinCreate {
   literature: string | null
   acquisition_method_id: number | null
   acquisition_method_text: string | null
+  purchase_price: number | null
+  purchase_date: string | null
 }
 
 export interface Coin extends CoinCreate {
