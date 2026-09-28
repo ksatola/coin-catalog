@@ -242,7 +242,7 @@ function submitForm(): void {
     return
   }
   validationMessage.value = ''
-  const payload = { ...form, from_year: form.from_year || null, from_era_id: form.from_era_id || null, to_year: form.to_year || null, to_era_id: form.to_era_id || null }
+  const payload = { ...form, from_year: form.from_year || null, from_era_id: form.from_era_id || null, to_year: form.to_year || null, to_era_id: form.to_era_id || null, purchase_date: form.purchase_date || null }
   emit('submit', {
     coin: payload,
     images: {
