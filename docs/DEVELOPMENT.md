@@ -80,6 +80,49 @@ From the repository root:
 `./status` provides process and port diagnostics.
 
 
+## Test Runner
+
+The repository root contains a `./test` helper for running automated verification without manually changing directories.
+
+Run the complete suite with:
+
+```bash
+cd /workspaces/coin-catalog
+./test
+```
+
+The available suites are:
+
+```text
+./test all
+./test backend
+./test frontend
+./test ui
+./test build
+./test typecheck
+./test lint
+```
+
+The default `./test` command runs:
+
+1. backend pytest;
+2. backend Ruff checks;
+3. backend Pyright and frontend TypeScript type-checking;
+4. frontend production build;
+5. Playwright UI tests.
+
+The backend and frontend commands use the project's managed tooling. Playwright starts its configured backend and frontend test servers automatically, so `./test ui` does not require `./start`.
+
+Individual backend or Playwright tests can be selected by passing arguments through the helper:
+
+```bash
+./test backend tests/test_api.py
+./test ui collections.spec.ts
+./test ui collections.spec.ts -g "creates a collection"
+```
+
+Use `./test --help` for the complete command reference.
+
 ## Current Development Services
 
 ```text

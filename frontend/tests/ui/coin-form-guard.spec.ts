@@ -1,16 +1,16 @@
 import { expect, test, type Page } from '@playwright/test'
 
 const dictionaries = {
-  countries: [{ id: 1, name: 'Polska' }],
+  countries: [{ id: 1, name: 'Kraj testowy' }],
   issuers: [],
-  denominations: [{ id: 2, name: '1 grosz' }],
+  denominations: [{ id: 2, name: 'Nominał testowy' }],
   mints: [],
   materials: [],
   states: [],
   eras: [{ id: 3, name: 'AD' }],
 }
 
-const categories = [{ id: 10, name: 'Monety', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' }]
+const categories = [{ id: 10, name: 'Kategoria testowa', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' }]
 
 const coin = {
   id: 1,
@@ -24,7 +24,7 @@ const coin = {
   mint_id: null,
   material_id: null,
   state_id: null,
-  description: 'Polski grosz',
+  description: 'Opis testowej monety',
   weight: null,
   diameter: null,
   has_video: false,

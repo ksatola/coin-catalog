@@ -1,11 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 
 const coinId = 404
+const collectionId = 1
+const collection = { id: collectionId, name: 'Testowa kolekcja', description: null }
 const oldImage = { id: 10, coin_id: coinId, filename: '000404 - awers.jpg', kind: 'avers', sort_order: 0 }
 const rewersImage = { id: 11, coin_id: coinId, filename: '000404 - rewers.jpg', kind: 'rewers', sort_order: 1 }
-const coin = { id: coinId, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, collection_id: 1, state_id: null, description: 'Moneta testowa', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
+const coin = { id: coinId, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, collection_id: collectionId, state_id: null, description: 'Moneta testowa', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
-  countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [{ id: 1, name: '1 złoty' }], mints: [], materials: [], states: [],
+  countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 1, name: 'Nominał testowy' }], mints: [], materials: [], states: [],
   eras: [{ id: 1, name: 'Współczesna' }, { id: 2, name: 'AD' }],
 }
 type UploadCall = { kind: string; replace: boolean }
@@ -15,6 +17,9 @@ async function mockCommonApi(page: Page) {
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = route.request().url().split('/').pop() ?? ''
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name] ?? []) })
+  })
+  await page.route(`**/api/collections/${collectionId}`, async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collection) })
   })
   await page.route(`**/api/coins/${coinId}`, async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coin) }))
   await page.route(`**/api/coins/${coinId}/images`, async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([oldImage, rewersImage]) }))
@@ -51,7 +56,7 @@ test('podmiana awersu zostaje zapisana i widoczna po powrocie do listy', async (
   await page.waitForURL(`/monety/${coinId}`)
   await expect(page.getByRole('heading', { name: `Szczegóły monety #${coinId}` })).toBeVisible()
   await expect(page.getByAltText('Awers monety')).toBeVisible()
-  await page.getByRole('link', { name: 'Monety' }).click()
+  await page.getByRole('navigation', { name: 'Główna nawigacja' }).getByRole('link', { name: 'Monety', exact: true }).click()
   await page.waitForURL('/monety')
   await expect(page.getByRole('link', { name: `Moneta #${coinId}` })).toBeVisible()
   await expect(page.getByAltText(`Awers monety #${coinId}`)).toBeVisible()

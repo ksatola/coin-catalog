@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const dictionaries = { countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] }
-const categories = [{ id: 1, name: 'Monety', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' }]
-const coin = { id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Polski grosz', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
+const dictionaries = { countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] }
+const categories = [{ id: 1, name: 'Kategoria testowa', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' }]
+const coin = { id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Opis testowej monety', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 
 async function mockCatalog(page: Page): Promise<void> {
   await page.route('**/api/dictionaries/*', async (route) => {
@@ -22,7 +22,7 @@ async function advancedSearch(page: Page): Promise<import('@playwright/test').Lo
   return page.getByRole('searchbox', { name: 'Szukaj', exact: true })
 }
 
-test('zachowuje filtry Monety po przejściu do Dodaj monetę i z powrotem', async ({ page }) => {
+test('zachowuje filtry Kategoria testowa po przejściu do Dodaj monetę i z powrotem', async ({ page }) => {
   await mockCatalog(page)
   await page.goto('/monety')
   await openAdvancedFilters(page)

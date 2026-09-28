@@ -3,15 +3,15 @@ import { expect, test } from '@playwright/test'
 const coinId = 505
 const coin = { id: coinId, collection_id: 1, country_id: 1, issuer_id: null, denomination_id: 1, from_year: 1900, from_era_id: 1, to_year: 1901, to_era_id: 1, mint_id: null, material_id: null, state_id: null, description: 'Moneta testowa', weight: null, diameter: null, has_video: false, source: null, is_deleted: false }
 const categories = [
-  { id: 1, name: 'Polska', description: null, created_at: '', updated_at: '' },
-  { id: 2, name: 'II RP', description: null, created_at: '', updated_at: '' },
-  { id: 3, name: 'PRL', description: null, created_at: '', updated_at: '' },
+  { id: 1, name: 'Kategoria testowa A', description: null, created_at: '', updated_at: '' },
+  { id: 2, name: 'Kategoria testowa B', description: null, created_at: '', updated_at: '' },
+  { id: 3, name: 'Kategoria testowa C', description: null, created_at: '', updated_at: '' },
 ]
 const collections = [
-  { id: 1, name: 'Główna kolekcja', description: null, coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 0, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
+  { id: 1, name: 'Kolekcja testowa', description: null, coin_count: 0, archived_coin_count: 0, image_count: 0, file_size_bytes: 0, category_count: 0, coins_without_images_count: 0, last_modified_at: '', created_at: '', updated_at: '' },
 ]
 const dictionaries: Record<string, Array<{ id: number; name: string }>> = {
-  countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [{ id: 1, name: '1 złoty' }],
+  countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 1, name: 'Nominał testowy' }],
   mints: [], materials: [], states: [], eras: [{ id: 1, name: 'Współczesna' }],
 }
 

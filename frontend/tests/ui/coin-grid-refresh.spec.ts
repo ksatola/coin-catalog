@@ -11,7 +11,7 @@ const images = new Map([
   [2, [{ id: 102, coin_id: 2, filename: '000002 - awers.jpg', kind: 'avers', sort_order: 0 }]],
 ])
 const dictionaries = {
-  countries: [{ id: 1, name: 'Polska' }], issuers: [], denominations: [{ id: 2, name: '1 grosz' }],
+  countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 2, name: 'Nominał testowy' }],
   mints: [], materials: [], states: [], eras: [{ id: 3, name: 'AD' }],
 }
 

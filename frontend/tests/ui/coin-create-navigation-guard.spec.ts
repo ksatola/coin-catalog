@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 const dictionaries = {
-  countries: [{ id: 1, name: 'Polska' }],
+  countries: [{ id: 1, name: 'Kraj testowy' }],
   issuers: [],
-  denominations: [{ id: 2, name: '1 grosz' }],
+  denominations: [{ id: 2, name: 'Nominał testowy' }],
   mints: [],
   materials: [],
   states: [],
@@ -11,7 +11,7 @@ const dictionaries = {
 }
 
 const categories = [
-  { id: 10, name: 'Monety', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' },
+  { id: 10, name: 'Kategoria testowa', description: null, parent_ids: [], child_ids: [], created_at: '', updated_at: '' },
 ]
 
 async function mockCreateView(page: import('@playwright/test').Page): Promise<void> {
