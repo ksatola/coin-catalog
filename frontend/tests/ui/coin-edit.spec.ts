@@ -66,6 +66,11 @@ async function mockCoinEditApi(page: Parameters<typeof test>[0]['page']): Promis
   })
   await page.route('**/api/categories*', async (route) => await route.fulfill({ json: [] }))
   await page.route('**/api/collections', async (route) => await route.fulfill({ json: collections }))
+  await page.route('**/api/collections/*', async (route) => {
+    const id = Number(new URL(route.request().url()).pathname.split('/').pop())
+    const collection = collections.find((item) => item.id === id)
+    await route.fulfill({ status: collection ? 200 : 404, json: collection ?? { detail: 'Not found' } })
+  })
   await page.route('**/api/coins/1/images', async (route) => await route.fulfill({ json: coinImages }))
   await page.route('**/api/coins/2/images', async (route) => await route.fulfill({ json: movedCoinImages }))
   await page.route('**/api/coins/1', async (route) => await route.fulfill({ json: coin }))
@@ -200,7 +205,7 @@ test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
   })
 
   await page.goto('/monety/1/edytuj')
-  await page.getByRole('textbox', { name: 'Własny tekst' }).fill('Zakup od prywatnego kolekcjonera')
+  await page.getByLabel('Sposób nabycia').fill('Zakup od prywatnego kolekcjonera')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect.poll(() => updatePayload).toMatchObject({
