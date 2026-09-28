@@ -24,7 +24,7 @@ test('moneta pozwala przypisać i usunąć wiele kategorii w edycji', async ({ p
   const allCategories = [
     {
       id: 1,
-      name: 'Polska',
+      name: 'Kategoria testowa A',
       description: null,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
@@ -33,7 +33,7 @@ test('moneta pozwala przypisać i usunąć wiele kategorii w edycji', async ({ p
     },
     {
       id: 2,
-      name: 'II RP',
+      name: 'Kategoria testowa B',
       description: null,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
@@ -42,7 +42,7 @@ test('moneta pozwala przypisać i usunąć wiele kategorii w edycji', async ({ p
     },
     {
       id: 3,
-      name: 'PRL',
+      name: 'Kategoria testowa C',
       description: null,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
@@ -137,7 +137,7 @@ test('moneta pozwala przypisać i usunąć wiele kategorii w edycji', async ({ p
 
   await expect(page.getByRole('heading', { name: 'Kategorie' })).toBeVisible()
   const assignment = page.locator('.category-assignment')
-  await expect(assignment.getByText('Polska', { exact: true })).toBeVisible()
+  await expect(assignment.getByText('Kategoria testowa A', { exact: true })).toBeVisible()
   await expect(assignment.locator('select option[value="1"]')).toHaveCount(0)
   await expect(assignment.locator('select option[value="2"]')).toHaveCount(1)
   await expect(assignment.locator('select option[value="3"]')).toHaveCount(1)
@@ -145,15 +145,15 @@ test('moneta pozwala przypisać i usunąć wiele kategorii w edycji', async ({ p
   await assignment.locator('select').selectOption(['2', '3'])
   await assignment.getByRole('button', { name: 'Zapisz kategorię' }).click()
 
-  await expect(assignment.locator('.category-list li').filter({ hasText: 'II RP' })).toBeVisible()
-  await expect(assignment.locator('.category-list li').filter({ hasText: 'PRL' })).toBeVisible()
+  await expect(assignment.locator('.category-list li').filter({ hasText: 'Kategoria testowa B' })).toBeVisible()
+  await expect(assignment.locator('.category-list li').filter({ hasText: 'Kategoria testowa C' })).toBeVisible()
   await expect(assignment.locator('select option[value="2"]')).toHaveCount(0)
   await expect(assignment.locator('select option[value="3"]')).toHaveCount(0)
 
-  const iiRpItem = assignment.locator('.category-list li').filter({ hasText: 'II RP' })
+  const iiRpItem = assignment.locator('.category-list li').filter({ hasText: 'Kategoria testowa B' })
   await iiRpItem.getByRole('button', { name: 'Usuń', exact: true }).click()
 
   await expect(iiRpItem).not.toBeVisible()
-  await expect(assignment.locator('.category-list li').filter({ hasText: 'PRL' })).toBeVisible()
+  await expect(assignment.locator('.category-list li').filter({ hasText: 'Kategoria testowa C' })).toBeVisible()
   await expect(assignment.locator('select option[value="2"]')).toHaveCount(1)
 })
