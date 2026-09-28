@@ -378,7 +378,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
       <div class="info-grid">
         <label class="field-card collection-number-field" for="collection-number">Numer w kolekcji <input id="collection-number" v-model="form.collection_number" type="text" /></label>
         <div class="field-card"><label for="country">Kraj</label><div class="select-with-add"><select id="country" v-model.number="form.country_id" required @click.stop><option :value="0">Wybierz kraj</option><option v-for="item in dictionaries.countries" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="countries" label="kraj" @created="addDictionaryItem('countries', $event)" /></div></div>
-        <div class="field-card"><label for="issuer">Emitent</label><div class="select-with-add"><select id="issuer" v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" /></div></div>
+        <div class="field-card issuer-field"><label for="issuer">Emitent</label><div class="select-with-add"><select id="issuer" v-model="form.issuer_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.issuers" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="issuers" label="emitenta" @created="addDictionaryItem('issuers', $event)" /></div></div>
         <div class="field-card mint-field"><label for="mint">Mennica</label><div class="select-with-add"><select id="mint" v-model="form.mint_id" @click.stop><option :value="null">— brak —</option><option v-for="item in dictionaries.mints" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="mints" label="mennicę" @created="addDictionaryItem('mints', $event)" /></div></div>
         <div class="field-card denomination-field"><label for="denomination">Nominał</label><div class="select-with-add"><select id="denomination" v-model.number="form.denomination_id" required @click.stop><option :value="0">Wybierz nominał</option><option v-for="item in dictionaries.denominations" :key="item.id" :value="item.id">{{ item.name }}</option></select><InlineDictionaryCreate dictionary-name="denominations" label="nominał" @created="addDictionaryItem('denominations', $event)" /></div></div>
         <div class="field-card dating-field">
@@ -464,7 +464,8 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
 .info-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
 .field-card { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #334155; font-weight: 600; }
 .info-grid > .field-card { grid-column: span 1; }
-.info-grid .dating-field { grid-column: span 3; }
+.info-grid .issuer-field { grid-column: span 2; }
+    .info-grid .dating-field { grid-column: span 2; }
 .collection-number-field { grid-column: span 1; }
 .field-card-label { color: #334155; font-weight: 600; }
 .dating-fields { display: grid; gap: 10px; }
