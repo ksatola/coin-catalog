@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -108,6 +109,12 @@ def create_coin(
         to_year=1900,
         to_era_id=reference_data["era_id"],
         description="Coin to move",
+        avers_description="Awers do przeniesienia",
+        revers_description="Rewers do przeniesienia",
+        literature="Literatura do przeniesienia",
+        acquisition_method_text="Dom aukcyjny do przeniesienia",
+        purchase_price=250.75,
+        purchase_date=date(2026, 9, 20),
     )
     category = session.get(Category, reference_data["category_id"])
     assert category is not None
@@ -209,6 +216,12 @@ def test_move_coin_recreates_coin_images_and_preserves_data(
     assert moved["collection_id"] == reference_data["target_collection_id"]
     assert moved["collection_number"] == "KC-001"
     assert moved["description"] == "Coin to move"
+    assert moved["avers_description"] == "Awers do przeniesienia"
+    assert moved["revers_description"] == "Rewers do przeniesienia"
+    assert moved["literature"] == "Literatura do przeniesienia"
+    assert moved["acquisition_method_text"] == "Dom aukcyjny do przeniesienia"
+    assert moved["purchase_price"] == 250.75
+    assert moved["purchase_date"] == "2026-09-20"
 
     new_id = moved["id"]
     target_dir = image_dir / f"collection-{reference_data['target_collection_id']:03d}"
