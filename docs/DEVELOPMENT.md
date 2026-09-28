@@ -71,7 +71,7 @@ From the repository root:
 ./status
 ```
 
-`./start` starts the backend and frontend development services.
+`./start` applies pending Alembic migrations and then starts the backend and frontend development services. If the database is missing, this initializes the schema and runs the migrations that create the default collection.
 
 `./stop` stops services managed by `./start`.
 

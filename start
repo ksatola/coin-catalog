@@ -72,6 +72,11 @@ show_start_status() {
     echo "========================================"
 }
 
+(
+    cd "$ROOT_DIR/backend"
+    uv run alembic upgrade head
+)
+
 start_service \
     "backend" \
     "$ROOT_DIR/backend" \
