@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import (
+    AcquisitionMethod,
     Coin,
     Collection,
     Country,
@@ -72,9 +73,10 @@ def reference_data(session: Session) -> dict[str, int]:
     material = Material(name="Test Material")
     state = State(name="Test State")
     era = Era(name="CE")
+    acquisition_method = AcquisitionMethod(name="Test Acquisition")
 
     session.add_all(
-        [collection, country, issuer, denomination, mint, material, state, era],
+        [collection, country, issuer, denomination, mint, material, state, era, acquisition_method],
     )
     session.commit()
 
@@ -87,6 +89,7 @@ def reference_data(session: Session) -> dict[str, int]:
         "material_id": material.id,
         "state_id": state.id,
         "era_id": era.id,
+        "acquisition_method_id": acquisition_method.id,
     }
 
 
@@ -504,6 +507,7 @@ def test_dictionary_crud(
         ("materials", "material_id", "material_id"),
         ("states", "state_id", "state_id"),
         ("eras", "era_id", "from_era_id"),
+        ("acquisition_methods", "acquisition_method_id", "acquisition_method_id"),
     ],
 )
 def test_dictionary_delete_is_blocked_when_used_by_coin(
