@@ -39,6 +39,8 @@ const coin = {
   literature: 'Literatura testowa',
   acquisition_method_id: 1,
   acquisition_method_text: null,
+  purchase_price: 250,
+  purchase_date: '2026-09-28',
   weight: null,
   diameter: null,
   collection_number: '1',
@@ -134,6 +136,27 @@ test('zapis danych monety nie wykonuje move', async ({ page }) => {
   expect(moveRequestCount).toBe(0)
 })
 
+test('zapisuje dane zakupu', async ({ page }) => {
+  await mockCoinEditApi(page)
+  let updatePayload: Record<string, unknown> | null = null
+  await page.route('**/api/coins/1', async (route) => {
+    if (route.request().method() === 'PUT') {
+      updatePayload = route.request().postDataJSON() as Record<string, unknown>
+    }
+    await route.fulfill({ json: coin })
+  })
+
+  await page.goto('/monety/1/edytuj')
+  await page.getByLabel('Cena zakupu').fill('175.50')
+  await page.getByLabel('Data zakupu').fill('2026-09-27')
+  await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
+
+  await expect.poll(() => updatePayload).toMatchObject({
+    purchase_price: 175.5,
+    purchase_date: '2026-09-27',
+  })
+})
+
 test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
   await mockCoinEditApi(page)
   let updatePayload: Record<string, unknown> | null = null
@@ -173,6 +196,13 @@ test('dodaje nowy sposób nabycia do słownika', async ({ page }) => {
 
   await expect.poll(() => createdPayload).toEqual({ name: 'Nowy dom aukcyjny' })
   await expect(page.getByLabel('Wartość ze słownika')).toHaveValue('2')
+})
+
+test('odczytuje dane zakupu w szczegółach monety', async ({ page }) => {
+  await mockCoinEditApi(page)
+  await page.goto('/monety/1')
+  await expect(page.getByText('250.00')).toBeVisible()
+  await expect(page.getByText('2026-09-28')).toBeVisible()
 })
 
 test('pozwala zapisać monetę bez datowania', async ({ page }) => {
