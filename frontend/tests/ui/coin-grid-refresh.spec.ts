@@ -92,10 +92,9 @@ test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) =>
 })
 
 
-test('rzeczywiste obrazy monet są pobierane przez backend i dekodowane przez przeglądarkę', async ({ page }) => {
+test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page }) => {
   const imageResponses = new Map<string, number>()
   const imageFailures = new Map<string, string>()
-  const failedLoads: string[] = []
 
   page.on('response', (response) => {
     if (
@@ -126,57 +125,74 @@ test('rzeczywiste obrazy monet są pobierane przez backend i dekodowane przez pr
     id: number
     images?: Array<{ id: number; kind: string }>
   }>
-  const coinsWithPrimaryImages = coins.filter((coin) =>
-    coin.images?.some((image) => image.kind === 'avers' || image.kind === 'rewers'),
+
+  const expectedImages = coins.flatMap((coin) =>
+    (coin.images ?? [])
+      .filter((image) => image.kind === 'avers' || image.kind === 'rewers')
+      .map((image) => ({
+        coinId: coin.id,
+        imageId: image.id,
+        kind: image.kind,
+        src: `/api/coins/${coin.id}/images/${image.id}/file`,
+      })),
   )
-  const expectedImageCount = coinsWithPrimaryImages.reduce(
-    (count, coin) => count + (coin.images?.filter((image) => image.kind === 'avers' || image.kind === 'rewers').length ?? 0),
-    0,
+
+  expect(expectedImages.length).toBeGreaterThan(0)
+
+  await page.goto('/monety?has_image=true&sort_by=id&sort_order=asc')
+
+  const renderedImages = await page.locator('.image-grid img').evaluateAll((elements) =>
+    elements.map((element) => {
+      const image = element as HTMLImageElement
+      const match = image.src.match(/\/api\/coins\/(\d+)\/images\/(\d+)\/file$/)
+      return {
+        src: image.currentSrc || image.src,
+        coinId: match ? Number(match[1]) : null,
+        imageId: match ? Number(match[2]) : null,
+        complete: image.complete,
+        naturalWidth: image.naturalWidth,
+        naturalHeight: image.naturalHeight,
+      }
+    }),
   )
 
-  expect(coinsWithPrimaryImages.length).toBeGreaterThan(0)
-  expect(expectedImageCount).toBeGreaterThan(0)
+  expect(renderedImages.length).toBe(expectedImages.length)
 
-  const rounds = 20
+  const expectedByKey = new Map(
+    expectedImages.map((image) => [`${image.coinId}:${image.imageId}`, image]),
+  )
+  const renderedByKey = new Map(
+    renderedImages
+      .filter((image) => image.coinId !== null && image.imageId !== null)
+      .map((image) => [`${image.coinId}:${image.imageId}`, image]),
+  )
 
-  for (let round = 1; round <= rounds; round += 1) {
-    await page.goto('/monety?has_image=true&sort_by=id&sort_order=asc')
+  const missingFromDom = expectedImages.filter(
+    (image) => !renderedByKey.has(`${image.coinId}:${image.imageId}`),
+  )
+  const unexpectedInDom = renderedImages.filter(
+    (image) => image.coinId === null
+      || image.imageId === null
+      || !expectedByKey.has(`${image.coinId}:${image.imageId}`),
+  )
 
-    const images = page.locator('.image-grid img')
-    await expect(images).toHaveCount(expectedImageCount)
+  const notDecoded = renderedImages.filter(
+    (image) => !image.complete || image.naturalWidth === 0,
+  )
 
-    try {
-      await expect.poll(async () => images.evaluateAll((elements) =>
-        elements.filter((element) => {
-          const image = element as HTMLImageElement
-          return image.complete && image.naturalWidth > 0
-        }).length,
-      ), { timeout: 10_000 }).toBe(expectedImageCount)
-    } catch {
-      const notLoaded = await images.evaluateAll((elements) => elements
-        .map((element) => {
-          const image = element as HTMLImageElement
-          return {
-            src: image.currentSrc || image.src,
-            complete: image.complete,
-            naturalWidth: image.naturalWidth,
-            naturalHeight: image.naturalHeight,
-          }
-        })
-        .filter((image) => !image.complete || image.naturalWidth === 0))
+  const missingRequests = expectedImages.filter(
+    (image) => !imageResponses.has(new URL(image.src, 'http://127.0.0.1:5173').href),
+  )
 
-      failedLoads.push(
-        ...notLoaded.map((image) =>
-          `round=${round} src=${image.src} complete=${image.complete} naturalWidth=${image.naturalWidth} naturalHeight=${image.naturalHeight}`,
-        ),
-      )
-    }
-  }
+  const non200Responses = [...imageResponses.entries()].filter(([, status]) => status !== 200)
 
-  expect(imageFailures.size, [...imageFailures.entries()]).toBe(0)
-  expect([...imageResponses.values()].every((status) => status === 200), [...imageResponses.entries()]).toBe(true)
-  expect(imageResponses.size).toBeGreaterThanOrEqual(expectedImageCount)
-  expect(failedLoads).toEqual([])
+  expect(missingFromDom, JSON.stringify(missingFromDom, null, 2)).toEqual([])
+  expect(unexpectedInDom, JSON.stringify(unexpectedInDom, null, 2)).toEqual([])
+  expect(notDecoded, JSON.stringify(notDecoded, null, 2)).toEqual([])
+  expect(missingRequests, JSON.stringify(missingRequests, null, 2)).toEqual([])
+  expect(non200Responses, JSON.stringify(non200Responses, null, 2)).toEqual([])
+  expect([...imageFailures.entries()], JSON.stringify([...imageFailures.entries()], null, 2)).toEqual([])
+  expect(imageResponses.size).toBe(expectedImages.length)
 })
 
 test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', async ({ page }) => {
