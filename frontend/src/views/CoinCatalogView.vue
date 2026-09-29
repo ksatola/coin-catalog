@@ -262,8 +262,9 @@ onMounted(async () => {
         v-if="viewMode === 'image-grid'"
         :coins="coins"
         :columns="galleryColumns"
+        :detail-query="appliedFilterQuery"
       />
-      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" />
+      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" />
 
       <CoinList
         v-else
