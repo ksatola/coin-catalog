@@ -60,7 +60,7 @@ async function mockCatalog(page: import('@playwright/test').Page): Promise<URL[]
     await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   })
 
-  await page.route('**/api/coins', async (route) => {
+  await page.route('**/api/coins?*', async (route) => {
     const url = new URL(route.request().url())
     requests.push(url)
 
