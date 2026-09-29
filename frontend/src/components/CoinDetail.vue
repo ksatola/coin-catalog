@@ -114,7 +114,7 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
       <div class="text-panel-description"><h2>Opis</h2><p>{{ coin.description ?? '—' }}</p></div>
       <div class="text-panel-literature"><h2>Literatura</h2><p>{{ coin.literature ?? '—' }}</p></div>
       <div class="text-panel-source"><h2>Źródło</h2><p v-if="sourceUrl"><a :href="sourceUrl" target="_blank" rel="noopener noreferrer">{{ sourceUrl }}</a></p><p v-else>{{ coin.source ?? '—' }}</p></div>
-      <div class="text-panel-acquisition"><h2>Sposób nabycia</h2><p>{{ coin.acquisition_method_text || dictionaryName(dictionaries.acquisition_methods, coin.acquisition_method_id) }}</p></div>
+      <div class="text-panel-acquisition"><h2>Sposób nabycia</h2><p>{{ dictionaryName(dictionaries.acquisition_methods, coin.acquisition_method_id) }}</p><p v-if="coin.acquisition_method_text">{{ coin.acquisition_method_text }}</p><p v-if="!coin.acquisition_method_id && !coin.acquisition_method_text">—</p></div>
     </section>
     <CoinCategoriesReadOnly :coin-id="coin.id" />
 
