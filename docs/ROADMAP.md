@@ -136,9 +136,19 @@ Implemented scope:
 
 ## Phase 9 — Coin Browser Optimization
 
-**Status:** Future / conditional
+**Status:** In progress
 
-The basic browser is already implemented. Pagination or other large-collection optimization should be introduced only if actual collection size or performance requirements justify it.
+The catalogue is being extended with server-side cursor pagination presented as infinite scroll. Coin detail previous/next navigation is being moved to a dedicated navigation endpoint so it remains independent of the batches loaded by the catalogue.
+
+Current implementation scope:
+
+1. Cursor-paginated coin-list API with bounded result batches.
+2. Deterministic cursors for the supported sort fields and sort directions.
+3. Infinite-scroll catalogue loading through an IntersectionObserver sentinel.
+4. Filter/sort-aware detail previous/next navigation independent of loaded catalogue batches.
+5. Backend and Playwright coverage for pagination, filtering, sorting, infinite scroll, and detail navigation.
+
+The phase is complete only after implementation and the relevant backend/frontend verification have been run successfully.
 
 ## Phase 10 — Backup and Export
 
