@@ -135,6 +135,13 @@ test('read-only nawigacja monet zachowuje aktualne filtry i pozwala je wyłączy
       return
     }
 
+    if (/^\/api\/coins\/[123]\/navigation$/.test(url.pathname)) {
+      await route.fulfill({
+        json: { previous_id: url.pathname.endsWith('/2/navigation') ? 1 : 2, next_id: url.pathname.endsWith('/2/navigation') ? 3 : null },
+      })
+      return
+    }
+
     if (url.pathname === '/api/coins/1' || url.pathname === '/api/coins/2' || url.pathname === '/api/coins/3') {
       const id = Number(url.pathname.split('/').pop())
       await route.fulfill({ json: { ...coin, id } })
