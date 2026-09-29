@@ -120,5 +120,5 @@ test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', 
   )).toBe(2)
 
   expect([...imageResponses.values()]).toEqual([200, 200])
-  expect(imageFailures).toHaveSize(0)
+  expect(imageFailures.size).toBe(0)
 })
