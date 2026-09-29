@@ -30,7 +30,7 @@ function navigationQuery(): string {
 
 function detailPath(coinId: number): string {
   const query = navigationQuery()
-  return \`/monety/\${coinId}\${query ? \`?\${query}\` : ''}\`
+  return `/monety/${coinId}${query ? `?${query}` : ''}`
 }
 
 const currentNavigationIndex = () => navigationCoins.value.findIndex((item) => item.id === coin.value?.id)
@@ -48,8 +48,8 @@ const nextCoin = () => {
 async function loadNavigationCoins(): Promise<void> {
   try {
     const query = navigationQuery()
-    const response = await fetch(\`/api/coins?\${query}\`, { cache: 'no-store' })
-    if (!response.ok) throw new Error(\`HTTP \${response.status}\`)
+    const response = await fetch(`/api/coins?${query}`, { cache: 'no-store' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
     navigationCoins.value = await response.json() as Coin[]
   } catch {
     navigationCoins.value = []
@@ -60,12 +60,12 @@ async function loadCoin(): Promise<void> {
   const coinId = route.params.id
 
   try {
-    const response = await fetch(\`/api/coins/\${coinId}\`, {
+    const response = await fetch(`/api/coins/${coinId}`, {
       cache: 'no-store',
     })
 
     if (!response.ok) {
-      throw new Error(\`HTTP \${response.status}\`)
+      throw new Error(`HTTP ${response.status}`)
     }
 
     coin.value = await response.json() as Coin
@@ -87,12 +87,12 @@ async function archiveCoin(): Promise<void> {
   if (!coin.value) return
 
   try {
-    const response = await fetch(\`/api/coins/\${coin.value.id}/archive\`, {
+    const response = await fetch(`/api/coins/${coin.value.id}/archive`, {
       method: 'POST',
     })
 
     if (!response.ok) {
-      throw new Error(\`HTTP \${response.status}\`)
+      throw new Error(`HTTP ${response.status}`)
     }
 
     await loadCoin()
@@ -105,12 +105,12 @@ async function restoreCoin(): Promise<void> {
   if (!coin.value) return
 
   try {
-    const response = await fetch(\`/api/coins/\${coin.value.id}/restore\`, {
+    const response = await fetch(`/api/coins/${coin.value.id}/restore`, {
       method: 'POST',
     })
 
     if (!response.ok) {
-      throw new Error(\`HTTP \${response.status}\`)
+      throw new Error(`HTTP ${response.status}`)
     }
 
     await loadCoin()
