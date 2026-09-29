@@ -31,22 +31,6 @@ def test_legacy_acquisition_method_text_is_mapped_to_dictionary(
             text("INSERT INTO acquisition_method (id, name) VALUES (2, 'Sklep')")
         )
         connection.execute(
-            text(
-                """
-                INSERT INTO collection (
-                    id, name, description, created_at, updated_at,
-                    coin_count, archived_coin_count, image_count,
-                    file_size_bytes, category_count, coins_without_images_count,
-                    last_modified_at
-                )
-                VALUES (
-                    1, 'Test', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,
-                    0, 0, 0, 0, 0, 0, CURRENT_TIMESTAMP
-                )
-                """
-            )
-        )
-        connection.execute(
             text("INSERT INTO country (id, name) VALUES (1, 'Polska')")
         )
         connection.execute(
