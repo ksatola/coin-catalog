@@ -30,9 +30,7 @@ def test_legacy_acquisition_method_text_is_mapped_to_dictionary(
         connection.execute(
             text("INSERT INTO acquisition_method (id, name) VALUES (2, 'Sklep')")
         )
-        connection.execute(
-            text("INSERT INTO country (id, name) VALUES (1, 'Polska')")
-        )
+        connection.execute(text("INSERT INTO country (id, name) VALUES (1, 'Polska')"))
         connection.execute(
             text("INSERT INTO denomination (id, name) VALUES (1, '1 zł')")
         )
@@ -60,15 +58,19 @@ def test_legacy_acquisition_method_text_is_mapped_to_dictionary(
     command.upgrade(config, "c7d8e9f0a1b2")
 
     with engine.connect() as connection:
-        rows = connection.execute(
-            text(
-                """
+        rows = (
+            connection.execute(
+                text(
+                    """
                 SELECT id, acquisition_method_id, acquisition_method_text
                 FROM coin
                 ORDER BY id
                 """
+                )
             )
-        ).mappings().all()
+            .mappings()
+            .all()
+        )
 
     assert rows == [
         {"id": 1, "acquisition_method_id": 1, "acquisition_method_text": None},
