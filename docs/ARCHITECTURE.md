@@ -159,15 +159,37 @@ The collection filter model uses `collectionIds: number[]`; an empty selection m
 
 A coin move is an application-level compensating operation. It creates a new technical coin ID, preserves the user-facing collection number, prepares target image files and metadata, protects against collisions, and removes source state only after the target state is ready. Failures must leave the source intact or compensate partial target changes.
 
-## 13. Current Architecture Boundaries
+## 13. Coin Catalogue Browsing and Navigation
+
+The coin catalogue uses server-side cursor pagination for bounded API responses. The frontend presents the paginated result as infinite scroll.
+
+The paginated list request uses:
+
+    GET /api/coins?...filters...&limit=50
+    GET /api/coins?...filters...&limit=50&cursor=<opaque-cursor>
+
+The response contains:
+
+    items
+    next_cursor
+    has_more
+
+The cursor is interpreted only by the backend. It records the selected sort field and direction together with the last sort value and coin ID. Coin ID is the deterministic tie-breaker for the supported sort fields.
+
+The frontend keeps filters and sorting in the catalogue URL but keeps the cursor as transient in-memory pagination state. A filter or sort change resets the loaded result set and starts a new cursor sequence.
+
+The catalogue uses an IntersectionObserver sentinel near the end of the rendered result set to trigger loading of the next batch. Loaded batches are appended to the existing coins collection.
+
+Coin detail previous/next navigation does not depend on the batches already loaded by infinite scroll. The detail view calls a dedicated navigation endpoint with the same filter and sort criteria and receives only previous_id and next_id. This allows detail navigation to cross infinite-scroll batch boundaries without downloading the full result set.
+
+## 14. Current Architecture Boundaries
 
 The following remain future or conditional work:
 
-- pagination or other large-collection browser optimization;
 - backup/recovery automation;
 - production deployment;
 - CI/CD pipeline.
 
-Collections, collection-aware coin management, collection-aware image storage, collection filtering, and coin moves are part of the implemented Phase 8 architecture.
+Collections, collection-aware coin management, collection-aware image storage, collection filtering, coin moves, cursor pagination, infinite-scroll browsing, and independent detail navigation are part of the current architecture.
 
 The current category model, search/filtering, collection-number workflow, and collection functionality are implemented.
