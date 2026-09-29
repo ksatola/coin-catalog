@@ -430,3 +430,30 @@ test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', 
   expect([...imageResponses.values()]).toEqual([200, 200])
   expect(imageFailures.size).toBe(0)
 })
+
+test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page }) => {
+  let imageRequests = 0
+
+  await mockApi(page, 1)
+  await page.route('**/api/coins/1/images/101/file*', async (route) => {
+    imageRequests += 1
+
+    if (imageRequests === 1) {
+      await route.abort('failed')
+      return
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/jpeg',
+      body: validJpeg,
+    })
+  })
+
+  await page.goto('/monety')
+
+  const image = page.getByAltText('Awers monety #1')
+  await expect.poll(() => imageRequests).toBe(2)
+  await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file?image_retry=1')
+})
