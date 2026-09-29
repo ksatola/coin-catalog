@@ -122,7 +122,7 @@ watch(() => props.coins, () => void loadImages(), { immediate: true })
       v-for="coin in coins"
       :key="coin.id"
       class="card"
-      :to="`/monety/${coin.id}`"
+      :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
     >
       <div class="image-row">
