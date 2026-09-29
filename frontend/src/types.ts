@@ -26,6 +26,7 @@ export interface Collection extends CollectionStats {
   description: string | null
   created_at: string
   updated_at: string
+  images?: CoinListImage[]
 }
 
 export interface Category {
@@ -76,6 +77,11 @@ export interface CoinCreate {
   acquisition_method_text: string | null
   purchase_price: number | null
   purchase_date: string | null
+}
+
+export interface CoinListImage {
+  id: number
+  kind: CoinImageKind
 }
 
 export interface Coin extends CoinCreate {
