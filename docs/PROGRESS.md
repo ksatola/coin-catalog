@@ -220,3 +220,16 @@ Next step: Phase 8 is complete. Continue with the next planned phase or maintena
 ### 2026-09-14
 
 - Recorded the Phase 4 coin, browser, editing, archive/restore, dictionary, image, and cross-era date workflows and their verification.
+
+
+### 2026-09-29 — Phase 9 started: cursor pagination and infinite scroll
+
+- Created working branch `feature/coin-infinite-scroll` from `main`.
+- Recorded accepted decision D-036 for cursor pagination, infinite-scroll catalogue browsing, and independent detail navigation.
+- Added backend cursor encoding/decoding and keyset traversal helpers.
+- Added paginated coin-list response schemas and a dedicated coin navigation response.
+- Added the paginated `GET /coins` mode using `limit` and opaque `cursor`, while retaining the existing response shape when `limit` is omitted.
+- Added `GET /coins/{coin_id}/navigation` for filter/sort-aware previous/next navigation.
+- Added backend tests covering cursor traversal, nullable year sorting, detail navigation boundaries, filtering behavior, and invalid cursors.
+- Added the initial frontend infinite-scroll implementation and switched coin detail navigation to the dedicated navigation endpoint.
+- **Verification pending:** backend pytest and frontend Playwright tests have not yet been run for this phase.
