@@ -94,14 +94,17 @@ test('infinite scroll doładowuje kolejną porcję monet przez cursor', async ({
 
   await page.goto('/monety')
 
-  await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Moneta #2' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Moneta #3' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Moneta #1', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Moneta #2', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Moneta #3', exact: true })).toHaveCount(0)
 
+  await page.addStyleTag({
+    content: '.infinite-scroll-sentinel { margin-top: 2000px !important; }',
+  })
   await page.locator('.infinite-scroll-sentinel').scrollIntoViewIfNeeded()
 
-  await expect(page.getByRole('link', { name: 'Moneta #3' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Moneta #4' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Moneta #3', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Moneta #4', exact: true })).toBeVisible()
   await expect(page.locator('.image-grid .coin-tile')).toHaveCount(4)
 
   const paginatedRequests = requests.filter((url) => url.searchParams.has('limit'))
@@ -154,7 +157,6 @@ test('nawigacja szczegółów używa endpointu previous/next z filtrami', async 
   expect(requestedNavigation).toHaveLength(1)
   expect(requestedNavigation[0]?.searchParams.get('country_id')).toBe('1')
   expect(requestedNavigation[0]?.searchParams.get('sort_by')).toBe('id')
-
   await page.getByRole('button', { name: 'Następna →' }).click()
   await expect(page).toHaveURL(/\/monety\/3\?/)
 })
