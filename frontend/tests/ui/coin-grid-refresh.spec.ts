@@ -289,6 +289,54 @@ test('równoległe odświeżenia katalogu nie pozwalają starszej odpowiedzi nad
   await expect(page.getByRole('link', { name: 'Moneta #2' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toHaveCount(0)
 })
+
+test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src elementów img', async ({ page }) => {
+  let responseVersion = 0
+
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []),
+    })
+  })
+  await page.route('**/api/categories', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  })
+  await page.route('**/api/coins*', async (route) => {
+    responseVersion += 1
+    const imageId = responseVersion === 1 ? 101 : 201
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{
+        ...coin1,
+        id: 1,
+        images: [{
+          id: imageId,
+          coin_id: 1,
+          filename: `coin-1-v${responseVersion}.jpg`,
+          kind: 'avers',
+          sort_order: 0,
+        }],
+      }]),
+    })
+  })
+  await page.route('**/api/coins/*/images/*/file', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
+  })
+
+  await page.goto('/monety')
+
+  const image = page.getByAltText('Awers monety #1')
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file')
+  await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+
+  await page.getByPlaceholder('Szukaj monet, np. polska grosz').fill('test')
+  await expect.poll(() => image.getAttribute('src')).toBe('/api/coins/1/images/201/file')
+  await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+})
 test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', async ({ page }) => {
   const imageResponses = new Map<string, number>()
   const imageFailures = new Map<string, string>()
