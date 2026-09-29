@@ -12,9 +12,16 @@ down_revision = "a4b5c6d7e8f9"
 branch_labels = None
 depends_on = None
 
+BATCH_NAMING_CONVENTION = {
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+}
+
 
 def upgrade() -> None:
-    with op.batch_alter_table("coin") as batch_op:
+    with op.batch_alter_table(
+        "coin",
+        naming_convention=BATCH_NAMING_CONVENTION,
+    ) as batch_op:
         batch_op.alter_column(
             "from_year",
             existing_type=sa.Integer(),
@@ -40,7 +47,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("coin") as batch_op:
+    with op.batch_alter_table(
+        "coin",
+        naming_convention=BATCH_NAMING_CONVENTION,
+    ) as batch_op:
         batch_op.drop_column("purchase_date")
         batch_op.drop_column("purchase_price")
         batch_op.alter_column(
