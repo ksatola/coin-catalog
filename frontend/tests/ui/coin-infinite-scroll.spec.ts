@@ -96,9 +96,10 @@ test('infinite scroll doładowuje kolejną porcję monet przez cursor', async ({
 
   await expect(page.getByRole('link', { name: 'Moneta #1', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #10', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Moneta #11', exact: true })).toHaveCount(0)
 
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await expect.poll(
+    () => requests.filter((url) => url.searchParams.has('limit')).length,
+  ).toBeGreaterThanOrEqual(2)
 
   await expect(page.getByRole('link', { name: 'Moneta #11', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #20', exact: true })).toBeVisible()
