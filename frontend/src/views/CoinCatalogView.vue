@@ -223,9 +223,11 @@ function toggleAdvancedFilters(): void {
   showAdvancedFilters.value = !showAdvancedFilters.value
 }
 
-watch(sentinel, (element) => {
+watch([sentinel, loadingMore], ([element, isLoading]) => {
   observer?.disconnect()
-  if (!element) return
+  observer = undefined
+
+  if (!element || isLoading) return
 
   observer = new IntersectionObserver((entries) => {
     if (entries.some((entry) => entry.isIntersecting)) {
