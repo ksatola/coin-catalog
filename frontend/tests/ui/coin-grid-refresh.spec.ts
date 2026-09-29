@@ -15,6 +15,11 @@ const dictionaries = {
   mints: [], materials: [], states: [], eras: [{ id: 3, name: 'AD' }],
 }
 
+const validJpeg = Buffer.from(
+  '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/Aaf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/Aaf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Aqf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/IV//2gAMAwEAAgADAAAAEP/EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z',
+  'base64',
+)
+
 async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Promise<void> {
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
@@ -31,7 +36,7 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Pr
     }))
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(search ? coins.filter((item) => item.id !== 2) : coins) })
   })
-  await page.route('**/api/coins/*/images', async (route) => {
+  await page.route('**/api/coins/*/images/*/file', async (route) => {\n    await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })\n  })\n  await page.route('**/api/coins/*/images', async (route) => {
     const coinId = Number(new URL(route.request().url()).pathname.split('/')[3])
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(images.get(coinId) ?? []) })
   })
@@ -81,4 +86,36 @@ test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) =>
 
   const after = await page.evaluate(() => window.scrollY)
   expect(after).toBe(before)
+})
+
+
+test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', async ({ page }) => {
+  const imageResponses = new Map<string, number>()
+  const imageFailures = new Map<string, string>()
+
+  page.on('response', (response) => {
+    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().endsWith('/file')) {
+      imageResponses.set(response.url(), response.status())
+    }
+  })
+  page.on('requestfailed', (request) => {
+    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().endsWith('/file')) {
+      imageFailures.set(request.url(), request.failure()?.errorText ?? 'unknown')
+    }
+  })
+
+  await mockApi(page, 20)
+  await page.goto('/monety')
+
+  const images = page.locator('.image-grid img')
+  await expect(images).toHaveCount(2)
+  await expect.poll(async () => images.evaluateAll((elements) =>
+    elements.filter((element) => {
+      const image = element as HTMLImageElement
+      return image.complete && image.naturalWidth > 0
+    }).length,
+  )).toBe(2)
+
+  expect([...imageResponses.values()]).toEqual([200, 200])
+  expect(imageFailures).toHaveSize(0)
 })
