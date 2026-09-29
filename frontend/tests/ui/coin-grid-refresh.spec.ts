@@ -27,14 +27,24 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Pr
   })
   await page.route('**/api/categories', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
   await page.route('**/api/coins*', async (route) => {
-    const search = new URL(route.request().url()).searchParams.get('search')
+    const url = new URL(route.request().url())
+    const search = url.searchParams.get('search')
     const coins = Array.from({ length: coinCount }, (_, index) => ({
       ...coin1,
       id: index + 1,
       description: `Moneta testowa ${index + 1}`,
       images: images.get(index + 1) ?? [],
     }))
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(search ? coins.filter((item) => item.id !== 2) : coins) })
+    const payload = search ? coins.filter((item) => item.id !== 2) : coins
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        url.searchParams.has('limit')
+          ? { items: payload, next_cursor: null, has_more: false }
+          : payload,
+      ),
+    })
   })
   await page.route('**/api/coins/*/images/*/file', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
@@ -271,7 +281,11 @@ test('równoległe odświeżenia katalogu nie pozwalają starszej odpowiedzi nad
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(responseCoins),
+      body: JSON.stringify(
+        new URL(route.request().url()).searchParams.has('limit')
+          ? { items: responseCoins, next_cursor: null, has_more: false }
+          : responseCoins,
+      ),
     })
   })
   await page.route('**/api/coins/*/images/*/file', async (route) => {
@@ -310,8 +324,10 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([{
-        ...coin1,
+      body: JSON.stringify(new URL(route.request().url()).searchParams.has('limit')
+        ? {
+            items: [{
+              ...coin1,
         id: 1,
         images: [{
           id: imageId,
@@ -319,8 +335,21 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
           filename: `coin-1-v${responseVersion}.jpg`,
           kind: 'avers',
           sort_order: 0,
-        }],
-      }]),
+            }],
+            next_cursor: null,
+            has_more: false,
+          }
+        : [{
+          ...coin1,
+          id: 1,
+          images: [{
+            id: imageId,
+            coin_id: 1,
+            filename: `coin-1-v${responseVersion}.jpg`,
+            kind: 'avers',
+            sort_order: 0,
+          }],
+        }]),
     })
   })
   await page.route('**/api/coins/*/images/*/file', async (route) => {
