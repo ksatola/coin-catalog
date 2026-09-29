@@ -112,6 +112,68 @@ test('infinite scroll doładowuje kolejną porcję monet przez cursor', async ({
   expect(paginatedRequests[1]?.searchParams.get('cursor')).toBe('cursor-page-2')
 })
 
+test('zachowuje kontekst filtrów po niefiltrowanej nawigacji', async ({ page }) => {
+  const requestedNavigation: URL[] = []
+
+  await page.route('**/api/coins/*/navigation*', async (route) => {
+    const url = new URL(route.request().url())
+    requestedNavigation.push(url)
+    const filtered = url.searchParams.get('country_id') === '1'
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        filtered
+          ? { previous_id: 1, next_id: 4 }
+          : { previous_id: 2, next_id: 3 },
+      ),
+    })
+  })
+
+  await page.route('**/api/coins/*', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/navigation')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ previous_id: 2, next_id: 3 }),
+      })
+      return
+    }
+
+    const coinId = Number(url.pathname.split('/').pop())
+    const coin = coins.find((item) => item.id === coinId) ?? coins[1]
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(coin),
+    })
+  })
+
+  await page.goto('/monety/2?country_id=1&sort_by=id&sort_order=asc')
+
+  const filterCheckbox = page.getByRole('checkbox', { name: 'Zastosuj aktualne filtry' })
+  await expect(filterCheckbox).toBeChecked()
+  await filterCheckbox.uncheck()
+
+  await expect(page.getByRole('button', { name: 'Następna →' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Następna →' }).click()
+
+  await expect(page).toHaveURL(/\/monety\/3\?/)
+  expect(new URL(page.url()).searchParams.get('country_id')).toBe('1')
+  expect(new URL(page.url()).searchParams.get('apply_filters')).toBe('false')
+  expect(requestedNavigation.at(-1)?.searchParams.get('country_id')).toBeNull()
+
+  await filterCheckbox.check()
+
+  await expect.poll(
+    () => requestedNavigation.at(-1)?.searchParams.get('country_id'),
+  ).toBe('1')
+  expect(requestedNavigation.at(-1)?.searchParams.get('sort_by')).toBe('id')
+  expect(requestedNavigation.at(-1)?.searchParams.get('sort_order')).toBe('asc')
+})
+
 test('nawigacja szczegółów używa endpointu previous/next z filtrami', async ({ page }) => {
   const requestedNavigation: URL[] = []
 
