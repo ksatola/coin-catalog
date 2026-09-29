@@ -8,7 +8,13 @@ from coin_catalog.coin_search import build_coin_query
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import get_db
 from coin_catalog.models import Coin, CoinImage, Collection
-from coin_catalog.schemas import CoinCreate, CoinListResponse, CoinMoveRequest, CoinResponse, CoinUpdate
+from coin_catalog.schemas import (
+    CoinCreate,
+    CoinListResponse,
+    CoinMoveRequest,
+    CoinResponse,
+    CoinUpdate,
+)
 
 router = APIRouter(prefix="/coins", tags=["coins"])
 
@@ -112,9 +118,7 @@ def list_coins(
         sort_order=sort_order,
     )
     statement = statement.options(
-        selectinload(
-            Coin.images.and_(CoinImage.kind.in_(("avers", "rewers")))
-        )
+        selectinload(Coin.images.and_(CoinImage.kind.in_(("avers", "rewers"))))
     )
     return list(session.scalars(statement).all())
 
