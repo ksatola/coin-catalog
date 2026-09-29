@@ -1,7 +1,6 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.coin_move import move_coin
