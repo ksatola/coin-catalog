@@ -118,3 +118,41 @@ test('read-only ma białe sekcje dla zdjęć dodatkowych i kategorii oraz spójn
   await expect(page.locator('.coin-detail')).toHaveCSS('gap', '28px')
   await expect(page.locator('.detail-actions')).toHaveCSS('margin-top', '28px')
 })
+
+
+test('read-only nawigacja monet zachowuje aktualne filtry i pozwala je wyłączyć', async ({ page }) => {
+  await mockDictionaries(page)
+  await page.route('**/api/collections/1', async (route) => await route.fulfill({ json: collections[0] }))
+  await page.route('**/api/coins/1/images', async (route) => await route.fulfill({ json: coinImages }))
+  await page.route('**/api/coins/2/images', async (route) => await route.fulfill({ json: coinImages }))
+  await page.route('**/api/coins/3/images', async (route) => await route.fulfill({ json: coinImages }))
+  await page.route('**/api/coins/*/categories', async (route) => await route.fulfill({ json: categories }))
+
+  const coins = [1, 2, 3].map((id) => ({ ...coin, id }))
+
+  await page.route('**/api/coins/1', async (route) => await route.fulfill({ json: coins[0] }))
+  await page.route('**/api/coins/2', async (route) => await route.fulfill({ json: coins[1] }))
+  await page.route('**/api/coins/3', async (route) => await route.fulfill({ json: coins[2] }))
+  await page.route('**/api/coins*', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname === '/api/coins') {
+      await route.fulfill({ json: coins })
+      return
+    }
+    await route.continue()
+  })
+
+  await page.goto('/monety/2?country_id=1&include_category_children=true&status=active&sort_by=id&sort_order=asc')
+
+  const filterCheckbox = page.getByRole('checkbox', { name: 'Zastosuj aktualne filtry' })
+  await expect(filterCheckbox).toBeChecked()
+  await expect(page.getByRole('button', { name: '← Poprzednia' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Następna →' })).toBeEnabled()
+
+  await page.getByRole('button', { name: 'Następna →' }).click()
+  await expect(page).toHaveURL(/\/monety\/3\?/)
+  expect(new URL(page.url()).searchParams.get('country_id')).toBe('1')
+
+  await filterCheckbox.uncheck()
+  await expect(page.getByRole('button', { name: '← Poprzednia' })).toBeEnabled()
+})
