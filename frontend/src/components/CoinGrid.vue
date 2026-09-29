@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import type { Coin } from '../types'
+import CoinImage from './CoinImage.vue'
 
 type DictionaryItem = {
   id: number
@@ -95,11 +95,11 @@ onMounted(() => void loadDictionaries())
     >
       <div class="image-row">
         <div class="coin-side">
-          <img v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')" :alt="`Awers monety #${coin.id}`" />
+          <CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" />
           <span v-else>Brak zdjęcia</span>
         </div>
         <div class="coin-side">
-          <img v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')" :alt="`Rewers monety #${coin.id}`" />
+          <CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" />
           <span v-else>Brak zdjęcia</span>
         </div>
       </div>
