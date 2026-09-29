@@ -66,7 +66,7 @@ test('widok dodaj monetę ma kolejność Kolekcja, Kategorie, Zdjęcia i tylko j
   await page.route('**/api/collections', async (route) => await route.fulfill({ json: collections }))
   await page.route('**/api/categories', async (route) => await route.fulfill({ json: categories }))
 
-  await page.goto('/monety/dodaj')
+  await page.goto('/dodaj')
 
   await expect(page.getByRole('heading', { name: 'Dodaj monetę', exact: true })).toHaveCount(1)
 
