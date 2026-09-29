@@ -328,13 +328,14 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
         ? {
             items: [{
               ...coin1,
-        id: 1,
-        images: [{
-          id: imageId,
-          coin_id: 1,
-          filename: `coin-1-v${responseVersion}.jpg`,
-          kind: 'avers',
-          sort_order: 0,
+              id: 1,
+              images: [{
+                id: imageId,
+                coin_id: 1,
+                filename: `coin-1-v${responseVersion}.jpg`,
+                kind: 'avers',
+                sort_order: 0,
+              }],
             }],
             next_cursor: null,
             has_more: false,
