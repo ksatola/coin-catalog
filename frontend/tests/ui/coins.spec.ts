@@ -29,7 +29,28 @@ async function mockCommonApi(page: Page) {
     uploaded.push({ kind: url.searchParams.get('kind') ?? '', replace: url.searchParams.get('replace') === 'true' })
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(oldImage) })
   })
-  await page.route('**/api/coins*', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([coin]) }))
+  await page.route('**/api/coins*', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/navigation')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ previous_id: null, next_id: null }),
+      })
+      return
+    }
+
+    const payload = [coin]
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        url.searchParams.has('limit')
+          ? { items: payload, next_cursor: null, has_more: false }
+          : payload,
+      ),
+    })
+  })
   return { uploaded }
 }
 

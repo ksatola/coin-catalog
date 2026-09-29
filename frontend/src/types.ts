@@ -91,3 +91,9 @@ export interface Coin extends CoinCreate {
   updated_at: string
   images?: CoinListImage[]
 }
+
+export interface CoinPageResponse {
+  items: Coin[]
+  next_cursor: string | null
+  has_more: boolean
+}

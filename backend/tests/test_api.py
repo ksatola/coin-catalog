@@ -647,3 +647,210 @@ def test_dictionary_era_delete_is_blocked_when_used_by_coin_to_era(
 
     assert response.status_code == 409
     assert response.json()["detail"] == "Item is used by a coin"
+
+
+def test_list_coins_cursor_pagination(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            from_year=1900 + index,
+            from_era_id=reference_data["era_id"],
+            to_year=1900 + index,
+            to_era_id=reference_data["era_id"],
+        )
+        for index in range(5)
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    first = client.get("/coins?limit=2&sort_by=id&sort_order=asc")
+    assert first.status_code == 200
+    first_data = first.json()
+
+    assert [item["id"] for item in first_data["items"]] == [
+        coins[0].id,
+        coins[1].id,
+    ]
+    assert first_data["has_more"] is True
+    assert first_data["next_cursor"]
+
+    second = client.get(
+        "/coins",
+        params={
+            "limit": 2,
+            "sort_by": "id",
+            "sort_order": "asc",
+            "cursor": first_data["next_cursor"],
+        },
+    )
+    assert second.status_code == 200
+    second_data = second.json()
+
+    assert [item["id"] for item in second_data["items"]] == [
+        coins[2].id,
+        coins[3].id,
+    ]
+    assert second_data["has_more"] is True
+
+    third = client.get(
+        "/coins",
+        params={
+            "limit": 2,
+            "sort_by": "id",
+            "sort_order": "asc",
+            "cursor": second_data["next_cursor"],
+        },
+    )
+    assert third.status_code == 200
+    third_data = third.json()
+
+    assert [item["id"] for item in third_data["items"]] == [coins[4].id]
+    assert third_data["has_more"] is False
+    assert third_data["next_cursor"] is None
+
+
+def test_list_coins_cursor_pagination_supports_sorting_and_null_years(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            from_year=year,
+            from_era_id=reference_data["era_id"] if year is not None else None,
+            to_year=year,
+            to_era_id=reference_data["era_id"] if year is not None else None,
+        )
+        for year in (None, 1900, 1900, 1910, None)
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    first = client.get(
+        "/coins",
+        params={"limit": 2, "sort_by": "from_year", "sort_order": "asc"},
+    )
+    assert first.status_code == 200
+    first_data = first.json()
+
+    assert [item["from_year"] for item in first_data["items"]] == [None, None]
+
+    second = client.get(
+        "/coins",
+        params={
+            "limit": 2,
+            "sort_by": "from_year",
+            "sort_order": "asc",
+            "cursor": first_data["next_cursor"],
+        },
+    )
+    assert second.status_code == 200
+    second_data = second.json()
+
+    assert [item["from_year"] for item in second_data["items"]] == [1900, 1900]
+
+
+def test_coin_navigation_respects_filters_and_sorting(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    matching = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            from_year=year,
+            from_era_id=reference_data["era_id"],
+            to_year=year,
+            to_era_id=reference_data["era_id"],
+        )
+        for year in (1900, 1901, 1902)
+    ]
+    excluded = Coin(
+        collection_id=reference_data["collection_id"],
+        country_id=reference_data["country_id"],
+        denomination_id=reference_data["denomination_id"],
+        from_year=1899,
+        from_era_id=reference_data["era_id"],
+        to_year=1899,
+        to_era_id=reference_data["era_id"],
+        is_deleted=True,
+    )
+    session.add_all([*matching, excluded])
+    session.commit()
+
+    response = client.get(
+        f"/coins/{matching[1].id}/navigation",
+        params={
+            "status": "active",
+            "sort_by": "from_year",
+            "sort_order": "asc",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "previous_id": matching[0].id,
+        "next_id": matching[2].id,
+    }
+
+    response = client.get(
+        f"/coins/{matching[1].id}/navigation",
+        params={
+            "status": "archived",
+            "sort_by": "id",
+            "sort_order": "asc",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {"previous_id": None, "next_id": None}
+
+
+def test_coin_navigation_returns_boundaries(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+        )
+        for _ in range(2)
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    first = client.get(f"/coins/{coins[0].id}/navigation")
+    assert first.status_code == 200
+    assert first.json() == {
+        "previous_id": None,
+        "next_id": coins[1].id,
+    }
+
+    last = client.get(f"/coins/{coins[1].id}/navigation")
+    assert last.status_code == 200
+    assert last.json() == {
+        "previous_id": coins[0].id,
+        "next_id": None,
+    }
+
+
+def test_list_coins_rejects_invalid_cursor(
+    client: TestClient,
+    reference_data: dict[str, int],
+) -> None:
+    response = client.get("/coins?limit=2&cursor=not-a-valid-cursor")
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid cursor"

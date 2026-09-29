@@ -10,9 +10,16 @@ const route = useRoute()
 const router = useRouter()
 
 const coin = ref<Coin | null>(null)
-const navigationCoins = ref<Coin[]>([])
+const previousCoinId = ref<number | null>(null)
+const nextCoinId = ref<number | null>(null)
 const errorMessage = ref('')
 const applyCurrentFilters = ref(window.location.search ? new URLSearchParams(window.location.search).get('apply_filters') !== 'false' : false)
+
+function filterContextQuery(): string {
+  const params = new URLSearchParams(window.location.search)
+  params.delete('apply_filters')
+  return params.toString()
+}
 
 function navigationQuery(): string {
   if (applyCurrentFilters.value) {
@@ -31,33 +38,32 @@ function navigationQuery(): string {
 }
 
 function detailPath(coinId: number): string {
-  const query = navigationQuery()
+  const query = filterContextQuery()
   const params = new URLSearchParams(query)
   params.set('apply_filters', String(applyCurrentFilters.value))
   const navigationQueryString = params.toString()
   return `/monety/${coinId}${navigationQueryString ? `?${navigationQueryString}` : ''}`
 }
 
-const currentNavigationIndex = () => navigationCoins.value.findIndex((item) => item.id === coin.value?.id)
-const previousCoin = () => {
-  const index = currentNavigationIndex()
-  return index > 0 ? navigationCoins.value[index - 1] ?? null : null
-}
-const nextCoin = () => {
-  const index = currentNavigationIndex()
-  return index >= 0 && index < navigationCoins.value.length - 1
-    ? navigationCoins.value[index + 1] ?? null
-    : null
-}
+async function loadNavigation(): Promise<void> {
+  previousCoinId.value = null
+  nextCoinId.value = null
 
-async function loadNavigationCoins(): Promise<void> {
   try {
     const query = navigationQuery()
-    const response = await fetch(`/api/coins?${query}`, { cache: 'no-store' })
+    const response = await fetch(`/api/coins/${coin.value?.id}/navigation?${query}`, {
+      cache: 'no-store',
+    })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    navigationCoins.value = await response.json() as Coin[]
+    const navigation = await response.json() as {
+      previous_id: number | null
+      next_id: number | null
+    }
+    previousCoinId.value = navigation.previous_id
+    nextCoinId.value = navigation.next_id
   } catch {
-    navigationCoins.value = []
+    previousCoinId.value = null
+    nextCoinId.value = null
   }
 }
 
@@ -75,17 +81,18 @@ async function loadCoin(): Promise<void> {
 
     coin.value = await response.json() as Coin
     errorMessage.value = ''
-    await loadNavigationCoins()
+    await loadNavigation()
   } catch {
     coin.value = null
-    navigationCoins.value = []
+    previousCoinId.value = null
+    nextCoinId.value = null
     errorMessage.value = 'Nie udało się pobrać monety.'
   }
 }
 
-function goToCoin(target: Coin | null): void {
-  if (!target) return
-  void router.push(detailPath(target.id))
+function goToCoin(coinId: number | null): void {
+  if (coinId === null) return
+  void router.push(detailPath(coinId))
 }
 
 async function archiveCoin(): Promise<void> {
@@ -125,7 +132,7 @@ async function restoreCoin(): Promise<void> {
 }
 
 watch(applyCurrentFilters, () => {
-  if (coin.value) void loadNavigationCoins()
+  if (coin.value) void loadNavigation()
 })
 
 watch(() => route.fullPath, () => {
@@ -144,8 +151,8 @@ onMounted(loadCoin)
         <button
           type="button"
           class="navigation-button"
-          :disabled="!previousCoin()"
-          @click="goToCoin(previousCoin())"
+          :disabled="previousCoinId === null"
+          @click="goToCoin(previousCoinId)"
         >
           ← Poprzednia
         </button>
@@ -158,8 +165,8 @@ onMounted(loadCoin)
         <button
           type="button"
           class="navigation-button"
-          :disabled="!nextCoin()"
-          @click="goToCoin(nextCoin())"
+          :disabled="nextCoinId === null"
+          @click="goToCoin(nextCoinId)"
         >
           Następna →
         </button>

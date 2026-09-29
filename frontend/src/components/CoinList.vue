@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 
+import type { Coin } from '../types'
 import CoinImage from './CoinImage.vue'
 
 type DictionaryItem = { id: number; name: string }

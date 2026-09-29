@@ -888,3 +888,52 @@ Keeping `collection_number` unchanged preserves the user's own identifier indepe
 - The old record and files must remain intact until the target state is ready.
 - Rollback/compensation is a mandatory part of the move implementation.
 - Real failure-injection tests are required for the move workflow.
+
+
+## D-036 — Cursor Pagination and Infinite Scroll for Coin Browsing
+
+**Status:** Accepted  
+**Date:** 2026-09-29
+
+Coin catalogue browsing uses server-side cursor pagination presented in the frontend as infinite scroll.
+
+The paginated coin-list API accepts:
+
+    limit
+    cursor
+
+The default frontend page size is 50 and the API maximum page size is 100.
+
+The cursor is opaque to the frontend. It identifies a stable position in the selected coin sort order using the sort field, sort direction, the last sort value, and the last coin ID. The coin ID is the deterministic tie-breaker for id, from_year, and to_year sorting.
+
+The paginated response contains:
+
+    items
+    next_cursor
+    has_more
+
+The API may continue to return the existing unpaginated list response when limit is omitted, preserving compatibility for existing non-paginated consumers. Cursor-based requests require limit.
+
+The frontend uses IntersectionObserver with a lower-page sentinel to request subsequent result batches. Filters and sorting remain part of the normal catalogue URL/query state; the cursor is transient pagination state and is not persisted as part of the catalogue URL.
+
+Previous/next navigation on a coin detail page is independent of list pagination. The backend provides a dedicated navigation endpoint that evaluates the same filter and sort criteria and returns the IDs immediately before and after the current coin. When current filters are disabled, navigation uses the active or archived scope of the current coin and the default id ascending order.
+
+If the current coin does not belong to the filtered/sorted result set, filtered previous/next navigation returns no targets.
+
+### Rationale
+
+The catalogue is expected to grow beyond a size where returning the complete result set for every catalogue request is desirable. Infinite scroll keeps the browsing experience continuous while cursor pagination limits each HTTP response to a bounded result set and avoids offset-based page traversal.
+
+Keeping previous/next navigation separate from list pagination prevents the detail view from depending on which catalogue batches have already been loaded in the browser. It also allows navigation to cross infinite-scroll batch boundaries.
+
+The deterministic sort tie-breaker and opaque cursor provide stable forward traversal for the supported sort fields while keeping cursor interpretation out of the frontend.
+
+### Consequences
+
+- The coin list endpoint must support bounded cursor-based result retrieval.
+- The frontend must append subsequent batches rather than replace the existing catalogue contents.
+- Filter and sort changes reset pagination and begin a new cursor sequence.
+- Cursor state is not stored in the URL.
+- Coin detail previous/next navigation uses the dedicated navigation endpoint rather than loading the entire filtered catalogue.
+- New supported sort fields must define cursor semantics before being exposed to the paginated API.
+- Pagination and navigation behavior require backend and Playwright test coverage.

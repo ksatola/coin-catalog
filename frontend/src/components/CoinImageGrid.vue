@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Coin } from '../types'
 import CoinImage from './CoinImage.vue'
 
 const props = defineProps<{

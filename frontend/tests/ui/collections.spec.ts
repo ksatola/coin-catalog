@@ -206,7 +206,11 @@ async function mockCatalogApi(page: Page): Promise<void> {
       return collectionMatch && statusMatch && searchMatch
     })
 
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(filtered) })
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: filtered, next_cursor: null, has_more: false }),
+    })
   })
 
   await page.route('**/api/coins', async (route) => {
@@ -214,7 +218,12 @@ async function mockCatalogApi(page: Page): Promise<void> {
       await route.fallback()
       return
     }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(catalogCoins.filter((coin) => !coin.archived)) })
+    const items = catalogCoins.filter((coin) => !coin.archived)
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items, next_cursor: null, has_more: false }),
+    })
   })
 
   for (const coin of catalogCoins) {
