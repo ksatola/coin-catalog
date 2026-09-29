@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 
-import type { Coin } from '../types'
+import CoinImage from './CoinImage.vue'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = {
@@ -84,8 +84,8 @@ void loadDictionaries()
   <ul class="coin-list">
     <li v-for="coin in coins" :key="coin.id" class="coin-row">
       <div class="image-pair">
-        <span class="coin-image"><img v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')" :alt="`Awers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
-        <span class="coin-image"><img v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')" :alt="`Rewers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
       </div>
       <div class="coin-info">
         <div class="coin-title"><strong>#{{ coin.id }}<span v-if="coin.collection_number" class="collection-number"> | {{ coin.collection_number }}</span></strong></div>
