@@ -244,6 +244,53 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
   expect(imageResponses.size).toBe(expectedImages.length)
 })
 
+
+test('równoległe odświeżenia katalogu nie pozwalają starszej odpowiedzi nadpisać nowszej', async ({ page }) => {
+  let requestNumber = 0
+
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []),
+    })
+  })
+  await page.route('**/api/categories', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  })
+  await page.route('**/api/coins*', async (route) => {
+    requestNumber += 1
+    const currentRequest = requestNumber
+    const responseCoins = currentRequest === 1
+      ? [{ ...coin1, id: 1, description: 'Stara odpowiedź', images: images.get(1) ?? [] }]
+      : [{ ...coin1, id: 2, description: 'Nowsza odpowiedź', images: images.get(2) ?? [] }]
+
+    await new Promise((resolve) => setTimeout(resolve, currentRequest === 1 ? 300 : 20))
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(responseCoins),
+    })
+  })
+  await page.route('**/api/coins/*/images/*/file', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
+  })
+
+  await page.goto('/monety')
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('test-load-coins'))
+  })
+
+  await page.waitForTimeout(500)
+
+  const cards = page.locator('.image-grid .coin-tile')
+  await expect(cards).toHaveCount(1)
+  await expect(page.getByRole('link', { name: 'Moneta #2' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Moneta #1' })).toHaveCount(0)
+})
 test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', async ({ page }) => {
   const imageResponses = new Map<string, number>()
   const imageFailures = new Map<string, string>()
