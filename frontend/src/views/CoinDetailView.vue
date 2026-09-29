@@ -124,7 +124,6 @@ watch(applyCurrentFilters, () => {
 })
 
 watch(() => route.fullPath, () => {
-  applyCurrentFilters.value = Boolean(window.location.search)
   void loadCoin()
 })
 
