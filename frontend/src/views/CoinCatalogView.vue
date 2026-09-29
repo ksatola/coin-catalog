@@ -22,6 +22,7 @@ const filters = useCoinFilters(props.scope)
 const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
 const errorMessage = ref('')
+const appliedFilterQuery = ref('')
 const showAdvancedFilters = ref(false)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -116,6 +117,7 @@ async function loadCoins(): Promise<void> {
     const response = await fetch(`/api/coins${query ? `?${query}` : ''}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     coins.value = await response.json() as Coin[]
+    appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
     window.scrollTo(0, scrollY)
@@ -148,6 +150,11 @@ async function restoreCoin(coin: Coin): Promise<void> {
   } catch {
     errorMessage.value = 'Nie udało się przywrócić monety.'
   }
+}
+
+function openCoinDetails(coin: Coin): void {
+  const query = appliedFilterQuery.value
+  router.push(`/monety/${coin.id}${query ? `?${query}` : ''}`)
 }
 
 function resetFilters(): void {
@@ -255,13 +262,14 @@ onMounted(async () => {
         v-if="viewMode === 'image-grid'"
         :coins="coins"
         :columns="galleryColumns"
+        :detail-query="appliedFilterQuery"
       />
-      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" />
+      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" />
 
       <CoinList
         v-else
         :coins="coins"
-        @details="(coin) => router.push(`/monety/${coin.id}`)"
+        @details="openCoinDetails"
         @archive="archiveCoin"
         @restore="restoreCoin"
       />

@@ -25,7 +25,12 @@ type Dictionaries = {
 
 const props = defineProps<{
   coins: Coin[]
+  detailQuery?: string
 }>()
+
+function detailPath(coinId: number): string {
+  return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
+}
 
 const imagesByCoin = reactive<Record<number, CoinImages>>({})
 const dictionaries = ref<Dictionaries>({
@@ -117,7 +122,7 @@ watch(() => props.coins, () => void loadImages(), { immediate: true })
       v-for="coin in coins"
       :key="coin.id"
       class="card"
-      :to="`/monety/${coin.id}`"
+      :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
     >
       <div class="image-row">

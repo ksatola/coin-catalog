@@ -11,7 +11,12 @@ type CoinImages = {
 const props = defineProps<{
   coins: Coin[]
   columns?: 1 | 2 | 3 | 4
+  detailQuery?: string
 }>()
+
+function detailPath(coinId: number): string {
+  return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
+}
 
 const imagesByCoin = reactive<Record<number, CoinImages>>({})
 let loadGeneration = 0
@@ -87,7 +92,7 @@ watch(() => props.coins, () => {
       v-for="coin in coins"
       :key="coin.id"
       class="coin-tile"
-      :to="`/monety/${coin.id}`"
+      :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
     >
       <div class="coin-side">
