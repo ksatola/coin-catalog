@@ -71,6 +71,17 @@ class CoinResponse(CoinCreate):
     updated_at: datetime
 
 
+class CoinListImageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: str
+
+
+class CoinListResponse(CoinResponse):
+    images: list[CoinListImageResponse] = Field(default_factory=list)
+
+
 class DictionaryItemCreate(BaseModel):
     name: str
 
