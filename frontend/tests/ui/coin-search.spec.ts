@@ -31,7 +31,17 @@ async function mockCatalog(page: import('@playwright/test').Page, requests?: URL
   })
   await page.route('**/api/coins*', async (route) => {
     requests?.push(new URL(route.request().url()))
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([coin]) })
+    const url = new URL(route.request().url())
+    const payload = [coin]
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        url.searchParams.has('limit')
+          ? { items: payload, next_cursor: null, has_more: false }
+          : payload,
+      ),
+    })
   })
 }
 
