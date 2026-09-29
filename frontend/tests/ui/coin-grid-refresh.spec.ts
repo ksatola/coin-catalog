@@ -176,19 +176,68 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
       || !expectedByKey.has(`${image.coinId}:${image.imageId}`),
   )
 
-  const notDecoded = renderedImages.filter(
-    (image) => !image.complete || image.naturalWidth === 0,
-  )
+  const imageLoadStates = await page.locator('.image-grid img').evaluateAll(async (elements) => {
+    const results = await Promise.all(elements.map(async (element) => {
+      const image = element as HTMLImageElement
+      const src = image.currentSrc || image.src
+
+      if (image.complete) {
+        return {
+          src,
+          complete: image.complete,
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          event: image.naturalWidth > 0 ? 'already-loaded' : 'already-failed',
+        }
+      }
+
+      const event = await new Promise<'load' | 'error' | 'timeout'>((resolve) => {
+        const onLoad = () => {
+          cleanup()
+          resolve('load')
+        }
+        const onError = () => {
+          cleanup()
+          resolve('error')
+        }
+        const timeout = window.setTimeout(() => {
+          cleanup()
+          resolve('timeout')
+        }, 10_000)
+        const cleanup = () => {
+          window.clearTimeout(timeout)
+          image.removeEventListener('load', onLoad)
+          image.removeEventListener('error', onError)
+        }
+
+        image.addEventListener('load', onLoad, { once: true })
+        image.addEventListener('error', onError, { once: true })
+      })
+
+      return {
+        src,
+        complete: image.complete,
+        naturalWidth: image.naturalWidth,
+        naturalHeight: image.naturalHeight,
+        event,
+      }
+    }))
+
+    return results
+  })
 
   const missingRequests = expectedImages.filter(
     (image) => !imageResponses.has(new URL(image.src, 'http://127.0.0.1:5173').href),
   )
 
   const non200Responses = [...imageResponses.entries()].filter(([, status]) => status !== 200)
+  const failedLoads = imageLoadStates.filter(
+    (image) => image.event !== 'load' && image.event !== 'already-loaded',
+  )
 
   expect(missingFromDom, JSON.stringify(missingFromDom, null, 2)).toEqual([])
   expect(unexpectedInDom, JSON.stringify(unexpectedInDom, null, 2)).toEqual([])
-  expect(notDecoded, JSON.stringify(notDecoded, null, 2)).toEqual([])
+  expect(failedLoads, JSON.stringify(failedLoads, null, 2)).toEqual([])
   expect(missingRequests, JSON.stringify(missingRequests, null, 2)).toEqual([])
   expect(non200Responses, JSON.stringify(non200Responses, null, 2)).toEqual([])
   expect([...imageFailures.entries()], JSON.stringify([...imageFailures.entries()], null, 2)).toEqual([])
