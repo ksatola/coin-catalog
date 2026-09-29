@@ -227,13 +227,14 @@ def list_coins(
     statement = load_list_images(statement).limit(limit + 1)
     coins = list(session.scalars(statement).all())
     has_more = len(coins) > limit
-    page_items = coins[:limit]
+    page_coins = coins[:limit]
 
     next_cursor = (
-        encode_cursor(cursor_for_coin(page_items[-1], sort_by, sort_order))
-        if has_more and page_items
+        encode_cursor(cursor_for_coin(page_coins[-1], sort_by, sort_order))
+        if has_more and page_coins
         else None
     )
+    page_items = [CoinListResponse.model_validate(coin) for coin in page_coins]
 
     return CoinPageResponse(
         items=page_items,
