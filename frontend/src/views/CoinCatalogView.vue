@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
@@ -7,7 +7,7 @@ import CoinGrid from '../components/CoinGrid.vue'
 import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
-import type { Coin, Collection } from '../types'
+import type { Coin, CoinPageResponse, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
 type ViewMode = 'image-grid' | 'grid' | 'list'
@@ -23,8 +23,14 @@ const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
 const errorMessage = ref('')
 const appliedFilterQuery = ref('')
+const nextCursor = ref<string | null>(null)
+const hasMore = ref(true)
+const loadingMore = ref(false)
+const sentinel = ref<HTMLElement | null>(null)
 const showAdvancedFilters = ref(false)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
+let requestGeneration = 0
+let observer: IntersectionObserver | undefined
 
 const isArchive = props.scope === 'archive'
 const pageTitle = isArchive ? 'Archiwum' : 'Monety'
@@ -110,21 +116,66 @@ async function loadCoins(): Promise<void> {
     return
   }
 
+  const generation = ++requestGeneration
   const scrollY = window.scrollY
+  loadingMore.value = true
 
   try {
     const query = buildCoinFilterQuery(filters)
-    const response = await fetch(`/api/coins${query ? `?${query}` : ''}`, { cache: 'no-store' })
+    const params = new URLSearchParams(query)
+    params.set('limit', '50')
+    const response = await fetch(`/api/coins?${params.toString()}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    coins.value = await response.json() as Coin[]
+
+    const page = await response.json() as CoinPageResponse
+    if (generation !== requestGeneration) return
+
+    coins.value = page.items
+    nextCursor.value = page.next_cursor
+    hasMore.value = page.has_more
     appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
     window.scrollTo(0, scrollY)
   } catch {
+    if (generation !== requestGeneration) return
     errorMessage.value = isArchive
       ? 'Nie udało się pobrać archiwum.'
       : 'Nie udało się pobrać monet.'
+  } finally {
+    if (generation === requestGeneration) {
+      loadingMore.value = false
+    }
+  }
+}
+
+async function loadMoreCoins(): Promise<void> {
+  if (!isSearchReady() || !hasMore.value || !nextCursor.value || loadingMore.value) {
+    return
+  }
+
+  loadingMore.value = true
+
+  try {
+    const query = buildCoinFilterQuery(filters)
+    const params = new URLSearchParams(query)
+    params.set('limit', '50')
+    params.set('cursor', nextCursor.value)
+
+    const response = await fetch(`/api/coins?${params.toString()}`, { cache: 'no-store' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    const page = await response.json() as CoinPageResponse
+    coins.value = [...coins.value, ...page.items]
+    nextCursor.value = page.next_cursor
+    hasMore.value = page.has_more
+    errorMessage.value = ''
+  } catch {
+    errorMessage.value = isArchive
+      ? 'Nie udało się pobrać kolejnej części archiwum.'
+      : 'Nie udało się pobrać kolejnej części katalogu.'
+  } finally {
+    loadingMore.value = false
   }
 }
 
@@ -166,8 +217,26 @@ function toggleAdvancedFilters(): void {
   showAdvancedFilters.value = !showAdvancedFilters.value
 }
 
+watch(sentinel, (element) => {
+  observer?.disconnect()
+  if (!element) return
+
+  observer = new IntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting)) {
+      void loadMoreCoins()
+    }
+  }, { rootMargin: '800px 0px' })
+
+  observer.observe(element)
+})
+
 onMounted(async () => {
   await Promise.all([loadCoins(), loadCollections()])
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+  if (searchTimer !== undefined) clearTimeout(searchTimer)
 })
 </script>
 
@@ -273,6 +342,10 @@ onMounted(async () => {
         @archive="archiveCoin"
         @restore="restoreCoin"
       />
+
+      <div ref="sentinel" class="infinite-scroll-sentinel" aria-hidden="true">
+        <span v-if="loadingMore">Ładowanie kolejnych monet…</span>
+      </div>
     </template>
   </section>
 </template>
@@ -474,6 +547,15 @@ onMounted(async () => {
 .results-bar {
   color: #475569;
   font-size: 14px;
+}
+
+.infinite-scroll-sentinel {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .error-message {
