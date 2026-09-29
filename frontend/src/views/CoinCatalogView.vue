@@ -154,6 +154,7 @@ async function loadMoreCoins(): Promise<void> {
     return
   }
 
+  const generation = requestGeneration
   loadingMore.value = true
 
   try {
@@ -166,16 +167,21 @@ async function loadMoreCoins(): Promise<void> {
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
     const page = await response.json() as CoinPageResponse
+    if (generation !== requestGeneration) return
+
     coins.value = [...coins.value, ...page.items]
     nextCursor.value = page.next_cursor
     hasMore.value = page.has_more
     errorMessage.value = ''
   } catch {
+    if (generation !== requestGeneration) return
     errorMessage.value = isArchive
       ? 'Nie udało się pobrać kolejnej części archiwum.'
       : 'Nie udało się pobrać kolejnej części katalogu.'
   } finally {
-    loadingMore.value = false
+    if (generation === requestGeneration) {
+      loadingMore.value = false
+    }
   }
 }
 
