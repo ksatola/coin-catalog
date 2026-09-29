@@ -36,7 +36,10 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Pr
     }))
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(search ? coins.filter((item) => item.id !== 2) : coins) })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {\n    await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })\n  })\n  await page.route('**/api/coins/*/images', async (route) => {
+  await page.route('**/api/coins/*/images/*/file', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
+  })
+  await page.route('**/api/coins/*/images', async (route) => {
     const coinId = Number(new URL(route.request().url()).pathname.split('/')[3])
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(images.get(coinId) ?? []) })
   })
