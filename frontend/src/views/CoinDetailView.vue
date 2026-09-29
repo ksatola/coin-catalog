@@ -12,11 +12,13 @@ const router = useRouter()
 const coin = ref<Coin | null>(null)
 const navigationCoins = ref<Coin[]>([])
 const errorMessage = ref('')
-const applyCurrentFilters = ref(Boolean(window.location.search))
+const applyCurrentFilters = ref(window.location.search ? new URLSearchParams(window.location.search).get('apply_filters') !== 'false' : false)
 
 function navigationQuery(): string {
   if (applyCurrentFilters.value) {
-    const filters = parseCoinFilterQuery(window.location.search)
+    const params = new URLSearchParams(window.location.search)
+    params.delete('apply_filters')
+    const filters = parseCoinFilterQuery(params)
     return buildCoinFilterQuery(filters)
   }
 
@@ -30,7 +32,10 @@ function navigationQuery(): string {
 
 function detailPath(coinId: number): string {
   const query = navigationQuery()
-  return `/monety/${coinId}${query ? `?${query}` : ''}`
+  const params = new URLSearchParams(query)
+  params.set('apply_filters', String(applyCurrentFilters.value))
+  const navigationQueryString = params.toString()
+  return `/monety/${coinId}${navigationQueryString ? `?${navigationQueryString}` : ''}`
 }
 
 const currentNavigationIndex = () => navigationCoins.value.findIndex((item) => item.id === coin.value?.id)
