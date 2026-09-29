@@ -123,7 +123,7 @@ async function loadCoins(): Promise<void> {
   try {
     const query = buildCoinFilterQuery(filters)
     const params = new URLSearchParams(query)
-    params.set('limit', '10')
+    params.set('limit', '50')
     const response = await fetch(`/api/coins?${params.toString()}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
@@ -160,7 +160,7 @@ async function loadMoreCoins(): Promise<void> {
   try {
     const query = buildCoinFilterQuery(filters)
     const params = new URLSearchParams(query)
-    params.set('limit', '10')
+    params.set('limit', '50')
     params.set('cursor', nextCursor.value)
 
     const response = await fetch(`/api/coins?${params.toString()}`, { cache: 'no-store' })
