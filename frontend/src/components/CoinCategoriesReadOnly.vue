@@ -42,13 +42,29 @@ onMounted(loadCategories)
 
 <style scoped>
 .coin-categories {
-  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.coin-categories h2 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: 20px;
+}
+
+.coin-categories p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
 }
 
 .category-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }

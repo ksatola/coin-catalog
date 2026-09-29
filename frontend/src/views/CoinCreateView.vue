@@ -118,41 +118,65 @@ onMounted(() => {
 </script>
 
 <template>
-  <section>
+  <section class="coin-create-page">
     <h1>Dodaj monetę</h1>
     <p v-if="errorMessage">{{ errorMessage }}</p>
     <p v-if="categoriesErrorMessage">{{ categoriesErrorMessage }}</p>
     <p v-if="collectionsErrorMessage">{{ collectionsErrorMessage }}</p>
 
-    <CollectionAssignment
-      v-model:selected-collection-id="selectedCollectionId"
-      :collections="collections"
-      @created="addCreatedCollection"
-    />
+    <div class="setup-sections">
+      <CollectionAssignment
+        v-model:selected-collection-id="selectedCollectionId"
+        :collections="collections"
+        @created="addCreatedCollection"
+      />
 
-    <section class="category-card">
-      <h2>Kategorie</h2>
-      <label class="category-field">
-        <span>Wybierz kategorie</span>
-        <select v-model="selectedCategoryIds" multiple size="5">
-          <option v-for="category in categories" :key="category.id" :value="category.id">
-            {{ category.name }}
-          </option>
-        </select>
-      </label>
-      <small>Możesz wybrać więcej niż jedną kategorię, także parenta i childa.</small>
-      <InlineCategoryCreate :categories="categories" @created="addCreatedCategory" />
-    </section>
+      <section class="category-card">
+        <h2>Kategorie</h2>
+        <label class="category-field">
+          <span>Wybierz kategorie</span>
+          <select v-model="selectedCategoryIds" multiple size="5">
+            <option v-for="category in categories" :key="category.id" :value="category.id">
+              {{ category.name }}
+            </option>
+          </select>
+        </label>
+        <small>Możesz wybrać więcej niż jedną kategorię, także parenta i childa.</small>
+        <InlineCategoryCreate :categories="categories" @created="addCreatedCategory" />
+      </section>
+    </div>
 
     <CoinForm @submit="createCoin" @cancel="cancelCreating" />
   </section>
 </template>
 
 <style scoped>
+.coin-create-page {
+  display: grid;
+  gap: 0;
+}
+
+.coin-create-page > h1 {
+  margin: 0 0 24px;
+}
+
+.coin-create-page :deep(.coin-form > .form-header) {
+  display: none;
+}
+
+.setup-sections {
+  display: grid;
+  gap: 24px;
+}
+
+.coin-form {
+  margin-top: 24px;
+}
+
 .category-card {
   display: grid;
   gap: 12px;
-  margin: 0 0 24px;
+  margin: 0;
   padding: 24px 26px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;

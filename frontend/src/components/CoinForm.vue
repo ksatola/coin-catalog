@@ -276,27 +276,9 @@ async function addDictionaryItem(name: keyof Dictionaries, item: DictionaryItem)
     else form.to_era_id = item.id
   }
   if (name === 'acquisition_methods') {
-    insertAcquisitionMethod(item)
+    form.acquisition_method_id = item.id
   }
   markDirty()
-}
-
-function insertAcquisitionMethod(item: DictionaryItem): void {
-  const current = form.acquisition_method_text?.trim() ?? ''
-  form.acquisition_method_text = current ? `${current}\n${item.name}` : item.name
-  form.acquisition_method_id = null
-  markDirty()
-}
-
-function insertSelectedAcquisitionMethod(): void {
-  if (form.acquisition_method_id === null) return
-  const item = dictionaries.acquisition_methods.find((entry) => entry.id === form.acquisition_method_id)
-  if (item) insertAcquisitionMethod(item)
-  form.acquisition_method_id = null
-}
-
-function enterAcquisitionText(): void {
-  form.acquisition_method_id = null
 }
 
 function submitForm(): void {
@@ -462,10 +444,10 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
       <div class="section-heading"><h3>Sposób nabycia</h3></div>
       <div class="field-card acquisition-field">
         <label for="acquisition-method-text">Sposób nabycia</label>
-        <textarea id="acquisition-method-text" v-model="form.acquisition_method_text" @input="enterAcquisitionText" placeholder="Wpisz sposób nabycia. Możesz dodać kilka pozycji w osobnych wierszach." />
+        <textarea id="acquisition-method-text" v-model="form.acquisition_method_text" placeholder="Wpisz dodatkowe informacje o sposobie nabycia." />
         <div class="acquisition-tools">
-          <select id="acquisition-method" v-model.number="form.acquisition_method_id" @change="insertSelectedAcquisitionMethod" @click.stop>
-            <option :value="null">Dodaj wartość ze słownika…</option>
+          <select id="acquisition-method" aria-label="Sposób nabycia" v-model.number="form.acquisition_method_id" @click.stop>
+            <option :value="null">Wybierz ze słownika…</option>
             <option v-for="item in dictionaries.acquisition_methods" :key="item.id" :value="item.id">{{ item.name }}</option>
           </select>
           <InlineDictionaryCreate dictionary-name="acquisition_methods" label="sposób nabycia" @created="addDictionaryItem('acquisition_methods', $event)" />

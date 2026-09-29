@@ -102,7 +102,7 @@ onMounted(loadCoin)
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 28px;
 }
 
 .button {

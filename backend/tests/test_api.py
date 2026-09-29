@@ -175,7 +175,7 @@ def test_coin_description_and_acquisition_crud(
             "avers_description": "Nowy opis awersu",
             "revers_description": None,
             "literature": "Nowa literatura",
-            "acquisition_method_id": None,
+            "acquisition_method_id": acquisition_method_id,
             "acquisition_method_text": "Zakup od prywatnego kolekcjonera",
             "purchase_price": 150.00,
             "purchase_date": "2026-09-27",
@@ -186,7 +186,7 @@ def test_coin_description_and_acquisition_crud(
     assert data["avers_description"] == "Nowy opis awersu"
     assert data["revers_description"] is None
     assert data["literature"] == "Nowa literatura"
-    assert data["acquisition_method_id"] is None
+    assert data["acquisition_method_id"] == acquisition_method_id
     assert data["acquisition_method_text"] == "Zakup od prywatnego kolekcjonera"
     assert Decimal(data["purchase_price"]) == Decimal("150.0")
     assert data["purchase_date"] == "2026-09-27"

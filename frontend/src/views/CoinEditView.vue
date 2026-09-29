@@ -10,7 +10,7 @@ import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const route = useRoute()
 const router = useRouter()
-const { markClean, markDirty } = useUnsavedCoinForm()
+const { markClean } = useUnsavedCoinForm()
 
 const coin = ref<Coin | null>(null)
 const collections = ref<Collection[]>([])
@@ -148,7 +148,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section>
+  <section class="edit-coin-page">
     <p v-if="errorMessage">{{ errorMessage }}</p>
     <p v-if="collectionsErrorMessage">{{ collectionsErrorMessage }}</p>
 
@@ -156,35 +156,38 @@ onMounted(() => {
       <h2>Edytuj monetę</h2>
     </header>
 
-    <CollectionAssignment
-      v-if="coin"
-      v-model:selected-collection-id="selectedCollectionId"
-      :collections="collections"
-      :saved-collection-id="savedCollectionId"
-      :saving-collection="savingCollection"
-      @created="addCreatedCollection"
-      @save="saveCollection"
-    />
+    <div v-if="coin" class="setup-sections">
+      <CollectionAssignment
+        v-model:selected-collection-id="selectedCollectionId"
+        :collections="collections"
+        :saved-collection-id="savedCollectionId"
+        :saving-collection="savingCollection"
+        @created="addCreatedCollection"
+        @save="saveCollection"
+      />
 
-    <CoinForm
-      v-if="coin"
-      :coin="coin"
-      :image-coin-id="currentCoinId"
-      class="edit-coin-form"
-      @submit="saveCoin"
-      @cancel="cancelEditing"
-    >
-      <template #categories>
-        <CategoryAssignment v-if="coin" :coin-id="currentCoinId" />
-      </template>
-    </CoinForm>
+      <CategoryAssignment :coin-id="currentCoinId" />
+
+      <CoinForm
+        :coin="coin"
+        :image-coin-id="currentCoinId"
+        class="edit-coin-form"
+        @submit="saveCoin"
+        @cancel="cancelEditing"
+      />
+    </div>
   </section>
 </template>
 
 <style scoped>
+.edit-coin-page {
+  display: grid;
+  gap: 0;
+}
+
 .edit-page-header {
   max-width: 1200px;
-  margin: 0 auto 28px;
+  margin: 0 auto 24px;
 }
 
 .edit-page-header h2 {
@@ -192,6 +195,14 @@ onMounted(() => {
   padding-top: 24px;
   font-size: 1.75rem;
   line-height: 1.2;
+}
+
+.setup-sections {
+  display: grid;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .edit-coin-form :deep(.form-header) {
