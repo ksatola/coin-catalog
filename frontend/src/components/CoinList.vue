@@ -1,17 +1,11 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive } from 'vue'
 
-import type { Coin, CoinImage } from '../types'
-
-type CoinImages = { avers: CoinImage | null; rewers: CoinImage | null }
-type DictionaryItem = { id: number; name: string }
-type Dictionaries = { countries: DictionaryItem[]; issuers: DictionaryItem[]; denominations: DictionaryItem[]; mints: DictionaryItem[]; materials: DictionaryItem[]; states: DictionaryItem[]; eras: DictionaryItem[] }
+import type { Coin } from '../types'
 
 const props = defineProps<{ coins: Coin[] }>()
 const emit = defineEmits<{ details: [coin: Coin]; archive: [coin: Coin]; restore: [coin: Coin] }>()
-const imagesByCoin = reactive<Record<number, CoinImages>>({})
 const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
-let loadGeneration = 0
 
 function dictionaryName(items: DictionaryItem[], id: number | null): string | null {
   if (id === null) return null
@@ -32,20 +26,6 @@ async function loadDictionaries(): Promise<void> {
     for (const [name, items] of results) dictionaries[name] = items
   } catch { /* The list remains usable with IDs and years if dictionary data is unavailable. */ }
 }
-async function loadImages(): Promise<void> {
-  const generation = ++loadGeneration
-  const coinIds = new Set(props.coins.map((coin) => coin.id))
-  for (const coinId of Object.keys(imagesByCoin)) if (!coinIds.has(Number(coinId))) delete imagesByCoin[Number(coinId)]
-  const results = await Promise.all(props.coins.map(async (coin) => {
-    try {
-      const response = await fetch(`/api/coins/${coin.id}/images`, { cache: 'no-store' }); if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const images = await response.json() as CoinImage[]
-      return [coin.id, { avers: images.find((image) => image.kind === 'avers') ?? null, rewers: images.find((image) => image.kind === 'rewers') ?? null }] as const
-    } catch { return [coin.id, { avers: null, rewers: null }] as const }
-  }))
-  if (generation !== loadGeneration) return
-  for (const [coinId, images] of results) if (coinIds.has(coinId)) imagesByCoin[coinId] = images
-}
 function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined { const image = imagesByCoin[coin.id]?.[kind]; return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined }
 void loadDictionaries()
 watch(() => props.coins, () => void loadImages(), { immediate: true })
@@ -55,8 +35,8 @@ watch(() => props.coins, () => void loadImages(), { immediate: true })
   <ul class="coin-list">
     <li v-for="coin in coins" :key="coin.id" class="coin-row">
       <div class="image-pair">
-        <span class="coin-image"><img v-if="imagesByCoin[coin.id]?.avers" :src="imageUrl(coin, 'avers')" :alt="`Awers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
-        <span class="coin-image"><img v-if="imagesByCoin[coin.id]?.rewers" :src="imageUrl(coin, 'rewers')" :alt="`Rewers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><img v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')" :alt="`Awers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><img v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')" :alt="`Rewers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
       </div>
       <div class="coin-info">
         <div class="coin-title"><strong>#{{ coin.id }}<span v-if="coin.collection_number" class="collection-number"> | {{ coin.collection_number }}</span></strong></div>
