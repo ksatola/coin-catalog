@@ -337,6 +337,69 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
   await expect.poll(() => image.getAttribute('src')).toBe('/api/coins/1/images/201/file')
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
 })
+
+test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async ({ page }) => {
+  const coinsResponse = await page.request.get(
+    'http://127.0.0.1:8000/coins?status=active&has_image=true&sort_by=id&sort_order=asc',
+  )
+  expect(coinsResponse.ok()).toBe(true)
+
+  const coins = await coinsResponse.json() as Array<{
+    id: number
+    images?: Array<{ id: number; kind: string }>
+  }>
+  const expectedCount = coins.reduce(
+    (count, coin) => count + (coin.images?.filter((image) => image.kind === 'avers' || image.kind === 'rewers').length ?? 0),
+    0,
+  )
+  expect(expectedCount).toBeGreaterThan(0)
+
+  await page.goto('/monety?has_image=true&sort_by=id&sort_order=asc')
+
+  const assertImages = async (): Promise<void> => {
+    const images = page.locator('.image-grid img')
+    await expect(images).toHaveCount(expectedCount)
+    await expect.poll(async () => images.evaluateAll((elements) =>
+      elements.filter((element) => {
+        const image = element as HTMLImageElement
+        return image.complete && image.naturalWidth > 0
+      }).length,
+    ), { timeout: 10_000 }).toBe(expectedCount)
+  }
+
+  await assertImages()
+
+  await page.getByRole('button', { name: 'Grid', exact: true }).click()
+  await expect(page.locator('.grid img')).toHaveCount(expectedCount)
+
+  await page.getByRole('button', { name: 'Galeria', exact: true }).click()
+  await assertImages()
+
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('a')
+  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.waitForTimeout(400)
+
+  const filteredImages = page.locator('.image-grid img')
+  await expect.poll(async () => filteredImages.evaluateAll((elements) =>
+    elements.filter((element) => {
+      const image = element as HTMLImageElement
+      return image.complete && image.naturalWidth > 0
+    }).length,
+  ), { timeout: 10_000 }).toBe(await filteredImages.count())
+
+  await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+  await assertImages()
+
+  await page.getByRole('button', { name: '3 monet w wierszu' }).click()
+  await assertImages()
+
+  await page.getByRole('button', { name: '4 monet w wierszu' }).click()
+  await assertImages()
+
+  await page.getByRole('button', { name: '1 monet w wierszu' }).click()
+  await assertImages()
+})
 test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', async ({ page }) => {
   const imageResponses = new Map<string, number>()
   const imageFailures = new Map<string, string>()
