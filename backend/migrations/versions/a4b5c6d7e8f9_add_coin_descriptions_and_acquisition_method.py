@@ -41,7 +41,7 @@ def upgrade() -> None:
                 sa.Column(
                     "acquisition_method_id",
                     sa.Integer(),
-                    sa.ForeignKey("acquisition_method.id"),
+                    sa.ForeignKey("acquisition_method.id", name="fk_coin_acquisition_method_id_acquisition_method"),
                     nullable=True,
                 )
             )
