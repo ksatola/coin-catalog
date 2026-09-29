@@ -1,4 +1,5 @@
 import base64
+import binascii
 import json
 from dataclasses import dataclass
 
@@ -41,7 +42,7 @@ def decode_cursor(value: str, sort_by: str, sort_order: str) -> CoinCursor:
             sort_value=payload["sort_value"],
             coin_id=payload["coin_id"],
         )
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+    except (binascii.Error, KeyError, TypeError, ValueError, json.JSONDecodeError):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid cursor",
