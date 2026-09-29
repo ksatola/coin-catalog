@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Coin } from '../types'
+import CoinImage from './CoinImage.vue'
 
 const props = defineProps<{
   coins: Coin[]
@@ -33,16 +33,16 @@ function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
       :aria-label="`Moneta #${coin.id}`"
     >
       <div class="coin-side">
-        <img
+        <CoinImage
           v-if="imageUrl(coin, 'avers')"
-          :src="imageUrl(coin, 'avers')"
+          :src="imageUrl(coin, 'avers')!"
           :alt="`Awers monety #${coin.id}`"
         />
       </div>
       <div class="coin-side">
-        <img
+        <CoinImage
           v-if="imageUrl(coin, 'rewers')"
-          :src="imageUrl(coin, 'rewers')"
+          :src="imageUrl(coin, 'rewers')!"
           :alt="`Rewers monety #${coin.id}`"
         />
       </div>
