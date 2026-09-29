@@ -15,6 +15,12 @@ const nextCoinId = ref<number | null>(null)
 const errorMessage = ref('')
 const applyCurrentFilters = ref(window.location.search ? new URLSearchParams(window.location.search).get('apply_filters') !== 'false' : false)
 
+function filterContextQuery(): string {
+  const params = new URLSearchParams(window.location.search)
+  params.delete('apply_filters')
+  return params.toString()
+}
+
 function navigationQuery(): string {
   if (applyCurrentFilters.value) {
     const params = new URLSearchParams(window.location.search)
@@ -32,7 +38,7 @@ function navigationQuery(): string {
 }
 
 function detailPath(coinId: number): string {
-  const query = navigationQuery()
+  const query = filterContextQuery()
   const params = new URLSearchParams(query)
   params.set('apply_filters', String(applyCurrentFilters.value))
   const navigationQueryString = params.toString()
