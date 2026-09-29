@@ -122,24 +122,36 @@ test('read-only ma białe sekcje dla zdjęć dodatkowych i kategorii oraz spójn
 
 test('read-only nawigacja monet zachowuje aktualne filtry i pozwala je wyłączyć', async ({ page }) => {
   await mockDictionaries(page)
-  await page.route('**/api/collections/1', async (route) => await route.fulfill({ json: collections[0] }))
-  await page.route('**/api/coins/1/images', async (route) => await route.fulfill({ json: coinImages }))
-  await page.route('**/api/coins/2/images', async (route) => await route.fulfill({ json: coinImages }))
-  await page.route('**/api/coins/3/images', async (route) => await route.fulfill({ json: coinImages }))
-  await page.route('**/api/coins/*/categories', async (route) => await route.fulfill({ json: categories }))
-
-  const coins = [1, 2, 3].map((id) => ({ ...coin, id }))
-
-  await page.route('**/api/coins/1', async (route) => await route.fulfill({ json: coins[0] }))
-  await page.route('**/api/coins/2', async (route) => await route.fulfill({ json: coins[1] }))
-  await page.route('**/api/coins/3', async (route) => await route.fulfill({ json: coins[2] }))
-  await page.route('**/api/coins*', async (route) => {
+  await page.route('**/api/**', async (route) => {
     const url = new URL(route.request().url())
-    if (url.pathname === '/api/coins') {
-      await route.fulfill({ json: coins })
+
+    if (url.pathname === '/api/collections/1') {
+      await route.fulfill({ json: collections[0] })
       return
     }
-    await route.continue()
+
+    if (url.pathname === '/api/coins/1' || url.pathname === '/api/coins/2' || url.pathname === '/api/coins/3') {
+      const id = Number(url.pathname.split('/').pop())
+      await route.fulfill({ json: { ...coin, id } })
+      return
+    }
+
+    if (url.pathname === '/api/coins') {
+      await route.fulfill({ json: [1, 2, 3].map((id) => ({ ...coin, id })) })
+      return
+    }
+
+    if (/^\/api\/coins\/[123]\/images$/.test(url.pathname)) {
+      await route.fulfill({ json: coinImages })
+      return
+    }
+
+    if (/^\/api\/coins\/[123]\/categories$/.test(url.pathname)) {
+      await route.fulfill({ json: categories })
+      return
+    }
+
+    await route.fulfill({ json: [] })
   })
 
   await page.goto('/monety/2?country_id=1&include_category_children=true&status=active&sort_by=id&sort_order=asc')
