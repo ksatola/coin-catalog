@@ -10,12 +10,13 @@ async function mockCatalog(page: Page): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []) })
   })
   await page.route('**/api/categories', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(categories) }))
-  await page.route('**/api/coins*', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([coin]) }))
+  await page.route('**/api/collections', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }))
+  await page.route('**/api/coins*', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [coin], next_cursor: null, has_more: false }) }))
 }
 
 async function openAdvancedFilters(page: Page): Promise<void> {
   const toggle = page.getByRole('button', { name: '⚙ Filtry' })
-  if (await toggle.isVisible()) await toggle.click()
+  await toggle.click()
 }
 
 async function advancedSearch(page: Page): Promise<import('@playwright/test').Locator> {
