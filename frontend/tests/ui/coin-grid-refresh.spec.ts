@@ -280,11 +280,9 @@ test('równoległe odświeżenia katalogu nie pozwalają starszej odpowiedzi nad
 
   await page.goto('/monety')
 
-  await page.evaluate(() => {
-    window.dispatchEvent(new Event('test-load-coins'))
-  })
-
-  await page.waitForTimeout(500)
+  const search = page.getByPlaceholder('Szukaj monet, np. polska grosz')
+  await search.fill('test')
+  await page.waitForTimeout(600)
 
   const cards = page.locator('.image-grid .coin-tile')
   await expect(cards).toHaveCount(1)
