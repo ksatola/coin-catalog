@@ -92,16 +92,42 @@ async function mockCatalog(page: import('@playwright/test').Page): Promise<URL[]
 test('infinite scroll doładowuje kolejną porcję monet przez cursor', async ({ page }) => {
   const requests = await mockCatalog(page)
 
+  await page.addInitScript(() => {
+    let intersectionCallback: IntersectionObserverCallback | undefined
+
+    window.IntersectionObserver = class {
+      constructor(callback: IntersectionObserverCallback) {
+        intersectionCallback = callback
+      }
+
+      disconnect(): void {}
+
+      observe(): void {}
+
+      unobserve(): void {}
+    } as unknown as typeof IntersectionObserver
+
+    Object.defineProperty(window, '__triggerCoinCatalogIntersection', {
+      configurable: true,
+      value: () => {
+        intersectionCallback?.(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          {} as IntersectionObserver,
+        )
+      },
+    })
+  })
+
   await page.goto('/monety')
 
   await expect(page.getByRole('link', { name: 'Moneta #1', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #2', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #3', exact: true })).toHaveCount(0)
 
-  await page.addStyleTag({
-    content: '.infinite-scroll-sentinel { margin-top: 2000px !important; }',
+  await page.evaluate(() => {
+    ;(window as unknown as { __triggerCoinCatalogIntersection: () => void })
+      .__triggerCoinCatalogIntersection()
   })
-  await page.locator('.infinite-scroll-sentinel').scrollIntoViewIfNeeded()
 
   await expect(page.getByRole('link', { name: 'Moneta #3', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #4', exact: true })).toBeVisible()
