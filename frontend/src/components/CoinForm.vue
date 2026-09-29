@@ -446,7 +446,7 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
         <label for="acquisition-method-text">Sposób nabycia</label>
         <textarea id="acquisition-method-text" v-model="form.acquisition_method_text" placeholder="Wpisz dodatkowe informacje o sposobie nabycia." />
         <div class="acquisition-tools">
-          <select id="acquisition-method" v-model.number="form.acquisition_method_id" @click.stop>
+          <select id="acquisition-method" aria-label="Sposób nabycia" v-model.number="form.acquisition_method_id" @click.stop>
             <option :value="null">Wybierz ze słownika…</option>
             <option v-for="item in dictionaries.acquisition_methods" :key="item.id" :value="item.id">{{ item.name }}</option>
           </select>
