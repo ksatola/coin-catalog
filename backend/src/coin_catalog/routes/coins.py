@@ -1,9 +1,17 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.coin_move import move_coin
+from coin_catalog.coin_pagination import (
+    CoinCursor,
+    apply_after_cursor,
+    apply_before_cursor,
+    decode_cursor,
+    encode_cursor,
+)
 from coin_catalog.coin_search import build_coin_query
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import get_db
@@ -12,11 +20,16 @@ from coin_catalog.schemas import (
     CoinCreate,
     CoinListResponse,
     CoinMoveRequest,
+    CoinNavigationResponse,
+    CoinPageResponse,
     CoinResponse,
     CoinUpdate,
 )
 
 router = APIRouter(prefix="/coins", tags=["coins"])
+
+MAX_PAGE_SIZE = 100
+DEFAULT_PAGE_SIZE = 50
 
 
 def get_collection_or_404(collection_id: int, session: Session) -> Collection:
@@ -31,48 +44,12 @@ def get_collection_or_404(collection_id: int, session: Session) -> Collection:
     return collection
 
 
-@router.post(
-    "",
-    response_model=CoinResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_coin(
-    coin_data: CoinCreate,
-    session: Session = Depends(get_db),
-) -> Coin:
-    collection = get_collection_or_404(coin_data.collection_id, session)
-
-    coin = Coin(**coin_data.model_dump())
-    session.add(coin)
-    session.flush()
-    recalculate_collection_stats(collection, session)
-    session.commit()
-    session.refresh(coin)
-    return coin
-
-
-@router.get("", response_model=list[CoinListResponse])
-def list_coins(
-    search: str | None = None,
-    collection_id: list[int] | None = Query(None),
-    country_id: list[int] | None = Query(None),
-    issuer_id: list[int] | None = Query(None),
-    denomination_id: list[int] | None = Query(None),
-    mint_id: list[int] | None = Query(None),
-    material_id: list[int] | None = Query(None),
-    state_id: list[int] | None = Query(None),
-    era_id: list[int] | None = Query(None),
-    category_id: list[int] | None = Query(None),
-    include_category_children: bool = True,
-    from_year: int | None = None,
-    to_year: int | None = None,
-    has_image: bool | None = None,
-    has_video: bool | None = None,
-    coin_status: str = Query("active", alias="status"),
-    sort_by: str = "id",
-    sort_order: str = "asc",
-    session: Session = Depends(get_db),
-) -> list[Coin]:
+def validate_coin_query(
+    search: str | None,
+    coin_status: str,
+    sort_by: str,
+    sort_order: str,
+) -> None:
     if search:
         tokens = [token for token in search.split() if token]
         if any(len(token) < 3 for token in tokens):
@@ -97,7 +74,29 @@ def list_coins(
             detail="Invalid sort order",
         )
 
-    statement = build_coin_query(
+
+def build_filtered_coin_query(
+    *,
+    search: str | None,
+    collection_id: list[int] | None,
+    country_id: list[int] | None,
+    issuer_id: list[int] | None,
+    denomination_id: list[int] | None,
+    mint_id: list[int] | None,
+    material_id: list[int] | None,
+    state_id: list[int] | None,
+    era_id: list[int] | None,
+    category_id: list[int] | None,
+    include_category_children: bool,
+    from_year: int | None,
+    to_year: int | None,
+    has_image: bool | None,
+    has_video: bool | None,
+    coin_status: str,
+    sort_by: str,
+    sort_order: str,
+):
+    return build_coin_query(
         search=search,
         collection_ids=collection_id,
         country_ids=country_id,
@@ -117,10 +116,214 @@ def list_coins(
         sort_by=sort_by,
         sort_order=sort_order,
     )
-    statement = statement.options(
+
+
+def load_list_images(statement):
+    return statement.options(
         selectinload(Coin.images.and_(CoinImage.kind.in_(("avers", "rewers"))))
     )
-    return list(session.scalars(statement).all())
+
+
+def cursor_for_coin(coin: Coin, sort_by: str, sort_order: str) -> CoinCursor:
+    sort_value = {
+        "id": coin.id,
+        "from_year": coin.from_year,
+        "to_year": coin.to_year,
+    }[sort_by]
+    return CoinCursor(
+        sort_by=sort_by,
+        sort_order=sort_order,
+        sort_value=sort_value,
+        coin_id=coin.id,
+    )
+
+
+@router.post(
+    "",
+    response_model=CoinResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_coin(
+    coin_data: CoinCreate,
+    session: Session = Depends(get_db),
+) -> Coin:
+    collection = get_collection_or_404(coin_data.collection_id, session)
+
+    coin = Coin(**coin_data.model_dump())
+    session.add(coin)
+    session.flush()
+    recalculate_collection_stats(collection, session)
+    session.commit()
+    session.refresh(coin)
+    return coin
+
+
+@router.get(
+    "",
+    response_model=list[CoinListResponse] | CoinPageResponse,
+)
+def list_coins(
+    search: str | None = None,
+    collection_id: list[int] | None = Query(None),
+    country_id: list[int] | None = Query(None),
+    issuer_id: list[int] | None = Query(None),
+    denomination_id: list[int] | None = Query(None),
+    mint_id: list[int] | None = Query(None),
+    material_id: list[int] | None = Query(None),
+    state_id: list[int] | None = Query(None),
+    era_id: list[int] | None = Query(None),
+    category_id: list[int] | None = Query(None),
+    include_category_children: bool = True,
+    from_year: int | None = None,
+    to_year: int | None = None,
+    has_image: bool | None = None,
+    has_video: bool | None = None,
+    coin_status: str = Query("active", alias="status"),
+    sort_by: str = "id",
+    sort_order: str = "asc",
+    limit: int | None = Query(None, ge=1, le=MAX_PAGE_SIZE),
+    cursor: str | None = None,
+    session: Session = Depends(get_db),
+) -> list[Coin] | CoinPageResponse:
+    validate_coin_query(search, coin_status, sort_by, sort_order)
+
+    if cursor is not None and limit is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cursor requires limit",
+        )
+
+    statement = build_filtered_coin_query(
+        search=search,
+        collection_id=collection_id,
+        country_id=country_id,
+        issuer_id=issuer_id,
+        denomination_id=denomination_id,
+        mint_id=mint_id,
+        material_id=material_id,
+        state_id=state_id,
+        era_id=era_id,
+        category_id=category_id,
+        include_category_children=include_category_children,
+        from_year=from_year,
+        to_year=to_year,
+        has_image=has_image,
+        has_video=has_video,
+        coin_status=coin_status,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+    if limit is None:
+        statement = load_list_images(statement)
+        return list(session.scalars(statement).all())
+
+    coin_cursor = (
+        decode_cursor(cursor, sort_by, sort_order) if cursor is not None else None
+    )
+    if coin_cursor is not None:
+        statement = apply_after_cursor(statement, coin_cursor)
+
+    statement = load_list_images(statement).limit(limit + 1)
+    coins = list(session.scalars(statement).all())
+    has_more = len(coins) > limit
+    page_items = coins[:limit]
+
+    next_cursor = (
+        encode_cursor(cursor_for_coin(page_items[-1], sort_by, sort_order))
+        if has_more and page_items
+        else None
+    )
+
+    return CoinPageResponse(
+        items=page_items,
+        next_cursor=next_cursor,
+        has_more=has_more,
+    )
+
+
+@router.get("/{coin_id}/navigation", response_model=CoinNavigationResponse)
+def coin_navigation(
+    coin_id: int,
+    search: str | None = None,
+    collection_id: list[int] | None = Query(None),
+    country_id: list[int] | None = Query(None),
+    issuer_id: list[int] | None = Query(None),
+    denomination_id: list[int] | None = Query(None),
+    mint_id: list[int] | None = Query(None),
+    material_id: list[int] | None = Query(None),
+    state_id: list[int] | None = Query(None),
+    era_id: list[int] | None = Query(None),
+    category_id: list[int] | None = Query(None),
+    include_category_children: bool = True,
+    from_year: int | None = None,
+    to_year: int | None = None,
+    has_image: bool | None = None,
+    has_video: bool | None = None,
+    coin_status: str = Query("active", alias="status"),
+    sort_by: str = "id",
+    sort_order: str = "asc",
+    session: Session = Depends(get_db),
+) -> CoinNavigationResponse:
+    validate_coin_query(search, coin_status, sort_by, sort_order)
+
+    coin = session.get(Coin, coin_id)
+    if coin is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Coin not found",
+        )
+
+    statement = build_filtered_coin_query(
+        search=search,
+        collection_id=collection_id,
+        country_id=country_id,
+        issuer_id=issuer_id,
+        denomination_id=denomination_id,
+        mint_id=mint_id,
+        material_id=material_id,
+        state_id=state_id,
+        era_id=era_id,
+        category_id=category_id,
+        include_category_children=include_category_children,
+        from_year=from_year,
+        to_year=to_year,
+        has_image=has_image,
+        has_video=has_video,
+        coin_status=coin_status,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+    current = session.scalar(statement.where(Coin.id == coin_id).limit(1))
+    if current is None:
+        return CoinNavigationResponse(previous_id=None, next_id=None)
+
+    current_cursor = cursor_for_coin(current, sort_by, sort_order)
+
+    previous_statement = apply_before_cursor(statement, current_cursor)
+    reverse_sort_order = "desc" if sort_order == "asc" else "asc"
+    previous_statement = (
+        previous_statement.order_by(None)
+        .order_by(
+            (
+                getattr(Coin, sort_by).desc()
+                if reverse_sort_order == "desc"
+                else getattr(Coin, sort_by).asc()
+            ),
+            Coin.id.desc(),
+        )
+        .limit(1)
+    )
+    previous = session.scalar(previous_statement)
+
+    next_statement = apply_after_cursor(statement, current_cursor).limit(1)
+    next_coin = session.scalar(next_statement)
+
+    return CoinNavigationResponse(
+        previous_id=previous.id if previous is not None else None,
+        next_id=next_coin.id if next_coin is not None else None,
+    )
 
 
 @router.get("/archived", response_model=list[CoinResponse])
