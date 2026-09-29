@@ -194,7 +194,7 @@ test('waliduje ręcznie wpisaną datę zakupu', async ({ page }) => {
   })
 })
 
-test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
+test('zapisuje niezależnie słownikowy sposób i własny tekst nabycia', async ({ page }) => {
   await mockCoinEditApi(page)
   let updatePayload: Record<string, unknown> | null = null
   await page.route('**/api/coins/1', async (route) => {
@@ -205,12 +205,13 @@ test('zapisuje własny tekst sposobu nabycia', async ({ page }) => {
   })
 
   await page.goto('/monety/1/edytuj')
-  await page.getByRole('textbox', { name: 'Sposób nabycia' }).fill('Zakup od prywatnego kolekcjonera')
+  await page.getByRole('combobox', { name: 'Sposób nabycia' }).selectOption('1')
+  await page.getByRole('textbox', { name: 'Sposób nabycia' }).fill('Kupiłem podczas aukcji 12.03.2026')
   await page.getByRole('button', { name: 'Zapisz zmiany' }).click()
 
   await expect.poll(() => updatePayload).toMatchObject({
-    acquisition_method_id: null,
-    acquisition_method_text: 'Zakup od prywatnego kolekcjonera',
+    acquisition_method_id: 1,
+    acquisition_method_text: 'Kupiłem podczas aukcji 12.03.2026',
   })
 })
 
@@ -232,7 +233,7 @@ test('dodaje nowy sposób nabycia do słownika', async ({ page }) => {
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
 
   await expect.poll(() => createdPayload).toEqual({ name: 'Nowy dom aukcyjny' })
-  await expect(page.getByRole('textbox', { name: 'Sposób nabycia' })).toHaveValue('Nowy dom aukcyjny')
+  await expect(page.getByRole('combobox', { name: 'Sposób nabycia' })).toHaveValue('2')
 })
 
 
