@@ -12,6 +12,7 @@ from coin_catalog.main import app
 from coin_catalog.models import (
     AcquisitionMethod,
     Coin,
+    CoinImage,
     Collection,
     Country,
     Denomination,
@@ -304,6 +305,58 @@ def test_list_coins_returns_active_coins_only(
     data = response.json()
     assert len(data) == 1
     assert data[0]["id"] == active_coin.id
+
+
+def test_list_coins_includes_image_metadata(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coin = Coin(
+        collection_id=reference_data["collection_id"],
+        country_id=reference_data["country_id"],
+        denomination_id=reference_data["denomination_id"],
+    )
+    session.add(coin)
+    session.flush()
+
+    session.add_all(
+        [
+            CoinImage(
+                coin_id=coin.id,
+                filename=f"{coin.id}-avers.jpg",
+                kind="avers",
+                sort_order=0,
+            ),
+            CoinImage(
+                coin_id=coin.id,
+                filename=f"{coin.id}-rewers.jpg",
+                kind="rewers",
+                sort_order=0,
+            ),
+            CoinImage(
+                coin_id=coin.id,
+                filename=f"{coin.id}-additional.jpg",
+                kind="additional",
+                sort_order=0,
+            ),
+        ],
+    )
+    session.commit()
+
+    response = client.get("/coins")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["images"] == [
+        {"id": image.id, "kind": image.kind}
+        for image in session.query(CoinImage)
+        .filter(CoinImage.coin_id == coin.id)
+        .order_by(CoinImage.id)
+        .all()
+        if image.kind in {"avers", "rewers"}
+    ]
 
 
 def test_list_archived_coins_returns_archived_coins_only(

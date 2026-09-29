@@ -78,10 +78,16 @@ export interface CoinCreate {
   purchase_date: string | null
 }
 
+export interface CoinListImage {
+  id: number
+  kind: CoinImageKind
+}
+
 export interface Coin extends CoinCreate {
   id: number
   collection_id: number
   is_deleted: boolean
   created_at: string
   updated_at: string
+  images?: CoinListImage[]
 }

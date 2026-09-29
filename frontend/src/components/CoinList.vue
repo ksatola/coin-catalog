@@ -1,62 +1,91 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive } from 'vue'
 
-import type { Coin, CoinImage } from '../types'
+import CoinImage from './CoinImage.vue'
 
-type CoinImages = { avers: CoinImage | null; rewers: CoinImage | null }
 type DictionaryItem = { id: number; name: string }
-type Dictionaries = { countries: DictionaryItem[]; issuers: DictionaryItem[]; denominations: DictionaryItem[]; mints: DictionaryItem[]; materials: DictionaryItem[]; states: DictionaryItem[]; eras: DictionaryItem[] }
+type Dictionaries = {
+  countries: DictionaryItem[]
+  issuers: DictionaryItem[]
+  denominations: DictionaryItem[]
+  mints: DictionaryItem[]
+  materials: DictionaryItem[]
+  states: DictionaryItem[]
+  eras: DictionaryItem[]
+}
 
 const props = defineProps<{ coins: Coin[] }>()
 const emit = defineEmits<{ details: [coin: Coin]; archive: [coin: Coin]; restore: [coin: Coin] }>()
-const imagesByCoin = reactive<Record<number, CoinImages>>({})
-const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
-let loadGeneration = 0
+const dictionaries = reactive<Dictionaries>({
+  countries: [],
+  issuers: [],
+  denominations: [],
+  mints: [],
+  materials: [],
+  states: [],
+  eras: [],
+})
 
 function dictionaryName(items: DictionaryItem[], id: number | null): string | null {
   if (id === null) return null
   return items.find((item) => item.id === id)?.name ?? null
 }
-function formatYear(year: number | null, eraId: number | null): string { if (year === null) return '—'; const era = dictionaryName(dictionaries.eras, eraId); return era ? `${year} ${era}` : `${year}` }
-function formatRange(coin: Coin): string { return `${formatYear(coin.from_year, coin.from_era_id)} – ${formatYear(coin.to_year, coin.to_era_id)}` }
-function formatDetails(coin: Coin): string[] {
-  return [dictionaryName(dictionaries.materials, coin.material_id), dictionaryName(dictionaries.states, coin.state_id), coin.weight !== null ? `${Number(coin.weight).toFixed(2)} g` : null, coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : null].filter((value): value is string => Boolean(value))
+
+function formatYear(year: number | null, eraId: number | null): string {
+  if (year === null) return '—'
+  const era = dictionaryName(dictionaries.eras, eraId)
+  return era ? `${year} ${era}` : `${year}`
 }
-function formatIdentity(coin: Coin): string[] { return [dictionaryName(dictionaries.countries, coin.country_id), dictionaryName(dictionaries.issuers, coin.issuer_id), formatRange(coin)].filter((value): value is string => Boolean(value)) }
-function formatDescription(coin: Coin): string[] { return [dictionaryName(dictionaries.denominations, coin.denomination_id), dictionaryName(dictionaries.mints, coin.mint_id), ...formatDetails(coin)].filter((value): value is string => Boolean(value)) }
+
+function formatRange(coin: Coin): string {
+  return `${formatYear(coin.from_year, coin.from_era_id)} – ${formatYear(coin.to_year, coin.to_era_id)}`
+}
+
+function formatDetails(coin: Coin): string[] {
+  return [
+    dictionaryName(dictionaries.materials, coin.material_id),
+    dictionaryName(dictionaries.states, coin.state_id),
+    coin.weight !== null ? `${Number(coin.weight).toFixed(2)} g` : null,
+    coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : null,
+  ].filter((value): value is string => Boolean(value))
+}
+
+function formatIdentity(coin: Coin): string[] {
+  return [dictionaryName(dictionaries.countries, coin.country_id), dictionaryName(dictionaries.issuers, coin.issuer_id), formatRange(coin)].filter((value): value is string => Boolean(value))
+}
+
+function formatDescription(coin: Coin): string[] {
+  return [dictionaryName(dictionaries.denominations, coin.denomination_id), dictionaryName(dictionaries.mints, coin.mint_id), ...formatDetails(coin)].filter((value): value is string => Boolean(value))
+}
 
 async function loadDictionaries(): Promise<void> {
   const names: Array<keyof Dictionaries> = ['countries', 'issuers', 'denominations', 'mints', 'materials', 'states', 'eras']
   try {
-    const results = await Promise.all(names.map(async (name) => { const response = await fetch(`/api/dictionaries/${name}`, { cache: 'no-store' }); if (!response.ok) throw new Error(`HTTP ${response.status}`); return [name, await response.json() as DictionaryItem[]] as const }))
+    const results = await Promise.all(names.map(async (name) => {
+      const response = await fetch(`/api/dictionaries/${name}`, { cache: 'no-store' })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return [name, await response.json() as DictionaryItem[]] as const
+    }))
     for (const [name, items] of results) dictionaries[name] = items
-  } catch { /* The list remains usable with IDs and years if dictionary data is unavailable. */ }
+  } catch {
+    // The list remains usable with IDs and years if dictionary data is unavailable.
+  }
 }
-async function loadImages(): Promise<void> {
-  const generation = ++loadGeneration
-  const coinIds = new Set(props.coins.map((coin) => coin.id))
-  for (const coinId of Object.keys(imagesByCoin)) if (!coinIds.has(Number(coinId))) delete imagesByCoin[Number(coinId)]
-  const results = await Promise.all(props.coins.map(async (coin) => {
-    try {
-      const response = await fetch(`/api/coins/${coin.id}/images`, { cache: 'no-store' }); if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const images = await response.json() as CoinImage[]
-      return [coin.id, { avers: images.find((image) => image.kind === 'avers') ?? null, rewers: images.find((image) => image.kind === 'rewers') ?? null }] as const
-    } catch { return [coin.id, { avers: null, rewers: null }] as const }
-  }))
-  if (generation !== loadGeneration) return
-  for (const [coinId, images] of results) if (coinIds.has(coinId)) imagesByCoin[coinId] = images
+
+function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
+  const image = coin.images?.find((item) => item.kind === kind)
+  return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined
 }
-function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined { const image = imagesByCoin[coin.id]?.[kind]; return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined }
+
 void loadDictionaries()
-watch(() => props.coins, () => void loadImages(), { immediate: true })
 </script>
 
 <template>
   <ul class="coin-list">
     <li v-for="coin in coins" :key="coin.id" class="coin-row">
       <div class="image-pair">
-        <span class="coin-image"><img v-if="imagesByCoin[coin.id]?.avers" :src="imageUrl(coin, 'avers')" :alt="`Awers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
-        <span class="coin-image"><img v-if="imagesByCoin[coin.id]?.rewers" :src="imageUrl(coin, 'rewers')" :alt="`Rewers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
       </div>
       <div class="coin-info">
         <div class="coin-title"><strong>#{{ coin.id }}<span v-if="coin.collection_number" class="collection-number"> | {{ coin.collection_number }}</span></strong></div>

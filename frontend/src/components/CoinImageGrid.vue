@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
-
-import type { Coin, CoinImage } from '../types'
-
-type CoinImages = {
-  avers: CoinImage | null
-  rewers: CoinImage | null
-}
+import CoinImage from './CoinImage.vue'
 
 const props = defineProps<{
   coins: Coin[]
@@ -18,66 +11,10 @@ function detailPath(coinId: number): string {
   return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
 }
 
-const imagesByCoin = reactive<Record<number, CoinImages>>({})
-let loadGeneration = 0
-
-async function loadImages(): Promise<void> {
-  const generation = ++loadGeneration
-  const coinIds = new Set(props.coins.map((coin) => coin.id))
-
-  for (const coinId of Object.keys(imagesByCoin)) {
-    if (!coinIds.has(Number(coinId))) {
-      delete imagesByCoin[Number(coinId)]
-    }
-  }
-
-  const results = await Promise.all(
-    props.coins.map(async (coin) => {
-      try {
-        const response = await fetch(`/api/coins/${coin.id}/images`, {
-          cache: 'no-store',
-        })
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-
-        const images = await response.json() as CoinImage[]
-        return [
-          coin.id,
-          {
-            avers: images.find((image) => image.kind === 'avers') ?? null,
-            rewers: images.find((image) => image.kind === 'rewers') ?? null,
-          },
-        ] as const
-      } catch {
-        return [coin.id, { avers: null, rewers: null }] as const
-      }
-    }),
-  )
-
-  if (generation !== loadGeneration) {
-    return
-  }
-
-  for (const [coinId, images] of results) {
-    if (coinIds.has(coinId)) {
-      imagesByCoin[coinId] = images
-    }
-  }
-}
-
 function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
-  const image = imagesByCoin[coin.id]?.[kind]
-  if (!image) {
-    return undefined
-  }
-
-  return `/api/coins/${coin.id}/images/${image.id}/file`
+  const image = coin.images?.find((item) => item.kind === kind)
+  return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined
 }
-
-watch(() => props.coins, () => {
-  void loadImages()
-}, { immediate: true })
 </script>
 
 <template>
@@ -96,16 +33,16 @@ watch(() => props.coins, () => {
       :aria-label="`Moneta #${coin.id}`"
     >
       <div class="coin-side">
-        <img
-          v-if="imagesByCoin[coin.id]?.avers"
-          :src="imageUrl(coin, 'avers')"
+        <CoinImage
+          v-if="imageUrl(coin, 'avers')"
+          :src="imageUrl(coin, 'avers')!"
           :alt="`Awers monety #${coin.id}`"
         />
       </div>
       <div class="coin-side">
-        <img
-          v-if="imagesByCoin[coin.id]?.rewers"
-          :src="imageUrl(coin, 'rewers')"
+        <CoinImage
+          v-if="imageUrl(coin, 'rewers')"
+          :src="imageUrl(coin, 'rewers')!"
           :alt="`Rewers monety #${coin.id}`"
         />
       </div>
