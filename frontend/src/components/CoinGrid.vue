@@ -27,7 +27,6 @@ function detailPath(coinId: number): string {
   return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
 }
 
-const imagesByCoin = reactive<Record<number, CoinImages>>({})
 const dictionaries = ref<Dictionaries>({
   countries: [],
   issuers: [],
@@ -37,7 +36,6 @@ const dictionaries = ref<Dictionaries>({
   states: [],
   eras: [],
 })
-let loadGeneration = 0
 
 function dictionaryName(items: DictionaryItem[], id: number | null): string | null {
   if (id === null) return null
