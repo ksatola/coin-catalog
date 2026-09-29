@@ -121,9 +121,14 @@ test('read-only ma białe sekcje dla zdjęć dodatkowych i kategorii oraz spójn
 
 
 test('read-only nawigacja monet zachowuje aktualne filtry i pozwala je wyłączyć', async ({ page }) => {
-  await mockDictionaries(page)
   await page.route('**/api/**', async (route) => {
     const url = new URL(route.request().url())
+
+    if (url.pathname.startsWith('/api/dictionaries/')) {
+      const name = url.pathname.split('/').pop() as keyof typeof dictionaries
+      await route.fulfill({ json: dictionaries[name] ?? [] })
+      return
+    }
 
     if (url.pathname === '/api/collections/1') {
       await route.fulfill({ json: collections[0] })
