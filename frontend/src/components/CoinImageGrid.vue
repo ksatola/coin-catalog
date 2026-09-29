@@ -11,7 +11,12 @@ type CoinImages = {
 const props = defineProps<{
   coins: Coin[]
   columns?: 1 | 2 | 3 | 4
+  detailQuery?: string
 }>()
+
+function detailPath(coinId: number): string {
+  return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
+}
 
 const imagesByCoin = reactive<Record<number, CoinImages>>({})
 let loadGeneration = 0
