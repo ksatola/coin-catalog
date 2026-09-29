@@ -167,7 +167,7 @@ onMounted(loadCoin)
           <button
             type="button"
             class="button button-primary"
-            @click="router.push(\`/monety/\${coin.id}/edytuj\`)"
+            @click="router.push(`/monety/${coin.id}/edytuj`)"
           >
             Edytuj
           </button>
