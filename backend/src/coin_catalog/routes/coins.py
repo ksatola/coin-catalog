@@ -1,14 +1,14 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.coin_move import move_coin
 from coin_catalog.coin_search import build_coin_query
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import get_db
 from coin_catalog.models import Coin, Collection
-from coin_catalog.schemas import CoinCreate, CoinMoveRequest, CoinResponse, CoinUpdate
+from coin_catalog.schemas import CoinCreate, CoinListResponse, CoinMoveRequest, CoinResponse, CoinUpdate
 
 router = APIRouter(prefix="/coins", tags=["coins"])
 
@@ -45,7 +45,7 @@ def create_coin(
     return coin
 
 
-@router.get("", response_model=list[CoinResponse])
+@router.get("", response_model=list[CoinListResponse])
 def list_coins(
     search: str | None = None,
     collection_id: list[int] | None = Query(None),
@@ -111,6 +111,7 @@ def list_coins(
         sort_by=sort_by,
         sort_order=sort_order,
     )
+    statement = statement.options(selectinload(Coin.images))
     return list(session.scalars(statement).all())
 
 
