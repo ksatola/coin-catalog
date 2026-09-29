@@ -82,6 +82,17 @@ class CoinListResponse(CoinResponse):
     images: list[CoinListImageResponse] = Field(default_factory=list)
 
 
+class CoinPageResponse(BaseModel):
+    items: list[CoinListResponse]
+    next_cursor: str | None
+    has_more: bool
+
+
+class CoinNavigationResponse(BaseModel):
+    previous_id: int | None
+    next_id: int | None
+
+
 class DictionaryItemCreate(BaseModel):
     name: str
 
