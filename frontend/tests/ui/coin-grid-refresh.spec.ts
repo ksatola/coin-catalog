@@ -92,6 +92,65 @@ test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) =>
 })
 
 
+test('rzeczywiste obrazy monet są pobierane przez backend i dekodowane przez przeglądarkę', async ({ page }) => {
+  const imageResponses = new Map<string, number>()
+  const imageFailures = new Map<string, string>()
+
+  page.on('response', (response) => {
+    if (
+      response.url().includes('/api/coins/')
+      && response.url().includes('/images/')
+      && response.url().endsWith('/file')
+    ) {
+      imageResponses.set(response.url(), response.status())
+    }
+  })
+
+  page.on('requestfailed', (request) => {
+    if (
+      request.url().includes('/api/coins/')
+      && request.url().includes('/images/')
+      && request.url().endsWith('/file')
+    ) {
+      imageFailures.set(request.url(), request.failure()?.errorText ?? 'unknown')
+    }
+  })
+
+  const coinsResponse = await page.request.get(
+    'http://127.0.0.1:8000/coins?status=active&has_image=true&sort_by=id&sort_order=asc',
+  )
+  expect(coinsResponse.ok()).toBe(true)
+
+  const coins = await coinsResponse.json() as Array<{
+    id: number
+    images?: Array<{ id: number; kind: string }>
+  }>
+  const coinsWithPrimaryImages = coins.filter((coin) =>
+    coin.images?.some((image) => image.kind === 'avers' || image.kind === 'rewers'),
+  )
+
+  expect(coinsWithPrimaryImages.length).toBeGreaterThan(0)
+
+  await page.goto('/monety?has_image=true&sort_by=id&sort_order=asc')
+
+  const images = page.locator('.image-grid img')
+  await expect(images).toHaveCount(coinsWithPrimaryImages.reduce(
+    (count, coin) => count + (coin.images?.filter((image) => image.kind === 'avers' || image.kind === 'rewers').length ?? 0),
+    0,
+  ))
+
+  await expect.poll(async () => images.evaluateAll((elements) =>
+    elements.filter((element) => {
+      const image = element as HTMLImageElement
+      return image.complete && image.naturalWidth > 0
+    }).length,
+  ), { timeout: 10_000 }).toBe(await images.count())
+
+  expect(imageFailures.size).toBe(0)
+  expect([...imageResponses.values()].every((status) => status === 200)).toBe(true)
+  expect(imageResponses.size).toBe(await images.count())
+})
+
 test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', async ({ page }) => {
   const imageResponses = new Map<string, number>()
   const imageFailures = new Map<string, string>()
