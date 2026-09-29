@@ -369,10 +369,10 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
 
   await assertImages()
 
-  await page.getByRole('button', { name: 'Grid', exact: true }).click()
+  await page.getByRole('button', { name: /Grid/ }).click()
   await expect(page.locator('.grid img')).toHaveCount(expectedCount)
 
-  await page.getByRole('button', { name: 'Galeria', exact: true }).click()
+  await page.getByRole('button', { name: /Galeria/ }).click()
   await assertImages()
 
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
