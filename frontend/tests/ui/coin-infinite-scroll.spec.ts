@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const coins = Array.from({ length: 4 }, (_, index) => ({
+const coins = Array.from({ length: 20 }, (_, index) => ({
   id: index + 1,
   collection_id: 1,
   country_id: 1,
@@ -74,7 +74,7 @@ async function mockCatalog(page: import('@playwright/test').Page): Promise<URL[]
     }
 
     const cursor = url.searchParams.get('cursor')
-    const items = cursor ? coins.slice(2, 4) : coins.slice(0, 2)
+    const items = cursor ? coins.slice(10, 20) : coins.slice(0, 10)
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -92,46 +92,17 @@ async function mockCatalog(page: import('@playwright/test').Page): Promise<URL[]
 test('infinite scroll doładowuje kolejną porcję monet przez cursor', async ({ page }) => {
   const requests = await mockCatalog(page)
 
-  await page.addInitScript(() => {
-    let intersectionCallback: IntersectionObserverCallback | undefined
-
-    window.IntersectionObserver = class {
-      constructor(callback: IntersectionObserverCallback) {
-        intersectionCallback = callback
-      }
-
-      disconnect(): void {}
-
-      observe(): void {}
-
-      unobserve(): void {}
-    } as unknown as typeof IntersectionObserver
-
-    Object.defineProperty(window, '__triggerCoinCatalogIntersection', {
-      configurable: true,
-      value: () => {
-        intersectionCallback?.(
-          [{ isIntersecting: true } as IntersectionObserverEntry],
-          {} as IntersectionObserver,
-        )
-      },
-    })
-  })
-
   await page.goto('/monety')
 
   await expect(page.getByRole('link', { name: 'Moneta #1', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Moneta #2', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Moneta #3', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Moneta #10', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Moneta #11', exact: true })).toHaveCount(0)
 
-  await page.evaluate(() => {
-    ;(window as unknown as { __triggerCoinCatalogIntersection: () => void })
-      .__triggerCoinCatalogIntersection()
-  })
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 
-  await expect(page.getByRole('link', { name: 'Moneta #3', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Moneta #4', exact: true })).toBeVisible()
-  await expect(page.locator('.image-grid .coin-tile')).toHaveCount(4)
+  await expect(page.getByRole('link', { name: 'Moneta #11', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Moneta #20', exact: true })).toBeVisible()
+  await expect(page.locator('.image-grid .coin-tile')).toHaveCount(20)
 
   const paginatedRequests = requests.filter((url) => url.searchParams.has('limit'))
   expect(paginatedRequests).toHaveLength(2)
