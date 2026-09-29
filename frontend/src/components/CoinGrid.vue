@@ -25,7 +25,12 @@ type Dictionaries = {
 
 const props = defineProps<{
   coins: Coin[]
+  detailQuery?: string
 }>()
+
+function detailPath(coinId: number): string {
+  return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
+}
 
 const imagesByCoin = reactive<Record<number, CoinImages>>({})
 const dictionaries = ref<Dictionaries>({
