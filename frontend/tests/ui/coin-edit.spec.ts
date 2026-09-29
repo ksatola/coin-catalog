@@ -38,7 +38,7 @@ const coin = {
   revers_description: 'Opis rewersu',
   literature: 'Literatura testowa',
   acquisition_method_id: 1,
-  acquisition_method_text: null,
+  acquisition_method_text: 'Lot 182, aukcja internetowa',
   purchase_price: 250,
   purchase_date: '2026-09-28',
   weight: null,
