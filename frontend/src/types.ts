@@ -26,7 +26,6 @@ export interface Collection extends CollectionStats {
   description: string | null
   created_at: string
   updated_at: string
-  images?: CoinListImage[]
 }
 
 export interface Category {
@@ -90,4 +89,5 @@ export interface Coin extends CoinCreate {
   is_deleted: boolean
   created_at: string
   updated_at: string
+  images?: CoinListImage[]
 }
