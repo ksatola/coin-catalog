@@ -42,7 +42,6 @@ onMounted(loadCategories)
 
 <style scoped>
 .coin-categories {
-  margin-top: 24px;
   padding: 16px;
   border: 1px solid #dbe3ee;
   border-radius: 10px;
