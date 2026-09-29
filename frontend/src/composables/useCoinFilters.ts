@@ -68,6 +68,47 @@ export function useCoinFilters(scope: CoinFilterScope): CoinFilterState {
   return state
 }
 
+
+function parsePositiveIds(params: URLSearchParams, key: string): number[] {
+  return params
+    .getAll(key)
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0)
+}
+
+export function parseCoinFilterQuery(query: string | URLSearchParams): CoinFilterState {
+  const params = typeof query === 'string' ? new URLSearchParams(query) : query
+
+  return {
+    search: params.get('search') ?? '',
+    dictionarySelections: {
+      countries: parsePositiveIds(params, 'country_id'),
+      issuers: parsePositiveIds(params, 'issuer_id'),
+      denominations: parsePositiveIds(params, 'denomination_id'),
+      mints: parsePositiveIds(params, 'mint_id'),
+      materials: parsePositiveIds(params, 'material_id'),
+      states: parsePositiveIds(params, 'state_id'),
+      eras: parsePositiveIds(params, 'era_id'),
+    },
+    collectionIds: parsePositiveIds(params, 'collection_id'),
+    categoryIds: parsePositiveIds(params, 'category_id'),
+    includeCategoryChildren: params.get('include_category_children') !== 'false',
+    fromYear: parseOptionalInteger(params.get('from_year')),
+    toYear: parseOptionalInteger(params.get('to_year')),
+    hasImage: params.get('has_image') ?? '',
+    hasVideo: params.get('has_video') ?? '',
+    statusFilter: params.get('status') ?? 'active',
+    sortBy: params.get('sort_by') ?? 'id',
+    sortOrder: params.get('sort_order') ?? 'asc',
+  }
+}
+
+function parseOptionalInteger(value: string | null): number | null {
+  if (value === null || value.trim() === '') return null
+  const parsed = Number(value)
+  return Number.isInteger(parsed) ? parsed : null
+}
+
 export function validateCoinSearch(search: string): string {
   const tokens = search.trim().split(/\s+/).filter(Boolean)
   return tokens.some((token) => token.length < 3)
