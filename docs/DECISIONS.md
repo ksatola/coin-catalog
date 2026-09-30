@@ -937,3 +937,23 @@ The deterministic sort tie-breaker and opaque cursor provide stable forward trav
 - Coin detail previous/next navigation uses the dedicated navigation endpoint rather than loading the entire filtered catalogue.
 - New supported sort fields must define cursor semantics before being exposed to the paginated API.
 - Pagination and navigation behavior require backend and Playwright test coverage.
+
+## D-037 — Size-Based Coin Gallery
+
+**Status:** Accepted  
+**Date:** 2026-09-30
+
+The coin catalogue gains a new gallery-based presentation mode in which the rendered size of each coin is proportional to its physical diameter stored in the database.
+
+The size rules are:
+
+- The largest known diameter among the coins currently loaded in the catalogue defines the reference size.
+- That largest coin is rendered at the selected presentation scale.
+- All other coins are rendered proportionally to their diameter. A coin with twice the diameter therefore has twice the rendered diameter.
+- The reference size is recalculated after each additional batch is loaded by infinite scroll. If a newly loaded coin has a larger diameter, previously rendered coins are rescaled accordingly.
+- Coins without a stored diameter remain visible but do not participate in determining the reference diameter. They receive a clear visual indication that their diameter is unknown.
+- A coin's obverse and reverse images use the same rendered diameter. The dimensions of the source image file do not determine the rendered coin size.
+- The presentation scale is limited to **25%, 50%, 75%, and 100%**.
+- **100%** corresponds to the current Gallery's maximum image diameter for one coin in a row. The size-based gallery never renders a coin above that maximum base size.
+- The presentation scale changes all coin sizes by the same factor and therefore does not alter the physical proportions between coins.
+
