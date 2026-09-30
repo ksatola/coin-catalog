@@ -167,7 +167,7 @@ Production runtime, deployment, backup/recovery documentation, and supported-hos
 
 ## Current Next Step
 
-Next step: Phase 8 is complete. Continue with the next planned phase or maintenance work.
+Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is established and implementation is at the early-start stage.
 
 ---
 
@@ -234,20 +234,14 @@ Next step: Phase 8 is complete. Continue with the next planned phase or maintena
 - Added the initial frontend infinite-scroll implementation and switched coin detail navigation to the dedicated navigation endpoint.
 - **Verification pending:** backend pytest and frontend Playwright tests have not yet been run for this phase.
 
-### 2026-09-30 — Size-based coin gallery started
+### 2026-09-30 — Size-based coin gallery merged and verified
 
-- Created working branch `feature/coin-size-gallery` for the new size-based gallery view.
+- Merged `feature/coin-size-gallery` into `main` through pull request #15.
 - Recorded accepted decision D-037 for rendering coin sizes proportionally to the database `diameter` value.
-- Defined the reference size as the largest known diameter among currently loaded infinite-scroll results.
-- Defined automatic rescaling of already displayed coins when a newly loaded batch contains a larger diameter.
-- Defined presentation scale controls of 25%, 50%, 75%, and 100%, with 100% matching the current Gallery's maximum image diameter for one coin in a row.
-- Defined that coins without a diameter remain visible, do not affect the reference size, and are visibly marked as having no diameter.
-- Defined identical rendered size for obverse and reverse images of the same coin.
-- Implemented the new size-based gallery mode with proportional diameter rendering, a 25%/50%/75%/100% scale control, unknown-diameter handling, and rescaling after infinite-scroll batches introduce a larger diameter.
-- Added dedicated Playwright coverage for proportional sizing, scale changes, and infinite-scroll rescaling.
-- **Verification pending:** the frontend type-check/build and the new Playwright tests have not yet been run in the current development environment.
-- Added Grid-equivalent metadata tooltip on hover for each size-gallery coin via the native `title` attribute.
-- Added Playwright coverage verifying tooltip content including catalogue number, date range, country, issuer, denomination, mint, material, state, weight, diameter, and video indicator.
-- **Verification still pending:** no GitHub Actions workflow run is configured for the latest commit, so the new tests/type-check/build remain unexecuted in this environment.
+- Implemented the Size Gallery with proportional diameter rendering, 25%/50%/75%/100% presentation scales, unknown-diameter handling, and rescaling after infinite-scroll batches introduce a larger diameter.
+- Added a custom metadata tooltip with catalogue number, date range, country, issuer, denomination, mint, material, state, weight, diameter, and video indicator.
+- User-reported verification: the dedicated Size Gallery Playwright suite completed with **3 passed**.
+- User-reported verification: frontend type-check completed successfully after the tooltip typing fix.
+- The tooltip is implemented as custom HTML/CSS rather than a native `title` attribute.
 
 
