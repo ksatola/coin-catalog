@@ -153,7 +153,7 @@ Planned: database/image backup strategy and useful metadata/catalogue export.
 
 **Status:** Ongoing
 
-Backend pytest, Ruff checks, frontend production build, and Playwright UI coverage are established. Phases 1–7 have been verified as recorded above. Broader integration tests, CI checks, and further quality automation remain future work.
+Backend pytest, Ruff checks, frontend production build, and Playwright UI coverage are established. Phases 1–8 have been verified as recorded above. Broader integration tests, CI checks, and further quality automation remain future work.
 
 ---
 
