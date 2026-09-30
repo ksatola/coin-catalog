@@ -461,6 +461,75 @@ test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', 
   expect(imageFailures.size).toBe(0)
 })
 
+
+test('ponawia ładowanie obrazu w widoku szczegółów po błędzie pierwszej próby', async ({ page }) => {
+  let imageRequests = 0
+
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []),
+    })
+  })
+  await page.route('**/api/collections/1', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: 1, name: 'Kolekcja testowa', description: null, is_archived: false }),
+    })
+  })
+  await page.route('**/api/coins/1', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ...coin1,
+        id: 1,
+        collection_id: 1,
+        collection_number: 'A-1',
+        images: undefined,
+      }),
+    })
+  })
+  await page.route('**/api/coins/1/navigation*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ previous_id: null, next_id: null }),
+    })
+  })
+  await page.route('**/api/coins/1/images', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(images.get(1) ?? []),
+    })
+  })
+  await page.route('**/api/coins/1/images/101/file*', async (route) => {
+    imageRequests += 1
+
+    if (imageRequests === 1) {
+      await route.abort('failed')
+      return
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/jpeg',
+      body: validJpeg,
+    })
+  })
+
+  await page.goto('/monety/1')
+
+  const image = page.getByAltText('Awers monety')
+  await expect.poll(() => imageRequests).toBe(2)
+  await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file?image_retry=1')
+})
+
 test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page }) => {
   let imageRequests = 0
 

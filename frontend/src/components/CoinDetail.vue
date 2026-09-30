@@ -3,7 +3,8 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import CoinCategoriesReadOnly from './CoinCategoriesReadOnly.vue'
-import type { Coin, CoinImage, Collection } from '../types'
+import CoinImage from './CoinImage.vue'
+import type { Coin, CoinImage as CoinImageData, Collection } from '../types'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = { countries: DictionaryItem[]; issuers: DictionaryItem[]; denominations: DictionaryItem[]; mints: DictionaryItem[]; materials: DictionaryItem[]; states: DictionaryItem[]; eras: DictionaryItem[]; acquisition_methods: DictionaryItem[] }
@@ -23,11 +24,11 @@ const sourceUrl = computed(() => {
 const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [], acquisition_methods: [] })
 const collection = ref<Collection | null>(null)
 const collectionErrorMessage = ref('')
-const primaryImages = reactive<{ avers: CoinImage | null; rewers: CoinImage | null }>({ avers: null, rewers: null })
-const additionalImages = ref<CoinImage[]>([])
+const primaryImages = reactive<{ avers: CoinImageData | null; rewers: CoinImageData | null }>({ avers: null, rewers: null })
+const additionalImages = ref<CoinImageData[]>([])
 const imageErrorMessage = ref('')
 const selectedImageIndex = ref<number | null>(null)
-const allImages = computed<CoinImage[]>(() => [primaryImages.avers, primaryImages.rewers, ...additionalImages.value].filter((image): image is CoinImage => image !== null))
+const allImages = computed<CoinImageData[]>(() => [primaryImages.avers, primaryImages.rewers, ...additionalImages.value].filter((image): image is CoinImageData => image !== null))
 const selectedImage = computed(() => selectedImageIndex.value === null ? null : allImages.value[selectedImageIndex.value] ?? null)
 
 function dictionaryName(items: DictionaryItem[], id: number | null): string { if (id === null) return '—'; return items.find((item) => item.id === id)?.name ?? `#${id}` }
@@ -51,12 +52,12 @@ async function loadCollection(): Promise<void> {
 async function loadImages(): Promise<void> {
   try {
     const response = await fetch(`/api/coins/${props.coin.id}/images`, { cache: 'no-store' }); if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const images = await response.json() as CoinImage[]
+    const images = await response.json() as CoinImageData[]
     primaryImages.avers = images.find((image) => image.kind === 'avers') ?? null; primaryImages.rewers = images.find((image) => image.kind === 'rewers') ?? null; additionalImages.value = images.filter((image) => image.kind === 'additional'); imageErrorMessage.value = ''
   } catch { imageErrorMessage.value = 'Nie udało się pobrać zdjęć monety.' }
 }
-function imageUrl(image: CoinImage | null): string | undefined { return image ? `/api/coins/${props.coin.id}/images/${image.id}/file` : undefined }
-function openImage(image: CoinImage): void { const index = allImages.value.findIndex((item) => item.id === image.id); selectedImageIndex.value = index >= 0 ? index : null }
+function imageUrl(image: CoinImageData | null): string | undefined { return image ? `/api/coins/${props.coin.id}/images/${image.id}/file` : undefined }
+function openImage(image: CoinImageData): void { const index = allImages.value.findIndex((item) => item.id === image.id); selectedImageIndex.value = index >= 0 ? index : null }
 function closeImage(): void { selectedImageIndex.value = null }
 function showPreviousImage(): void { if (selectedImageIndex.value === null || allImages.value.length < 2) return; selectedImageIndex.value = (selectedImageIndex.value - 1 + allImages.value.length) % allImages.value.length }
 function showNextImage(): void { if (selectedImageIndex.value === null || allImages.value.length < 2) return; selectedImageIndex.value = (selectedImageIndex.value + 1) % allImages.value.length }
@@ -71,8 +72,8 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
     <p v-if="collectionErrorMessage" class="image-error">{{ collectionErrorMessage }}</p>
 
     <div class="primary-images">
-      <figure class="primary-image-card" @click="primaryImages.avers && openImage(primaryImages.avers)"><button v-if="primaryImages.avers" type="button" class="image-button" @click.stop="openImage(primaryImages.avers)"><img :src="imageUrl(primaryImages.avers)" alt="Awers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia awersu</div><figcaption>Awers</figcaption></figure>
-      <figure class="primary-image-card" @click="primaryImages.rewers && openImage(primaryImages.rewers)"><button v-if="primaryImages.rewers" type="button" class="image-button" @click.stop="openImage(primaryImages.rewers)"><img :src="imageUrl(primaryImages.rewers)" alt="Rewers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia rewersu</div><figcaption>Rewers</figcaption></figure>
+      <figure class="primary-image-card" @click="primaryImages.avers && openImage(primaryImages.avers)"><button v-if="primaryImages.avers" type="button" class="image-button" @click.stop="openImage(primaryImages.avers)"><CoinImage :src="imageUrl(primaryImages.avers) ?? ''" alt="Awers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia awersu</div><figcaption>Awers</figcaption></figure>
+      <figure class="primary-image-card" @click="primaryImages.rewers && openImage(primaryImages.rewers)"><button v-if="primaryImages.rewers" type="button" class="image-button" @click.stop="openImage(primaryImages.rewers)"><CoinImage :src="imageUrl(primaryImages.rewers) ?? ''" alt="Rewers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia rewersu</div><figcaption>Rewers</figcaption></figure>
     </div>
 
     <section class="primary-description-section">
@@ -86,7 +87,7 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
       </div>
     </section>
 
-    <div v-if="additionalImages.length" class="additional-images"><h2>Zdjęcia dodatkowe</h2><div class="additional-image-list"><figure v-for="image in additionalImages" :key="image.id" class="additional-image-card"><button type="button" class="image-button" @click="openImage(image)"><img :src="imageUrl(image)" :alt="image.filename" /></button><figcaption :title="image.filename">{{ image.filename }}</figcaption></figure></div></div>
+    <div v-if="additionalImages.length" class="additional-images"><h2>Zdjęcia dodatkowe</h2><div class="additional-image-list"><figure v-for="image in additionalImages" :key="image.id" class="additional-image-card"><button type="button" class="image-button" @click="openImage(image)"><CoinImage :src="imageUrl(image) ?? ''" :alt="image.filename" /></button><figcaption :title="image.filename">{{ image.filename }}</figcaption></figure></div></div>
 
     <section class="details-section">
       <h2>Informacje</h2>
@@ -121,7 +122,7 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
     <div v-if="selectedImage" class="image-viewer" role="dialog" aria-modal="true" aria-label="Podgląd zdjęcia" @click.self="closeImage">
       <button type="button" class="viewer-close" aria-label="Zamknij" @click="closeImage">×</button>
       <button v-if="allImages.length > 1" type="button" class="viewer-nav viewer-prev" aria-label="Poprzednie zdjęcie" @click="showPreviousImage">‹</button>
-      <figure class="viewer-content"><div class="viewer-image-frame"><img :key="selectedImage.id" :src="imageUrl(selectedImage)" :alt="selectedImage.filename" /><figcaption><span>{{ selectedImage.filename }}</span><span v-if="allImages.length > 1">{{ (selectedImageIndex ?? 0) + 1 }} / {{ allImages.length }}</span></figcaption></div></figure>
+      <figure class="viewer-content"><div class="viewer-image-frame"><CoinImage :key="selectedImage.id" :src="imageUrl(selectedImage) ?? ''" :alt="selectedImage.filename" /><figcaption><span>{{ selectedImage.filename }}</span><span v-if="allImages.length > 1">{{ (selectedImageIndex ?? 0) + 1 }} / {{ allImages.length }}</span></figcaption></div></figure>
       <button v-if="allImages.length > 1" type="button" class="viewer-nav viewer-next" aria-label="Następne zdjęcie" @click="showNextImage">›</button>
     </div>
   </section>
