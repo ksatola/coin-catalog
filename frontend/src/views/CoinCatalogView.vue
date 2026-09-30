@@ -67,7 +67,7 @@ const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
 
 function loadSizeGalleryScale(): SizeGalleryScale {
   const stored = Number(localStorage.getItem(sizeGalleryScaleStorageKey))
-  return stored === 25 || stored === 50 || stored === 75 || stored === 100 ? stored : 100
+  return stored === 25 || stored === 50 || stored === 75 || stored === 100 || stored === 125 || stored === 150 || stored === 200 ? stored : 100
 }
 
 const sizeGalleryScale = ref<SizeGalleryScale>(loadSizeGalleryScale())
@@ -406,6 +406,7 @@ onUnmounted(() => {
         v-else-if="viewMode === 'size-gallery'"
         :coins="coins"
         :scale="sizeGalleryScale"
+        :pixels-per-mm="sizeGalleryPixelsPerMm"
         :detail-query="appliedFilterQuery"
       />
       <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" />
