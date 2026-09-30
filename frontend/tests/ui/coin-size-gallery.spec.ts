@@ -156,12 +156,14 @@ test('widok rozmiarów pokazuje informacje z widoku Grid po najechaniu na monet�
   await expect(tooltip.locator('div')).toHaveText([
     '#7 | A-123',
     '1900 AD – 1901 AD',
-    'Kraj testowy · Emitent testowy',
-    '1 zł · Mennica testowa',
-    'Srebro',
-    'II',
-    '12.34 g',
-    '20.00 mm',
+    'Kraj: Kraj testowy',
+    'Emitent: Emitent testowy',
+    'Nominał: 1 zł',
+    'Mennica: Mennica testowa',
+    'Materiał: Srebro',
+    'Stan: II',
+    'Waga: 12.34 g',
+    'Średnica: 20.00 mm',
     'Video',
   ])
 })
