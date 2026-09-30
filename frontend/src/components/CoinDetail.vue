@@ -24,7 +24,7 @@ const sourceUrl = computed(() => {
 const dictionaries = reactive<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [], acquisition_methods: [] })
 const collection = ref<Collection | null>(null)
 const collectionErrorMessage = ref('')
-const primaryImages = reactive<{ avers: CoinImageData | null; rewers: CoinImage | null }>({ avers: null, rewers: null })
+const primaryImages = reactive<{ avers: CoinImageData | null; rewers: CoinImageData | null }>({ avers: null, rewers: null })
 const additionalImages = ref<CoinImageData[]>([])
 const imageErrorMessage = ref('')
 const selectedImageIndex = ref<number | null>(null)
