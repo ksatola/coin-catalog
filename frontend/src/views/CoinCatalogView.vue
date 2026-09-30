@@ -6,13 +6,14 @@ import CoinFilters from '../components/CoinFilters.vue'
 import CoinGrid from '../components/CoinGrid.vue'
 import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
+import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
 type ViewMode = 'image-grid' | 'size-gallery' | 'grid' | 'list'
-type SizeGalleryScale = 25 | 50 | 75 | 100
+type SizeGalleryScale = 25 | 50 | 75 | 100 | 125 | 150 | 200
 type GalleryColumns = 1 | 2 | 3 | 4
 
 const props = defineProps<{
@@ -44,6 +45,8 @@ const emptyDescription = isArchive
 const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
+const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
+const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
 function loadViewMode(): ViewMode {
   const stored = localStorage.getItem(viewModeStorageKey)
@@ -68,6 +71,15 @@ function loadSizeGalleryScale(): SizeGalleryScale {
 }
 
 const sizeGalleryScale = ref<SizeGalleryScale>(loadSizeGalleryScale())
+
+function loadSizeGalleryPixelsPerMm(): number {
+  const stored = Number(localStorage.getItem(sizeGalleryCalibrationStorageKey))
+  return Number.isFinite(stored) && stored > 0 ? stored : DEFAULT_PIXELS_PER_MM
+}
+
+const sizeGalleryPixelsPerMm = ref(loadSizeGalleryPixelsPerMm())
+const showSizeGalleryCalibration = ref(false)
+const sizeGalleryIsCalibrated = ref(localStorage.getItem(sizeGalleryCalibrationStorageKey) !== null)
 
 function activeCollectionScopeLabel(): string {
   const ids = filters.collectionIds
@@ -102,6 +114,13 @@ watch(galleryColumns, (columns) => {
 watch(sizeGalleryScale, (scale) => {
   localStorage.setItem(sizeGalleryScaleStorageKey, String(scale))
 })
+
+function saveSizeGalleryCalibration(pixelsPerMm: number): void {
+  sizeGalleryPixelsPerMm.value = pixelsPerMm
+  sizeGalleryIsCalibrated.value = true
+  localStorage.setItem(sizeGalleryCalibrationStorageKey, String(pixelsPerMm))
+  showSizeGalleryCalibration.value = false
+}
 
 function isSearchReady(): boolean {
   const search = filters.search.trim()
@@ -307,7 +326,7 @@ onUnmounted(() => {
         <div v-if="viewMode === 'size-gallery'" class="gallery-scale" aria-label="Skala galerii rozmiarów">
           <span>Skala:</span>
           <button
-            v-for="scale in [25, 50, 75, 100] as SizeGalleryScale[]"
+            v-for="scale in [25, 50, 75, 100, 125, 150, 200] as SizeGalleryScale[]"
             :key="scale"
             type="button"
             :class="{ active: sizeGalleryScale === scale }"
@@ -317,7 +336,17 @@ onUnmounted(() => {
           >
             {{ scale }}%
           </button>
+          <button type="button" class="calibration-button" @click="showSizeGalleryCalibration = true">
+            ⚙ Kalibruj ekran
+          </button>
+          <span class="calibration-status">{{ sizeGalleryIsCalibrated ? '100% = rzeczywisty rozmiar' : '100% wymaga kalibracji' }}</span>
         </div>
+        <CoinScaleCalibration
+          v-if="showSizeGalleryCalibration"
+          :pixels-per-mm="sizeGalleryPixelsPerMm"
+          @save="saveSizeGalleryCalibration"
+          @close="showSizeGalleryCalibration = false"
+        />
       </div>
     </header>
 
