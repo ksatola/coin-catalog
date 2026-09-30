@@ -286,7 +286,6 @@ onUnmounted(() => {
     <header class="page-header">
       <div>
         <h1>{{ pageTitle }}</h1>
-        <p class="page-subtitle">{{ pageSubtitle }}</p>
       </div>
 
       <div class="header-controls">
