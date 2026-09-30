@@ -31,7 +31,7 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
     { ...baseCoin, id: 2, diameter: 10, images: [] },
   ]
 
-  await page.route('**/api/collections', async (route) => {
+  await page.route('**/api/dictionaries/*', async (route) => {\n    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''\n    const dictionaries: Record<string, unknown[]> = {\n      countries: [{ id: 1, name: 'Kraj testowy' }],\n      issuers: [{ id: 2, name: 'Emitent testowy' }],\n      denominations: [{ id: 3, name: '1 zł' }],\n      mints: [{ id: 4, name: 'Mennica testowa' }],\n      materials: [{ id: 5, name: 'Srebro' }],\n      states: [{ id: 6, name: 'II' }],\n      eras: [{ id: 7, name: 'AD' }],\n    }\n    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name] ?? []) })\n  })\n\n  await page.route('**/api/collections', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   })
   await page.route('**/api/coins*', async (route) => {
@@ -99,4 +99,60 @@ test('widok rozmiarów przeskalowuje wcześniej załadowane monety po infinite s
   await expect.poll(() => sizes.nth(0).evaluate((element) => element.getBoundingClientRect().width)).toBe(200)
   await expect.poll(() => sizes.nth(1).evaluate((element) => element.getBoundingClientRect().width)).toBe(100)
   await expect.poll(() => sizes.nth(2).evaluate((element) => element.getBoundingClientRect().width)).toBe(400)
+})
+
+
+test('widok rozmiarów pokazuje informacje z widoku Grid po najechaniu na monetę', async ({ page }) => {
+  const coin = {
+    ...baseCoin,
+    id: 7,
+    diameter: 20,
+    country_id: 1,
+    issuer_id: 2,
+    denomination_id: 3,
+    mint_id: 4,
+    material_id: 5,
+    state_id: 6,
+    from_year: 1900,
+    from_era_id: 7,
+    to_year: 1901,
+    to_era_id: 7,
+    weight: 12.34,
+    has_video: true,
+    collection_number: 'A-123',
+    images: [],
+  }
+
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+    const dictionaries: Record<string, unknown[]> = {
+      countries: [{ id: 1, name: 'Kraj testowy' }],
+      issuers: [{ id: 2, name: 'Emitent testowy' }],
+      denominations: [{ id: 3, name: '1 zł' }],
+      mints: [{ id: 4, name: 'Mennica testowa' }],
+      materials: [{ id: 5, name: 'Srebro' }],
+      states: [{ id: 6, name: 'II' }],
+      eras: [{ id: 7, name: 'AD' }],
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name] ?? []) })
+  })
+  await page.route('**/api/collections', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  })
+  await page.route('**/api/coins*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: [coin], next_cursor: null, has_more: false }),
+    })
+  })
+
+  await page.goto('/monety')
+  await page.getByRole('button', { name: '◉ Rozmiar' }).click()
+
+  const tile = page.locator('.coin-size-tile')
+  await expect(tile).toHaveAttribute(
+    'title',
+    '#7 | A-123\\n1900 AD – 1901 AD\\nKraj testowy · Emitent testowy\\n1 zł · Mennica testowa\\nSrebro\\nII\\n12.34 g\\n20.00 mm\\nVideo',
+  )
 })
