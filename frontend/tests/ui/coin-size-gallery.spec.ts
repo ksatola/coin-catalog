@@ -73,7 +73,7 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
   const halfSizes = await sizes.evaluateAll((elements) =>
     elements.map((element) => element.getBoundingClientRect().width),
   )
-  expect(halfSizes).toEqual([200, 100])
+  expect(halfSizes).toEqual([100, 50])
 })
 
 test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
@@ -104,8 +104,14 @@ test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
   await expect(page.getByText('100% = rzeczywisty rozmiar')).toBeVisible()
   await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
 
+  await page.getByRole('button', { name: 'Skala 125%' }).click()
+  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 250)
+  await page.getByRole('button', { name: 'Skala 150%' }).click()
+  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 300)
+  await page.getByRole('button', { name: 'Skala 200%' }).click()
+  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 400)
+
   await page.reload()
-  await page.getByRole('button', { name: '◉ Rozmiar' }).click()
   await expect(page.getByText('100% = rzeczywisty rozmiar')).toBeVisible()
   await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
 })
@@ -135,6 +141,7 @@ test('widok rozmiarów przeskalowuje wcześniej załadowane monety po infinite s
     })
   })
 
+  await page.addInitScript(() => localStorage.setItem('coin-catalog:size-gallery-calibration:active', '10'))
   await page.goto('/monety')
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
