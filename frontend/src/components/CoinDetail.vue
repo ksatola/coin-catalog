@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import CoinCategoriesReadOnly from './CoinCategoriesReadOnly.vue'
+import CoinImage from './CoinImage.vue'
 import type { Coin, CoinImage, Collection } from '../types'
 
 type DictionaryItem = { id: number; name: string }
@@ -71,8 +72,8 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
     <p v-if="collectionErrorMessage" class="image-error">{{ collectionErrorMessage }}</p>
 
     <div class="primary-images">
-      <figure class="primary-image-card" @click="primaryImages.avers && openImage(primaryImages.avers)"><button v-if="primaryImages.avers" type="button" class="image-button" @click.stop="openImage(primaryImages.avers)"><img :src="imageUrl(primaryImages.avers)" alt="Awers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia awersu</div><figcaption>Awers</figcaption></figure>
-      <figure class="primary-image-card" @click="primaryImages.rewers && openImage(primaryImages.rewers)"><button v-if="primaryImages.rewers" type="button" class="image-button" @click.stop="openImage(primaryImages.rewers)"><img :src="imageUrl(primaryImages.rewers)" alt="Rewers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia rewersu</div><figcaption>Rewers</figcaption></figure>
+      <figure class="primary-image-card" @click="primaryImages.avers && openImage(primaryImages.avers)"><button v-if="primaryImages.avers" type="button" class="image-button" @click.stop="openImage(primaryImages.avers)"><CoinImage :src="imageUrl(primaryImages.avers) ?? ''" alt="Awers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia awersu</div><figcaption>Awers</figcaption></figure>
+      <figure class="primary-image-card" @click="primaryImages.rewers && openImage(primaryImages.rewers)"><button v-if="primaryImages.rewers" type="button" class="image-button" @click.stop="openImage(primaryImages.rewers)"><CoinImage :src="imageUrl(primaryImages.rewers) ?? ''" alt="Rewers monety" /></button><div v-else class="image-placeholder">Brak zdjęcia rewersu</div><figcaption>Rewers</figcaption></figure>
     </div>
 
     <section class="primary-description-section">
@@ -86,7 +87,7 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
       </div>
     </section>
 
-    <div v-if="additionalImages.length" class="additional-images"><h2>Zdjęcia dodatkowe</h2><div class="additional-image-list"><figure v-for="image in additionalImages" :key="image.id" class="additional-image-card"><button type="button" class="image-button" @click="openImage(image)"><img :src="imageUrl(image)" :alt="image.filename" /></button><figcaption :title="image.filename">{{ image.filename }}</figcaption></figure></div></div>
+    <div v-if="additionalImages.length" class="additional-images"><h2>Zdjęcia dodatkowe</h2><div class="additional-image-list"><figure v-for="image in additionalImages" :key="image.id" class="additional-image-card"><button type="button" class="image-button" @click="openImage(image)"><CoinImage :src="imageUrl(image) ?? ''" :alt="image.filename" /></button><figcaption :title="image.filename">{{ image.filename }}</figcaption></figure></div></div>
 
     <section class="details-section">
       <h2>Informacje</h2>
@@ -121,7 +122,7 @@ onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImage
     <div v-if="selectedImage" class="image-viewer" role="dialog" aria-modal="true" aria-label="Podgląd zdjęcia" @click.self="closeImage">
       <button type="button" class="viewer-close" aria-label="Zamknij" @click="closeImage">×</button>
       <button v-if="allImages.length > 1" type="button" class="viewer-nav viewer-prev" aria-label="Poprzednie zdjęcie" @click="showPreviousImage">‹</button>
-      <figure class="viewer-content"><div class="viewer-image-frame"><img :key="selectedImage.id" :src="imageUrl(selectedImage)" :alt="selectedImage.filename" /><figcaption><span>{{ selectedImage.filename }}</span><span v-if="allImages.length > 1">{{ (selectedImageIndex ?? 0) + 1 }} / {{ allImages.length }}</span></figcaption></div></figure>
+      <figure class="viewer-content"><div class="viewer-image-frame"><CoinImage :key="selectedImage.id" :src="imageUrl(selectedImage) ?? ''" :alt="selectedImage.filename" /><figcaption><span>{{ selectedImage.filename }}</span><span v-if="allImages.length > 1">{{ (selectedImageIndex ?? 0) + 1 }} / {{ allImages.length }}</span></figcaption></div></figure>
       <button v-if="allImages.length > 1" type="button" class="viewer-nav viewer-next" aria-label="Następne zdjęcie" @click="showNextImage">›</button>
     </div>
   </section>
