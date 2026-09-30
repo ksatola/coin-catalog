@@ -151,6 +151,10 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
 
   await page.goto('/monety?has_image=true&sort_by=id&sort_order=asc')
 
+  // The catalog is cursor-paginated; load the next page before comparing against the full API result.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await expect.poll(() => page.locator('.image-grid img').count(), { timeout: 10_000 }).toBe(expectedImages.length)
+
   const renderedImages = await page.locator('.image-grid img').evaluateAll((elements) =>
     elements.map((element) => {
       const image = element as HTMLImageElement
@@ -388,6 +392,7 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
 
   const assertImages = async (): Promise<void> => {
     const images = page.locator('.image-grid img')
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     await expect(images).toHaveCount(expectedCount)
     await expect.poll(async () => images.evaluateAll((elements) =>
       elements.filter((element) => {
