@@ -78,7 +78,7 @@ function formatDetails(coin: Coin): string[] {
   ].filter((value): value is string => Boolean(value))
 }
 
-function tooltipText(coin: Coin): string {
+function tooltipLines(coin: Coin): string[] {
   const lines = [
     `#${coin.id}${coin.collection_number ? ` | ${coin.collection_number}` : ''}`,
     formatRange(coin),
@@ -93,7 +93,7 @@ function tooltipText(coin: Coin): string {
 
   if (coin.has_video) lines.push('Video')
 
-  return lines.join('\\n')
+  return lines
 }
 
 async function loadDictionaries(): Promise<void> {
@@ -159,8 +159,12 @@ onMounted(() => void loadDictionaries())
       :style="coinStyle(coin)"
       :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
-      :title="tooltipText(coin)"
     >
+      <div class="coin-tooltip" role="tooltip">
+        <div v-for="(line, index) in tooltipLines(coin)" :key="`${coin.id}-tooltip-${index}`">
+          {{ line }}
+        </div>
+      </div>
       <template v-if="coin.diameter !== null">
         <div v-if="imageUrl(coin, 'avers')" class="coin-side">
           <CoinImage
@@ -201,6 +205,7 @@ onMounted(() => void loadDictionaries())
 }
 
 .coin-size-tile {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -215,6 +220,48 @@ onMounted(() => void loadDictionaries())
 .coin-size-tile:hover {
   border-color: #94a3b8;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.coin-tooltip {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  display: grid;
+  min-width: 220px;
+  max-width: 360px;
+  gap: 2px;
+  padding: 9px 11px;
+  border: 1px solid #334155;
+  border-radius: 7px;
+  background: #0f172a;
+  color: #f8fafc;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.coin-tooltip::after {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-right: 1px solid #334155;
+  border-bottom: 1px solid #334155;
+  background: #0f172a;
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.coin-size-tile:hover .coin-tooltip,
+.coin-size-tile:focus-visible .coin-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .coin-side,
