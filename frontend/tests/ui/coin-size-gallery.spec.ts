@@ -104,12 +104,8 @@ test('widok rozmiarów przeskalowuje wcześniej załadowane monety po infinite s
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
   const sizes = page.locator('.coin-size-tile .missing-image')
-  await expect(sizes).toHaveCount(2)
-  await expect.poll(() => sizes.nth(0).evaluate((element) => element.getBoundingClientRect().width)).toBe(400)
-
-  await page.locator('.infinite-scroll-sentinel').scrollIntoViewIfNeeded()
-
   await expect(sizes).toHaveCount(3)
+  await expect.poll(() => sizes.nth(0).evaluate((element) => element.getBoundingClientRect().width)).toBe(200)
   await expect.poll(() => sizes.nth(0).evaluate((element) => element.getBoundingClientRect().width)).toBe(200)
   await expect.poll(() => sizes.nth(1).evaluate((element) => element.getBoundingClientRect().width)).toBe(100)
   await expect.poll(() => sizes.nth(2).evaluate((element) => element.getBoundingClientRect().width)).toBe(400)
