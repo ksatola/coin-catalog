@@ -113,6 +113,14 @@ Additional Phase 8 work completed in the current cycle:
 
 The complete project verification beyond the checks listed above (including the full backend pytest suite, Pyright, frontend type-check/build, and complete Playwright suite) is **not recorded here as verified** unless separately reported by the project owner.
 
+### 2026-09-30 — Physical Size Gallery Scale
+
+- Replaced the Size Gallery's arbitrary maximum-diameter reference sizing with direct physical-diameter rendering based on the stored coin diameter.
+- Added 25%, 50%, 75%, 100%, 125%, 150%, and 200% presentation scales.
+- Added browser-local screen calibration using a 100 mm reference line and CSS-pixels-per-millimetre storage.
+- Added Playwright coverage for physical sizing, extended scale controls, calibration persistence, and infinite-scroll proportional sizing.
+- Superseded D-037's original 400 px reference scale with D-038.
+
 ## Image Management
 
 **Status:** Initial implementation complete

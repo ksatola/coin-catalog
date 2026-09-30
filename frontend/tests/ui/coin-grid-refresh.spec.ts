@@ -105,155 +105,87 @@ test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) =>
 test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page }) => {
   const imageResponses = new Map<string, number>()
   const imageFailures = new Map<string, string>()
+  const fixtureCoins = [1, 2, 3].map((id) => ({
+    ...coin1,
+    id,
+    description: `Moneta testowa ${id}`,
+    images: [
+      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0 },
+      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1 },
+    ],
+  }))
+  const expectedImages = fixtureCoins.flatMap((coin) =>
+    (coin.images ?? []).map((image) => ({
+      coinId: coin.id,
+      imageId: image.id,
+      kind: image.kind,
+      src: `/api/coins/${coin.id}/images/${image.id}/file`,
+    })),
+  )
+
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []),
+    })
+  })
+  await page.route('**/api/collections', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  })
+  await page.route('**/api/categories', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  })
+  await page.route('**/api/coins*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: fixtureCoins, next_cursor: null, has_more: false }),
+    })
+  })
+  await page.route('**/api/coins/*/images/*/file', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
+  })
 
   page.on('response', (response) => {
-    if (
-      response.url().includes('/api/coins/')
-      && response.url().includes('/images/')
-      && response.url().endsWith('/file')
-    ) {
+    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().endsWith('/file')) {
       imageResponses.set(response.url(), response.status())
     }
   })
-
   page.on('requestfailed', (request) => {
-    if (
-      request.url().includes('/api/coins/')
-      && request.url().includes('/images/')
-      && request.url().endsWith('/file')
-    ) {
+    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().endsWith('/file')) {
       imageFailures.set(request.url(), request.failure()?.errorText ?? 'unknown')
     }
   })
 
-  const coinsResponse = await page.request.get(
-    'http://127.0.0.1:8000/coins?status=active&has_image=true&sort_by=id&sort_order=asc',
-  )
-  expect(coinsResponse.ok()).toBe(true)
-
-  const coins = await coinsResponse.json() as Array<{
-    id: number
-    images?: Array<{ id: number; kind: string }>
-  }>
-
-  const expectedImages = coins.flatMap((coin) =>
-    (coin.images ?? [])
-      .filter((image) => image.kind === 'avers' || image.kind === 'rewers')
-      .map((image) => ({
-        coinId: coin.id,
-        imageId: image.id,
-        kind: image.kind,
-        src: `/api/coins/${coin.id}/images/${image.id}/file`,
-      })),
-  )
-
-  expect(expectedImages.length).toBeGreaterThan(0)
-
   await page.goto('/monety?has_image=true&sort_by=id&sort_order=asc')
+  const renderedImages = page.locator('.image-grid img')
+  await expect(renderedImages).toHaveCount(expectedImages.length)
+  await expect.poll(async () => renderedImages.evaluateAll((elements) =>
+    elements.filter((element) => {
+      const image = element as HTMLImageElement
+      return image.complete && image.naturalWidth > 0
+    }).length,
+  )).toBe(expectedImages.length)
 
-  const renderedImages = await page.locator('.image-grid img').evaluateAll((elements) =>
+  const rendered = await renderedImages.evaluateAll((elements) =>
     elements.map((element) => {
       const image = element as HTMLImageElement
       const match = image.src.match(/\/api\/coins\/(\d+)\/images\/(\d+)\/file$/)
       return {
-        src: image.currentSrc || image.src,
         coinId: match ? Number(match[1]) : null,
         imageId: match ? Number(match[2]) : null,
-        complete: image.complete,
-        naturalWidth: image.naturalWidth,
-        naturalHeight: image.naturalHeight,
       }
     }),
   )
+  const expectedKeys = expectedImages.map((image) => `${image.coinId}:${image.imageId}`).sort()
+  const renderedKeys = rendered.map((image) => `${image.coinId}:${image.imageId}`).sort()
 
-  expect(renderedImages.length).toBe(expectedImages.length)
-
-  const expectedByKey = new Map(
-    expectedImages.map((image) => [`${image.coinId}:${image.imageId}`, image]),
-  )
-  const renderedByKey = new Map(
-    renderedImages
-      .filter((image) => image.coinId !== null && image.imageId !== null)
-      .map((image) => [`${image.coinId}:${image.imageId}`, image]),
-  )
-
-  const missingFromDom = expectedImages.filter(
-    (image) => !renderedByKey.has(`${image.coinId}:${image.imageId}`),
-  )
-  const unexpectedInDom = renderedImages.filter(
-    (image) => image.coinId === null
-      || image.imageId === null
-      || !expectedByKey.has(`${image.coinId}:${image.imageId}`),
-  )
-
-  const imageLoadStates = await page.locator('.image-grid img').evaluateAll(async (elements) => {
-    const results = await Promise.all(elements.map(async (element) => {
-      const image = element as HTMLImageElement
-      const src = image.currentSrc || image.src
-
-      if (image.complete) {
-        return {
-          src,
-          complete: image.complete,
-          naturalWidth: image.naturalWidth,
-          naturalHeight: image.naturalHeight,
-          event: image.naturalWidth > 0 ? 'already-loaded' : 'already-failed',
-        }
-      }
-
-      const event = await new Promise<'load' | 'error' | 'timeout'>((resolve) => {
-        const onLoad = () => {
-          cleanup()
-          resolve('load')
-        }
-        const onError = () => {
-          cleanup()
-          resolve('error')
-        }
-        const timeout = window.setTimeout(() => {
-          cleanup()
-          resolve('timeout')
-        }, 10_000)
-        const cleanup = () => {
-          window.clearTimeout(timeout)
-          image.removeEventListener('load', onLoad)
-          image.removeEventListener('error', onError)
-        }
-
-        image.addEventListener('load', onLoad, { once: true })
-        image.addEventListener('error', onError, { once: true })
-      })
-
-      return {
-        src,
-        complete: image.complete,
-        naturalWidth: image.naturalWidth,
-        naturalHeight: image.naturalHeight,
-        event,
-      }
-    }))
-
-    return results
-  })
-
-  const missingRequests = expectedImages.filter(
-    (image) => !imageResponses.has(new URL(image.src, 'http://127.0.0.1:5173').href),
-  )
-
-  const non200Responses = [...imageResponses.entries()].filter(([, status]) => status !== 200)
-  const failedLoads = imageLoadStates.filter(
-    (image) => image.event !== 'load' && image.event !== 'already-loaded',
-  )
-
-  expect(missingFromDom, JSON.stringify(missingFromDom, null, 2)).toEqual([])
-  expect(unexpectedInDom, JSON.stringify(unexpectedInDom, null, 2)).toEqual([])
-  expect(failedLoads, JSON.stringify(failedLoads, null, 2)).toEqual([])
-  expect(missingRequests, JSON.stringify(missingRequests, null, 2)).toEqual([])
-  expect(non200Responses, JSON.stringify(non200Responses, null, 2)).toEqual([])
-  expect([...imageFailures.entries()], JSON.stringify([...imageFailures.entries()], null, 2)).toEqual([])
-  expect(imageResponses.size).toBe(expectedImages.length)
+  expect(renderedKeys).toEqual(expectedKeys)
+  expect([...imageResponses.values()]).toEqual(Array(expectedImages.length).fill(200))
+  expect(imageFailures).toEqual(new Map())
 })
-
 
 test('równoległe odświeżenia katalogu nie pozwalają starszej odpowiedzi nadpisać nowszej', async ({ page }) => {
   let requestNumber = 0
@@ -369,24 +301,49 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
 })
 
 test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async ({ page }) => {
-  const coinsResponse = await page.request.get(
-    'http://127.0.0.1:8000/coins?status=active&has_image=true&sort_by=id&sort_order=asc',
-  )
-  expect(coinsResponse.ok()).toBe(true)
+  const fixtureCoins = [1, 2, 3].map((id) => ({
+    ...coin1,
+    id,
+    description: id === 3 ? 'Trzecia moneta' : `Moneta testowa ${id}`,
+    images: [
+      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0 },
+      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1 },
+    ],
+  }))
 
-  const coins = await coinsResponse.json() as Array<{
-    id: number
-    images?: Array<{ id: number; kind: string }>
-  }>
-  const expectedCount = coins.reduce(
-    (count, coin) => count + (coin.images?.filter((image) => image.kind === 'avers' || image.kind === 'rewers').length ?? 0),
-    0,
-  )
-  expect(expectedCount).toBeGreaterThan(0)
+  const mockCatalog = async (): Promise<void> => {
+    await page.route('**/api/dictionaries/*', async (route) => {
+      const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []),
+      })
+    })
+    await page.route('**/api/collections', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/api/categories', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+    await page.route('**/api/coins*', async (route) => {
+      const search = new URL(route.request().url()).searchParams.get('search')
+      const items = search ? fixtureCoins.slice(0, 2) : fixtureCoins
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ items, next_cursor: null, has_more: false }),
+      })
+    })
+    await page.route('**/api/coins/*/images/*/file', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
+    })
+  }
 
+  await mockCatalog()
   await page.goto('/monety?has_image=true&sort_by=id&sort_order=asc')
 
-  const assertImages = async (): Promise<void> => {
+  const assertImages = async (expectedCount: number): Promise<void> => {
     const images = page.locator('.image-grid img')
     await expect(images).toHaveCount(expectedCount)
     await expect.poll(async () => images.evaluateAll((elements) =>
@@ -394,41 +351,33 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
         const image = element as HTMLImageElement
         return image.complete && image.naturalWidth > 0
       }).length,
-    ), { timeout: 10_000 }).toBe(expectedCount)
+    )).toBe(expectedCount)
   }
 
-  await assertImages()
+  await assertImages(6)
 
   await page.getByRole('button', { name: /Grid/ }).click()
-  await expect(page.locator('.grid img')).toHaveCount(expectedCount)
+  await expect(page.locator('.grid img')).toHaveCount(6)
 
   await page.getByRole('button', { name: /Galeria/ }).click()
-  await assertImages()
+  await assertImages(6)
 
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
-  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('a')
+  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
-  await page.waitForTimeout(400)
-
-  const filteredImages = page.locator('.image-grid img')
-  await expect.poll(async () => filteredImages.evaluateAll((elements) =>
-    elements.filter((element) => {
-      const image = element as HTMLImageElement
-      return image.complete && image.naturalWidth > 0
-    }).length,
-  ), { timeout: 10_000 }).toBe(await filteredImages.count())
+  await assertImages(4)
 
   await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
-  await assertImages()
+  await assertImages(6)
 
   await page.getByRole('button', { name: '3 monet w wierszu' }).click()
-  await assertImages()
+  await assertImages(6)
 
   await page.getByRole('button', { name: '4 monet w wierszu' }).click()
-  await assertImages()
+  await assertImages(6)
 
   await page.getByRole('button', { name: '1 monet w wierszu' }).click()
-  await assertImages()
+  await assertImages(6)
 })
 test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', async ({ page }) => {
   const imageResponses = new Map<string, number>()

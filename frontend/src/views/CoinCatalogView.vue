@@ -6,13 +6,14 @@ import CoinFilters from '../components/CoinFilters.vue'
 import CoinGrid from '../components/CoinGrid.vue'
 import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
+import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
 type ViewMode = 'image-grid' | 'size-gallery' | 'grid' | 'list'
-type SizeGalleryScale = 25 | 50 | 75 | 100
+type SizeGalleryScale = 25 | 50 | 75 | 100 | 125 | 150 | 200
 type GalleryColumns = 1 | 2 | 3 | 4
 
 const props = defineProps<{
@@ -44,6 +45,8 @@ const emptyDescription = isArchive
 const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
+const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
+const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
 function loadViewMode(): ViewMode {
   const stored = localStorage.getItem(viewModeStorageKey)
@@ -64,10 +67,19 @@ const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
 
 function loadSizeGalleryScale(): SizeGalleryScale {
   const stored = Number(localStorage.getItem(sizeGalleryScaleStorageKey))
-  return stored === 25 || stored === 50 || stored === 75 || stored === 100 ? stored : 100
+  return stored === 25 || stored === 50 || stored === 75 || stored === 100 || stored === 125 || stored === 150 || stored === 200 ? stored : 100
 }
 
 const sizeGalleryScale = ref<SizeGalleryScale>(loadSizeGalleryScale())
+
+function loadSizeGalleryPixelsPerMm(): number {
+  const stored = Number(localStorage.getItem(sizeGalleryCalibrationStorageKey))
+  return Number.isFinite(stored) && stored > 0 ? stored : DEFAULT_PIXELS_PER_MM
+}
+
+const sizeGalleryPixelsPerMm = ref(loadSizeGalleryPixelsPerMm())
+const showSizeGalleryCalibration = ref(false)
+const sizeGalleryIsCalibrated = ref(localStorage.getItem(sizeGalleryCalibrationStorageKey) !== null)
 
 function activeCollectionScopeLabel(): string {
   const ids = filters.collectionIds
@@ -102,6 +114,13 @@ watch(galleryColumns, (columns) => {
 watch(sizeGalleryScale, (scale) => {
   localStorage.setItem(sizeGalleryScaleStorageKey, String(scale))
 })
+
+function saveSizeGalleryCalibration(pixelsPerMm: number): void {
+  sizeGalleryPixelsPerMm.value = pixelsPerMm
+  sizeGalleryIsCalibrated.value = true
+  localStorage.setItem(sizeGalleryCalibrationStorageKey, String(pixelsPerMm))
+  showSizeGalleryCalibration.value = false
+}
 
 function isSearchReady(): boolean {
   const search = filters.search.trim()
@@ -267,10 +286,6 @@ onUnmounted(() => {
     <header class="page-header">
       <div>
         <h1>{{ pageTitle }}</h1>
-        <p class="page-subtitle">{{ pageSubtitle }}</p>
-        <p class="active-collection-scope" aria-label="Aktywny zakres kolekcji">
-          <span>Aktywny zakres kolekcji:</span> <strong>{{ activeCollectionScopeLabel() }}</strong>
-        </p>
       </div>
 
       <div class="header-controls">
@@ -307,17 +322,35 @@ onUnmounted(() => {
         <div v-if="viewMode === 'size-gallery'" class="gallery-scale" aria-label="Skala galerii rozmiarów">
           <span>Skala:</span>
           <button
-            v-for="scale in [25, 50, 75, 100] as SizeGalleryScale[]"
+            v-for="scale in [25, 50, 75, 100, 125, 150, 200] as SizeGalleryScale[]"
             :key="scale"
             type="button"
-            :class="{ active: sizeGalleryScale === scale }"
-            :aria-label="`Skala ${scale}%`"
+            :class="{ active: sizeGalleryScale === scale, 'scale-calibrated': scale === 100 && sizeGalleryIsCalibrated }"
+            :aria-label="scale === 100
+              ? (sizeGalleryIsCalibrated ? 'Skala 100%, skalibrowana' : 'Skala 100%, wymaga kalibracji')
+              : `Skala ${scale}%`"
+            :title="scale === 100
+              ? (sizeGalleryIsCalibrated ? '100% = rzeczywisty rozmiar' : '100% wymaga kalibracji')
+              : undefined"
             :aria-pressed="sizeGalleryScale === scale"
             @click="sizeGalleryScale = scale"
           >
-            {{ scale }}%
+            <span v-if="scale === 100" class="scale-value">
+              <span>100%</span>
+              <small aria-hidden="true">{{ sizeGalleryIsCalibrated ? '✓' : '?' }}</small>
+            </span>
+            <span v-else>{{ scale }}%</span>
+          </button>
+          <button type="button" class="calibration-button" @click="showSizeGalleryCalibration = true">
+            ⚙ Kalibruj ekran
           </button>
         </div>
+        <CoinScaleCalibration
+          v-if="showSizeGalleryCalibration"
+          :pixels-per-mm="sizeGalleryPixelsPerMm"
+          @save="saveSizeGalleryCalibration"
+          @close="showSizeGalleryCalibration = false"
+        />
       </div>
     </header>
 
@@ -363,8 +396,9 @@ onUnmounted(() => {
     </div>
 
     <template v-else>
-      <div class="results-bar">
+      <div class="results-bar" aria-label="Zakres wyników">
         <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
+        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
       </div>
 
       <CoinImageGrid
@@ -377,6 +411,7 @@ onUnmounted(() => {
         v-else-if="viewMode === 'size-gallery'"
         :coins="coins"
         :scale="sizeGalleryScale"
+        :pixels-per-mm="sizeGalleryPixelsPerMm"
         :detail-query="appliedFilterQuery"
       />
       <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" />
@@ -421,16 +456,6 @@ onUnmounted(() => {
   margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
-}
-
-.active-collection-scope {
-  margin: 8px 0 0;
-  color: #475569;
-  font-size: 13px;
-}
-
-.active-collection-scope span {
-  color: #64748b;
 }
 
 .header-controls {
@@ -485,6 +510,24 @@ onUnmounted(() => {
 
 .gallery-scale {
   align-items: center;
+}
+
+.gallery-scale .scale-value {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.gallery-scale .scale-value small {
+  min-height: 9px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.gallery-scale button.scale-calibrated .scale-value small {
+  color: #16a34a;
 }
 
 .simple-search {
@@ -599,8 +642,18 @@ onUnmounted(() => {
 }
 
 .results-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: #475569;
   font-size: 14px;
+}
+
+.results-scope {
+  padding-left: 10px;
+  border-left: 1px solid #cbd5e1;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .infinite-scroll-sentinel {

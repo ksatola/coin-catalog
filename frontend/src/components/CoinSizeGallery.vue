@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue'
 import type { Coin } from '../types'
 import CoinImage from './CoinImage.vue'
 
-type Scale = 25 | 50 | 75 | 100
+type Scale = 25 | 50 | 75 | 100 | 125 | 150 | 200
 
 type DictionaryItem = {
   id: number
@@ -25,14 +25,15 @@ const props = withDefaults(
   defineProps<{
     coins: Coin[]
     scale?: Scale
+    pixelsPerMm?: number
     detailQuery?: string
   }>(),
   {
     scale: 100,
+    pixelsPerMm: 96 / 25.4,
   },
 )
 
-const BASE_COIN_SIZE = 400
 const UNKNOWN_COIN_SIZE = 96
 
 const dictionaries = ref<Dictionaries>({
@@ -120,22 +121,13 @@ async function loadDictionaries(): Promise<void> {
   }
 }
 
-function maximumDiameter(): number {
-  return props.coins.reduce((maximum, coin) => {
-    const diameter = coin.diameter === null ? 0 : Number(coin.diameter)
-    return Number.isFinite(diameter) && diameter > maximum ? diameter : maximum
-  }, 0)
-}
-
 function renderedSize(coin: Coin): number {
   const diameter = coin.diameter === null ? null : Number(coin.diameter)
-  const maximum = maximumDiameter()
-
-  if (diameter === null || !Number.isFinite(diameter) || maximum <= 0) {
-    return UNKNOWN_COIN_SIZE
+  if (diameter === null || !Number.isFinite(diameter) || diameter <= 0) {
+    return Math.max(1, UNKNOWN_COIN_SIZE * (props.scale / 100))
   }
 
-  return Math.max(1, BASE_COIN_SIZE * (diameter / maximum) * (props.scale / 100))
+  return Math.max(1, diameter * props.pixelsPerMm * (props.scale / 100))
 }
 
 function coinStyle(coin: Coin): Record<string, string> {
