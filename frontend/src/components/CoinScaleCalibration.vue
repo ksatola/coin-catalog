@@ -27,7 +27,7 @@ function save(): void {
 
       <div class="calibration-ruler">
         <div class="ruler-line" :style="{ width: previewWidth + 'px' }"><span>100 mm</span></div>
-        <div class="ruler-labels"><span>0</span><span>100 mm</span></div>
+        <div class="ruler-labels" :style="{ '--ruler-width': `${previewWidth}px` }"><span>0</span><span>100 mm</span></div>
       </div>
 
       <label class="calibration-input">
@@ -59,21 +59,21 @@ function save(): void {
 
 <style scoped>
 .calibration-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; padding: 20px; place-items: center; background: rgb(15 23 42 / 45%); }
-.calibration-dialog { width: min(620px, 100%); padding: 20px; border: 1px solid #dbe3ee; border-radius: 12px; background: #ffffff; box-shadow: 0 18px 50px rgb(15 23 42 / 20%); }
+.calibration-dialog { width: min(720px, 100%); padding: 24px; border: 1px solid #dbe3ee; border-radius: 12px; background: #ffffff; box-shadow: 0 18px 50px rgb(15 23 42 / 20%); }
 .calibration-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .calibration-header h2 { margin: 0; color: #0f172a; font-size: 20px; }
 .calibration-header p, .calibration-help { margin: 6px 0 0; color: #64748b; font-size: 14px; line-height: 1.45; }
 .calibration-header > button { border: 0; background: transparent; color: #64748b; cursor: pointer; font-size: 24px; line-height: 1; }
-.calibration-ruler { overflow-x: auto; margin: 28px 0 18px; padding: 16px 0 8px; }
+.calibration-ruler { overflow-x: auto; margin: 32px 0 22px; padding: 24px 0 8px; }
 .ruler-line { position: relative; min-width: 120px; height: 18px; border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a; box-sizing: border-box; }
 .ruler-line::before, .ruler-line::after { position: absolute; top: -7px; width: 2px; height: 28px; background: #0f172a; content: ''; }
 .ruler-line::before { left: 0; } .ruler-line::after { right: 0; }
 .ruler-line span { position: absolute; top: -27px; left: 50%; color: #334155; font-size: 12px; transform: translateX(-50%); }
-.ruler-labels { display: flex; justify-content: space-between; min-width: 120px; color: #64748b; font-size: 11px; }
+.ruler-labels { position: relative; width: max(120px, var(--ruler-width)); min-width: var(--ruler-width); color: #64748b; font-size: 11px; }
 .calibration-input { display: grid; gap: 6px; color: #334155; font-size: 13px; font-weight: 600; }
-.calibration-input input { width: 120px; padding: 7px 9px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
+.calibration-input input { width: 190px; max-width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
 .calibration-slider { width: 100%; margin: 14px 0 0; }
-.calibration-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.calibration-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
 .calibration-actions button { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; cursor: pointer; }
 .calibration-actions .primary { border-color: #2563eb; background: #2563eb; color: #ffffff; }
 </style>
