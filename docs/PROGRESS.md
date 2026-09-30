@@ -6,7 +6,7 @@ This document records the current, verified state of the project. A task is mark
 
 ## Current Phase
 
-**Phase 8 — Collections is complete and verified on the working branch.**
+**Phase 9 — Cross-platform Standalone Packaging is the current phase; planning is established and implementation is at the early-start stage.**
 
 Phase 7 — Collection Number is complete and verified.
 
@@ -159,9 +159,9 @@ Backend pytest, Ruff checks, frontend production build, and Playwright UI covera
 
 ## Packaging and Deployment
 
-**Status:** Not started
+**Status:** Phase 9 planning / early implementation
 
-Production runtime, deployment, backup/recovery documentation, and supported-host verification remain future work.
+Standalone Windows/macOS packaging is the current Phase 9 work. Production deployment and release automation remain separate future concerns.
 
 ---
 
