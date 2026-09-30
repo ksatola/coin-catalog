@@ -6,11 +6,11 @@ The project is developed incrementally, with the repository documentation servin
 
 ## Project Status
 
-**Current phase:** Phase 8 — Collections is complete and verified on the working branch.
+**Current phase:** Phase 9 — Cross-platform Standalone Packaging is planned and in early development.
 
 The application provides a usable catalogue workflow including coin creation, browsing, details, editing, soft archive/restore, dictionary management, coin photograph management, category management, coin-category assignment, search and filtering, collection management, collection-aware filtering and search, collection-aware image storage, atomic coin moves, and a user-facing collection number independent from the technical database ID.
 
-Phase 1 through Phase 7 are complete. Phase 8 — Collections adds collections as a first-class organizational entity across the database, API, coin operations, filtering, image storage, and frontend collection management. Collection metadata continues to be entered manually through the application; XLS/XLSX import is not part of the current workflow.
+Phase 1 through Phase 8 are complete and verified. Phase 9 — Cross-platform Standalone Packaging is the current development phase; its planning document exists and implementation is at the early-start stage. Collection metadata continues to be entered manually through the application; XLS/XLSX import is not part of the current workflow.
 
 ## Architecture
 
@@ -33,7 +33,7 @@ The primary host platforms are Windows 11 and macOS.
 The frontend provides:
 
 - active and archived coin browsers,
-- Gallery, Grid, and List views,
+- Gallery, Grid, List, and Size Gallery views,
 - coin detail views,
 - coin creation and editing,
 - optional collection-number entry and display,
