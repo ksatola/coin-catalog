@@ -1,8 +1,25 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+
 import type { Coin } from '../types'
 import CoinImage from './CoinImage.vue'
 
 type Scale = 25 | 50 | 75 | 100
+
+type DictionaryItem = {
+  id: number
+  name: string
+}
+
+type Dictionaries = {
+  countries: DictionaryItem[]
+  issuers: DictionaryItem[]
+  denominations: DictionaryItem[]
+  mints: DictionaryItem[]
+  materials: DictionaryItem[]
+  states: DictionaryItem[]
+  eras: DictionaryItem[]
+}
 
 const props = withDefaults(
   defineProps<{
@@ -18,6 +35,16 @@ const props = withDefaults(
 const BASE_COIN_SIZE = 400
 const UNKNOWN_COIN_SIZE = 96
 
+const dictionaries = ref<Dictionaries>({
+  countries: [],
+  issuers: [],
+  denominations: [],
+  mints: [],
+  materials: [],
+  states: [],
+  eras: [],
+})
+
 function detailPath(coinId: number): string {
   return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
 }
@@ -25,6 +52,74 @@ function detailPath(coinId: number): string {
 function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
   const image = coin.images?.find((item) => item.kind === kind)
   return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined
+}
+
+function dictionaryName(items: DictionaryItem[], id: number | null): string | null {
+  if (id === null) return null
+  return items.find((item) => item.id === id)?.name ?? null
+}
+
+function formatYear(year: number | null, eraId: number | null): string {
+  if (year === null) return '—'
+  const era = dictionaryName(dictionaries.value.eras, eraId)
+  return era ? `${year} ${era}` : `${year}`
+}
+
+function formatRange(coin: Coin): string {
+  return `${formatYear(coin.from_year, coin.from_era_id)} – ${formatYear(coin.to_year, coin.to_era_id)}`
+}
+
+function formatDetails(coin: Coin): string[] {
+  return [
+    dictionaryName(dictionaries.value.materials, coin.material_id),
+    dictionaryName(dictionaries.value.states, coin.state_id),
+    coin.weight !== null ? `${Number(coin.weight).toFixed(2)} g` : null,
+    coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : null,
+  ].filter((value): value is string => Boolean(value))
+}
+
+function tooltipText(coin: Coin): string {
+  const lines = [
+    `#${coin.id}${coin.collection_number ? ` | ${coin.collection_number}` : ''}`,
+    formatRange(coin),
+    [dictionaryName(dictionaries.value.countries, coin.country_id), dictionaryName(dictionaries.value.issuers, coin.issuer_id)]
+      .filter((value): value is string => Boolean(value))
+      .join(' · '),
+    [dictionaryName(dictionaries.value.denominations, coin.denomination_id), dictionaryName(dictionaries.value.mints, coin.mint_id)]
+      .filter((value): value is string => Boolean(value))
+      .join(' · '),
+    ...formatDetails(coin),
+  ].filter(Boolean)
+
+  if (coin.has_video) lines.push('Video')
+
+  return lines.join('\\n')
+}
+
+async function loadDictionaries(): Promise<void> {
+  const names: Array<keyof Dictionaries> = [
+    'countries',
+    'issuers',
+    'denominations',
+    'mints',
+    'materials',
+    'states',
+    'eras',
+  ]
+
+  try {
+    const results = await Promise.all(
+      names.map(async (name) => {
+        const response = await fetch(`/api/dictionaries/${name}`, { cache: 'no-store' })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        return [name, await response.json() as DictionaryItem[]] as const
+      }),
+    )
+
+    for (const [name, items] of results) dictionaries.value[name] = items
+  } catch {
+    // The gallery remains usable with IDs/years if dictionary data is unavailable.
+  }
 }
 
 function maximumDiameter(): number {
@@ -51,6 +146,8 @@ function coinStyle(coin: Coin): Record<string, string> {
     '--coin-size': `${size}px`,
   }
 }
+
+onMounted(() => void loadDictionaries())
 </script>
 
 <template>
@@ -62,6 +159,7 @@ function coinStyle(coin: Coin): Record<string, string> {
       :style="coinStyle(coin)"
       :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
+      :title="tooltipText(coin)"
     >
       <template v-if="coin.diameter !== null">
         <div v-if="imageUrl(coin, 'avers')" class="coin-side">
