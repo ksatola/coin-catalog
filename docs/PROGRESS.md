@@ -233,3 +233,15 @@ Next step: Phase 8 is complete. Continue with the next planned phase or maintena
 - Added backend tests covering cursor traversal, nullable year sorting, detail navigation boundaries, filtering behavior, and invalid cursors.
 - Added the initial frontend infinite-scroll implementation and switched coin detail navigation to the dedicated navigation endpoint.
 - **Verification pending:** backend pytest and frontend Playwright tests have not yet been run for this phase.
+
+### 2026-09-30 — Size-based coin gallery started
+
+- Created working branch `feature/coin-size-gallery` for the new size-based gallery view.
+- Recorded accepted decision D-037 for rendering coin sizes proportionally to the database `diameter` value.
+- Defined the reference size as the largest known diameter among currently loaded infinite-scroll results.
+- Defined automatic rescaling of already displayed coins when a newly loaded batch contains a larger diameter.
+- Defined presentation scale controls of 25%, 50%, 75%, and 100%, with 100% matching the current Gallery's maximum image diameter for one coin in a row.
+- Defined that coins without a diameter remain visible, do not affect the reference size, and are visibly marked as having no diameter.
+- Defined identical rendered size for obverse and reverse images of the same coin.
+- **Verification pending:** the new view has not yet been implemented or tested.
+
