@@ -134,21 +134,27 @@ Implemented scope:
    - injected-failure rollback tests;
    - Playwright coverage.
 
-## Phase 9 — Coin Browser Optimization
+## Phase 9 — Cross-platform Standalone Packaging
 
 **Status:** In progress
 
-The catalogue is being extended with server-side cursor pagination presented as infinite scroll. Coin detail previous/next navigation is being moved to a dedicated navigation endpoint so it remains independent of the batches loaded by the catalogue.
+Phase 9 is the current development phase for standalone Windows and macOS distribution. The planning and acceptance criteria are documented in `docs/CROSS_PLATFORM_STANDALONE_PACKAGING.md`.
 
-Current implementation scope:
+The phase is currently at the planning/early-start stage. The existing web application remains the verified product baseline; standalone packaging has not yet been completed.
 
-1. Cursor-paginated coin-list API with bounded result batches.
-2. Deterministic cursors for the supported sort fields and sort directions.
-3. Infinite-scroll catalogue loading through an IntersectionObserver sentinel.
-4. Filter/sort-aware detail previous/next navigation independent of loaded catalogue batches.
-5. Backend and Playwright coverage for pagination, filtering, sorting, infinite scroll, and detail navigation.
+Planned scope:
 
-The phase is complete only after implementation and the relevant backend/frontend verification have been run successfully.
+1. Windows standalone proof of concept and release candidate.
+2. macOS standalone proof of concept and release candidate.
+3. External user-data locations outside the replaceable application bundle.
+4. Packaged FastAPI + production Vue runtime and browser launch.
+5. SQLite migration and upgrade safety.
+6. Platform-specific clean-machine verification.
+7. Versioning, release artifacts, checksums, release notes, and supported platform/architecture documentation.
+8. Signing/notarization requirements for supported releases.
+9. Reproducible documented release workflow.
+
+The previously implemented cursor pagination and infinite-scroll catalogue behavior is an application capability already merged into `main); it is not a separate roadmap phase.
 
 ## Phase 10 — Backup and Export
 
