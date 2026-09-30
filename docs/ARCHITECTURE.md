@@ -137,19 +137,34 @@ Coin collection data is entered manually through the application. There is curre
 
 The architecture targets Windows 11 and macOS through the Docker-based development environment. Filesystem handling must remain portable across host platforms.
 
-## 10. Testing
+## 10. Coin Size Gallery
+
+The catalogue provides a Size Gallery presentation mode in which rendered coin diameter is proportional to the database `diameter` value.
+
+- The largest known diameter among currently loaded coins defines the reference size.
+- That coin is rendered at the selected presentation scale.
+- Other known diameters are rendered proportionally.
+- When infinite scroll loads a batch containing a larger known diameter, the reference is recalculated and already loaded coins rescale.
+- Coins without a stored diameter remain visible but are excluded from the reference-size calculation and receive an explicit unknown-diameter indicator.
+- Obverse and reverse images of the same coin use the same rendered diameter.
+- Available presentation scales are 25%, 50%, 75%, and 100%.
+- At 100%, the reference size is capped by the current Gallery maximum image diameter for one coin in a row.
+
+The Size Gallery also provides a hover/focus metadata tooltip containing the available catalogue metadata, including collection number, date range, country, issuer, denomination, mint, material, state, weight, diameter, and video indicator when applicable.
+
+## 11. Testing
 
 Current automated verification includes backend pytest tests, backend Ruff checks, the frontend production build, and Playwright UI tests.
 
-Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, catalogue search behavior, and collection workflows including collection selection, multi-collection filtering, coin moves, and image/file consistency.
+Playwright coverage includes coin/image workflows, category workflows, Collection Number create/edit behavior, catalogue search behavior, collection workflows including collection selection, multi-collection filtering, coin moves, and image/file consistency, and Size Gallery behavior including proportional sizing, presentation-scale changes, infinite-scroll rescaling, and metadata tooltip content.
 
 Broader integration and CI coverage remain future work.
 
-## 11. Deployment Model
+## 12. Deployment Model
 
 The current priority is local development rather than production deployment. A production deployment architecture will be defined when deployment becomes an actual requirement.
 
-## 12. Collection Integrity and Lifecycle
+## 13. Collection Integrity and Lifecycle
 
 Collections use one shared SQLite database. Each coin belongs to exactly one collection, while categories remain global across collections. Empty collections may exist; normal application functionality does not delete collections containing coins.
 
@@ -159,7 +174,7 @@ The collection filter model uses `collectionIds: number[]`; an empty selection m
 
 A coin move is an application-level compensating operation. It creates a new technical coin ID, preserves the user-facing collection number, prepares target image files and metadata, protects against collisions, and removes source state only after the target state is ready. Failures must leave the source intact or compensate partial target changes.
 
-## 13. Coin Catalogue Browsing and Navigation
+## 14. Coin Catalogue Browsing and Navigation
 
 The coin catalogue uses server-side cursor pagination for bounded API responses. The frontend presents the paginated result as infinite scroll.
 
@@ -182,7 +197,7 @@ The catalogue uses an IntersectionObserver sentinel near the end of the rendered
 
 Coin detail previous/next navigation does not depend on the batches already loaded by infinite scroll. The detail view calls a dedicated navigation endpoint with the same filter and sort criteria and receives only previous_id and next_id. This allows detail navigation to cross infinite-scroll batch boundaries without downloading the full result set.
 
-## 14. Current Architecture Boundaries
+## 15. Current Architecture Boundaries
 
 The following remain future or conditional work:
 

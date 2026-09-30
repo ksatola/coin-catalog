@@ -340,7 +340,7 @@ The fixed bottom navigation contains `Monety`, `Dodaj monetę`, `Archiwum`, and 
 
 ## Current Coin Browser and Entry Flow
 
-The browser supports Grid and List layouts. Grid is the default. The active catalogue and archive can be scoped to all, one, or multiple collections; an empty collection selection means all collections. Quick search respects the selected collection scope. Collection detail views are available at `/kolekcje/:id`, and coin editing moves a coin through the collection move operation rather than changing only `collection_id`.
+The browser supports Grid, List, and Size Gallery layouts. Grid is the default. Size Gallery renders coin sizes proportionally to stored diameter and supports 25%, 50%, 75%, and 100% presentation scales. The active catalogue and archive can be scoped to all, one, or multiple collections; an empty collection selection means all collections. Quick search respects the selected collection scope. Collection detail views are available at `/kolekcje/:id`, and coin editing moves a coin through the collection move operation rather than changing only `collection_id`.
 
 Grid tiles open details. List rows are not clickable; actions are explicit buttons.
 
@@ -362,12 +362,12 @@ Coin-category assignment/removal is implemented in the coin workflow. Assigned c
 
 Image management is implemented for primary and additional photographs.
 
-The accepted storage convention uses a top-level `images/` directory, ignored by Git, with flat six-digit filenames such as:
+The accepted storage convention uses collection-aware directories under `data/images/`, with flat six-digit filenames inside each collection directory, such as:
 
 ```text
-000404 - awers.jpg
-000404 - rewers.jpg
-000404 - 01.jpg
+data/images/collection-001/000404 - awers.jpg
+data/images/collection-001/000404 - rewers.jpg
+data/images/collection-001/000404 - 01.jpg
 ```
 
 The database stores image metadata; image contents are files, not SQLite BLOBs. Primary replacement requires explicit replacement confirmation.
@@ -406,7 +406,7 @@ The verified UI coverage includes image replacement, cancellation, additional-im
 
 ## Recommended Local Verification
 
-For the current Phase 8 branch:
+For the current project state:
 
 ```bash
 cd /workspaces/coin-catalog/backend
@@ -438,11 +438,11 @@ cd /workspaces/coin-catalog
 
 ## Current Scope
 
-Phase 4 is complete and currently covers:
+Phase 8 — Collections is complete. The current verified application scope includes:
 
 - coin creation and persistence;
 - dictionary-backed entry;
-- Grid/List browsing;
+- Grid/List/Size Gallery browsing;
 - details and editing;
 - soft archive/restore;
 - dictionary management;
@@ -452,7 +452,7 @@ Phase 4 is complete and currently covers:
 - local development tooling;
 - automated UI coverage for the current workflows.
 
-Future work includes advanced search/filtering, richer collections/tags, backup/export, CI/CD, and deployment.
+Phase 9 — Cross-platform Standalone Packaging is planned and in early development. Its durable planning document is `docs/CROSS_PLATFORM_STANDALONE_PACKAGING.md`.
 
 ## Working Rules
 
