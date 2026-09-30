@@ -329,17 +329,25 @@ onUnmounted(() => {
             v-for="scale in [25, 50, 75, 100, 125, 150, 200] as SizeGalleryScale[]"
             :key="scale"
             type="button"
-            :class="{ active: sizeGalleryScale === scale }"
-            :aria-label="`Skala ${scale}%`"
+            :class="{ active: sizeGalleryScale === scale, 'scale-calibrated': scale === 100 && sizeGalleryIsCalibrated }"
+            :aria-label="scale === 100
+              ? (sizeGalleryIsCalibrated ? 'Skala 100%, skalibrowana' : 'Skala 100%, wymaga kalibracji')
+              : `Skala ${scale}%`"
+            :title="scale === 100
+              ? (sizeGalleryIsCalibrated ? '100% = rzeczywisty rozmiar' : '100% wymaga kalibracji')
+              : undefined"
             :aria-pressed="sizeGalleryScale === scale"
             @click="sizeGalleryScale = scale"
           >
-            {{ scale }}%
+            <span v-if="scale === 100" class="scale-value">
+              <span>100%</span>
+              <small aria-hidden="true">{{ sizeGalleryIsCalibrated ? '✓' : '?' }}</small>
+            </span>
+            <span v-else>{{ scale }}%</span>
           </button>
           <button type="button" class="calibration-button" @click="showSizeGalleryCalibration = true">
             ⚙ Kalibruj ekran
           </button>
-          <span class="calibration-status">{{ sizeGalleryIsCalibrated ? '100% = rzeczywisty rozmiar' : '100% wymaga kalibracji' }}</span>
         </div>
         <CoinScaleCalibration
           v-if="showSizeGalleryCalibration"
@@ -515,6 +523,24 @@ onUnmounted(() => {
 
 .gallery-scale {
   align-items: center;
+}
+
+.gallery-scale .scale-value {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.gallery-scale .scale-value small {
+  min-height: 9px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.gallery-scale button.scale-calibrated .scale-value small {
+  color: #16a34a;
 }
 
 .simple-search {
