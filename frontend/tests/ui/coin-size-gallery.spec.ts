@@ -151,8 +151,17 @@ test('widok rozmiarów pokazuje informacje z widoku Grid po najechaniu na monet�
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
   const tile = page.locator('.coin-size-tile')
-  await expect(tile).toHaveAttribute(
-    'title',
-    '#7 | A-123\\n1900 AD – 1901 AD\\nKraj testowy · Emitent testowy\\n1 zł · Mennica testowa\\nSrebro\\nII\\n12.34 g\\n20.00 mm\\nVideo',
-  )
+  const tooltip = tile.locator('.coin-tooltip')
+  await expect(tooltip).toBeVisible()
+  await expect(tooltip.locator('div')).toHaveText([
+    '#7 | A-123',
+    '1900 AD – 1901 AD',
+    'Kraj testowy · Emitent testowy',
+    '1 zł · Mennica testowa',
+    'Srebro',
+    'II',
+    '12.34 g',
+    '20.00 mm',
+    'Video',
+  ])
 })
