@@ -56,6 +56,7 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
     })
   })
 
+  await page.addInitScript(() => localStorage.setItem('coin-catalog:size-gallery-calibration:active', '10'))
   await page.goto('/monety')
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
@@ -65,7 +66,7 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
   const initialSizes = await sizes.evaluateAll((elements) =>
     elements.map((element) => element.getBoundingClientRect().width),
   )
-  expect(initialSizes).toEqual([400, 200])
+  expect(initialSizes).toEqual([200, 100])
 
   await page.getByRole('button', { name: 'Skala 50%' }).click()
 
@@ -73,6 +74,40 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
     elements.map((element) => element.getBoundingClientRect().width),
   )
   expect(halfSizes).toEqual([200, 100])
+})
+
+test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
+  const coin = { ...baseCoin, diameter: 20, images: [] }
+
+  await page.route('**/api/collections', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  })
+  await page.route('**/api/coins*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: [coin], next_cursor: null, has_more: false }),
+    })
+  })
+
+  await page.goto('/monety')
+  await page.getByRole('button', { name: '◉ Rozmiar' }).click()
+  await page.getByRole('button', { name: '⚙ Kalibruj ekran' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'Kalibracja ekranu' })
+  await expect(dialog).toBeVisible()
+
+  const input = dialog.getByLabel('Piksele CSS na 1 mm')
+  await input.fill('10')
+  await dialog.getByRole('button', { name: 'Zapisz kalibrację' }).click()
+
+  await expect(page.getByText('100% = rzeczywisty rozmiar')).toBeVisible()
+  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
+
+  await page.reload()
+  await page.getByRole('button', { name: '◉ Rozmiar' }).click()
+  await expect(page.getByText('100% = rzeczywisty rozmiar')).toBeVisible()
+  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
 })
 
 test('widok rozmiarów przeskalowuje wcześniej załadowane monety po infinite scroll', async ({ page }) => {
