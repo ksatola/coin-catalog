@@ -71,10 +71,10 @@ function formatRange(coin: Coin): string {
 
 function formatDetails(coin: Coin): string[] {
   return [
-    dictionaryName(dictionaries.value.materials, coin.material_id),
-    dictionaryName(dictionaries.value.states, coin.state_id),
-    coin.weight !== null ? `${Number(coin.weight).toFixed(2)} g` : null,
-    coin.diameter !== null ? `${Number(coin.diameter).toFixed(2)} mm` : null,
+    dictionaryName(dictionaries.value.materials, coin.material_id) ? `Materiał: ${dictionaryName(dictionaries.value.materials, coin.material_id)}` : null,
+    dictionaryName(dictionaries.value.states, coin.state_id) ? `Stan: ${dictionaryName(dictionaries.value.states, coin.state_id)}` : null,
+    coin.weight !== null ? `Waga: ${Number(coin.weight).toFixed(2)} g` : null,
+    coin.diameter !== null ? `Średnica: ${Number(coin.diameter).toFixed(2)} mm` : null,
   ].filter((value): value is string => Boolean(value))
 }
 
@@ -82,12 +82,10 @@ function tooltipLines(coin: Coin): string[] {
   const lines = [
     `#${coin.id}${coin.collection_number ? ` | ${coin.collection_number}` : ''}`,
     formatRange(coin),
-    [dictionaryName(dictionaries.value.countries, coin.country_id), dictionaryName(dictionaries.value.issuers, coin.issuer_id)]
-      .filter((value): value is string => Boolean(value))
-      .join(' · '),
-    [dictionaryName(dictionaries.value.denominations, coin.denomination_id), dictionaryName(dictionaries.value.mints, coin.mint_id)]
-      .filter((value): value is string => Boolean(value))
-      .join(' · '),
+    dictionaryName(dictionaries.value.countries, coin.country_id) ? `Kraj: ${dictionaryName(dictionaries.value.countries, coin.country_id)}` : null,
+    dictionaryName(dictionaries.value.issuers, coin.issuer_id) ? `Emitent: ${dictionaryName(dictionaries.value.issuers, coin.issuer_id)}` : null,
+    dictionaryName(dictionaries.value.denominations, coin.denomination_id) ? `Nominał: ${dictionaryName(dictionaries.value.denominations, coin.denomination_id)}` : null,
+    dictionaryName(dictionaries.value.mints, coin.mint_id) ? `Mennica: ${dictionaryName(dictionaries.value.mints, coin.mint_id)}` : null,
     ...formatDetails(coin),
   ].filter(Boolean)
 
@@ -232,11 +230,11 @@ onMounted(() => void loadDictionaries())
   max-width: 360px;
   gap: 2px;
   padding: 9px 11px;
-  border: 1px solid #334155;
+  border: 1px solid #dbe3ee;
   border-radius: 7px;
-  background: #0f172a;
-  color: #f8fafc;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
+  background: #ffffff;
+  color: #334155;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
   font-size: 12px;
   line-height: 1.4;
   pointer-events: none;
@@ -251,9 +249,9 @@ onMounted(() => void loadDictionaries())
   left: 50%;
   width: 9px;
   height: 9px;
-  border-right: 1px solid #334155;
-  border-bottom: 1px solid #334155;
-  background: #0f172a;
+  border-right: 1px solid #dbe3ee;
+  border-bottom: 1px solid #dbe3ee;
+  background: #ffffff;
   content: '';
   transform: translateX(-50%) rotate(45deg);
 }
