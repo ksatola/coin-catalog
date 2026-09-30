@@ -940,20 +940,29 @@ The deterministic sort tie-breaker and opaque cursor provide stable forward trav
 
 ## D-037 — Size-Based Coin Gallery
 
+**Status:** Superseded by D-038  
+**Date:** 2026-09-30
+
+The coin catalogue gains a gallery-based presentation mode in which the rendered size of each coin is proportional to its physical diameter stored in the database.
+
+D-037 established proportional sizing. Its original arbitrary 400 px reference scale is superseded by D-038.
+
+## D-038 — Physical Coin Scale and Screen Calibration
+
 **Status:** Accepted  
 **Date:** 2026-09-30
 
-The coin catalogue gains a new gallery-based presentation mode in which the rendered size of each coin is proportional to its physical diameter stored in the database.
+The Size Gallery uses the coin's stored physical diameter as the basis for its rendered size.
 
 The size rules are:
 
-- The largest known diameter among the coins currently loaded in the catalogue defines the reference size.
-- That largest coin is rendered at the selected presentation scale.
-- All other coins are rendered proportionally to their diameter. A coin with twice the diameter therefore has twice the rendered diameter.
-- The reference size is recalculated after each additional batch is loaded by infinite scroll. If a newly loaded coin has a larger diameter, previously rendered coins are rescaled accordingly.
-- Coins without a stored diameter remain visible but do not participate in determining the reference diameter. They receive a clear visual indication that their diameter is unknown.
-- A coin's obverse and reverse images use the same rendered diameter. The dimensions of the source image file do not determine the rendered coin size.
-- The presentation scale is limited to **25%, 50%, 75%, and 100%**.
-- **100%** corresponds to the current Gallery's maximum image diameter for one coin in a row. The size-based gallery never renders a coin above that maximum base size.
-- The presentation scale changes all coin sizes by the same factor and therefore does not alter the physical proportions between coins.
+- **100% represents the coin's stored physical diameter in millimetres**, converted to CSS pixels using the configured screen calibration.
+- The default conversion is based on the standard CSS reference density of 96 CSS pixels per inch. It is only an estimate until the user calibrates the screen.
+- Screen calibration measures a 100 mm reference line and stores the resulting CSS-pixels-per-millimetre value in browser local storage for the active catalogue scope.
+- The calibration is local to the browser and scope; it does not modify coin data or the database.
+- Presentation scales are **25%, 50%, 75%, 100%, 125%, 150%, and 200%**.
+- Scaling changes all known coin diameters by the same factor and therefore preserves physical proportions between coins.
+- Coins without a stored diameter remain visible with a clear unknown-diameter indicator.
+- Infinite-scroll loading no longer changes the reference size of already rendered coins, because each known diameter is rendered independently.
+- Source image dimensions do not determine rendered coin size.
 
