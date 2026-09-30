@@ -299,7 +299,7 @@ test.describe('collections', () => {
     await mockCatalogApi(page)
     await page.goto('/monety')
 
-    await expect(page.getByLabel('Aktywny zakres kolekcji')).toContainText('Wszystkie kolekcje')
+    await expect(page.locator('.results-bar .results-scope')).toHaveText('Wszystkie kolekcje')
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption(['1', '2'])
