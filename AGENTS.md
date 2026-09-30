@@ -447,8 +447,8 @@ The development container may provide standalone tooling such as `pytest`, `ruff
 
 The project is currently in:
 
-**Phase 8 — Collections**
+**Phase 9 — Cross-platform Standalone Packaging**
 
-Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, Phase 6 — UI Foundation, and Phase 7 — Collection Number have been completed and verified.
+Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, Phase 6 — UI Foundation, Phase 7 — Collection Number, and Phase 8 — Collections have been completed and verified.
 
-Phase 8 adds collections as a first-class organizational entity across the database, API, collection-aware coin operations and filtering, image storage, atomic coin moves, and frontend collection management and assignment. Phase 8 implementation and the verification recorded in docs/PROGRESS.md are complete.
+Phase 9 planning is documented in `docs/CROSS_PLATFORM_STANDALONE_PACKAGING.md`. The Phase 9 implementation is currently at the planning/early-start stage; it must not be described as completed until the standalone packaging work and its verification are actually finished.
