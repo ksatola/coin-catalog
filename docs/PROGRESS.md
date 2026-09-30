@@ -243,5 +243,7 @@ Next step: Phase 8 is complete. Continue with the next planned phase or maintena
 - Defined presentation scale controls of 25%, 50%, 75%, and 100%, with 100% matching the current Gallery's maximum image diameter for one coin in a row.
 - Defined that coins without a diameter remain visible, do not affect the reference size, and are visibly marked as having no diameter.
 - Defined identical rendered size for obverse and reverse images of the same coin.
-- **Verification pending:** the new view has not yet been implemented or tested.
+- Implemented the new size-based gallery mode with proportional diameter rendering, a 25%/50%/75%/100% scale control, unknown-diameter handling, and rescaling after infinite-scroll batches introduce a larger diameter.
+- Added dedicated Playwright coverage for proportional sizing, scale changes, and infinite-scroll rescaling.
+- **Verification pending:** the frontend type-check/build and the new Playwright tests have not yet been run in the current development environment.
 
