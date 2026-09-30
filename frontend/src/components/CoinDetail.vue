@@ -28,7 +28,7 @@ const primaryImages = reactive<{ avers: CoinImageData | null; rewers: CoinImage 
 const additionalImages = ref<CoinImageData[]>([])
 const imageErrorMessage = ref('')
 const selectedImageIndex = ref<number | null>(null)
-const allImages = computed<CoinImageData[]>(() => [primaryImages.avers, primaryImages.rewers, ...additionalImages.value].filter((image): image is CoinImage => image !== null))
+const allImages = computed<CoinImageData[]>(() => [primaryImages.avers, primaryImages.rewers, ...additionalImages.value].filter((image): image is CoinImageData => image !== null))
 const selectedImage = computed(() => selectedImageIndex.value === null ? null : allImages.value[selectedImageIndex.value] ?? null)
 
 function dictionaryName(items: DictionaryItem[], id: number | null): string { if (id === null) return '—'; return items.find((item) => item.id === id)?.name ?? `#${id}` }
