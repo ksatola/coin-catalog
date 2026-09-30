@@ -160,11 +160,11 @@ Playwright coverage includes coin/image workflows, category workflows, Collectio
 
 Broader integration and CI coverage remain future work.
 
-## 11. Deployment Model
+## 12. Deployment Model
 
 The current priority is local development rather than production deployment. A production deployment architecture will be defined when deployment becomes an actual requirement.
 
-## 12. Collection Integrity and Lifecycle
+## 13. Collection Integrity and Lifecycle
 
 Collections use one shared SQLite database. Each coin belongs to exactly one collection, while categories remain global across collections. Empty collections may exist; normal application functionality does not delete collections containing coins.
 
@@ -174,7 +174,7 @@ The collection filter model uses `collectionIds: number[]`; an empty selection m
 
 A coin move is an application-level compensating operation. It creates a new technical coin ID, preserves the user-facing collection number, prepares target image files and metadata, protects against collisions, and removes source state only after the target state is ready. Failures must leave the source intact or compensate partial target changes.
 
-## 13. Coin Catalogue Browsing and Navigation
+## 14. Coin Catalogue Browsing and Navigation
 
 The coin catalogue uses server-side cursor pagination for bounded API responses. The frontend presents the paginated result as infinite scroll.
 
@@ -197,7 +197,7 @@ The catalogue uses an IntersectionObserver sentinel near the end of the rendered
 
 Coin detail previous/next navigation does not depend on the batches already loaded by infinite scroll. The detail view calls a dedicated navigation endpoint with the same filter and sort criteria and receives only previous_id and next_id. This allows detail navigation to cross infinite-scroll batch boundaries without downloading the full result set.
 
-## 14. Current Architecture Boundaries
+## 15. Current Architecture Boundaries
 
 The following remain future or conditional work:
 
