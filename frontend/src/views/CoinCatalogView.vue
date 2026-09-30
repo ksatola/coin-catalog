@@ -287,9 +287,6 @@ onUnmounted(() => {
       <div>
         <h1>{{ pageTitle }}</h1>
         <p class="page-subtitle">{{ pageSubtitle }}</p>
-        <p class="active-collection-scope" aria-label="Aktywny zakres kolekcji">
-          <span>Aktywny zakres kolekcji:</span> <strong>{{ activeCollectionScopeLabel() }}</strong>
-        </p>
       </div>
 
       <div class="header-controls">
@@ -400,8 +397,9 @@ onUnmounted(() => {
     </div>
 
     <template v-else>
-      <div class="results-bar">
+      <div class="results-bar" aria-label="Zakres wyników">
         <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
+        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
       </div>
 
       <CoinImageGrid
@@ -459,16 +457,6 @@ onUnmounted(() => {
   margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
-}
-
-.active-collection-scope {
-  margin: 8px 0 0;
-  color: #475569;
-  font-size: 13px;
-}
-
-.active-collection-scope span {
-  color: #64748b;
 }
 
 .header-controls {
@@ -655,8 +643,18 @@ onUnmounted(() => {
 }
 
 .results-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: #475569;
   font-size: 14px;
+}
+
+.results-scope {
+  padding-left: 10px;
+  border-left: 1px solid #cbd5e1;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .infinite-scroll-sentinel {
