@@ -222,9 +222,9 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Recorded the Phase 4 coin, browser, editing, archive/restore, dictionary, image, and cross-era date workflows and their verification.
 
 
-### 2026-09-29 — Phase 9 started: cursor pagination and infinite scroll
+### 2026-09-29 — Cursor pagination and infinite scroll implemented
 
-- Created working branch `feature/coin-infinite-scroll` from `main`.
+- Implemented and merged the cursor pagination and infinite-scroll catalogue work through pull request #14.
 - Recorded accepted decision D-036 for cursor pagination, infinite-scroll catalogue browsing, and independent detail navigation.
 - Added backend cursor encoding/decoding and keyset traversal helpers.
 - Added paginated coin-list response schemas and a dedicated coin navigation response.
@@ -232,7 +232,7 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Added `GET /coins/{coin_id}/navigation` for filter/sort-aware previous/next navigation.
 - Added backend tests covering cursor traversal, nullable year sorting, detail navigation boundaries, filtering behavior, and invalid cursors.
 - Added the initial frontend infinite-scroll implementation and switched coin detail navigation to the dedicated navigation endpoint.
-- **Verification pending:** backend pytest and frontend Playwright tests have not yet been run for this phase.
+- The work is part of the current application baseline; Phase 9 now refers to Cross-platform Standalone Packaging.
 
 ### 2026-09-30 — Size-based coin gallery merged and verified
 
