@@ -6,11 +6,13 @@ import CoinFilters from '../components/CoinFilters.vue'
 import CoinGrid from '../components/CoinGrid.vue'
 import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
+import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
-type ViewMode = 'image-grid' | 'grid' | 'list'
+type ViewMode = 'image-grid' | 'size-gallery' | 'grid' | 'list'
+type SizeGalleryScale = 25 | 50 | 75 | 100
 type GalleryColumns = 1 | 2 | 3 | 4
 
 const props = defineProps<{
@@ -41,10 +43,11 @@ const emptyDescription = isArchive
   : 'Nie znaleziono monet spełniających kryteria.'
 const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
+const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
 
 function loadViewMode(): ViewMode {
   const stored = localStorage.getItem(viewModeStorageKey)
-  return stored === 'image-grid' || stored === 'grid' || stored === 'list'
+  return stored === 'image-grid' || stored === 'size-gallery' || stored === 'grid' || stored === 'list'
     ? stored
     : 'image-grid'
 }
@@ -58,6 +61,13 @@ function loadGalleryColumns(): GalleryColumns {
 
 const viewMode = ref<ViewMode>(loadViewMode())
 const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
+
+function loadSizeGalleryScale(): SizeGalleryScale {
+  const stored = Number(localStorage.getItem(sizeGalleryScaleStorageKey))
+  return stored === 25 || stored === 50 || stored === 75 || stored === 100 ? stored : 100
+}
+
+const sizeGalleryScale = ref<SizeGalleryScale>(loadSizeGalleryScale())
 
 function activeCollectionScopeLabel(): string {
   const ids = filters.collectionIds
@@ -87,6 +97,10 @@ watch(viewMode, (mode) => {
 
 watch(galleryColumns, (columns) => {
   localStorage.setItem(galleryColumnsStorageKey, String(columns))
+})
+
+watch(sizeGalleryScale, (scale) => {
+  localStorage.setItem(sizeGalleryScaleStorageKey, String(scale))
 })
 
 function isSearchReady(): boolean {
@@ -264,6 +278,9 @@ onUnmounted(() => {
           <button type="button" :class="{ active: viewMode === 'image-grid' }" :disabled="viewMode === 'image-grid'" @click="viewMode = 'image-grid'">
             ▦ Galeria
           </button>
+          <button type="button" :class="{ active: viewMode === 'size-gallery' }" :disabled="viewMode === 'size-gallery'" @click="viewMode = 'size-gallery'">
+            ◉ Rozmiar
+          </button>
           <button type="button" :class="{ active: viewMode === 'grid' }" :disabled="viewMode === 'grid'" @click="viewMode = 'grid'">
             ▦ Grid
           </button>
@@ -284,6 +301,21 @@ onUnmounted(() => {
             @click="galleryColumns = columns"
           >
             {{ columns }}
+          </button>
+        </div>
+
+        <div v-if="viewMode === 'size-gallery'" class="gallery-scale" aria-label="Skala galerii rozmiarów">
+          <span>Skala:</span>
+          <button
+            v-for="scale in [25, 50, 75, 100] as SizeGalleryScale[]"
+            :key="scale"
+            type="button"
+            :class="{ active: sizeGalleryScale === scale }"
+            :aria-label="`Skala ${scale}%`"
+            :aria-pressed="sizeGalleryScale === scale"
+            @click="sizeGalleryScale = scale"
+          >
+            {{ scale }}%
           </button>
         </div>
       </div>
@@ -339,6 +371,12 @@ onUnmounted(() => {
         v-if="viewMode === 'image-grid'"
         :coins="coins"
         :columns="galleryColumns"
+        :detail-query="appliedFilterQuery"
+      />
+      <CoinSizeGallery
+        v-else-if="viewMode === 'size-gallery'"
+        :coins="coins"
+        :scale="sizeGalleryScale"
         :detail-query="appliedFilterQuery"
       />
       <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" />
@@ -402,7 +440,8 @@ onUnmounted(() => {
 }
 
 .view-switcher,
-.gallery-columns {
+.gallery-columns,
+.gallery-scale {
   display: flex;
   gap: 4px;
   padding: 4px;
@@ -412,7 +451,8 @@ onUnmounted(() => {
 }
 
 .view-switcher button,
-.gallery-columns button {
+.gallery-columns button,
+.gallery-scale button {
   min-height: 34px;
   padding: 6px 10px;
   border: 0;
@@ -424,7 +464,8 @@ onUnmounted(() => {
 }
 
 .view-switcher button.active,
-.gallery-columns button.active {
+.gallery-columns button.active,
+.gallery-scale button.active {
   background: #e2e8f0;
   color: #0f172a;
 }
@@ -433,12 +474,17 @@ onUnmounted(() => {
   align-items: center;
 }
 
-.gallery-columns span {
+.gallery-columns span,
+.gallery-scale span {
   padding: 0 5px 0 3px;
   color: #64748b;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.gallery-scale {
+  align-items: center;
 }
 
 .simple-search {
@@ -612,16 +658,19 @@ onUnmounted(() => {
   }
 
   .view-switcher,
-  .gallery-columns {
+  .gallery-columns,
+  .gallery-scale {
     width: 100%;
   }
 
   .view-switcher button,
-  .gallery-columns button {
+  .gallery-columns button,
+  .gallery-scale button {
     flex: 1;
   }
 
-  .gallery-columns span {
+  .gallery-columns span,
+  .gallery-scale span {
     flex: 0 0 auto;
   }
 
