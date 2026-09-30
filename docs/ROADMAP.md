@@ -168,11 +168,11 @@ Planned: database/image backup strategy, metadata export, and full catalogue exp
 
 Backend and Playwright automation exists. Broader integration coverage, CI checks, and additional quality automation remain future work.
 
-## Phase 12 — Packaging and Deployment
+## Phase 12 — Production Deployment
 
 **Status:** Not started
 
-Planned: supported deployment model, production runtime, deployment documentation, backup/recovery documentation, and supported-host verification.
+Planned: deployment model beyond the standalone desktop distribution, production runtime, deployment documentation, backup/recovery documentation, and supported deployment-environment verification.
 
 ## Future / Optional Areas
 
