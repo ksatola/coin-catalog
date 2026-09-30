@@ -91,7 +91,7 @@ function tooltipLines(coin: Coin): string[] {
 
   if (coin.has_video) lines.push('Video')
 
-  return lines
+  return lines.filter((value): value is string => Boolean(value))
 }
 
 async function loadDictionaries(): Promise<void> {
