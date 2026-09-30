@@ -56,7 +56,7 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
     })
   })
 
-  await page.addInitScript(() => localStorage.setItem('coin-catalog:size-gallery-calibration:active', '10'))
+  await page.addInitScript(() => localStorage.setItem('coin-catalog:size-gallery-calibration:coins', '10'))
   await page.goto('/monety')
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
@@ -101,7 +101,7 @@ test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
   await input.fill('10')
   await dialog.getByRole('button', { name: 'Zapisz kalibrację' }).click()
 
-  await expect(page.getByText('100% = rzeczywisty rozmiar')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Skala 100%, skalibrowana' })).toBeVisible()
   await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
 
   await page.getByRole('button', { name: 'Skala 125%' }).click()
@@ -112,7 +112,7 @@ test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
   await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 400)
 
   await page.reload()
-  await expect(page.getByText('100% = rzeczywisty rozmiar')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Skala 100%, skalibrowana' })).toBeVisible()
   await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
 })
 
@@ -141,7 +141,7 @@ test('widok rozmiarów przeskalowuje wcześniej załadowane monety po infinite s
     })
   })
 
-  await page.addInitScript(() => localStorage.setItem('coin-catalog:size-gallery-calibration:active', '10'))
+  await page.addInitScript(() => localStorage.setItem('coin-catalog:size-gallery-calibration:coins', '10'))
   await page.goto('/monety')
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
