@@ -31,7 +31,21 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
     { ...baseCoin, id: 2, diameter: 10, images: [] },
   ]
 
-  await page.route('**/api/dictionaries/*', async (route) => {\n    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''\n    const dictionaries: Record<string, unknown[]> = {\n      countries: [{ id: 1, name: 'Kraj testowy' }],\n      issuers: [{ id: 2, name: 'Emitent testowy' }],\n      denominations: [{ id: 3, name: '1 zł' }],\n      mints: [{ id: 4, name: 'Mennica testowa' }],\n      materials: [{ id: 5, name: 'Srebro' }],\n      states: [{ id: 6, name: 'II' }],\n      eras: [{ id: 7, name: 'AD' }],\n    }\n    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name] ?? []) })\n  })\n\n  await page.route('**/api/collections', async (route) => {
+  await page.route('**/api/dictionaries/*', async (route) => {
+    const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
+    const dictionaries: Record<string, unknown[]> = {
+      countries: [{ id: 1, name: 'Kraj testowy' }],
+      issuers: [{ id: 2, name: 'Emitent testowy' }],
+      denominations: [{ id: 3, name: '1 zł' }],
+      mints: [{ id: 4, name: 'Mennica testowa' }],
+      materials: [{ id: 5, name: 'Srebro' }],
+      states: [{ id: 6, name: 'II' }],
+      eras: [{ id: 7, name: 'AD' }],
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name] ?? []) })
+  })
+
+  await page.route('**/api/collections', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
   })
   await page.route('**/api/coins*', async (route) => {
