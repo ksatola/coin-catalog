@@ -7,9 +7,9 @@ export interface CoinImage {
   kind: CoinImageKind
   sort_order: number
   file_size_bytes: number
-  revision: number
-  thumbnail_revision: number | null
-  thumbnail_generator_version: number | null
+  revision?: number
+  thumbnail_revision?: number | null
+  thumbnail_generator_version?: number | null
   created_at: string
 }
 
@@ -84,7 +84,7 @@ export interface CoinCreate {
 export interface CoinListImage {
   id: number
   kind: CoinImageKind
-  revision: number
+  revision?: number
 }
 
 export interface Coin extends CoinCreate {
