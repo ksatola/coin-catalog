@@ -29,6 +29,7 @@ const appliedFilterQuery = ref('')
 const nextCursor = ref<string | null>(null)
 const hasMore = ref(true)
 const loadingMore = ref(false)
+const initialLoading = ref(true)
 const sentinel = ref<HTMLElement | null>(null)
 const showAdvancedFilters = ref(false)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
@@ -151,6 +152,10 @@ async function loadCoins(): Promise<void> {
 
   const generation = ++requestGeneration
   const scrollY = window.scrollY
+  const isInitialLoad = coins.value.length === 0
+  if (isInitialLoad) {
+    initialLoading.value = true
+  }
   loadingMore.value = true
 
   try {
@@ -178,6 +183,7 @@ async function loadCoins(): Promise<void> {
   } finally {
     if (generation === requestGeneration) {
       loadingMore.value = false
+      initialLoading.value = false
     }
   }
 }
@@ -390,7 +396,11 @@ onUnmounted(() => {
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
 
-    <div v-if="coins.length === 0" class="empty-state">
+    <div v-if="initialLoading" class="loading-state" role="status">
+      Ładowanie monet…
+    </div>
+
+    <div v-else-if="coins.length === 0" class="empty-state">
       <strong>{{ emptyTitle }}</strong>
       <span>{{ emptyDescription }}</span>
     </div>
@@ -674,6 +684,14 @@ onUnmounted(() => {
   color: #b91c1c;
   font-size: 14px;
   font-weight: 600;
+}
+
+.loading-state {
+  display: grid;
+  min-height: 120px;
+  place-items: center;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .empty-state {
