@@ -35,6 +35,7 @@ const showAdvancedFilters = ref(false)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestGeneration = 0
 let observer: IntersectionObserver | undefined
+let hasMountedCatalog = false
 
 const isArchive = props.scope === 'archive'
 const pageTitle = isArchive ? 'Archiwum' : 'Monety'
@@ -174,7 +175,9 @@ async function loadCoins(): Promise<void> {
     appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
-    window.scrollTo(0, scrollY)
+    if (hasMountedCatalog) {
+      window.scrollTo(0, scrollY)
+    }
   } catch {
     if (generation !== requestGeneration) return
     errorMessage.value = isArchive
@@ -279,6 +282,7 @@ watch([sentinel, loadingMore], ([element, isLoading]) => {
 
 onMounted(async () => {
   await Promise.all([loadCoins(), loadCollections()])
+  hasMountedCatalog = true
 })
 
 onUnmounted(() => {
