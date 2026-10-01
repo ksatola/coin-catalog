@@ -26,7 +26,6 @@ def upgrade() -> None:
         "coin_image",
         sa.Column("thumbnail_generator_version", sa.Integer(), nullable=True),
     )
-    op.alter_column("coin_image", "revision", server_default=None)
 
 
 def downgrade() -> None:
