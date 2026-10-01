@@ -486,7 +486,7 @@ test('ponawia ładowanie obrazu w widoku szczegółów po błędzie pierwszej pr
   const image = page.getByAltText('Awers monety')
   await expect.poll(() => imageRequests).toBe(2)
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
-  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/thumbnail?v=1&image_retry=1')
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file?image_retry=1')
 })
 
 test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page }) => {
@@ -513,5 +513,5 @@ test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page })
   const image = page.getByAltText('Awers monety #1')
   await expect.poll(() => imageRequests).toBe(2)
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
-  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file?image_retry=1')
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/thumbnail?v=1&image_retry=1')
 })
