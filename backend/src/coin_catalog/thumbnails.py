@@ -18,7 +18,8 @@ class ThumbnailGenerationError(RuntimeError):
 
 def expected_thumbnail_size(source_path: Path, max_size: int = THUMBNAIL_MAX_SIZE) -> tuple[int, int]:
     with Image.open(source_path) as image:
-        width, height = image.size
+        oriented = ImageOps.exif_transpose(image)
+        width, height = oriented.size
 
     if width <= 0 or height <= 0:
         raise ValueError("Source image has invalid dimensions")
@@ -112,3 +113,18 @@ def ensure_thumbnail_file(
     raise ThumbnailGenerationError(
         f"Could not generate thumbnail after {THUMBNAIL_MAX_GENERATION_ATTEMPTS} attempts"
     ) from last_error
+
+
+def thumbnail_metadata_is_current(
+    *,
+    source_path: Path,
+    target_path: Path,
+    image_revision: int,
+    thumbnail_revision: int | None,
+    thumbnail_generator_version: int | None,
+) -> bool:
+    return (
+        thumbnail_revision == image_revision
+        and thumbnail_generator_version == THUMBNAIL_GENERATOR_VERSION
+        and is_valid_thumbnail(source_path, target_path)
+    )
