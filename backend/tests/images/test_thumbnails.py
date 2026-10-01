@@ -13,6 +13,7 @@ from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import Coin, CoinImage, Collection, Country, Denomination, Era
 from coin_catalog.routes import images
+from coin_catalog import image_storage
 from coin_catalog.thumbnails import (
     THUMBNAIL_GENERATOR_VERSION,
     THUMBNAIL_JPEG_QUALITY,
@@ -58,6 +59,7 @@ def image_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     directory = tmp_path / "images"
     directory.mkdir()
     monkeypatch.setattr(images, "IMAGES_DIR", directory)
+    monkeypatch.setattr(image_storage, "IMAGES_DIR", directory)
     return directory
 
 
