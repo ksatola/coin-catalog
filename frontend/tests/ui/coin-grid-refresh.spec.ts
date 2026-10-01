@@ -101,16 +101,17 @@ test('powrót z widoku szczegółowego przywraca pozycję przewijania katalogu',
 
   await page.goto('/monety')
   await expect(page.getByRole('link', { name: 'Moneta #20' })).toBeVisible()
+  const catalogUrl = page.url()
 
   await page.evaluate(() => window.scrollTo(0, 700))
   const catalogScrollY = await page.evaluate(() => window.scrollY)
   expect(catalogScrollY).toBeGreaterThan(0)
 
   await page.getByRole('link', { name: 'Moneta #20' }).click()
-  await expect(page).toHaveURL(/\/monety\/20$/)
+  await expect.poll(() => new URL(page.url()).pathname).toBe('/monety/20')
 
   await page.goBack()
-  await expect(page).toHaveURL(/\/monety$/)
+  await expect(page).toHaveURL(catalogUrl)
   await expect(page.getByRole('link', { name: 'Moneta #20' })).toBeVisible()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(catalogScrollY)
 })
