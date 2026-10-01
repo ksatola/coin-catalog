@@ -326,6 +326,7 @@ def test_catalog_page_schedules_thumbnail_reconciliation(
         limit=50,
         session=session,
         background_tasks=background_tasks,
+        coin_status="active",
     )
 
     assert response.items
