@@ -20,7 +20,15 @@ const validJpeg = Buffer.from(
   'base64',
 )
 
-async function mockApi(page: import('@playwright/test').Page, coinCount = 2, coinDelayMs = 0): Promise<void> {
+async function mockApi(
+  page: import('@playwright/test').Page,
+  coinCount = 2,
+  blockCoinsResponse = false,
+): Promise<() => void> {
+  let releaseCoinsResponse = (): void => undefined
+  const coinsResponseBlocked = new Promise<void>((resolve) => {
+    releaseCoinsResponse = resolve
+  })
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []) })
@@ -36,8 +44,8 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2, coi
       images: images.get(index + 1) ?? [],
     }))
     const payload = search ? coins.filter((item) => item.id !== 2) : coins
-    if (coinDelayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, coinDelayMs))
+    if (blockCoinsResponse) {
+      await coinsResponseBlocked
     }
     await route.fulfill({
       status: 200,
@@ -56,13 +64,16 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2, coi
     const coinId = Number(new URL(route.request().url()).pathname.split('/')[3])
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(images.get(coinId) ?? []) })
   })
+
+  return releaseCoinsResponse
 }
 
 test('pokazuje stan ładowania zamiast pustego katalogu przed pierwszą odpowiedzią', async ({ page }) => {
-  await mockApi(page, 2, 300)
+  const releaseCoinsResponse = await mockApi(page, 2, true)
 
   await page.goto('/monety', { waitUntil: 'commit' })
   await expect(page.getByRole('status')).toHaveText('Ładowanie monet…')
+  releaseCoinsResponse()
 
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
   await expect(page.getByRole('status')).toHaveCount(0)
