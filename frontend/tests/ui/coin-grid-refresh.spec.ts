@@ -61,9 +61,8 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2, coi
 test('pokazuje stan ładowania zamiast pustego katalogu przed pierwszą odpowiedzią', async ({ page }) => {
   await mockApi(page, 2, 300)
 
-  const navigation = page.goto('/monety')
+  await page.goto('/monety', { waitUntil: 'commit' })
   await expect(page.getByRole('status')).toHaveText('Ładowanie monet…')
-  await navigation
 
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
   await expect(page.getByRole('status')).toHaveCount(0)
