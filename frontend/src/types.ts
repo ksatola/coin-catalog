@@ -31,7 +31,7 @@ export interface Collection extends CollectionStats {
   updated_at: string
 }
 
-export interface Category extends CategoryGraphItem {
+export interface Category {
   id: number
   name: string
   description: string | null
