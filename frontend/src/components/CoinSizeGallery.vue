@@ -52,7 +52,7 @@ function detailPath(coinId: number): string {
 
 function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
   const image = coin.images?.find((item) => item.kind === kind)
-  return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined
+  return image ? `/api/coins/${coin.id}/images/${image.id}/thumbnail?v=${image.revision}` : undefined
 }
 
 function dictionaryName(items: DictionaryItem[], id: number | null): string | null {
@@ -160,12 +160,14 @@ onMounted(() => void loadDictionaries())
           <CoinImage
             :src="imageUrl(coin, 'avers')!"
             :alt="`Awers monety #${coin.id}`"
+            loading="lazy"
           />
         </div>
         <div v-if="imageUrl(coin, 'rewers')" class="coin-side">
           <CoinImage
             :src="imageUrl(coin, 'rewers')!"
             :alt="`Rewers monety #${coin.id}`"
+            loading="lazy"
           />
         </div>
         <div
