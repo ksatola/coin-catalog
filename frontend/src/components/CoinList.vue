@@ -75,7 +75,7 @@ async function loadDictionaries(): Promise<void> {
 
 function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
   const image = coin.images?.find((item) => item.kind === kind)
-  return image ? `/api/coins/${coin.id}/images/${image.id}/thumbnail?v=${image.revision}` : undefined
+  return image ? `/api/coins/${coin.id}/images/${image.id}/thumbnail?v=${image.revision ?? 1}` : undefined
 }
 
 void loadDictionaries()
