@@ -323,10 +323,19 @@ def test_catalog_page_schedules_thumbnail_reconciliation(
 
     background_tasks = BackgroundTasks()
     response = coin_routes.list_coins(
+        collection_id=None,
+        country_id=None,
+        issuer_id=None,
+        denomination_id=None,
+        mint_id=None,
+        material_id=None,
+        state_id=None,
+        era_id=None,
+        category_id=None,
+        coin_status="active",
         limit=50,
         session=session,
         background_tasks=background_tasks,
-        coin_status="active",
     )
 
     assert response.items
