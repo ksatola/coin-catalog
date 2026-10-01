@@ -252,6 +252,9 @@ def test_coin_image_has_expected_columns_and_kind_constraint() -> None:
         "sort_order",
         "created_at",
         "file_size_bytes",
+        "revision",
+        "thumbnail_revision",
+        "thumbnail_generator_version",
     }
     assert table.c.coin_id.nullable is False
     assert table.c.filename.nullable is False
