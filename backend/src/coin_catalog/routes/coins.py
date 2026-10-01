@@ -220,6 +220,7 @@ def create_coin(
     response_model=list[CoinListResponse] | CoinPageResponse,
 )
 def list_coins(
+    background_tasks: BackgroundTasks,
     search: str | None = None,
     collection_id: list[int] | None = Query(None),
     country_id: list[int] | None = Query(None),
@@ -241,7 +242,6 @@ def list_coins(
     limit: int | None = Query(None, ge=1, le=MAX_PAGE_SIZE),
     cursor: str | None = None,
     session: Session = Depends(get_db),
-    background_tasks: BackgroundTasks,
 ) -> list[Coin] | CoinPageResponse:
     validate_coin_query(search, coin_status, sort_by, sort_order)
 
