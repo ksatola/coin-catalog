@@ -7,6 +7,9 @@ export interface CoinImage {
   kind: CoinImageKind
   sort_order: number
   file_size_bytes: number
+  revision: number
+  thumbnail_revision: number | null
+  thumbnail_generator_version: number | null
   created_at: string
 }
 
@@ -28,7 +31,7 @@ export interface Collection extends CollectionStats {
   updated_at: string
 }
 
-export interface Category {
+export interface Category extends CategoryGraphItem {
   id: number
   name: string
   description: string | null
@@ -81,6 +84,7 @@ export interface CoinCreate {
 export interface CoinListImage {
   id: number
   kind: CoinImageKind
+  revision: number
 }
 
 export interface Coin extends CoinCreate {
