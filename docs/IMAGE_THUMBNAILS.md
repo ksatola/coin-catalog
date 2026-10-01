@@ -130,3 +130,25 @@ Aktualność miniaturki ma uwzględniać nie tylko revision obrazu, ale równie�
 Zmiana parametrów generowania w przyszłości ma umożliwiać rozpoznanie starszych miniaturek jako nieaktualnych i ich ponowne wygenerowanie.
 
 Nie ustalono jeszcze konkretnego sposobu przechowywania tej wersji ani konkretnego mechanizmu implementacyjnego.
+
+## Wymagania dotyczące testów
+
+Nowa funkcjonalność ma otrzymać nowe, deterministyczne testy. Testy nie mogą zależeć od aktualnej zawartości produkcyjnej bazy danych.
+
+Zakres testów ma obejmować:
+
+- generowanie miniaturek,
+- parametry miniaturek: maksymalny dłuższy bok 800 px, jakość JPEG 90, zachowanie proporcji, brak cropowania i wynik JPG,
+- potwierdzenie, że generowanie miniaturki nie modyfikuje oryginału,
+- revision obrazu i unieważnianie cache po podmianie zdjęcia,
+- brak zmiany revision i cache przy edycji danych monety bez zmiany zdjęcia,
+- wykrywanie brakującej miniaturki,
+- wykrywanie nieaktualnej miniaturki i jej regenerację,
+- kontrolę poprawności JPG i wymiarów miniaturki,
+- kontrolę zgodności miniaturki z aktualną revision obrazu oraz wersją parametrów/generatora,
+- retry po błędzie generowania oraz ponowną próbę po kolejnym błędzie,
+- lazy loading w widokach katalogowych,
+- używanie miniaturek w Gallery, Grid i Size Gallery,
+- używanie oryginału w szczegółach monety i podczas edycji.
+
+Testy mają weryfikować rzeczywiste zachowanie funkcjonalności, a nie tylko obecność implementacji.
