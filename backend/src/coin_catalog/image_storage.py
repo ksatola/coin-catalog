@@ -28,12 +28,23 @@ def collection_images_dir(collection_id: int) -> Path:
     return IMAGES_DIR / f"collection-{collection_id:03d}"
 
 
+def collection_thumbnails_dir(collection_id: int) -> Path:
+    """Return the filesystem directory for a collection's coin thumbnails."""
+    return IMAGES_DIR / "thumbnails" / f"collection-{collection_id:03d}"
+
+
+def thumbnail_path(collection_id: int, filename: str) -> Path:
+    """Return the filesystem path for a coin image thumbnail."""
+    return collection_thumbnails_dir(collection_id) / filename
+
+
 def ensure_image_storage_directories(session: Session) -> None:
     """Create the image root and missing collection directories without deleting data."""
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     collections = session.scalars(select(Collection.id).order_by(Collection.id)).all()
     for collection_id in collections:
         collection_images_dir(collection_id).mkdir(parents=True, exist_ok=True)
+        collection_thumbnails_dir(collection_id).mkdir(parents=True, exist_ok=True)
 
 
 def find_image_storage_issues(session: Session) -> list[ImageStorageIssue]:
