@@ -76,6 +76,7 @@ class CoinListImageResponse(BaseModel):
 
     id: int
     kind: str
+    revision: int
 
 
 class CoinListResponse(CoinResponse):
@@ -131,4 +132,7 @@ class CoinImageResponse(BaseModel):
     kind: str
     sort_order: int
     file_size_bytes: int
+    revision: int
+    thumbnail_revision: int | None
+    thumbnail_generator_version: int | None
     created_at: datetime
