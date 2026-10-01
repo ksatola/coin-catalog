@@ -296,6 +296,38 @@ def test_replacing_original_increments_revision_and_regenerates_thumbnail(
     assert thumbnail.read_bytes() != first_thumbnail
 
 
+def test_catalog_page_reconciles_missing_thumbnail_for_current_batch(
+    client: TestClient,
+    coin: Coin,
+    image_dir: Path,
+    session: Session,
+) -> None:
+    created = client.post(
+        f"/coins/{coin.id}/images",
+        params={"kind": "avers"},
+        files={"upload": ("source.jpg", jpeg_bytes((1200, 600), (220, 120, 40)), "image/jpeg")},
+    )
+    payload = created.json()
+    image = session.get(CoinImage, payload["id"])
+    assert image is not None
+
+    _, thumbnail = image_paths(image_dir, coin, payload["filename"])
+    thumbnail.unlink()
+    image.thumbnail_revision = None
+    image.thumbnail_generator_version = None
+    session.commit()
+
+    response = client.get("/coins", params={"limit": 50})
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["images"][0]["revision"] == image.revision
+    assert thumbnail.is_file()
+
+    session.refresh(image)
+    assert image.thumbnail_revision == image.revision
+    assert image.thumbnail_generator_version == THUMBNAIL_GENERATOR_VERSION
+
+
 def test_thumbnail_revision_is_not_advanced_when_generation_fails(
     client: TestClient,
     coin: Coin,
