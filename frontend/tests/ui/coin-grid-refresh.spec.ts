@@ -276,6 +276,7 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
                 filename: `coin-1-v${responseVersion}.jpg`,
                 kind: 'avers',
                 sort_order: 0,
+                revision: 1,
               }],
             }],
             next_cursor: null,
@@ -301,11 +302,11 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
   await page.goto('/monety')
 
   const image = page.getByAltText('Awers monety #1')
-  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file')
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/thumbnail?v=1')
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
 
   await page.getByPlaceholder('Szukaj monet, np. polska grosz').fill('test')
-  await expect.poll(() => image.getAttribute('src')).toBe('/api/coins/1/images/201/file')
+  await expect.poll(() => image.getAttribute('src')).toBe('/api/coins/1/images/201/thumbnail?v=1')
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
 })
 
@@ -465,7 +466,7 @@ test('ponawia ładowanie obrazu w widoku szczegółów po błędzie pierwszej pr
       body: JSON.stringify(images.get(1) ?? []),
     })
   })
-  await page.route('**/api/coins/1/images/101/file*', async (route) => {
+  await page.route('**/api/coins/1/images/101/thumbnail*', async (route) => {
     imageRequests += 1
 
     if (imageRequests === 1) {
@@ -485,7 +486,7 @@ test('ponawia ładowanie obrazu w widoku szczegółów po błędzie pierwszej pr
   const image = page.getByAltText('Awers monety')
   await expect.poll(() => imageRequests).toBe(2)
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
-  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file?image_retry=1')
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/thumbnail?v=1&image_retry=1')
 })
 
 test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page }) => {
