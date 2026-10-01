@@ -38,6 +38,7 @@ function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
           v-if="imageUrl(coin, 'avers')"
           :src="imageUrl(coin, 'avers')!"
           :alt="`Awers monety #${coin.id}`"
+          loading="lazy"
         />
       </div>
       <div class="coin-side">
@@ -45,6 +46,7 @@ function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
           v-if="imageUrl(coin, 'rewers')"
           :src="imageUrl(coin, 'rewers')!"
           :alt="`Rewers monety #${coin.id}`"
+          loading="lazy"
         />
       </div>
     </RouterLink>
