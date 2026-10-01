@@ -78,6 +78,15 @@ test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page
   await expect(grid.getByAltText('Awers monety #2')).toBeVisible()
 })
 
+test('katalog używa miniaturek z revision i lazy loading', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/monety')
+
+  const image = page.getByAltText('Awers monety #1')
+  await expect(image).toHaveAttribute('loading', 'lazy')
+  await expect(image).toHaveAttribute('src', /\/api\/coins\/1\/images\/101\/thumbnail\?v=1$/)
+})
+
 test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) => {
   await mockApi(page, 20)
   await page.goto('/monety')
