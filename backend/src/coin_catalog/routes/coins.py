@@ -1,7 +1,7 @@
 import logging
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.coin_move import move_coin
@@ -14,7 +14,7 @@ from coin_catalog.coin_pagination import (
 )
 from coin_catalog.coin_search import build_coin_query
 from coin_catalog.collection_stats import recalculate_collection_stats
-from coin_catalog.database import get_db
+from coin_catalog.database import SessionLocal, get_db
 from coin_catalog.image_storage import collection_images_dir, thumbnail_path
 from coin_catalog.models import Coin, CoinImage, Collection
 from coin_catalog.thumbnails import (
@@ -169,6 +169,18 @@ def ensure_page_thumbnails(page_coins: list[Coin], session: Session) -> None:
         session.commit()
 
 
+def reconcile_page_thumbnails(coin_ids: list[int]) -> None:
+    if not coin_ids:
+        return
+
+    with SessionLocal() as session:
+        statement = load_list_images(
+            build_coin_query(status_filter="all").where(Coin.id.in_(coin_ids))
+        )
+        page_coins = list(session.scalars(statement).all())
+        ensure_page_thumbnails(page_coins, session)
+
+
 def cursor_for_coin(coin: Coin, sort_by: str, sort_order: str) -> CoinCursor:
     sort_value = {
         "id": coin.id,
@@ -229,6 +241,7 @@ def list_coins(
     limit: int | None = Query(None, ge=1, le=MAX_PAGE_SIZE),
     cursor: str | None = None,
     session: Session = Depends(get_db),
+    background_tasks: BackgroundTasks = None,
 ) -> list[Coin] | CoinPageResponse:
     validate_coin_query(search, coin_status, sort_by, sort_order)
 
@@ -273,7 +286,8 @@ def list_coins(
     coins = list(session.scalars(statement).all())
     has_more = len(coins) > limit
     page_coins = coins[:limit]
-    ensure_page_thumbnails(page_coins, session)
+    if background_tasks is not None:
+        background_tasks.add_task(reconcile_page_thumbnails, [coin.id for coin in page_coins])
 
     next_cursor = (
         encode_cursor(cursor_for_coin(page_coins[-1], sort_by, sort_order))
