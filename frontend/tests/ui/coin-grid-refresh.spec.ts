@@ -466,7 +466,7 @@ test('ponawia ładowanie obrazu w widoku szczegółów po błędzie pierwszej pr
       body: JSON.stringify(images.get(1) ?? []),
     })
   })
-  await page.route('**/api/coins/1/images/101/thumbnail*', async (route) => {
+  await page.route('**/api/coins/1/images/101/file*', async (route) => {
     imageRequests += 1
 
     if (imageRequests === 1) {
@@ -493,7 +493,7 @@ test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page })
   let imageRequests = 0
 
   await mockApi(page, 1)
-  await page.route('**/api/coins/1/images/101/file*', async (route) => {
+  await page.route('**/api/coins/1/images/101/thumbnail*', async (route) => {
     imageRequests += 1
 
     if (imageRequests === 1) {
