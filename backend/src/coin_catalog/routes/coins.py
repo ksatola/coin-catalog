@@ -241,7 +241,7 @@ def list_coins(
     limit: int | None = Query(None, ge=1, le=MAX_PAGE_SIZE),
     cursor: str | None = None,
     session: Session = Depends(get_db),
-    background_tasks: BackgroundTasks = None,
+    background_tasks: BackgroundTasks,
 ) -> list[Coin] | CoinPageResponse:
     validate_coin_query(search, coin_status, sort_by, sort_order)
 
