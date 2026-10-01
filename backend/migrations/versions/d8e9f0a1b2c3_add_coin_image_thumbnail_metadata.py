@@ -17,8 +17,7 @@ def _has_column(table_name: str, column_name: str) -> bool:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
     return any(
-        column["name"] == column_name
-        for column in inspector.get_columns(table_name)
+        column["name"] == column_name for column in inspector.get_columns(table_name)
     )
 
 

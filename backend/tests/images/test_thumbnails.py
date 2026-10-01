@@ -10,10 +10,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from coin_catalog import image_storage
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import Coin, CoinImage, Collection, Country, Denomination, Era
-from coin_catalog import image_storage
 from coin_catalog.routes import coins as coin_routes
 from coin_catalog.routes import images
 from coin_catalog.schemas import CoinPageResponse
@@ -111,10 +111,7 @@ def jpeg_bytes(size: tuple[int, int], color: tuple[int, int, int]) -> bytes:
 def image_paths(image_dir: Path, coin: Coin, filename: str) -> tuple[Path, Path]:
     original = image_dir / f"collection-{coin.collection_id:03d}" / filename
     thumbnail = (
-        image_dir
-        / "thumbnails"
-        / f"collection-{coin.collection_id:03d}"
-        / filename
+        image_dir / "thumbnails" / f"collection-{coin.collection_id:03d}" / filename
     )
     return original, thumbnail
 
@@ -234,7 +231,13 @@ def test_upload_generates_thumbnail_and_stores_revision_metadata(
     response = client.post(
         f"/coins/{coin.id}/images",
         params={"kind": "avers"},
-        files={"upload": ("source.jpg", jpeg_bytes((1600, 800), (220, 120, 40)), "image/jpeg")},
+        files={
+            "upload": (
+                "source.jpg",
+                jpeg_bytes((1600, 800), (220, 120, 40)),
+                "image/jpeg",
+            )
+        },
     )
 
     assert response.status_code == 201
@@ -266,7 +269,13 @@ def test_thumbnail_endpoint_regenerates_missing_thumbnail_and_caches_it(
     response = client.post(
         f"/coins/{coin.id}/images",
         params={"kind": "avers"},
-        files={"upload": ("source.jpg", jpeg_bytes((1000, 500), (220, 120, 40)), "image/jpeg")},
+        files={
+            "upload": (
+                "source.jpg",
+                jpeg_bytes((1000, 500), (220, 120, 40)),
+                "image/jpeg",
+            )
+        },
     )
     payload = response.json()
     _, thumbnail = image_paths(image_dir, coin, payload["filename"])
@@ -290,7 +299,13 @@ def test_replacing_original_increments_revision_and_regenerates_thumbnail(
     first = client.post(
         f"/coins/{coin.id}/images",
         params={"kind": "avers"},
-        files={"upload": ("source.jpg", jpeg_bytes((1200, 600), (220, 120, 40)), "image/jpeg")},
+        files={
+            "upload": (
+                "source.jpg",
+                jpeg_bytes((1200, 600), (220, 120, 40)),
+                "image/jpeg",
+            )
+        },
     )
     first_payload = first.json()
     _, thumbnail = image_paths(image_dir, coin, first_payload["filename"])
@@ -299,7 +314,13 @@ def test_replacing_original_increments_revision_and_regenerates_thumbnail(
     second = client.post(
         f"/coins/{coin.id}/images",
         params={"kind": "avers", "replace": "true"},
-        files={"upload": ("source.jpg", jpeg_bytes((1200, 600), (40, 120, 220)), "image/jpeg")},
+        files={
+            "upload": (
+                "source.jpg",
+                jpeg_bytes((1200, 600), (40, 120, 220)),
+                "image/jpeg",
+            )
+        },
     )
     second_payload = second.json()
 
@@ -357,7 +378,13 @@ def test_catalog_page_reconciles_missing_thumbnail_for_current_batch(
     created = client.post(
         f"/coins/{coin.id}/images",
         params={"kind": "avers"},
-        files={"upload": ("source.jpg", jpeg_bytes((1200, 600), (220, 120, 40)), "image/jpeg")},
+        files={
+            "upload": (
+                "source.jpg",
+                jpeg_bytes((1200, 600), (220, 120, 40)),
+                "image/jpeg",
+            )
+        },
     )
     payload = created.json()
     image = session.get(CoinImage, payload["id"])
@@ -396,7 +423,13 @@ def test_thumbnail_revision_is_not_advanced_when_generation_fails(
     response = client.post(
         f"/coins/{coin.id}/images",
         params={"kind": "avers"},
-        files={"upload": ("source.jpg", jpeg_bytes((1200, 600), (40, 120, 220)), "image/jpeg")},
+        files={
+            "upload": (
+                "source.jpg",
+                jpeg_bytes((1200, 600), (40, 120, 220)),
+                "image/jpeg",
+            )
+        },
     )
 
     assert response.status_code == 201

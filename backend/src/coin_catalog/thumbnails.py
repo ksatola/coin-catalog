@@ -16,7 +16,9 @@ class ThumbnailGenerationError(RuntimeError):
     """Raised when a thumbnail cannot be generated after the allowed retries."""
 
 
-def expected_thumbnail_size(source_path: Path, max_size: int = THUMBNAIL_MAX_SIZE) -> tuple[int, int]:
+def expected_thumbnail_size(
+    source_path: Path, max_size: int = THUMBNAIL_MAX_SIZE
+) -> tuple[int, int]:
     with Image.open(source_path) as image:
         oriented = ImageOps.exif_transpose(image)
         width, height = oriented.size
@@ -61,7 +63,9 @@ def generate_thumbnail(
             with Image.open(temporary_path) as generated:
                 generated.load()
                 if generated.format != "JPEG" or generated.size != expected_size:
-                    raise ValueError("Generated thumbnail does not match expected JPG dimensions")
+                    raise ValueError(
+                        "Generated thumbnail does not match expected JPG dimensions"
+                    )
             os.replace(temporary_path, target_path)
         finally:
             temporary_path.unlink(missing_ok=True)
@@ -86,7 +90,7 @@ def is_valid_thumbnail(
             thumbnail.verify()
             if image_format != "JPEG" or image_size != expected_size:
                 return False
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return False
 
     return True

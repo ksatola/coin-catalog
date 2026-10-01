@@ -17,12 +17,6 @@ from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import SessionLocal, get_db
 from coin_catalog.image_storage import collection_images_dir, thumbnail_path
 from coin_catalog.models import Coin, CoinImage, Collection
-from coin_catalog.thumbnails import (
-    THUMBNAIL_GENERATOR_VERSION,
-    ThumbnailGenerationError,
-    ensure_thumbnail_file,
-    thumbnail_metadata_is_current,
-)
 from coin_catalog.schemas import (
     CoinCreate,
     CoinListResponse,
@@ -31,6 +25,12 @@ from coin_catalog.schemas import (
     CoinPageResponse,
     CoinResponse,
     CoinUpdate,
+)
+from coin_catalog.thumbnails import (
+    THUMBNAIL_GENERATOR_VERSION,
+    ThumbnailGenerationError,
+    ensure_thumbnail_file,
+    thumbnail_metadata_is_current,
 )
 
 router = APIRouter(prefix="/coins", tags=["coins"])
@@ -286,7 +286,9 @@ def list_coins(
     coins = list(session.scalars(statement).all())
     has_more = len(coins) > limit
     page_coins = coins[:limit]
-    background_tasks.add_task(reconcile_page_thumbnails, [coin.id for coin in page_coins])
+    background_tasks.add_task(
+        reconcile_page_thumbnails, [coin.id for coin in page_coins]
+    )
 
     next_cursor = (
         encode_cursor(cursor_for_coin(page_coins[-1], sort_by, sort_order))
