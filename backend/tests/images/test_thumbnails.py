@@ -3,6 +3,7 @@ from io import BytesIO
 from pathlib import Path
 
 import pytest
+from fastapi import BackgroundTasks
 from fastapi.testclient import TestClient
 from PIL import Image
 from sqlalchemy import create_engine
@@ -319,8 +320,6 @@ def test_catalog_page_schedules_thumbnail_reconciliation(
         "reconcile_page_thumbnails",
         lambda coin_ids: scheduled.append(coin_ids),
     )
-
-    from fastapi import BackgroundTasks
 
     background_tasks = BackgroundTasks()
     response = coin_routes.list_coins(
