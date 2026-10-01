@@ -129,7 +129,9 @@ Aktualność miniaturki ma uwzględniać nie tylko revision obrazu, ale równie�
 
 Zmiana parametrów generowania w przyszłości ma umożliwiać rozpoznanie starszych miniaturek jako nieaktualnych i ich ponowne wygenerowanie.
 
-Nie ustalono jeszcze konkretnego sposobu przechowywania tej wersji ani konkretnego mechanizmu implementacyjnego.
+Przyjmujemy `thumbnail_generator_version` na `CoinImage`. Aktualność miniaturki wymaga zgodności zarówno `thumbnail_revision == revision`, jak i `thumbnail_generator_version` z aktualną wersją generatora. Aktualna wersja generatora jest obecnie oznaczona jako **1**.
+
+Revision jest używana również w adresie miniaturki, np. przez parametr `?v=revision`, a miniaturka może być wtedy cache'owana długoterminowo.
 
 ## Wymagania dotyczące testów
 
