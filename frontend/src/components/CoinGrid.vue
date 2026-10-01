@@ -78,7 +78,7 @@ async function loadDictionaries(): Promise<void> {
 
 function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
   const image = coin.images?.find((item) => item.kind === kind)
-  return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined
+  return image ? `/api/coins/${coin.id}/images/${image.id}/thumbnail?v=${image.revision}` : undefined
 }
 
 onMounted(() => void loadDictionaries())
@@ -96,11 +96,11 @@ onMounted(() => void loadDictionaries())
     >
       <div class="image-row">
         <div class="coin-side">
-          <CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" />
+          <CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" loading="lazy" />
           <span v-else>Brak zdjęcia</span>
         </div>
         <div class="coin-side">
-          <CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" />
+          <CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" loading="lazy" />
           <span v-else>Brak zdjęcia</span>
         </div>
       </div>
