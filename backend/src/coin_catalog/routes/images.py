@@ -15,8 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from coin_catalog.collection_stats import recalculate_collection_stats
-from coin_catalog.database import get_db
-from coin_catalog.image_storage import collection_images_dir, thumbnail_path
+from coin_catalog.database import DATA_DIR, get_db
 from coin_catalog.models import Coin, CoinImage
 from coin_catalog.schemas import CoinImageResponse
 from coin_catalog.thumbnails import (
@@ -29,7 +28,16 @@ from coin_catalog.thumbnails import (
 router = APIRouter(prefix="/coins/{coin_id}/images", tags=["images"])
 
 PRIMARY_KINDS = {"avers", "rewers"}
+IMAGES_DIR = DATA_DIR / "images"
 THUMBNAIL_CACHE_CONTROL = "public, max-age=31536000, immutable"
+
+
+def collection_images_dir(collection_id: int) -> Path:
+    return IMAGES_DIR / f"collection-{collection_id:03d}"
+
+
+def thumbnail_path(collection_id: int, filename: str) -> Path:
+    return IMAGES_DIR / "thumbnails" / f"collection-{collection_id:03d}" / filename
 
 
 def get_coin(coin_id: int, session: Session) -> Coin:
