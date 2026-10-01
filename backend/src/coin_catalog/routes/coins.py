@@ -286,8 +286,7 @@ def list_coins(
     coins = list(session.scalars(statement).all())
     has_more = len(coins) > limit
     page_coins = coins[:limit]
-    if background_tasks is not None:
-        background_tasks.add_task(reconcile_page_thumbnails, [coin.id for coin in page_coins])
+    background_tasks.add_task(reconcile_page_thumbnails, [coin.id for coin in page_coins])
 
     next_cursor = (
         encode_cursor(cursor_for_coin(page_coins[-1], sort_by, sort_order))
