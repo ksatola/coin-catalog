@@ -16,6 +16,7 @@ from coin_catalog.models import Coin, CoinImage, Collection, Country, Denominati
 from coin_catalog import image_storage
 from coin_catalog.routes import coins as coin_routes
 from coin_catalog.routes import images
+from coin_catalog.schemas import CoinPageResponse
 from coin_catalog.thumbnails import (
     THUMBNAIL_GENERATOR_VERSION,
     THUMBNAIL_JPEG_QUALITY,
@@ -338,6 +339,7 @@ def test_catalog_page_schedules_thumbnail_reconciliation(
         background_tasks=background_tasks,
     )
 
+    assert isinstance(response, CoinPageResponse)
     assert response.items
     assert response.items[0].id == coin.id
     assert len(background_tasks.tasks) == 1
