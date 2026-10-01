@@ -12,8 +12,9 @@ from sqlalchemy.pool import StaticPool
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
 from coin_catalog.models import Coin, CoinImage, Collection, Country, Denomination, Era
-from coin_catalog.routes import images
 from coin_catalog import image_storage
+from coin_catalog.routes import coins as coin_routes
+from coin_catalog.routes import images
 from coin_catalog.thumbnails import (
     THUMBNAIL_GENERATOR_VERSION,
     THUMBNAIL_JPEG_QUALITY,
@@ -43,10 +44,18 @@ def session() -> Generator[Session]:
 
 
 @pytest.fixture
-def client(session: Session) -> Generator[TestClient]:
+def client(
+    session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[TestClient]:
     def override_get_db() -> Generator[Session]:
         yield session
 
+    monkeypatch.setattr(
+        coin_routes,
+        "SessionLocal",
+        sessionmaker(bind=session.get_bind()),
+    )
     app.dependency_overrides[get_db] = override_get_db
     try:
         yield TestClient(app)
@@ -296,6 +305,36 @@ def test_replacing_original_increments_revision_and_regenerates_thumbnail(
     assert second_payload["thumbnail_revision"] == 2
     assert second_payload["thumbnail_generator_version"] == THUMBNAIL_GENERATOR_VERSION
     assert thumbnail.read_bytes() != first_thumbnail
+
+
+def test_catalog_page_schedules_thumbnail_reconciliation(
+    session: Session,
+    coin: Coin,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduled: list[list[int]] = []
+
+    monkeypatch.setattr(
+        coin_routes,
+        "reconcile_page_thumbnails",
+        lambda coin_ids: scheduled.append(coin_ids),
+    )
+
+    from fastapi import BackgroundTasks
+
+    background_tasks = BackgroundTasks()
+    response = coin_routes.list_coins(
+        limit=50,
+        session=session,
+        background_tasks=background_tasks,
+    )
+
+    assert response.items
+    assert response.items[0].id == coin.id
+    assert len(background_tasks.tasks) == 1
+    assert background_tasks.tasks[0].func is coin_routes.reconcile_page_thumbnails
+    assert background_tasks.tasks[0].args == ([coin.id],)
+    assert scheduled == []
 
 
 def test_catalog_page_reconciles_missing_thumbnail_for_current_batch(
