@@ -81,8 +81,10 @@ def is_valid_thumbnail(
     try:
         expected_size = expected_thumbnail_size(source_path, max_size)
         with Image.open(target_path) as thumbnail:
+            image_format = thumbnail.format
+            image_size = thumbnail.size
             thumbnail.verify()
-            if thumbnail.format != "JPEG" or thumbnail.size != expected_size:
+            if image_format != "JPEG" or image_size != expected_size:
                 return False
     except (OSError, ValueError):
         return False
