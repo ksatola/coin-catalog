@@ -22,7 +22,7 @@ from coin_catalog.thumbnails import (
     THUMBNAIL_GENERATOR_VERSION,
     ThumbnailGenerationError,
     ensure_thumbnail_file,
-    is_valid_thumbnail,
+    thumbnail_metadata_is_current,
 )
 
 router = APIRouter(prefix="/coins/{coin_id}/images", tags=["images"])
@@ -83,10 +83,12 @@ def _thumbnail_is_current(
     original_path: Path,
     thumbnail_file: Path,
 ) -> bool:
-    return (
-        image.thumbnail_revision == image.revision
-        and image.thumbnail_generator_version == THUMBNAIL_GENERATOR_VERSION
-        and is_valid_thumbnail(original_path, thumbnail_file)
+    return thumbnail_metadata_is_current(
+        source_path=original_path,
+        target_path=thumbnail_file,
+        image_revision=image.revision,
+        thumbnail_revision=image.thumbnail_revision,
+        thumbnail_generator_version=image.thumbnail_generator_version,
     )
 
 
