@@ -7,8 +7,8 @@ const coin1 = {
 }
 const coin2 = { ...coin1, id: 2, description: 'Druga moneta' }
 const images = new Map([
-  [1, [{ id: 101, coin_id: 1, filename: '000001 - awers.jpg', kind: 'avers', sort_order: 0 }]],
-  [2, [{ id: 102, coin_id: 2, filename: '000002 - awers.jpg', kind: 'avers', sort_order: 0 }]],
+  [1, [{ id: 101, coin_id: 1, filename: '000001 - awers.jpg', kind: 'avers', sort_order: 0, revision: 1 }]],
+  [2, [{ id: 102, coin_id: 2, filename: '000002 - awers.jpg', kind: 'avers', sort_order: 0, revision: 1 }]],
 ])
 const dictionaries = {
   countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 2, name: 'Nominał testowy' }],
@@ -46,7 +46,7 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Pr
       ),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
   await page.route('**/api/coins/*/images', async (route) => {
@@ -110,8 +110,8 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
     id,
     description: `Moneta testowa ${id}`,
     images: [
-      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0 },
-      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1 },
+      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0, revision: 1 },
+      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1, revision: 1 },
     ],
   }))
   const expectedImages = fixtureCoins.flatMap((coin) =>
@@ -119,7 +119,7 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
       coinId: coin.id,
       imageId: image.id,
       kind: image.kind,
-      src: `/api/coins/${coin.id}/images/${image.id}/file`,
+      src: `/api/coins/${coin.id}/images/${image.id}/thumbnail?v=1`,
     })),
   )
 
@@ -144,17 +144,17 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
       body: JSON.stringify({ items: fixtureCoins, next_cursor: null, has_more: false }),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
 
   page.on('response', (response) => {
-    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().endsWith('/file')) {
+    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().includes('/thumbnail')) {
       imageResponses.set(response.url(), response.status())
     }
   })
   page.on('requestfailed', (request) => {
-    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().endsWith('/file')) {
+    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().includes('/thumbnail')) {
       imageFailures.set(request.url(), request.failure()?.errorText ?? 'unknown')
     }
   })
@@ -172,7 +172,7 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
   const rendered = await renderedImages.evaluateAll((elements) =>
     elements.map((element) => {
       const image = element as HTMLImageElement
-      const match = image.src.match(/\/api\/coins\/(\d+)\/images\/(\d+)\/file$/)
+      const match = image.src.match(/\/api\/coins\/(\d+)\/images\/(\d+)\/thumbnail\?v=1$/)
       return {
         coinId: match ? Number(match[1]) : null,
         imageId: match ? Number(match[2]) : null,
@@ -220,7 +220,7 @@ test('równoległe odświeżenia katalogu nie pozwalają starszej odpowiedzi nad
       ),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
 
@@ -285,7 +285,7 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
         }]),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
 
@@ -306,8 +306,8 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
     id,
     description: id === 3 ? 'Trzecia moneta' : `Moneta testowa ${id}`,
     images: [
-      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0 },
-      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1 },
+      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0, revision: 1 },
+      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1, revision: 1 },
     ],
   }))
 
@@ -335,7 +335,7 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
         body: JSON.stringify({ items, next_cursor: null, has_more: false }),
       })
     })
-    await page.route('**/api/coins/*/images/*/file', async (route) => {
+    await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
       await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
     })
   }
@@ -384,12 +384,12 @@ test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', 
   const imageFailures = new Map<string, string>()
 
   page.on('response', (response) => {
-    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().endsWith('/file')) {
+    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().includes('/thumbnail')) {
       imageResponses.set(response.url(), response.status())
     }
   })
   page.on('requestfailed', (request) => {
-    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().endsWith('/file')) {
+    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().includes('/thumbnail')) {
       imageFailures.set(request.url(), request.failure()?.errorText ?? 'unknown')
     }
   })
