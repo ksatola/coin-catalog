@@ -16,11 +16,12 @@ RUN apt-get update \
         git \
         build-essential \
         xz-utils \
+        procps \
     && case "$(dpkg --print-architecture)" in \
         amd64) NODE_ARCH="x64" ;; \
         arm64) NODE_ARCH="arm64" ;; \
         *) echo "Unsupported architecture: $(dpkg --print-architecture)" && exit 1 ;; \
-    esac \
+      esac \
     && NODE_TARBALL="node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz" \
     && curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TARBALL}" \
     && curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" \
