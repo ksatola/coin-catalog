@@ -138,7 +138,6 @@ class CoinImageResponse(BaseModel):
     created_at: datetime
 
 
-
 class StoryPageCreate(BaseModel):
     title: str
     content: str = ""
@@ -158,6 +157,12 @@ class StoryPageReorderRequest(BaseModel):
     direction: str
 
 
+class StoryEmbeddedCoinResponse(BaseModel):
+    id: int
+    coin: CoinListResponse | None = None
+    deleted: bool
+
+
 class StoryPageResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -170,6 +175,7 @@ class StoryPageResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     path: str
+    embedded_coins: list[StoryEmbeddedCoinResponse] = Field(default_factory=list)
 
 
 class StoryPageTreeResponse(BaseModel):
