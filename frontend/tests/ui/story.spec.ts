@@ -19,7 +19,7 @@ type StoryPageTree = Omit<StoryPage, 'content' | 'created_at' | 'updated_at'> & 
 function slugify(title: string): string {
   return title
     .normalize('NFKD')
-    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .toLowerCase() || 'strona'
@@ -120,7 +120,7 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
   await page.route('**/api/story/pages/**', async (route) => {
     const method = route.request().method()
     const pathname = new URL(route.request().url()).pathname
-    const suffix = pathname.replace(/^.*\\/api\\/story\\/pages\\/?/, '')
+    const suffix = pathname.replace(/^.*\/api\/story\/pages\/?/, '')
 
     if (suffix === 'tree' && method === 'GET') {
       await route.fulfill({
