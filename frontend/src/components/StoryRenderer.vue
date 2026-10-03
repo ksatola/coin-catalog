@@ -28,12 +28,32 @@ function renderCoin(id: number, embeddedCoins: StoryEmbeddedCoin[], key: string 
   })
 }
 
+function renderText(content: string, embeddedCoins: StoryEmbeddedCoin[], keyPrefix: string | number): VNode[] {
+  const pattern = /\{\{\s*coin:(\d+)\s*\}\}/g
+  const nodes: VNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let part = 0
+
+  while ((match = pattern.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(h('span', { key: `${keyPrefix}-text-${part++}` }, content.slice(lastIndex, match.index)))
+    }
+    nodes.push(renderCoin(Number(match[1]), embeddedCoins, `${keyPrefix}-coin-${part++}`))
+    lastIndex = match.index + match[0].length
+  }
+
+  if (lastIndex < content.length) {
+    nodes.push(h('span', { key: `${keyPrefix}-text-${part}` }, content.slice(lastIndex)))
+  }
+
+  return nodes
+}
+
 function inlineNodes(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[] = []): VNode[] {
   return tokens.flatMap((token, index) => {
     if (token.type === 'text') {
-      const coin = token.content.match(/^\{\{\s*coin:(\d+)\s*\}\}$/)
-      if (coin) return [renderCoin(Number(coin[1]), embeddedCoins, index)]
-      return [h('span', { key: index }, token.content)]
+      return renderText(token.content, embeddedCoins, index)
     }
     if (token.type === 'softbreak' || token.type === 'hardbreak') return [h('br', { key: index })]
     if (token.type === 'code_inline') return [h('code', { key: index }, token.content)]
@@ -84,9 +104,7 @@ function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[]
       continue
     }
     if (child.type === 'text') {
-      const coin = child.content.match(/^\{\{\s*coin:(\d+)\s*\}\}$/)
-      if (coin) nodes.push(renderCoin(Number(coin[1]), embeddedCoins, index))
-      else nodes.push(h('span', { key: index }, child.content))
+      nodes.push(...renderText(child.content, embeddedCoins, index))
       index += 1
       continue
     }

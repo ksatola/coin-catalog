@@ -304,7 +304,7 @@ test('Opowieść renders Markdown and real coin embeds without executing raw HTM
   await mockStoryApi(page)
 
   const title = 'Markdown E2E'
-  const content = '# Nagłówek\n\nPierwszy **ważny** akapit.\n\n- jeden\n- dwa\n\n{{ coin:123 }}\n\n{{ coin:999 }}\n\n<script>alert("nie wykonuj")</script>'
+  const content = '# Nagłówek\n\nPierwszy **ważny** akapit.\n\nTekst przed {{ coin:123 }} i tekst po.\n\n**Ważna {{ coin:123 }} moneta**\n\n- jeden\n- dwa\n\n{{ coin:123 }}\n\n{{ coin:999 }}\n\n<script>alert("nie wykonuj")</script>'
 
   await page.goto('/opowiesc/edytuj/nowa')
   await page.getByLabel('Tytuł').fill(title)
@@ -315,6 +315,10 @@ test('Opowieść renders Markdown and real coin embeds without executing raw HTM
   await expect(page.locator('strong')).toHaveText('ważny')
   await expect(page.locator('.reader .story-renderer ul li')).toHaveText(['jeden', 'dwa'])
   await expect(page.getByRole('link', { name:'Moneta #123' })).toHaveAttribute('href', '/monety/123')
+  await expect(page.locator('.story-renderer p').filter({ hasText: 'Tekst przed' })).toContainText('Tekst przed')
+  await expect(page.locator('.story-renderer p').filter({ hasText: 'tekst po' })).toContainText('tekst po')
+  await expect(page.locator('.story-renderer strong').filter({ hasText: 'Ważna' })).toContainText('Ważna')
+  await expect(page.locator('.story-renderer strong').filter({ hasText: 'moneta' })).toContainText('moneta')
   await expect(page.locator('.story-coin img')).toHaveAttribute('src', /\/api\/coins\/123\/images\/1231\/thumbnail\?v=2/)
   await expect(page.getByText('⚠ Moneta została usunięta')).toBeVisible()
   await expect(page.locator('.reader .story-renderer script')).toHaveCount(0)
