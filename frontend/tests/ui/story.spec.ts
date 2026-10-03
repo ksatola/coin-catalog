@@ -397,6 +397,12 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
 test('picker Opowieści pokazuje monety zaznaczone w widoku Monety', async ({ page }) => {
   await mockStoryApi(page)
   await page.route('**/api/coins*', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/12') || url.pathname.endsWith('/27')) {
+      const id = Number(url.pathname.split('/').pop())
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id }) })
+      return
+    }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [{ id: 12 }, { id: 27 }], next_cursor: null, has_more: false }) })
   })
   await page.goto('/monety')
@@ -407,5 +413,7 @@ test('picker Opowieści pokazuje monety zaznaczone w widoku Monety', async ({ pa
   await page.waitForURL('/opowiesc/edytuj/nowa')
   await page.getByRole('button', { name: 'Wstaw monetę' }).click()
   await page.getByRole('button', { name: /Wybrane w widoku Monety \(2\)/ }).click()
+  await expect(page.getByText('#12')).toBeVisible()
+  await expect(page.getByText('#27')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Wstaw' })).toHaveCount(2)
 })
