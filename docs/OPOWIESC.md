@@ -862,14 +862,15 @@ Implementacja:
 Implementacja:
 
 - pobieranie danych osadzonych monet — **M3.1 zaimplementowane**,
-- `StoryCoinEmbed`,
+- `StoryCoinEmbed` — **M3.1 zaimplementowane**,
 - wykorzystanie istniejących komponentów coin/image,
-- picker monet,
-- tryb `Katalog`,
-- tryb `Wybrane w widoku Monety`,
-- zaznaczanie wielu monet w widoku `Monety`,
-- tymczasowe przechowywanie zaznaczonych ID,
-- obsługa usuniętych monet,
+- picker monet — **M3.2 zaimplementowane**,
+- tryb `Katalog` — **M3.2 zaimplementowane**,
+- tryb `Wybrane w widoku Monety` — **M3.2 zaimplementowane**,
+- zaznaczanie wielu monet w widoku `Monety` — **M3.2 zaimplementowane**,
+- tymczasowe przechowywanie zaznaczonych ID przez frontendowy composable — **M3.2 zaimplementowane**,
+- wstawianie referencji `{{ coin:id }}` do Markdown — **M3.2 zaimplementowane**,
+- obsługa usuniętych monet — **M3.1 zaimplementowane**,
 - odpowiednie testy dla każdej nowej funkcjonalności.
 
 ### M4 — assets
