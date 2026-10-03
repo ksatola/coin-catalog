@@ -238,27 +238,29 @@ Zmiana danych monety w katalogu powinna być automatycznie widoczna we wszystkic
 
 Frontend powinien otrzymywać Markdown oraz dane monet potrzebnych do jego renderowania.
 
-Przykładowa odpowiedź:
+Aktualna odpowiedź API zawiera pola strony bezpośrednio oraz listę `embedded_coins`:
 
 ```json
 {
-  "page": {
-    "id": 10,
-    "title": "Jan Kazimierz",
-    "slug": "jan-kazimierz",
-    "parent_id": 4,
-    "content": "..."
-  },
+  "id": 10,
+  "title": "Jan Kazimierz",
+  "slug": "jan-kazimierz",
+  "parent_id": 4,
+  "content": "...",
   "embedded_coins": [
     {
+      "id": 123,
       "coin": {
-        "id": 123
+        "id": 123,
+        "images": []
       },
       "deleted": false
     }
   ]
 }
 ```
+
+Backend wyciąga unikalne ID z `{{ coin:id }}` w kolejności wystąpienia i pobiera potrzebne monety jednym zapytaniem. Dla brakującej albo usuniętej monety zwracane jest `coin: null` i `deleted: true`.
 
 Nie należy umieszczać pełnych danych monet w Markdown.
 
@@ -859,7 +861,7 @@ Implementacja:
 
 Implementacja:
 
-- pobieranie danych osadzonych monet,
+- pobieranie danych osadzonych monet — **M3.1 zaimplementowane**,
 - `StoryCoinEmbed`,
 - wykorzystanie istniejących komponentów coin/image,
 - picker monet,
