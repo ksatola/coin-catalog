@@ -34,6 +34,32 @@ async function move(id:number, direction:'up'|'down'): Promise<void> {
   if (!response.ok) { error.value='Nie udało się zmienić kolejności.'; return }
   await reload()
 }
+function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
+  for (const node of nodes) {
+    if (node.id === id) return node
+    const child = findNode(node.children, id)
+    if (child) return child
+  }
+  return null
+}
+async function remove(id:number): Promise<void> {
+  const node = findNode(tree.value, id)
+  if (!node || !window.confirm(`Usunąć stronę „${node.title}”?`)) return
+
+  const response = await fetch('/api/story/pages/' + id, { method:'DELETE' })
+  if (!response.ok) {
+    error.value = response.status === 409
+      ? 'Nie można usunąć strony, która ma podstrony.'
+      : 'Nie udało się usunąć strony.'
+    return
+  }
+
+  if (page.value?.id === id) {
+    await router.push('/opowiesc')
+  } else {
+    await reload()
+  }
+}
 function select(path:string):void { void router.push('/opowiesc/' + path) }
 function edit(id:number):void { void router.push('/opowiesc/edytuj/' + id) }
 watch(() => route.fullPath, () => void reload())
@@ -43,7 +69,7 @@ onMounted(() => void reload())
   <section class="story-layout">
     <aside class="sidebar">
       <div class="sidebar-header"><h1>Opowieść</h1><RouterLink to="/opowiesc/edytuj/nowa">+ Nowa strona</RouterLink></div>
-      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move="move" />
+      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move="move" @delete="remove" />
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>
