@@ -20,7 +20,7 @@ function inlineNodes(tokens: Token[]): VNode[] {
   return tokens.flatMap((token, index) => {
     if (token.type === 'text') {
       const coin = token.content.match(/^\{\{\s*coin:(\d+)\s*\}\}$/)
-      if (coin) return [h('span', { key: index, class: 'story-coin-placeholder', 'data-coin-id': coin[1] }, \`Moneta #\${coin[1]}\`)]
+      if (coin) return [h('span', { key: index, class: 'story-coin-placeholder', 'data-coin-id': coin[1] }, `Moneta #${coin[1]}`)]
       return [h('span', { key: index }, token.content)]
     }
     if (token.type === 'softbreak' || token.type === 'hardbreak') return [h('br', { key: index })]
@@ -73,7 +73,7 @@ function renderInline(token: Token): VNode[] {
     }
     if (child.type === 'text') {
       const coin = child.content.match(/^\{\{\s*coin:(\d+)\s*\}\}$/)
-      if (coin) nodes.push(h('span', { key: index, class: 'story-coin-placeholder', 'data-coin-id': coin[1] }, \`Moneta #\${coin[1]}\`))
+      if (coin) nodes.push(h('span', { key: index, class: 'story-coin-placeholder', 'data-coin-id': coin[1] }, `Moneta #${coin[1]}`))
       else nodes.push(h('span', { key: index }, child.content))
       index += 1
       continue
@@ -107,7 +107,7 @@ function renderTokens(tokens: Token[], start = 0, end = tokens.length): VNode[] 
       continue
     }
     if (token.type === 'fence' || token.type === 'code_block') {
-      const className = token.type === 'fence' && token.info.trim() ? \`language-\${token.info.trim()}\` : undefined
+      const className = token.type === 'fence' && token.info.trim() ? `language-${token.info.trim()}` : undefined
       nodes.push(h('pre', { key: index }, [h('code', { class: className }, token.content)]))
       index += 1
       continue
