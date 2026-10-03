@@ -53,6 +53,7 @@ def tree_node(page: StoryPage, session: Session) -> StoryPageTreeResponse:
         title=page.title,
         slug=page.slug,
         sort_order=page.sort_order,
+        path=page_path(page, session),
         children=[tree_node(child, session) for child in children],
     )
 
