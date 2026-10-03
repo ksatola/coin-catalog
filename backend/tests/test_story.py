@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from coin_catalog.database import Base, get_db
 from coin_catalog.main import app
+from coin_catalog.models import Coin, CoinImage, Collection, Country, Denomination
 
 
 @pytest.fixture
@@ -38,13 +39,45 @@ def client(session: Session) -> Generator[TestClient]:
         app.dependency_overrides.clear()
 
 
-def create_page(client: TestClient, title: str, parent_id: int | None = None) -> dict:
+def create_page(client: TestClient, title: str, parent_id: int | None = None, content: str | None = None) -> dict:
     response = client.post(
         "/story/pages",
-        json={"title": title, "parent_id": parent_id, "content": "# " + title},
+        json={"title": title, "parent_id": parent_id, "content": content if content is not None else "# " + title},
     )
     assert response.status_code == 201
     return response.json()
+
+
+def create_coin(session: Session, coin_id: int | None = None, deleted: bool = False) -> Coin:
+    collection = Collection(name=f"Collection {coin_id or 'new'}")
+    country = Country(name=f"Country {coin_id or 'new'}")
+    denomination = Denomination(name=f"Denomination {coin_id or 'new'}")
+    session.add_all([collection, country, denomination])
+    session.flush()
+
+    coin = Coin(
+        id=coin_id,
+        collection_id=collection.id,
+        country_id=country.id,
+        denomination_id=denomination.id,
+        collection_number="K-123",
+        is_deleted=deleted,
+        description="Test coin",
+    )
+    session.add(coin)
+    session.flush()
+    session.add(
+        CoinImage(
+            coin_id=coin.id,
+            filename=f"coin-{coin.id}.jpg",
+            kind="avers",
+            sort_order=0,
+            revision=2,
+        )
+    )
+    session.commit()
+    session.refresh(coin)
+    return coin
 
 
 def test_story_page_crud_and_tree(client: TestClient) -> None:
@@ -71,6 +104,50 @@ def test_story_page_crud_and_tree(client: TestClient) -> None:
     deleted = client.delete("/story/pages/" + str(child["id"]))
     assert deleted.status_code == 204
     assert client.get("/story/pages/" + str(child["id"])).status_code == 404
+
+
+def test_story_page_embeds_existing_deleted_and_missing_coins(
+    client: TestClient,
+    session: Session,
+) -> None:
+    active = create_coin(session, coin_id=101)
+    deleted = create_coin(session, coin_id=102, deleted=True)
+    page = create_page(
+        client,
+        "Coin embeds",
+        content="{{ coin:101 }} and {{ coin:101 }} and {{ coin:102 }} and {{ coin:999999 }}",
+    )
+
+    assert page["embedded_coins"] == [
+        {
+            "id": active.id,
+            "coin": {
+                **page["embedded_coins"][0]["coin"],
+                "images": [{"id": active.images[0].id, "kind": "avers", "revision": 2}],
+            },
+            "deleted": False,
+        },
+        {
+            "id": deleted.id,
+            "coin": None,
+            "deleted": True,
+        },
+        {
+            "id": 999999,
+            "coin": None,
+            "deleted": True,
+        },
+    ]
+
+    fetched = client.get("/story/pages/" + str(page["id"]))
+    assert fetched.status_code == 200
+    embedded = fetched.json()["embedded_coins"]
+    assert [item["id"] for item in embedded] == [101, 102, 999999]
+    assert embedded[0]["deleted"] is False
+    assert embedded[0]["coin"]["id"] == 101
+    assert embedded[0]["coin"]["images"][0]["id"] == active.images[0].id
+    assert embedded[1] == {"id": 102, "coin": None, "deleted": True}
+    assert embedded[2] == {"id": 999999, "coin": None, "deleted": True}
 
 
 def test_story_page_rejects_sibling_conflicts(client: TestClient) -> None:
@@ -160,7 +237,6 @@ def test_story_page_path_lookup(client: TestClient) -> None:
     response = client.get("/story/pages/path/monety-polskie/jan-kazimierz")
     assert response.status_code == 200
     assert response.json()["title"] == "Jan Kazimierz"
-
 
 
 def test_story_page_rejects_missing_parent_and_non_leaf_delete(client: TestClient) -> None:
