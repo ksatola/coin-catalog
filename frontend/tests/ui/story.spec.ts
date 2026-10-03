@@ -275,7 +275,7 @@ test('Opowieść renders Markdown and coin references without executing raw HTML
 
   await expect(page.getByRole('heading', { name:'Nagłówek', exact:true })).toBeVisible()
   await expect(page.locator('strong')).toHaveText('ważny')
-  await expect(page.locator('.preview-pane ul li')).toHaveText(['jeden', 'dwa'])
+  await expect(page.locator('.reader .story-renderer ul li')).toHaveText(['jeden', 'dwa'])
   await expect(page.locator('[data-coin-id="123"]')).toHaveText('Moneta #123')
   await expect(page.locator('script')).toHaveCount(0)
   await expect(page.getByText('<script>alert("nie wykonuj")</script>')).toBeVisible()
