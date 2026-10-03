@@ -102,7 +102,11 @@ export interface CoinPageResponse {
   has_more: boolean
 }
 
-
+export interface StoryEmbeddedCoin {
+  id: number
+  coin: Coin | null
+  deleted: boolean
+}
 
 export interface StoryPage {
   id: number
@@ -114,6 +118,7 @@ export interface StoryPage {
   created_at: string
   updated_at: string
   path: string
+  embedded_coins: StoryEmbeddedCoin[]
 }
 
 export interface StoryPageTree {
