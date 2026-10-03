@@ -2,6 +2,8 @@
 import MarkdownIt from 'markdown-it'
 import type { Token } from 'markdown-it'
 import { defineComponent, h, type VNode } from 'vue'
+import StoryCoinEmbed from './StoryCoinEmbed.vue'
+import type { StoryEmbeddedCoin } from '../types'
 
 const markdown = new MarkdownIt({
   html: false,
@@ -16,11 +18,21 @@ function safeHref(href: string): string {
   return '#'
 }
 
-function inlineNodes(tokens: Token[]): VNode[] {
+function renderCoin(id: number, embeddedCoins: StoryEmbeddedCoin[], key: string | number): VNode {
+  const embedded = embeddedCoins.find((item) => item.id === id)
+  return h(StoryCoinEmbed, {
+    key,
+    id,
+    coin: embedded?.coin ?? null,
+    deleted: embedded?.deleted ?? true,
+  })
+}
+
+function inlineNodes(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[] = []): VNode[] {
   return tokens.flatMap((token, index) => {
     if (token.type === 'text') {
       const coin = token.content.match(/^\{\{\s*coin:(\d+)\s*\}\}$/)
-      if (coin) return [h('span', { key: index, class: 'story-coin-placeholder', 'data-coin-id': coin[1] }, `Moneta #${coin[1]}`)]
+      if (coin) return [renderCoin(Number(coin[1]), embeddedCoins, index)]
       return [h('span', { key: index }, token.content)]
     }
     if (token.type === 'softbreak' || token.type === 'hardbreak') return [h('br', { key: index })]
@@ -34,7 +46,7 @@ function inlineNodes(tokens: Token[]): VNode[] {
   })
 }
 
-function renderInline(token: Token): VNode[] {
+function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[] {
   const children = token.children ?? []
   const nodes: VNode[] = []
   let index = 0
@@ -52,7 +64,7 @@ function renderInline(token: Token): VNode[] {
         }
       }
       const tag = child.type === 'strong_open' ? 'strong' : child.type === 'em_open' ? 'em' : 's'
-      nodes.push(h(tag, { key: index }, inlineNodes(children.slice(index + 1, close))))
+      nodes.push(h(tag, { key: index }, inlineNodes(children.slice(index + 1, close), embeddedCoins)))
       index = close + 1
       continue
     }
@@ -67,18 +79,18 @@ function renderInline(token: Token): VNode[] {
         }
       }
       const href = safeHref(child.attrGet('href') ?? '')
-      nodes.push(h('a', { key: index, href, target: /^https?:/i.test(href) ? '_blank' : undefined, rel: /^https?:/i.test(href) ? 'noopener noreferrer' : undefined }, inlineNodes(children.slice(index + 1, close))))
+      nodes.push(h('a', { key: index, href, target: /^https?:/i.test(href) ? '_blank' : undefined, rel: /^https?:/i.test(href) ? 'noopener noreferrer' : undefined }, inlineNodes(children.slice(index + 1, close), embeddedCoins)))
       index = close + 1
       continue
     }
     if (child.type === 'text') {
       const coin = child.content.match(/^\{\{\s*coin:(\d+)\s*\}\}$/)
-      if (coin) nodes.push(h('span', { key: index, class: 'story-coin-placeholder', 'data-coin-id': coin[1] }, `Moneta #${coin[1]}`))
+      if (coin) nodes.push(renderCoin(Number(coin[1]), embeddedCoins, index))
       else nodes.push(h('span', { key: index }, child.content))
       index += 1
       continue
     }
-    nodes.push(...inlineNodes([child]))
+    nodes.push(...inlineNodes([child], embeddedCoins))
     index += 1
   }
   return nodes
@@ -96,13 +108,13 @@ function findClose(tokens: Token[], start: number, openType: string, closeType: 
   return tokens.length
 }
 
-function renderTokens(tokens: Token[], start = 0, end = tokens.length): VNode[] {
+function renderTokens(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[], start = 0, end = tokens.length): VNode[] {
   const nodes: VNode[] = []
   let index = start
   while (index < end) {
     const token = tokens[index]
     if (token.type === 'inline') {
-      nodes.push(...renderInline(token))
+      nodes.push(...renderInline(token, embeddedCoins))
       index += 1
       continue
     }
@@ -134,7 +146,7 @@ function renderTokens(tokens: Token[], start = 0, end = tokens.length): VNode[] 
     const container = containers[token.type]
     if (container) {
       const close = findClose(tokens, index, token.type, container.close)
-      nodes.push(h(container.tag, { key: index }, renderTokens(tokens, index + 1, close)))
+      nodes.push(h(container.tag, { key: index }, renderTokens(tokens, embeddedCoins, index + 1, close)))
       index = close + 1
       continue
     }
@@ -145,9 +157,12 @@ function renderTokens(tokens: Token[], start = 0, end = tokens.length): VNode[] 
 
 export default defineComponent({
   name: 'StoryRenderer',
-  props: { content: { type: String, required: true } },
+  props: {
+    content: { type: String, required: true },
+    embeddedCoins: { type: Array as () => StoryEmbeddedCoin[], default: () => [] },
+  },
   setup(props) {
-    return () => h('div', { class: 'story-renderer' }, renderTokens(markdown.parse(props.content, {})))
+    return () => h('div', { class: 'story-renderer' }, renderTokens(markdown.parse(props.content, {}), props.embeddedCoins))
   },
 })
 </script>
