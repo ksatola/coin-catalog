@@ -966,3 +966,43 @@ The size rules are:
 - Infinite-scroll loading no longer changes the reference size of already rendered coins, because each known diameter is rendered independently.
 - Source image dimensions do not determine rendered coin size.
 
+
+
+## D-039 — Miniaturki zdjęć monet, revision i kontrola cache
+
+**Status:** Accepted  
+**Date:** 2026-10-01
+
+Miniaturki zdjęć monet są przechowywane jako pochodne oryginalnych plików w osobnym katalogu `images/thumbnails/collection-XXX/`, z zachowaniem basename oryginału.
+
+Parametry generatora miniaturek są wersjonowane. Aktualna wersja generatora jest identyfikowana przez stałą wersję generatora, a aktualność konkretnej miniaturki jest zapisywana w `CoinImage` przez:
+
+    revision
+    thumbnail_revision
+    thumbnail_generator_version
+
+Nowe zdjęcie otrzymuje `revision = 1`. Podmiana oryginału zwiększa `revision`.
+
+Miniaturka jest aktualna wyłącznie wtedy, gdy:
+
+    thumbnail_revision == revision
+    thumbnail_generator_version == aktualna wersja generatora
+    plik miniaturki istnieje i jest poprawnym JPG o oczekiwanych wymiarach
+
+Adres miniaturki zawiera `revision`, dzięki czemu podmiana obrazu powoduje zmianę adresu zasobu i unieważnienie starego wpisu cache bez konieczności używania `no-store`.
+
+Generator miniaturek nie modyfikuje oryginału. Brakująca, uszkodzona lub nieaktualna miniaturka jest regenerowana na podstawie oryginału.
+
+W paginowanym widoku katalogu kontrola jest wykonywana dla aktualnie pobranej strony monet. Dodatkowo endpoint pojedynczej miniaturki potrafi wykonać regenerację na żądanie.
+
+### Rationale
+
+Oddzielenie revision obrazu od metadata wersji generatora pozwala niezawodnie rozpoznać zarówno zmianę źródłowego zdjęcia, jak i zmianę sposobu generowania miniaturek. Przechowywanie stanu miniaturki w bazie eliminuje potrzebę opierania aktualności na czasie modyfikacji pliku lub dodatkowych plikach sidecar.
+
+### Consequences
+
+- `CoinImage` przechowuje stan wersji oryginału i odpowiadającej mu miniaturki.
+- Zmiana parametrów generatora wymaga zwiększenia jego wersji.
+- Miniaturki mogą być długo cache'owane, ponieważ URL zawiera wersję obrazu.
+- Regeneracja może być wykonywana zarówno podczas kontroli strony katalogu, jak i przy żądaniu konkretnej miniaturki.
+- Nowa funkcjonalność wymaga deterministycznych testów generatora, storage, revision/cache, retry i widoków katalogowych.

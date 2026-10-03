@@ -350,7 +350,7 @@ def test_list_coins_includes_image_metadata(
     data = response.json()
     assert len(data) == 1
     assert data[0]["images"] == [
-        {"id": image.id, "kind": image.kind}
+        {"id": image.id, "kind": image.kind, "revision": image.revision}
         for image in session.query(CoinImage)
         .filter(CoinImage.coin_id == coin.id)
         .order_by(CoinImage.id)

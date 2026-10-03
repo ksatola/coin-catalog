@@ -18,11 +18,26 @@ from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import DATA_DIR, get_db
 from coin_catalog.models import Coin, CoinImage
 from coin_catalog.schemas import CoinImageResponse
+from coin_catalog.thumbnails import (
+    THUMBNAIL_GENERATOR_VERSION,
+    ThumbnailGenerationError,
+    ensure_thumbnail_file,
+    thumbnail_metadata_is_current,
+)
 
 router = APIRouter(prefix="/coins/{coin_id}/images", tags=["images"])
 
-IMAGES_DIR = DATA_DIR / "images"
 PRIMARY_KINDS = {"avers", "rewers"}
+IMAGES_DIR = DATA_DIR / "images"
+THUMBNAIL_CACHE_CONTROL = "public, max-age=31536000, immutable"
+
+
+def collection_images_dir(collection_id: int) -> Path:
+    return IMAGES_DIR / f"collection-{collection_id:03d}"
+
+
+def thumbnail_path(collection_id: int, filename: str) -> Path:
+    return IMAGES_DIR / "thumbnails" / f"collection-{collection_id:03d}" / filename
 
 
 def get_coin(coin_id: int, session: Session) -> Coin:
@@ -33,10 +48,6 @@ def get_coin(coin_id: int, session: Session) -> Coin:
             detail="Coin not found",
         )
     return coin
-
-
-def collection_images_dir(collection_id: int) -> Path:
-    return IMAGES_DIR / f"collection-{collection_id:03d}"
 
 
 def validate_jpeg(upload: UploadFile) -> None:
@@ -65,6 +76,34 @@ def next_additional_order(coin: Coin) -> int:
     while order in used_orders:
         order += 1
     return order
+
+
+def _thumbnail_is_current(
+    image: CoinImage,
+    original_path: Path,
+    thumbnail_file: Path,
+) -> bool:
+    return thumbnail_metadata_is_current(
+        source_path=original_path,
+        target_path=thumbnail_file,
+        image_revision=image.revision,
+        thumbnail_revision=image.thumbnail_revision,
+        thumbnail_generator_version=image.thumbnail_generator_version,
+    )
+
+
+def _generate_thumbnail_if_needed(
+    image: CoinImage,
+    original_path: Path,
+    thumbnail_file: Path,
+) -> bool:
+    if _thumbnail_is_current(image, original_path, thumbnail_file):
+        return False
+
+    ensure_thumbnail_file(original_path, thumbnail_file)
+    image.thumbnail_revision = image.revision
+    image.thumbnail_generator_version = THUMBNAIL_GENERATOR_VERSION
+    return True
 
 
 @router.get("", response_model=list[CoinImageResponse])
@@ -96,7 +135,7 @@ def get_image_file(
         )
 
     target = collection_images_dir(coin.collection_id) / image.filename
-    if not target.exists():
+    if not target.is_file():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Image file not found",
@@ -106,6 +145,51 @@ def get_image_file(
         target,
         media_type="image/jpeg",
         headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.get("/{image_id}/thumbnail")
+def get_image_thumbnail(
+    coin_id: int,
+    image_id: int,
+    session: Session = Depends(get_db),
+) -> FileResponse:
+    coin = get_coin(coin_id, session)
+    image = session.scalar(
+        select(CoinImage).where(
+            CoinImage.id == image_id,
+            CoinImage.coin_id == coin_id,
+        )
+    )
+    if image is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found",
+        )
+
+    original_path = collection_images_dir(coin.collection_id) / image.filename
+    if not original_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image file not found",
+        )
+
+    thumbnail_file = thumbnail_path(coin.collection_id, image.filename)
+    try:
+        generated = _generate_thumbnail_if_needed(image, original_path, thumbnail_file)
+    except ThumbnailGenerationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Nie udało się wygenerować miniaturki zdjęcia. Spróbuj ponownie.",
+        ) from error
+
+    if generated:
+        session.commit()
+
+    return FileResponse(
+        thumbnail_file,
+        media_type="image/jpeg",
+        headers={"Cache-Control": THUMBNAIL_CACHE_CONTROL},
     )
 
 
@@ -153,11 +237,19 @@ def upload_image(
     previous_data = target.read_bytes() if target.exists() else None
     target.write_bytes(data)
 
+    thumbnail_file = thumbnail_path(coin.collection_id, filename)
     try:
         if existing is not None:
             existing.filename = filename
             existing.sort_order = sort_order
             existing.file_size_bytes = len(data)
+            existing.revision += 1
+            existing.thumbnail_revision = None
+            existing.thumbnail_generator_version = None
+            try:
+                _generate_thumbnail_if_needed(existing, target, thumbnail_file)
+            except ThumbnailGenerationError:
+                thumbnail_file.unlink(missing_ok=True)
             recalculate_collection_stats(coin.collection, session)
             session.commit()
             session.refresh(existing)
@@ -170,15 +262,21 @@ def upload_image(
             kind=kind,
             sort_order=sort_order,
             file_size_bytes=len(data),
+            revision=1,
         )
         session.add(image)
         session.flush()
+        try:
+            _generate_thumbnail_if_needed(image, target, thumbnail_file)
+        except ThumbnailGenerationError:
+            thumbnail_file.unlink(missing_ok=True)
         recalculate_collection_stats(coin.collection, session)
         session.commit()
         session.refresh(image)
         return image
     except Exception:
         session.rollback()
+        thumbnail_file.unlink(missing_ok=True)
         if previous_data is None:
             target.unlink(missing_ok=True)
         else:
@@ -213,6 +311,7 @@ def delete_image(
     target = collection_images_dir(coin.collection_id) / image.filename
     if target.exists():
         target.unlink()
+    thumbnail_path(coin.collection_id, image.filename).unlink(missing_ok=True)
     session.delete(image)
     recalculate_collection_stats(coin.collection, session)
     session.commit()

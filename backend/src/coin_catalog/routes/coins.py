@@ -1,6 +1,7 @@
+import logging
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.coin_move import move_coin
@@ -13,7 +14,8 @@ from coin_catalog.coin_pagination import (
 )
 from coin_catalog.coin_search import build_coin_query
 from coin_catalog.collection_stats import recalculate_collection_stats
-from coin_catalog.database import get_db
+from coin_catalog.database import SessionLocal, get_db
+from coin_catalog.image_storage import collection_images_dir, thumbnail_path
 from coin_catalog.models import Coin, CoinImage, Collection
 from coin_catalog.schemas import (
     CoinCreate,
@@ -24,8 +26,15 @@ from coin_catalog.schemas import (
     CoinResponse,
     CoinUpdate,
 )
+from coin_catalog.thumbnails import (
+    THUMBNAIL_GENERATOR_VERSION,
+    ThumbnailGenerationError,
+    ensure_thumbnail_file,
+    thumbnail_metadata_is_current,
+)
 
 router = APIRouter(prefix="/coins", tags=["coins"])
+logger = logging.getLogger(__name__)
 
 MAX_PAGE_SIZE = 100
 DEFAULT_PAGE_SIZE = 50
@@ -123,6 +132,55 @@ def load_list_images(statement):
     )
 
 
+def ensure_page_thumbnails(page_coins: list[Coin], session: Session) -> None:
+    changed = False
+
+    for coin in page_coins:
+        for image in coin.images:
+            original_path = collection_images_dir(coin.collection_id) / image.filename
+            thumbnail_file = thumbnail_path(coin.collection_id, image.filename)
+
+            if not original_path.is_file():
+                continue
+
+            if thumbnail_metadata_is_current(
+                source_path=original_path,
+                target_path=thumbnail_file,
+                image_revision=image.revision,
+                thumbnail_revision=image.thumbnail_revision,
+                thumbnail_generator_version=image.thumbnail_generator_version,
+            ):
+                continue
+
+            try:
+                ensure_thumbnail_file(original_path, thumbnail_file)
+            except ThumbnailGenerationError:
+                logger.warning(
+                    "Could not generate thumbnail for coin_image %s",
+                    image.id,
+                )
+                continue
+
+            image.thumbnail_revision = image.revision
+            image.thumbnail_generator_version = THUMBNAIL_GENERATOR_VERSION
+            changed = True
+
+    if changed:
+        session.commit()
+
+
+def reconcile_page_thumbnails(coin_ids: list[int]) -> None:
+    if not coin_ids:
+        return
+
+    with SessionLocal() as session:
+        statement = load_list_images(
+            build_coin_query(status_filter="all").where(Coin.id.in_(coin_ids))
+        )
+        page_coins = list(session.scalars(statement).all())
+        ensure_page_thumbnails(page_coins, session)
+
+
 def cursor_for_coin(coin: Coin, sort_by: str, sort_order: str) -> CoinCursor:
     sort_value = {
         "id": coin.id,
@@ -162,6 +220,7 @@ def create_coin(
     response_model=list[CoinListResponse] | CoinPageResponse,
 )
 def list_coins(
+    background_tasks: BackgroundTasks,
     search: str | None = None,
     collection_id: list[int] | None = Query(None),
     country_id: list[int] | None = Query(None),
@@ -227,6 +286,9 @@ def list_coins(
     coins = list(session.scalars(statement).all())
     has_more = len(coins) > limit
     page_coins = coins[:limit]
+    background_tasks.add_task(
+        reconcile_page_thumbnails, [coin.id for coin in page_coins]
+    )
 
     next_cursor = (
         encode_cursor(cursor_for_coin(page_coins[-1], sort_by, sort_order))

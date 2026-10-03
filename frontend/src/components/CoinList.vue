@@ -75,7 +75,7 @@ async function loadDictionaries(): Promise<void> {
 
 function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
   const image = coin.images?.find((item) => item.kind === kind)
-  return image ? `/api/coins/${coin.id}/images/${image.id}/file` : undefined
+  return image ? `/api/coins/${coin.id}/images/${image.id}/thumbnail?v=${image.revision ?? 1}` : undefined
 }
 
 void loadDictionaries()
@@ -85,8 +85,8 @@ void loadDictionaries()
   <ul class="coin-list">
     <li v-for="coin in coins" :key="coin.id" class="coin-row">
       <div class="image-pair">
-        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
-        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" loading="lazy" /><span v-else>Brak zdjęcia</span></span>
+        <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" loading="lazy" /><span v-else>Brak zdjęcia</span></span>
       </div>
       <div class="coin-info">
         <div class="coin-title"><strong>#{{ coin.id }}<span v-if="coin.collection_number" class="collection-number"> | {{ coin.collection_number }}</span></strong></div>

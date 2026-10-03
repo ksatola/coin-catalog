@@ -7,8 +7,8 @@ const coin1 = {
 }
 const coin2 = { ...coin1, id: 2, description: 'Druga moneta' }
 const images = new Map([
-  [1, [{ id: 101, coin_id: 1, filename: '000001 - awers.jpg', kind: 'avers', sort_order: 0 }]],
-  [2, [{ id: 102, coin_id: 2, filename: '000002 - awers.jpg', kind: 'avers', sort_order: 0 }]],
+  [1, [{ id: 101, coin_id: 1, filename: '000001 - awers.jpg', kind: 'avers', sort_order: 0, revision: 1 }]],
+  [2, [{ id: 102, coin_id: 2, filename: '000002 - awers.jpg', kind: 'avers', sort_order: 0, revision: 1 }]],
 ])
 const dictionaries = {
   countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 2, name: 'Nominał testowy' }],
@@ -20,7 +20,15 @@ const validJpeg = Buffer.from(
   'base64',
 )
 
-async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Promise<void> {
+async function mockApi(
+  page: import('@playwright/test').Page,
+  coinCount = 2,
+  blockCoinsResponse = false,
+): Promise<() => void> {
+  let releaseCoinsResponse = (): void => undefined
+  const coinsResponseBlocked = new Promise<void>((resolve) => {
+    releaseCoinsResponse = resolve
+  })
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dictionaries[name as keyof typeof dictionaries] ?? []) })
@@ -36,6 +44,9 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Pr
       images: images.get(index + 1) ?? [],
     }))
     const payload = search ? coins.filter((item) => item.id !== 2) : coins
+    if (blockCoinsResponse) {
+      await coinsResponseBlocked
+    }
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -46,14 +57,29 @@ async function mockApi(page: import('@playwright/test').Page, coinCount = 2): Pr
       ),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
   await page.route('**/api/coins/*/images', async (route) => {
     const coinId = Number(new URL(route.request().url()).pathname.split('/')[3])
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(images.get(coinId) ?? []) })
   })
+
+  return releaseCoinsResponse
 }
+
+test('pokazuje stan ładowania zamiast pustego katalogu przed pierwszą odpowiedzią', async ({ page }) => {
+  const releaseCoinsResponse = await mockApi(page, 2, true)
+
+  await page.goto('/monety', { waitUntil: 'commit' })
+  await expect(page.getByRole('status')).toHaveText('Ładowanie monet…')
+  releaseCoinsResponse()
+
+  await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
+  await expect(page.getByRole('status')).toHaveCount(0)
+  await expect(page.getByText('Brak monet')).toHaveCount(0)
+})
+
 
 test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page }) => {
   await mockApi(page)
@@ -76,6 +102,15 @@ test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page
   await expect(grid.getByRole('link', { name: 'Moneta #2' })).toBeVisible()
   await expect(grid.getByAltText('Awers monety #1')).toBeVisible()
   await expect(grid.getByAltText('Awers monety #2')).toBeVisible()
+})
+
+test('katalog używa miniaturek z revision i lazy loading', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/monety')
+
+  const image = page.getByAltText('Awers monety #1')
+  await expect(image).toHaveAttribute('loading', 'lazy')
+  await expect(image).toHaveAttribute('src', /\/api\/coins\/1\/images\/101\/thumbnail\?v=1$/)
 })
 
 test('wyszukiwanie zachowuje pozycję przewijania katalogu', async ({ page }) => {
@@ -110,8 +145,8 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
     id,
     description: `Moneta testowa ${id}`,
     images: [
-      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0 },
-      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1 },
+      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0, revision: 1 },
+      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1, revision: 1 },
     ],
   }))
   const expectedImages = fixtureCoins.flatMap((coin) =>
@@ -119,7 +154,7 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
       coinId: coin.id,
       imageId: image.id,
       kind: image.kind,
-      src: `/api/coins/${coin.id}/images/${image.id}/file`,
+      src: `/api/coins/${coin.id}/images/${image.id}/thumbnail?v=1`,
     })),
   )
 
@@ -144,17 +179,17 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
       body: JSON.stringify({ items: fixtureCoins, next_cursor: null, has_more: false }),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
 
   page.on('response', (response) => {
-    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().endsWith('/file')) {
+    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().includes('/thumbnail')) {
       imageResponses.set(response.url(), response.status())
     }
   })
   page.on('requestfailed', (request) => {
-    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().endsWith('/file')) {
+    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().includes('/thumbnail')) {
       imageFailures.set(request.url(), request.failure()?.errorText ?? 'unknown')
     }
   })
@@ -172,7 +207,7 @@ test('diagnostyka mapowania monet, obrazów i requestów plików', async ({ page
   const rendered = await renderedImages.evaluateAll((elements) =>
     elements.map((element) => {
       const image = element as HTMLImageElement
-      const match = image.src.match(/\/api\/coins\/(\d+)\/images\/(\d+)\/file$/)
+      const match = image.src.match(/\/api\/coins\/(\d+)\/images\/(\d+)\/thumbnail\?v=1$/)
       return {
         coinId: match ? Number(match[1]) : null,
         imageId: match ? Number(match[2]) : null,
@@ -220,7 +255,7 @@ test('równoległe odświeżenia katalogu nie pozwalają starszej odpowiedzi nad
       ),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
 
@@ -267,6 +302,7 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
                 filename: `coin-1-v${responseVersion}.jpg`,
                 kind: 'avers',
                 sort_order: 0,
+                revision: 1,
               }],
             }],
             next_cursor: null,
@@ -285,18 +321,18 @@ test('zmiana metadanych obrazów przy tych samych monetach aktualizuje src eleme
         }]),
     })
   })
-  await page.route('**/api/coins/*/images/*/file', async (route) => {
+  await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
     await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
   })
 
   await page.goto('/monety')
 
   const image = page.getByAltText('Awers monety #1')
-  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file')
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/thumbnail?v=1')
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
 
   await page.getByPlaceholder('Szukaj monet, np. polska grosz').fill('test')
-  await expect.poll(() => image.getAttribute('src')).toBe('/api/coins/1/images/201/file')
+  await expect.poll(() => image.getAttribute('src')).toBe('/api/coins/1/images/201/thumbnail?v=1')
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
 })
 
@@ -306,8 +342,8 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
     id,
     description: id === 3 ? 'Trzecia moneta' : `Moneta testowa ${id}`,
     images: [
-      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0 },
-      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1 },
+      { id: id * 100 + 1, coin_id: id, filename: `coin-${id}-avers.jpg`, kind: 'avers', sort_order: 0, revision: 1 },
+      { id: id * 100 + 2, coin_id: id, filename: `coin-${id}-rewers.jpg`, kind: 'rewers', sort_order: 1, revision: 1 },
     ],
   }))
 
@@ -335,7 +371,7 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
         body: JSON.stringify({ items, next_cursor: null, has_more: false }),
       })
     })
-    await page.route('**/api/coins/*/images/*/file', async (route) => {
+    await page.route('**/api/coins/*/images/*/thumbnail*', async (route) => {
       await route.fulfill({ status: 200, contentType: 'image/jpeg', body: validJpeg })
     })
   }
@@ -384,12 +420,12 @@ test('obrazy monet są faktycznie pobierane i dekodowane przez przeglądarkę', 
   const imageFailures = new Map<string, string>()
 
   page.on('response', (response) => {
-    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().endsWith('/file')) {
+    if (response.url().includes('/api/coins/') && response.url().includes('/images/') && response.url().includes('/thumbnail')) {
       imageResponses.set(response.url(), response.status())
     }
   })
   page.on('requestfailed', (request) => {
-    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().endsWith('/file')) {
+    if (request.url().includes('/api/coins/') && request.url().includes('/images/') && request.url().includes('/thumbnail')) {
       imageFailures.set(request.url(), request.failure()?.errorText ?? 'unknown')
     }
   })
@@ -483,7 +519,7 @@ test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page })
   let imageRequests = 0
 
   await mockApi(page, 1)
-  await page.route('**/api/coins/1/images/101/file*', async (route) => {
+  await page.route('**/api/coins/1/images/101/thumbnail*', async (route) => {
     imageRequests += 1
 
     if (imageRequests === 1) {
@@ -503,5 +539,5 @@ test('ponawia ładowanie obrazu po błędzie pierwszej próby', async ({ page })
   const image = page.getByAltText('Awers monety #1')
   await expect.poll(() => imageRequests).toBe(2)
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
-  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/file?image_retry=1')
+  await expect(image).toHaveAttribute('src', '/api/coins/1/images/101/thumbnail?v=1&image_retry=1')
 })

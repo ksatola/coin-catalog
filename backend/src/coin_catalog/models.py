@@ -206,6 +206,9 @@ class CoinImage(Base):
     kind: Mapped[str] = mapped_column(Text, nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
     file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    thumbnail_revision: Mapped[int | None] = mapped_column(Integer)
+    thumbnail_generator_version: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,

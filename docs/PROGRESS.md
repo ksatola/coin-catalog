@@ -123,7 +123,13 @@ The complete project verification beyond the checks listed above (including the 
 
 ## Image Management
 
-**Status:** Initial implementation complete
+**Status:** Initial implementation complete; thumbnail optimization is implemented on `feature/coin-image-thumbnails` and awaits local verification
+
+The thumbnail work adds versioned `CoinImage` metadata, separate thumbnail storage, Pillow-based generation, catalog-page reconciliation, a cached thumbnail endpoint, and lazy-loading catalog views.
+
+The implementation includes new deterministic backend and Playwright coverage for thumbnail generation, revision/cache behavior, regeneration, retry, and lazy loading.
+
+**Verification status:** the project checkout is not available in the current execution environment, so the new backend pytest suite, Ruff, frontend type-check/build, and Playwright tests have **not** been executed here. No test result is claimed.
 
 The collection-aware image storage from D-034 is implemented: Git-ignored `data/images/collection-XXX/` directories, flat six-digit technical coin-ID filenames, primary awers/rewers images, sequential additional images, SQLite metadata, JPG serving, explicit replacement confirmation, and byte-preserving storage.
 
@@ -241,6 +247,17 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Added backend tests covering cursor traversal, nullable year sorting, detail navigation boundaries, filtering behavior, and invalid cursors.
 - Added the initial frontend infinite-scroll implementation and switched coin detail navigation to the dedicated navigation endpoint.
 - The work is part of the current application baseline; Phase 9 now refers to Cross-platform Standalone Packaging.
+
+### 2026-10-01 — Coin image thumbnails implementation started
+
+- Implemented versioned coin-image thumbnail metadata on `CoinImage`.
+- Added separate thumbnail storage under `images/thumbnails/collection-XXX/`.
+- Added Pillow-based 800 px / JPEG 90 thumbnail generation with atomic writes and source-image preservation.
+- Added thumbnail regeneration and two-attempt generation retry.
+- Added revision-based cache URLs and long-lived thumbnail cache headers.
+- Added catalogue-page thumbnail reconciliation and lazy-loading thumbnail usage in catalogue views.
+- Added deterministic backend and Playwright coverage for the new functionality.
+- Verification is pending because the project checkout is unavailable in the current execution environment.
 
 ### 2026-09-30 — Size-based coin gallery merged and verified
 

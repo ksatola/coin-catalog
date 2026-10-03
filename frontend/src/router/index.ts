@@ -13,8 +13,8 @@ import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = createRouter({
   history: createWebHistory(),
-  scrollBehavior() {
-    return { top: 0 }
+  scrollBehavior(_to, _from, savedPosition) {
+    return savedPosition ?? { top: 0 }
   },
   routes: [
     { path: '/', redirect: '/monety' },
