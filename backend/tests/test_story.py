@@ -160,3 +160,17 @@ def test_story_page_path_lookup(client: TestClient) -> None:
     response = client.get("/story/pages/path/monety-polskie/jan-kazimierz")
     assert response.status_code == 200
     assert response.json()["title"] == "Jan Kazimierz"
+
+
+
+def test_story_page_rejects_missing_parent_and_non_leaf_delete(client: TestClient) -> None:
+    missing_parent = client.post(
+        "/story/pages",
+        json={"title": "Orphan", "parent_id": 999999, "content": ""},
+    )
+    assert missing_parent.status_code == 404
+
+    root = create_page(client, "Root")
+    create_page(client, "Child", root["id"])
+    delete_root = client.delete("/story/pages/" + str(root["id"]))
+    assert delete_root.status_code == 409
