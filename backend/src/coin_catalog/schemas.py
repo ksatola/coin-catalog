@@ -136,3 +136,46 @@ class CoinImageResponse(BaseModel):
     thumbnail_revision: int | None
     thumbnail_generator_version: int | None
     created_at: datetime
+
+
+
+class StoryPageCreate(BaseModel):
+    title: str
+    content: str = ""
+    parent_id: int | None = None
+    slug: str | None = None
+
+
+class StoryPageUpdate(StoryPageCreate):
+    pass
+
+
+class StoryPageMoveRequest(BaseModel):
+    parent_id: int | None = None
+
+
+class StoryPageReorderRequest(BaseModel):
+    direction: str
+
+
+class StoryPageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    parent_id: int | None
+    title: str
+    slug: str
+    content: str
+    sort_order: int
+    created_at: datetime
+    updated_at: datetime
+    path: str
+
+
+class StoryPageTreeResponse(BaseModel):
+    id: int
+    parent_id: int | None
+    title: str
+    slug: str
+    sort_order: int
+    children: list[StoryPageTreeResponse] = Field(default_factory=list)
