@@ -156,3 +156,17 @@ test('przedział między erą BC i AD nie jest blokowany przez kolejność warto
   expect(updates).toBe(1)
   expect(uploaded).toHaveLength(0)
 })
+
+test('widok Monety pozwala zaznaczyć wiele monet i przejść do Opowieści', async ({ page }) => {
+  await mockCommonApi(page)
+  await page.route('**/api/coins*', async (route) => {
+    const payload = [{ ...coin, id: 404 }, { ...coin, id: 405 }]
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: payload, next_cursor: null, has_more: false }) })
+  })
+  await page.goto('/monety')
+  await page.getByRole('checkbox', { name: 'Wybierz monetę #404' }).check()
+  await page.getByRole('checkbox', { name: 'Wybierz monetę #405' }).check()
+  await expect(page.getByText('Wybrano: 2')).toBeVisible()
+  await page.getByRole('button', { name: 'Dodaj do Opowieści' }).click()
+  await expect(page).toHaveURL('/opowiesc/edytuj/nowa')
+})
