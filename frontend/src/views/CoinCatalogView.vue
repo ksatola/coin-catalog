@@ -9,6 +9,7 @@ import CoinList from '../components/CoinList.vue'
 import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
+import { useStoryCoinSelection } from '../composables/useStoryCoinSelection'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
@@ -22,6 +23,7 @@ const props = defineProps<{
 
 const router = useRouter()
 const filters = useCoinFilters(props.scope)
+const storySelection = useStoryCoinSelection()
 const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
 const errorMessage = ref('')
@@ -261,6 +263,15 @@ function openCoinDetails(coin: Coin): void {
   router.push(`/monety/${coin.id}${query ? `?${query}` : ''}`)
 }
 
+function toggleStoryCoin(id: number): void {
+  if (storySelection.has(id)) storySelection.remove(id)
+  else storySelection.add(id)
+}
+
+function addSelectedCoinsToStory(): void {
+  void router.push('/opowiesc/edytuj/nowa')
+}
+
 function resetFilters(): void {
   resetCoinFilters(filters, isArchive ? 'archived' : 'active')
   void loadCoins()
@@ -419,6 +430,8 @@ onUnmounted(() => {
       <div class="results-bar" aria-label="Zakres wyników">
         <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
         <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
+        <span v-if="storySelection.ids.value.length" class="selection-count">Wybrano: {{ storySelection.ids.value.length }}</span>
+        <button v-if="storySelection.ids.value.length && !isArchive" type="button" class="story-selection-button" @click="addSelectedCoinsToStory">Dodaj do Opowieści</button>
       </div>
 
       <CoinImageGrid
@@ -426,6 +439,8 @@ onUnmounted(() => {
         :coins="coins"
         :columns="galleryColumns"
         :detail-query="appliedFilterQuery"
+        :selected-ids="storySelection.ids.value"
+        @toggle-selection="toggleStoryCoin"
       />
       <CoinSizeGallery
         v-else-if="viewMode === 'size-gallery'"
@@ -434,7 +449,7 @@ onUnmounted(() => {
         :pixels-per-mm="sizeGalleryPixelsPerMm"
         :detail-query="appliedFilterQuery"
       />
-      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" />
+      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" :selected-ids="storySelection.ids.value" @toggle-selection="toggleStoryCoin" />
 
       <CoinList
         v-else
@@ -442,6 +457,8 @@ onUnmounted(() => {
         @details="openCoinDetails"
         @archive="archiveCoin"
         @restore="restoreCoin"
+        :selected-ids="storySelection.ids.value"
+        @toggle-selection="toggleStoryCoin"
       />
 
       <div ref="sentinel" class="infinite-scroll-sentinel" aria-hidden="true">
@@ -669,7 +686,7 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
-.results-scope {
+.selection-count{padding-left:10px;color:#0f172a;font-weight:700}.story-selection-button{margin-left:auto;padding:7px 11px;border:0;border-radius:6px;background:#2563eb;color:#fff;font-weight:700}.results-scope {
   padding-left: 10px;
   border-left: 1px solid #cbd5e1;
   color: #64748b;
