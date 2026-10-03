@@ -1,5 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
 
+type StoryEmbeddedCoin = {
+  id: number
+  coin: {
+    id: number
+    collection_number: string | null
+    from_year: number | null
+    to_year: number | null
+    images: { id: number; kind: 'avers' | 'rewers'; revision: number }[]
+  } | null
+  deleted: boolean
+}
+
 type StoryPage = {
   id: number
   parent_id: number | null
@@ -10,9 +22,10 @@ type StoryPage = {
   created_at: string
   updated_at: string
   path: string
+  embedded_coins: StoryEmbeddedCoin[]
 }
 
-type StoryPageTree = Omit<StoryPage, 'content' | 'created_at' | 'updated_at'> & {
+type StoryPageTree = Omit<StoryPage, 'content' | 'created_at' | 'updated_at' | 'embedded_coins'> & {
   children: StoryPageTree[]
 }
 
@@ -37,8 +50,31 @@ function buildPath(page: StoryPage, pages: StoryPage[]): string {
   return parts.reverse().join('/')
 }
 
+function embeddedCoins(content: string): StoryEmbeddedCoin[] {
+  const ids = [...content.matchAll(/\{\{\s*coin:(\d+)\s*\}\}/g)]
+    .map((match) => Number(match[1]))
+    .filter((id, index, all) => all.indexOf(id) === index)
+
+  return ids.map((id) => {
+    if (id === 123) {
+      return {
+        id,
+        coin: {
+          id,
+          collection_number: 'K-123',
+          from_year: 1930,
+          to_year: 1930,
+          images: [{ id: 1231, kind: 'avers', revision: 2 }, { id: 1232, kind: 'rewers', revision: 3 }],
+        },
+        deleted: false,
+      }
+    }
+    return { id, coin: null, deleted: true }
+  })
+}
+
 function toResponse(page: StoryPage, pages: StoryPage[]): StoryPage {
-  return { ...page, path: buildPath(page, pages) }
+  return { ...page, path: buildPath(page, pages), embedded_coins: embeddedCoins(page.content) }
 }
 
 function buildTree(pages: StoryPage[]): StoryPageTree[] {
@@ -104,6 +140,7 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
         created_at: '2026-10-03T00:00:00Z',
         updated_at: '2026-10-03T00:00:00Z',
         path: '',
+        embedded_coins: [],
       }
       pages.push(storyPage)
       await route.fulfill({
@@ -244,6 +281,7 @@ function storyPage(overrides: Partial<StoryPage>): StoryPage {
     created_at: '2026-10-03T00:00:00Z',
     updated_at: '2026-10-03T00:00:00Z',
     path: 'strona-testowa',
+    embedded_coins: [],
     ...overrides,
   }
 }
@@ -262,11 +300,11 @@ test('Opowieść allows creating and navigating a page', async ({ page }) => {
   await expect(page.getByRole('button', { name:title })).toBeVisible()
 })
 
-test('Opowieść renders Markdown and coin references without executing raw HTML', async ({ page }) => {
+test('Opowieść renders Markdown and real coin embeds without executing raw HTML', async ({ page }) => {
   await mockStoryApi(page)
 
   const title = 'Markdown E2E'
-  const content = '# Nagłówek\n\nPierwszy **ważny** akapit.\n\n- jeden\n- dwa\n\n{{ coin:123 }}\n\n<script>alert("nie wykonuj")</script>'
+  const content = '# Nagłówek\n\nPierwszy **ważny** akapit.\n\n- jeden\n- dwa\n\n{{ coin:123 }}\n\n{{ coin:999 }}\n\n<script>alert("nie wykonuj")</script>'
 
   await page.goto('/opowiesc/edytuj/nowa')
   await page.getByLabel('Tytuł').fill(title)
@@ -276,7 +314,9 @@ test('Opowieść renders Markdown and coin references without executing raw HTML
   await expect(page.getByRole('heading', { name:'Nagłówek', exact:true })).toBeVisible()
   await expect(page.locator('strong')).toHaveText('ważny')
   await expect(page.locator('.reader .story-renderer ul li')).toHaveText(['jeden', 'dwa'])
-  await expect(page.locator('[data-coin-id="123"]')).toHaveText('Moneta #123')
+  await expect(page.getByRole('link', { name:'Moneta #123' })).toHaveAttribute('href', '/monety/123')
+  await expect(page.locator('.story-coin img')).toHaveAttribute('src', /\/api\/coins\/123\/images\/1231\/thumbnail\?v=2/)
+  await expect(page.getByText('⚠ Moneta została usunięta')).toBeVisible()
   await expect(page.locator('.reader .story-renderer script')).toHaveCount(0)
   await expect(page.getByText('<script>alert("nie wykonuj")</script>')).toBeVisible()
 })
