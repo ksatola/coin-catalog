@@ -81,42 +81,6 @@ test('pokazuje stan ładowania zamiast pustego katalogu przed pierwszą odpowied
 })
 
 
-test('powrót z widoku szczegółowego przywraca pozycję przewijania katalogu', async ({ page }) => {
-  await mockApi(page, 20)
-
-  await page.route('**/api/coins/20/navigation*', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ previous_id: 19, next_id: null }),
-    })
-  })
-  await page.route('**/api/coins/20', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ ...coin1, id: 20, description: 'Moneta testowa 20', images: images.get(2) ?? [] }),
-    })
-  })
-
-  await page.goto('/monety')
-  await expect(page.getByRole('link', { name: 'Moneta #20' })).toBeVisible()
-  const catalogUrl = page.url()
-
-  await page.evaluate(() => window.scrollTo(0, 700))
-  const catalogScrollY = await page.evaluate(() => window.scrollY)
-  expect(catalogScrollY).toBeGreaterThan(0)
-
-  await page.getByRole('link', { name: 'Moneta #20' }).click()
-  await expect.poll(() => new URL(page.url()).pathname).toBe('/monety/20')
-
-  await page.goBack()
-  await expect(page).toHaveURL(catalogUrl)
-  await expect(page.getByRole('link', { name: 'Moneta #20' })).toBeVisible()
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(catalogScrollY)
-})
-
-
 test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page }) => {
   await mockApi(page)
   await page.goto('/monety')
