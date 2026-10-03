@@ -179,6 +179,15 @@ Standalone Windows/macOS packaging is the current Phase 9 work. Production deplo
 
 ---
 
+### 2026-10-03 — Opowieść M3.2 — picker monet
+
+- Dodano tymczasowy frontendowy wybór monet współdzielony między widokiem `Monety` i pickerem Opowieści.
+- Dodano picker monet z trybami `Katalog` oraz `Wybrane w widoku Monety`.
+- Dodano wielokrotny wybór monet w istniejących sposobach prezentacji katalogu i przejście do nowej strony Opowieści.
+- Dodano wstawianie referencji `{{ coin:id }}` w aktualnej pozycji Markdown.
+- Dodano izolowane testy Playwright wykorzystujące `page.route()` bez zapisu do runtime DB.
+- Weryfikacja lokalna pozostaje po stronie projektu; checkout repozytorium nie jest dostępny w tym środowisku.
+
 ## Current Next Step
 
 Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is established and implementation is at the early-start stage.
