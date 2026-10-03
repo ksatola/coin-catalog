@@ -5,8 +5,11 @@ import CoinImage from './CoinImage.vue'
 const props = defineProps<{
   coins: Coin[]
   columns?: 1 | 2 | 3 | 4
+  selectedIds?: number[]
   detailQuery?: string
 }>()
+
+const emit = defineEmits<{ toggleSelection: [id: number] }>()
 
 function detailPath(coinId: number): string {
   return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
@@ -33,6 +36,7 @@ function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
       :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
     >
+      <label class="selection-toggle" @click.stop><input type="checkbox" :checked="props.selectedIds?.includes(coin.id)" :aria-label="'Wybierz monetę #' + coin.id" @change="emit('toggleSelection', coin.id)" /></label>
       <div class="coin-side">
         <CoinImage
           v-if="imageUrl(coin, 'avers')"
@@ -61,7 +65,7 @@ function imageUrl(coin: Coin, kind: 'avers' | 'rewers'): string | undefined {
   width: 100%;
 }
 
-.coin-tile {
+.selection-toggle{position:absolute;z-index:2;top:8px;left:8px;padding:5px;border-radius:6px;background:#fff}.coin-tile {position:relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   min-height: calc(200px * var(--gallery-scale));
