@@ -101,3 +101,27 @@ export interface CoinPageResponse {
   next_cursor: string | null
   has_more: boolean
 }
+
+
+
+export interface StoryPage {
+  id: number
+  parent_id: number | null
+  title: string
+  slug: string
+  content: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+  path: string
+}
+
+export interface StoryPageTree {
+  id: number
+  parent_id: number | null
+  title: string
+  slug: string
+  sort_order: number
+  path: string
+  children: StoryPageTree[]
+}
