@@ -448,6 +448,8 @@ onUnmounted(() => {
         :scale="sizeGalleryScale"
         :pixels-per-mm="sizeGalleryPixelsPerMm"
         :detail-query="appliedFilterQuery"
+        :selected-ids="storySelection.ids.value"
+        @toggle-selection="toggleStoryCoin"
       />
       <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" :selected-ids="storySelection.ids.value" @toggle-selection="toggleStoryCoin" />
 
