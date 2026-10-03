@@ -320,3 +320,45 @@ class Coin(Base):
         cascade="all, delete-orphan",
         order_by="CoinImage.sort_order",
     )
+
+
+
+class StoryPage(Base):
+    __tablename__ = "story_page"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    parent_id: Mapped[int | None] = mapped_column(
+        ForeignKey("story_page.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    slug: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    parent: Mapped[StoryPage | None] = relationship(
+        "StoryPage",
+        remote_side=[id],
+        back_populates="children",
+    )
+    children: Mapped[list[StoryPage]] = relationship(
+        "StoryPage",
+        back_populates="parent",
+        order_by="StoryPage.sort_order",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("parent_id", "slug", name="uq_story_page_parent_slug"),
+        UniqueConstraint("parent_id", "title", name="uq_story_page_parent_title"),
+    )
