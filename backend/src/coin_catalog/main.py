@@ -12,6 +12,7 @@ from coin_catalog.routes.coins import router as coins_router
 from coin_catalog.routes.collections import router as collections_router
 from coin_catalog.routes.dictionaries import router as dictionaries_router
 from coin_catalog.routes.images import router as images_router
+from coin_catalog.routes.story import router as story_router
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ app.include_router(categories_router)
 app.include_router(coin_categories_router)
 app.include_router(collections_router)
 app.include_router(images_router)
+app.include_router(story_router)
 
 
 @app.get("/health")
