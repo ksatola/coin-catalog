@@ -275,7 +275,7 @@ test('Opowieść renders Markdown and coin references without executing raw HTML
 
   await expect(page.getByRole('heading', { name:'Nagłówek', exact:true })).toBeVisible()
   await expect(page.locator('strong')).toHaveText('ważny')
-  await expect(page.locator('ul li')).toHaveText(['jeden', 'dwa'])
+  await expect(page.locator('.preview-pane ul li')).toHaveText(['jeden', 'dwa'])
   await expect(page.locator('[data-coin-id="123"]')).toHaveText('Moneta #123')
   await expect(page.locator('script')).toHaveCount(0)
   await expect(page.getByText('<script>alert("nie wykonuj")</script>')).toBeVisible()
@@ -289,7 +289,7 @@ test('edytor Opowieści pokazuje podgląd Markdown', async ({ page }) => {
   await page.getByLabel('Treść Markdown').fill('# Podgląd\n\n**Ważny** tekst.')
 
   const preview = page.locator('.preview-pane')
-  await expect(preview.getByRole('heading', { name:'Podgląd', exact:true })).toBeVisible()
+  await expect(preview.locator(':scope > h2')).toHaveText('Podgląd')
   await expect(preview.locator('strong')).toHaveText('Ważny')
 })
 
@@ -330,8 +330,9 @@ test('Opowieść nie pozwala usunąć strony posiadającej podstrony', async ({ 
   await page.goto('/opowiesc/strona-nadrzedna')
   await expect(page.getByRole('heading', { name: 'Strona nadrzędna' })).toBeVisible()
 
+  const parentRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Strona nadrzędna' }) })
   page.once('dialog', (dialog) => dialog.accept())
-  await page.getByRole('button', { name: 'Usuń stronę' }).click()
+  await parentRow.getByRole('button', { name: 'Usuń stronę' }).click()
 
   await expect(page.getByText('Nie można usunąć strony, która ma podstrony.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Strona nadrzędna' })).toBeVisible()
