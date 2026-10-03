@@ -22,7 +22,10 @@ type Dictionaries = {
 const props = defineProps<{
   coins: Coin[]
   detailQuery?: string
+  selectedIds?: number[]
 }>()
+
+const emit = defineEmits<{ toggleSelection: [id: number] }>()
 
 function detailPath(coinId: number): string {
   return `/monety/${coinId}${props.detailQuery ? `?${props.detailQuery}` : ''}`
@@ -94,6 +97,7 @@ onMounted(() => void loadDictionaries())
       :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
     >
+      <label class="selection-toggle" @click.stop><input type="checkbox" :checked="props.selectedIds?.includes(coin.id)" :aria-label="'Wybierz monetę #' + coin.id" @change="emit('toggleSelection', coin.id)" /></label>
       <div class="image-row">
         <div class="coin-side">
           <CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" loading="lazy" />
@@ -132,7 +136,7 @@ onMounted(() => void loadDictionaries())
 
 <style scoped>
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: 16px; width: 100%; }
-.card { display: grid; min-width: 0; border: 1px solid #dbe3ee; border-radius: 10px; background: #ffffff; color: inherit; text-decoration: none; overflow: hidden; }
+.selection-toggle{position:absolute;z-index:2;top:8px;left:8px;padding:5px;border-radius:6px;background:#fff}.card {position:relative; display: grid; min-width: 0; border: 1px solid #dbe3ee; border-radius: 10px; background: #ffffff; color: inherit; text-decoration: none; overflow: hidden; }
 .image-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 240px; background: #ffffff; }
 .coin-side { display: grid; min-width: 0; min-height: 240px; padding: 20px 0; place-items: center; background: #ffffff; }
 .coin-side + .coin-side { border-left: 1px solid #e2e8f0; }
