@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.database import get_db
-from coin_catalog.models import StoryPage
+from coin_catalog.models import Coin, CoinImage, StoryPage
 from coin_catalog.schemas import (
+    CoinListResponse,
+    StoryEmbeddedCoinResponse,
     StoryPageCreate,
     StoryPageMoveRequest,
     StoryPageReorderRequest,
@@ -26,6 +29,47 @@ from coin_catalog.story import (
 
 router = APIRouter(prefix="/story/pages", tags=["story"])
 
+COIN_REFERENCE_RE = re.compile(r"\{\{\s*coin:(\d+)\s*\}\}")
+
+
+def embedded_coin_ids(content: str) -> list[int]:
+    seen: set[int] = set()
+    ids: list[int] = []
+    for match in COIN_REFERENCE_RE.finditer(content):
+        coin_id = int(match.group(1))
+        if coin_id not in seen:
+            seen.add(coin_id)
+            ids.append(coin_id)
+    return ids
+
+
+def load_embedded_coins(page: StoryPage, session: Session) -> list[StoryEmbeddedCoinResponse]:
+    ids = embedded_coin_ids(page.content)
+    if not ids:
+        return []
+
+    coins = session.scalars(
+        select(Coin)
+        .options(selectinload(Coin.images.and_(CoinImage.kind.in_(("avers", "rewers")))))
+        .where(Coin.id.in_(ids))
+    ).all()
+    coins_by_id = {coin.id: coin for coin in coins}
+
+    result: list[StoryEmbeddedCoinResponse] = []
+    for coin_id in ids:
+        coin = coins_by_id.get(coin_id)
+        if coin is None or coin.is_deleted:
+            result.append(StoryEmbeddedCoinResponse(id=coin_id, coin=None, deleted=True))
+            continue
+        result.append(
+            StoryEmbeddedCoinResponse(
+                id=coin_id,
+                coin=CoinListResponse.model_validate(coin),
+                deleted=False,
+            )
+        )
+    return result
+
 
 def response(page: StoryPage, session: Session) -> StoryPageResponse:
     return StoryPageResponse(
@@ -38,6 +82,7 @@ def response(page: StoryPage, session: Session) -> StoryPageResponse:
         created_at=page.created_at,
         updated_at=page.updated_at,
         path=page_path(page, session),
+        embedded_coins=load_embedded_coins(page, session),
     )
 
 
