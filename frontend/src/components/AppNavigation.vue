@@ -13,6 +13,7 @@
 
       <div class="navigation-links">
         <RouterLink to="/monety">Monety</RouterLink>
+        <RouterLink to="/opowiesc">Opowieść</RouterLink>
         <RouterLink class="primary-link" to="/dodaj">+ Dodaj monetę</RouterLink>
         <RouterLink to="/archiwum">Archiwum</RouterLink>
         <RouterLink to="/slowniki">Słowniki</RouterLink>
