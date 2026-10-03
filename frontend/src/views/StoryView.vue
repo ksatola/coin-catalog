@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import StoryTree from '../components/StoryTree.vue'
+import StoryRenderer from '../components/StoryRenderer.vue'
 import type { StoryPage, StoryPageTree } from '../types'
 const route = useRoute()
 const router = useRouter()
@@ -46,11 +47,11 @@ onMounted(() => void reload())
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>
-      <template v-else-if="page"><nav class="breadcrumb">{{ page.path.replaceAll('/', ' / ') }}</nav><h2>{{ page.title }}</h2><pre class="raw-content">{{ page.content }}</pre></template>
+      <template v-else-if="page"><nav class="breadcrumb">{{ page.path.replaceAll('/', ' / ') }}</nav><h2>{{ page.title }}</h2><StoryRenderer :content="page.content" /></template>
       <div v-else class="empty">Wybierz stronę z drzewa.</div>
     </main>
   </section>
 </template>
 <style scoped>
-.story-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px}.sidebar,.reader{border:1px solid #dbe3ee;border-radius:10px;background:white;padding:18px}.sidebar{align-self:start}.sidebar-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.sidebar-header h1{margin:0;font-size:22px}.sidebar-header a{font-size:13px;color:#2563eb;text-decoration:none}.breadcrumb{color:#64748b;font-size:13px}.raw-content{white-space:pre-wrap;font:inherit;line-height:1.6}.error{color:#b91c1c}.empty{color:#64748b;padding:40px 0}@media(max-width:800px){.story-layout{grid-template-columns:1fr}}
+.story-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px}.sidebar,.reader{border:1px solid #dbe3ee;border-radius:10px;background:white;padding:18px}.sidebar{align-self:start}.sidebar-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.sidebar-header h1{margin:0;font-size:22px}.sidebar-header a{font-size:13px;color:#2563eb;text-decoration:none}.breadcrumb{color:#64748b;font-size:13px}.error{color:#b91c1c}.empty{color:#64748b;padding:40px 0}@media(max-width:800px){.story-layout{grid-template-columns:1fr}}
 </style>
