@@ -5,6 +5,7 @@ const emit = defineEmits<{
   select: [path: string]
   edit: [id: number]
   move: [id: number, direction: 'up' | 'down']
+  delete: [id: number]
 }>()
 </script>
 <template>
@@ -16,6 +17,7 @@ const emit = defineEmits<{
           <button type="button" aria-label="Przenieś wyżej" @click="emit('move', node.id, 'up')">↑</button>
           <button type="button" aria-label="Przenieś niżej" @click="emit('move', node.id, 'down')">↓</button>
           <button type="button" aria-label="Edytuj stronę" @click="emit('edit', node.id)">Edytuj</button>
+          <button type="button" aria-label="Usuń stronę" @click="emit('delete', node.id)">Usuń</button>
         </span>
       </div>
       <StoryTree
@@ -25,6 +27,7 @@ const emit = defineEmits<{
         @select="emit('select', $event)"
         @edit="emit('edit', $event)"
         @move="(id, direction) => emit('move', id, direction)"
+        @delete="emit('delete', $event)"
       />
     </li>
   </ul>
