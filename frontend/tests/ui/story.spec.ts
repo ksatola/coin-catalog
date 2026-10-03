@@ -377,3 +377,35 @@ test('Opowieść nie pozwala usunąć strony posiadającej podstrony', async ({ 
   await expect(page.getByText('Nie można usunąć strony, która ma podstrony.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Strona nadrzędna' })).toBeVisible()
 })
+
+test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ page }) => {
+  await mockStoryApi(page)
+  await page.route('**/api/coins*', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [{ id: 123, collection_number: 'A-123' }], next_cursor: null, has_more: false }) })
+  })
+  await page.goto('/opowiesc/edytuj/nowa')
+  await page.getByLabel('Tytuł').fill('Picker test')
+  await page.getByLabel('Treść Markdown').fill('Przed ')
+  const textarea = page.getByLabel('Treść Markdown')
+  await textarea.evaluate((element) => (element as HTMLTextAreaElement).setSelectionRange(7, 7))
+  await page.getByRole('button', { name: 'Wstaw monetę' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Wstaw' }).click()
+  await expect(textarea).toHaveValue('Przed {{ coin:123 }}')
+})
+
+test('picker Opowieści pokazuje monety zaznaczone w widoku Monety', async ({ page }) => {
+  await mockStoryApi(page)
+  await page.route('**/api/coins*', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [{ id: 12 }, { id: 27 }], next_cursor: null, has_more: false }) })
+  })
+  await page.goto('/monety')
+  await expect(page.getByRole('checkbox', { name: 'Wybierz monetę #12' })).toBeVisible()
+  await page.getByRole('checkbox', { name: 'Wybierz monetę #12' }).check()
+  await page.getByRole('checkbox', { name: 'Wybierz monetę #27' }).check()
+  await page.getByRole('button', { name: 'Dodaj do Opowieści' }).click()
+  await page.waitForURL('/opowiesc/edytuj/nowa')
+  await page.getByRole('button', { name: 'Wstaw monetę' }).click()
+  await page.getByRole('button', { name: /Wybrane w widoku Monety \(2\)/ }).click()
+  await expect(page.getByRole('button', { name: 'Wstaw' })).toHaveCount(2)
+})
