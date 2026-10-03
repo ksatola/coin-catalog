@@ -15,8 +15,8 @@ type Dictionaries = {
   eras: DictionaryItem[]
 }
 
-const props = defineProps<{ coins: Coin[] }>()
-const emit = defineEmits<{ details: [coin: Coin]; archive: [coin: Coin]; restore: [coin: Coin] }>()
+const props = defineProps<{ coins: Coin[]; selectedIds?: number[] }>()
+const emit = defineEmits<{ details: [coin: Coin]; archive: [coin: Coin]; restore: [coin: Coin]; toggleSelection: [id: number] }>()
 const dictionaries = reactive<Dictionaries>({
   countries: [],
   issuers: [],
@@ -83,7 +83,7 @@ void loadDictionaries()
 
 <template>
   <ul class="coin-list">
-    <li v-for="coin in coins" :key="coin.id" class="coin-row">
+    <li v-for="coin in coins" :key="coin.id" class="coin-row"><label class="selection-toggle"><input type="checkbox" :checked="props.selectedIds?.includes(coin.id)" :aria-label="'Wybierz monetę #' + coin.id" @change="emit('toggleSelection', coin.id)" /></label>
       <div class="image-pair">
         <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'avers')" :src="imageUrl(coin, 'avers')!" :alt="`Awers monety #${coin.id}`" loading="lazy" /><span v-else>Brak zdjęcia</span></span>
         <span class="coin-image"><CoinImage v-if="imageUrl(coin, 'rewers')" :src="imageUrl(coin, 'rewers')!" :alt="`Rewers monety #${coin.id}`" loading="lazy" /><span v-else>Brak zdjęcia</span></span>
@@ -107,5 +107,5 @@ void loadDictionaries()
 </template>
 
 <style scoped>
-.coin-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}.coin-row{display:grid;grid-template-columns:176px minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px;border:1px solid #dbe3ee;border-radius:10px;background:#fff}.image-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}.coin-image{display:grid;width:auto;height:88px;min-width:0;place-items:center;background:#fff;overflow:hidden}.coin-image img{display:block;width:100%;height:100%;object-fit:contain}.coin-image span{color:#94a3b8;font-size:12px;text-align:center}.coin-info{display:grid;gap:4px;min-width:0}.coin-title{display:flex;align-items:baseline}.coin-title strong{color:#0f172a;font-size:16px}.collection-number{color:#64748b;font-size:14px;font-weight:600}.coin-line{display:flex;flex-wrap:wrap;color:#475569;font-size:14px;line-height:1.45}.coin-line span+span{margin-left:.35em}.coin-line span+span::before{content:'·';margin-right:.35em;color:#94a3b8}.video-icon{width:16px;height:16px;margin-left:8px;color:#64748b;flex:0 0 auto}.actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.actions button,.actions .button{display:inline-flex;min-height:36px;align-items:center;justify-content:center;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#334155;font:inherit;font-size:14px;text-decoration:none;cursor:pointer}.actions button:hover,.actions .button:hover{border-color:#94a3b8;background:#f8fafc}@media(max-width:900px){.coin-row{grid-template-columns:144px minmax(0,1fr)}.image-pair{grid-row:span 2}.coin-image{height:72px}.actions{grid-column:2;justify-content:flex-start}}@media(max-width:600px){.coin-row{grid-template-columns:1fr}.image-pair{grid-row:auto}.coin-image{width:100%;height:120px}.actions{grid-column:auto}}
+.coin-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}.selection-toggle{display:flex;align-items:center;justify-content:center}.coin-row{display:grid;grid-template-columns:28px 176px minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px;border:1px solid #dbe3ee;border-radius:10px;background:#fff}.image-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}.coin-image{display:grid;width:auto;height:88px;min-width:0;place-items:center;background:#fff;overflow:hidden}.coin-image img{display:block;width:100%;height:100%;object-fit:contain}.coin-image span{color:#94a3b8;font-size:12px;text-align:center}.coin-info{display:grid;gap:4px;min-width:0}.coin-title{display:flex;align-items:baseline}.coin-title strong{color:#0f172a;font-size:16px}.collection-number{color:#64748b;font-size:14px;font-weight:600}.coin-line{display:flex;flex-wrap:wrap;color:#475569;font-size:14px;line-height:1.45}.coin-line span+span{margin-left:.35em}.coin-line span+span::before{content:'·';margin-right:.35em;color:#94a3b8}.video-icon{width:16px;height:16px;margin-left:8px;color:#64748b;flex:0 0 auto}.actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.actions button,.actions .button{display:inline-flex;min-height:36px;align-items:center;justify-content:center;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#334155;font:inherit;font-size:14px;text-decoration:none;cursor:pointer}.actions button:hover,.actions .button:hover{border-color:#94a3b8;background:#f8fafc}@media(max-width:900px){.coin-row{grid-template-columns:144px minmax(0,1fr)}.image-pair{grid-row:span 2}.coin-image{height:72px}.actions{grid-column:2;justify-content:flex-start}}@media(max-width:600px){.coin-row{grid-template-columns:1fr}.image-pair{grid-row:auto}.coin-image{width:100%;height:120px}.actions{grid-column:auto}}
 </style>
