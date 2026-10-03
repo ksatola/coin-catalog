@@ -175,11 +175,11 @@ async function loadCoins(): Promise<void> {
     appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
-    const savedCatalogScrollY = typeof history.state?.catalogScrollY === 'number'
-      ? history.state.catalogScrollY
+    const savedScrollY = typeof history.state?.scroll?.top === 'number'
+      ? history.state.scroll.top
       : null
-    if (savedCatalogScrollY !== null) {
-      window.scrollTo(0, savedCatalogScrollY)
+    if (savedScrollY !== null) {
+      window.scrollTo(0, savedScrollY)
     } else if (hasMountedCatalog) {
       window.scrollTo(0, scrollY)
     }
@@ -294,7 +294,6 @@ onUnmounted(() => {
   observer?.disconnect()
   if (searchTimer !== undefined) clearTimeout(searchTimer)
 
-  history.replaceState({ ...history.state, catalogScrollY: window.scrollY }, '')
 })
 </script>
 
