@@ -38,6 +38,7 @@ async function uploadAsset(files: File[]): Promise<void> {
     const asset = await response.json() as StoryAsset
     assets.value = [...assets.value, asset]
     altText.value = ''
+    emit('select', asset)
   } catch {
     error.value = 'Nie udało się wgrać assetu.'
   } finally {
