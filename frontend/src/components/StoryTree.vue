@@ -113,9 +113,6 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
     <li v-for="node in nodes" :key="node.id" class="tree-item">
       <div
         class="node-row"
-        draggable="true"
-        @dragstart="startDrag($event, node)"
-        @dragend="finishDrag"
         :class="{
           'drop-target-before': dropTarget?.id === node.id && dropTarget.position === 'before',
           'drop-target-inside': dropTarget?.id === node.id && dropTarget.position === 'inside',
@@ -135,6 +132,15 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
           {{ expanded.has(node.id) ? '▾' : '▸' }}
         </button>
         <span v-else class="expand-placeholder" aria-hidden="true"></span>
+        <span
+          class="drag-handle"
+          draggable="true"
+          role="button"
+          tabindex="0"
+          aria-label="Przeciągnij stronę"
+          @dragstart="startDrag($event, node)"
+          @dragend="finishDrag"
+        >⋮⋮</span>
 
         <button
           class="node-link"
@@ -255,11 +261,23 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   background: #f1f5f9;
 }
 
-.node-row[draggable="true"] {
+.drag-handle {
+  flex: 0 0 18px;
+  width: 18px;
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 30px;
+  text-align: center;
   cursor: grab;
+  user-select: none;
+  touch-action: none;
 }
 
-.node-row[draggable="true"]:active {
+.drag-handle:hover {
+  color: #475569;
+}
+
+.drag-handle:active {
   cursor: grabbing;
 }
 
