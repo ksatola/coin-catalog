@@ -419,24 +419,24 @@ a nie połączenie obu źródeł.
 
 Istniejący widok `Monety` pozostaje bez zmian wizualnych i funkcjonalnych.
 
-Zakres przekazywany do pickera Opowieści jest definiowany przez istniejące:
+Picker Opowieści korzysta z istniejącego współdzielonego stanu filtrów katalogu dla zakresu `coins`. Ten sam stan jest używany przez widok `Monety` oraz przez picker w trybie:
+
+```
+Aktualne wyniki z widoku Monety
+```
+
+Zakres obejmuje istniejące kryteria katalogu, w szczególności:
 
 - wyszukiwanie,
 - filtry,
 - sortowanie,
-- inne istniejące kryteria katalogu.
+- pozostałe pola istniejącego stanu filtrów.
 
-Nie należy dodawać checkboxów, przycisków ani osobnego trybu zaznaczania monet w widoku `Monety`.
+Picker nie przejmuje listy wcześniej pobranych monet. Po przełączeniu na tryb „Aktualne wyniki z widoku Monety” ponownie wykonuje zapytanie do istniejącego endpointu pobierania monet, budując je z aktualnego współdzielonego stanu filtrów.
 
-Do przekazania aktualnego zakresu pomiędzy widokiem `Monety` i pickerem Opowieści można wykorzystać frontendowy composable, np.:
+Nie należy dodawać checkboxów, przycisków ani osobnego mechanizmu zaznaczania monet w widoku `Monety`.
 
-```
-useStoryCoinCatalogScope()
-```
-
-z tymczasowo przechowywanym zapytaniem filtrującym.
-
-Stan jest tylko in-memory — bez zapisu w bazie, localStorage i bez umieszczania listy ID w URL.
+Stan filtrów pozostaje frontendowym stanem in-memory. Nie jest zapisywany w bazie danych, localStorage ani jako lista ID monet w URL.
 
 ---
 
