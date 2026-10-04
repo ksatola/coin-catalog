@@ -188,6 +188,16 @@ Standalone Windows/macOS packaging is the current Phase 9 work. Production deplo
 - Dodano izolowane testy Playwright wykorzystujące `page.route()` bez zapisu do runtime DB.
 - Weryfikacja lokalna pozostaje po stronie projektu; checkout repozytorium nie jest dostępny w tym środowisku.
 
+
+### 2026-10-04 — Opowieść — hierarchiczne drzewo stron
+
+- Ulepszono lewy panel Opowieści, aby wizualnie pokazywał relacje parent-child przez wcięcia, linie gałęzi oraz chevrony rozwijania/zwijania.
+- Drzewo jest domyślnie rozwinięte, a wejście bezpośrednio na zagnieżdżoną stronę rozwija jej przodków.
+- Dodano izolowany test Playwright dla wielopoziomowego drzewa oraz operacji zwijania/rozwijania.
+- Test wykorzystuje istniejący mechanizm izolacji mockStoryApi() oparty na page.route() i nie zapisuje do runtime DB.
+- Weryfikacja testu nie została jeszcze wykonana w tym środowisku: checkout repozytorium nie jest dostępny lokalnie, a dla brancha nie ma uruchomionego workflow GitHub Actions.
+
+
 ## Current Next Step
 
 Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is established and implementation is at the early-start stage.
