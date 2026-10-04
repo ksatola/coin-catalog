@@ -339,14 +339,26 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
         .sort((a, b) => a.sort_order - b.sort_order)
 
       if (body.target_id !== undefined) {
-        const target = siblings.find((item) => item.id === body.target_id)
+        const target = pages.find((item) => item.id === body.target_id)
         if (!target || !body.position) {
           await route.fulfill({ status: 409, body: '' })
           return
         }
-        siblings.splice(siblings.indexOf(storyPage), 1)
-        const targetIndex = siblings.indexOf(target)
-        siblings.splice(body.position === 'before' ? targetIndex : targetIndex + 1, 0, storyPage)
+
+        const destinationParentId = body.position === 'inside' ? target.id : target.parent_id
+        const destinationSiblings = pages
+          .filter((item) => item.parent_id === destinationParentId && item.id !== storyPage.id)
+          .sort((a, b) => a.sort_order - b.sort_order)
+
+        if (body.position === 'inside') {
+          destinationSiblings.push(storyPage)
+        } else {
+          const targetIndex = destinationSiblings.findIndex((item) => item.id === target.id)
+          destinationSiblings.splice(body.position === 'before' ? targetIndex : targetIndex + 1, 0, storyPage)
+        }
+
+        storyPage.parent_id = destinationParentId
+        destinationSiblings.forEach((item, index) => { item.sort_order = index })
       } else {
         const index = siblings.findIndex((item) => item.id === storyPage.id)
         const targetIndex = body.direction === 'up' ? index - 1 : index + 1
@@ -468,6 +480,23 @@ test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ 
 
   await page.getByRole('button', { name: 'Rozwiń Monety królewskie' }).click()
   await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toBeVisible()
+})
+
+test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({ title: 'Korzeń', slug: 'korzen', path: 'korzen' }),
+    storyPage({ id: 2, parent_id: 1, title: 'Przenoszona', slug: 'przenoszona', sort_order: 0, path: 'korzen/przenoszona' }),
+    storyPage({ id: 3, parent_id: 1, title: 'Nowy rodzic', slug: 'nowy-rodzic', sort_order: 1, path: 'korzen/nowy-rodzic' }),
+  ])
+
+  await page.goto('/opowiesc/korzen')
+
+  const source = page.getByRole('button', { name: 'Przenoszona' })
+  const target = page.getByRole('button', { name: 'Nowy rodzic' })
+  await source.dragTo(target, { targetPosition: { x: 10, y: 15 } })
+
+  const targetRow = page.locator('.node-row').filter({ has: target })
+  await expect(targetRow.locator('xpath=..').locator('.tree.nested .node-link')).toContainText('Przenoszona')
 })
 
 test('Opowieść pozwala przeciągnąć stronę przed lub za rodzeństwo', async ({ page }) => {
