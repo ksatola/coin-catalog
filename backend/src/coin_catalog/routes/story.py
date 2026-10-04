@@ -323,7 +323,7 @@ def reorder_story_page(
     )
 
     if reorder_data.target_id is not None:
-        if reorder_data.position not in {"before", "after"}:
+        if reorder_data.position not in {"before", "inside", "after"}:
             raise HTTPException(status_code=400, detail="Invalid target position")
         if reorder_data.target_id == page.id:
             return response(page, session)
@@ -340,7 +340,7 @@ def reorder_story_page(
             session=session,
         )
 
-        destination_parent_id = target.parent_id
+        destination_parent_id = target.id if reorder_data.position == "inside" else target.parent_id
         siblings = list(
             session.scalars(
                 select(StoryPage)
@@ -351,8 +351,11 @@ def reorder_story_page(
         if page in siblings:
             siblings.remove(page)
 
-        target_index = siblings.index(target)
-        insert_at = target_index if reorder_data.position == "before" else target_index + 1
+        if reorder_data.position == "inside":
+            insert_at = len(siblings)
+        else:
+            target_index = siblings.index(target)
+            insert_at = target_index if reorder_data.position == "before" else target_index + 1
         siblings.insert(insert_at, page)
 
         now = datetime.now(UTC)
