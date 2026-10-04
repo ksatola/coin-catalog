@@ -47,6 +47,17 @@ async function moveTo(id:number, parentId:number): Promise<void> {
     return
   }
   await reload()
+}async function reorderTo(id:number, targetId:number, position:'before'|'after'): Promise<void> {
+  const response = await fetch('/api/story/pages/' + id + '/reorder', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ target_id: targetId, position }),
+  })
+  if (!response.ok) {
+    error.value = 'Nie udało się zmienić kolejności.'
+    return
+  }
+  await reload()
 }
 function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
   for (const node of nodes) {
@@ -83,7 +94,7 @@ onMounted(() => void reload())
   <section class="story-layout">
     <aside class="sidebar">
       <div class="sidebar-header"><h1>Opowieść</h1><RouterLink to="/opowiesc/edytuj/nowa">+ Nowa strona</RouterLink></div>
-      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move="move" @move-to="moveTo" @delete="remove" />
+      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move-to="moveTo" @reorder-to="reorderTo" @delete="remove" />
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>
