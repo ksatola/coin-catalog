@@ -43,7 +43,11 @@ async function reorderTo(id:number, targetId:number, position:'before'|'inside'|
       : 'Nie udało się zmienić kolejności.'
     return
   }
-  await reload()
+  try {
+    await loadTree()
+  } catch {
+    error.value = 'Nie udało się odświeżyć drzewa Opowieści.'
+  }
 }
 function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
   for (const node of nodes) {
@@ -55,7 +59,7 @@ function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
 }
 async function remove(id:number): Promise<void> {
   const node = findNode(tree.value, id)
-  if (!node || !window.confirm(`Usunąć stronę „${node.title}”?`)) return
+  if (!node || !window.confirm(`Usunąć stronę „${node.title}”? `)) return
 
   const response = await fetch('/api/story/pages/' + id, { method:'DELETE' })
   if (!response.ok) {
