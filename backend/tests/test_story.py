@@ -210,7 +210,7 @@ def test_story_page_move_preserves_descendants(client: TestClient) -> None:
 
 def test_story_page_reorder(client: TestClient) -> None:
     first = create_page(client, "First")
-    second = create_page(client, "Second")
+    create_page(client, "Second")
     third = create_page(client, "Third")
 
     assert client.post(
