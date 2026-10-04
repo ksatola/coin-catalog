@@ -14,7 +14,10 @@ defineProps<{
   item: StoryTreeItem
   depth: number
   expanded: boolean
-  setExpanded: (value: boolean) => void
+}>()
+
+const emit = defineEmits<{
+  'set-expanded': [value: boolean]
 }>()
 </script>
 
@@ -27,7 +30,7 @@ defineProps<{
         type="button"
         :aria-label="expanded ? 'Zwiń ' + item.title : 'Rozwiń ' + item.title"
         :aria-expanded="expanded"
-        @click.stop="setExpanded(!expanded)"
+        @click.stop="emit('set-expanded', !expanded)"
       >
         {{ expanded ? '▾' : '▸' }}
       </button>
