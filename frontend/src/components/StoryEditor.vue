@@ -39,10 +39,30 @@ async function insertCoin(id: number): Promise<void> {
   if (embeddedCoins.value.some((item) => item.id === id)) return
 
   try {
-    const response = await fetch(`/api/coins/${id}`, { cache: 'no-store' })
-    if (!response.ok) return
-    const coin = await response.json() as Coin
-    embeddedCoins.value = [...embeddedCoins.value, { id, coin, deleted: coin.is_deleted }]
+    const [coinResponse, imagesResponse] = await Promise.all([
+      fetch(`/api/coins/${id}`, { cache: 'no-store' }),
+      fetch(`/api/coins/${id}/images`, { cache: 'no-store' }),
+    ])
+    if (!coinResponse.ok) return
+
+    const coin = await coinResponse.json() as Coin
+    const images = imagesResponse.ok
+      ? await imagesResponse.json() as Array<{ id: number; kind: 'avers' | 'rewers' | 'additional'; revision: number }>
+      : []
+
+    embeddedCoins.value = [
+      ...embeddedCoins.value,
+      {
+        id,
+        coin: {
+          ...coin,
+          images: images
+            .filter((image) => image.kind === 'avers' || image.kind === 'rewers')
+            .map(({ id: imageId, kind, revision }) => ({ id: imageId, kind, revision })),
+        },
+        deleted: coin.is_deleted,
+      },
+    ]
   } catch {
     // Renderer shows a neutral placeholder until coin data becomes available.
   }
