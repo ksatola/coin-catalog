@@ -69,9 +69,9 @@ function handlePointerMove(event: PointerEvent): void {
   }
 
   const nodeId = Number(row.dataset.nodeId)
-  const node = findNode(props.nodes, nodeId)
-  if (!node || dragged.value.id === node.id || node.path.startsWith(dragged.value.path + '/')) {
-    dropTarget.value = node ? { id: node.id, position: 'inside' } : null
+  const nodePath = row.dataset.nodePath ?? ''
+  if (!nodePath || dragged.value.id === nodeId || nodePath.startsWith(dragged.value.path + '/')) {
+    dropTarget.value = nodePath ? { id: nodeId, position: 'inside' } : null
     return
   }
 
@@ -89,11 +89,11 @@ function finishPointerDrag(event: PointerEvent): void {
   const element = document.elementFromPoint(event.clientX, event.clientY)
   const row = element?.closest<HTMLElement>('.node-row[data-node-id]')
   const nodeId = row ? Number(row.dataset.nodeId) : null
-  const node = nodeId === null ? null : findNode(props.nodes, nodeId)
+  const nodePath = row?.dataset.nodePath ?? ''
 
-  if (payload && target && node && target.id === node.id) {
-    if (payload.id !== node.id && !node.path.startsWith(payload.path + '/')) {
-      emit('reorderTo', payload.id, node.id, target.position)
+  if (payload && target && nodeId !== null && target.id === nodeId) {
+    if (payload.id !== nodeId && !nodePath.startsWith(payload.path + '/')) {
+      emit('reorderTo', payload.id, nodeId, target.position)
     }
   }
 
@@ -104,14 +104,6 @@ function finishPointerDrag(event: PointerEvent): void {
   window.removeEventListener('pointermove', handlePointerMove)
 }
 
-function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
-  for (const node of nodes) {
-    if (node.id === id) return node
-    const child = findNode(node.children, id)
-    if (child) return child
-  }
-  return null
-}
 
 watch(() => props.nodes, resetExpanded, { immediate: true })
 watch(() => props.activePath, expandActivePath, { immediate: true })
@@ -123,6 +115,7 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
       <div
         class="node-row"
         :data-node-id="node.id"
+        :data-node-path="node.path"
         :class="{
           'drop-target-before': dropTarget?.id === node.id && dropTarget.position === 'before',
           'drop-target-inside': dropTarget?.id === node.id && dropTarget.position === 'inside',
