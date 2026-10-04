@@ -27,15 +27,12 @@ const props = withDefaults(
     scale?: Scale
     pixelsPerMm?: number
     detailQuery?: string
-    selectedIds?: number[]
   }>(),
   {
     scale: 100,
     pixelsPerMm: 96 / 25.4,
   },
 )
-
-const emit = defineEmits<{ toggleSelection: [id: number] }>()
 
 const UNKNOWN_COIN_SIZE = 96
 
@@ -153,7 +150,6 @@ onMounted(() => void loadDictionaries())
       :to="detailPath(coin.id)"
       :aria-label="`Moneta #${coin.id}`"
     >
-      <label class="selection-toggle" @click.stop><input type="checkbox" :checked="props.selectedIds?.includes(coin.id)" :aria-label="'Wybierz monetę #' + coin.id" @change="emit('toggleSelection', coin.id)" /></label>
       <div class="coin-tooltip" role="tooltip">
         <div v-for="(line, index) in tooltipLines(coin)" :key="`${coin.id}-tooltip-${index}`">
           {{ line }}
@@ -200,7 +196,7 @@ onMounted(() => void loadDictionaries())
   width: 100%;
 }
 
-.selection-toggle{position:absolute;z-index:2;top:8px;left:8px;padding:4px;border-radius:6px;background:#fff}.coin-size-tile {
+.coin-size-tile {
   position: relative;
   display: flex;
   align-items: center;
