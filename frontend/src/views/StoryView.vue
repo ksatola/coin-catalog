@@ -29,20 +29,7 @@ async function reload(): Promise<void> {
   error.value=''
   try { await Promise.all([loadTree(), loadPage()]) } catch { error.value='Nie udało się wczytać Opowieści.' }
 }
-async function moveTo(id:number, parentId:number): Promise<void> {
-  const response = await fetch('/api/story/pages/' + id + '/move', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ parent_id: parentId }),
-  })
-  if (!response.ok) {
-    error.value = response.status === 409
-      ? 'Nie można przenieść strony w to miejsce.'
-      : 'Nie udało się przenieść strony.'
-    return
-  }
-  await reload()
-}async function reorderTo(id:number, targetId:number, position:'before'|'inside'|'after'): Promise<void> {
+async function reorderTo(id:number, targetId:number, position:'before'|'inside'|'after'): Promise<void> {
   const response = await fetch('/api/story/pages/' + id + '/reorder', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -93,7 +80,7 @@ onMounted(() => void reload())
   <section class="story-layout">
     <aside class="sidebar">
       <div class="sidebar-header"><h1>Opowieść</h1><RouterLink to="/opowiesc/edytuj/nowa">+ Nowa strona</RouterLink></div>
-      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move-to="moveTo" @reorder-to="reorderTo" @delete="remove" />
+      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @reorder-to="reorderTo" @delete="remove" />
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>
