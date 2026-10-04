@@ -298,6 +298,27 @@ def test_story_page_reorder_to_target(client: TestClient) -> None:
     ]
 
 
+def test_story_page_reorder_can_change_parent(client: TestClient) -> None:
+    root = create_page(client, "Root")
+    source = create_page(client, "Source", root["id"])
+    target = create_page(client, "Target", root["id"])
+    child = create_page(client, "Child", target["id"])
+
+    moved_before = client.post(
+        "/story/pages/" + str(source["id"]) + "/reorder",
+        json={"target_id": child["id"], "position": "before"},
+    )
+    assert moved_before.status_code == 200
+    assert moved_before.json()["parent_id"] == target["id"]
+
+    moved_inside = client.post(
+        "/story/pages/" + str(source["id"]) + "/reorder",
+        json={"target_id": root["id"], "position": "inside"},
+    )
+    assert moved_inside.status_code == 200
+    assert moved_inside.json()["parent_id"] == root["id"]
+
+
 def test_story_page_path_lookup(client: TestClient) -> None:
     root = create_page(client, "Monety polskie")
     create_page(client, "Jan Kazimierz", root["id"])
