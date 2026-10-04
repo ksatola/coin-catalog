@@ -368,10 +368,6 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
         }
       }
 
-      const reorderedSiblings = pages
-        .filter((item) => item.parent_id === storyPage.parent_id)
-        .sort((a, b) => a.sort_order - b.sort_order)
-      reorderedSiblings.forEach((item, index) => { item.sort_order = index })
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
