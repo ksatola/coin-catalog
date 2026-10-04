@@ -581,7 +581,9 @@ test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async
 
   await source.dragTo(target)
 
-  await expect(target.locator('xpath=..').getByRole('button', { name: 'Przenoszona', exact: true })).toBeVisible()
+  const movedRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona', exact: true }) })
+  await expect(movedRow).toBeVisible()
+  await expect.poll(async () => movedRow.locator('xpath=..').evaluate((element) => parseFloat(getComputedStyle(element).paddingLeft))).toBe(52)
 })
 
 test('Opowieść renders Markdown and real coin embeds without executing raw HTML', async ({ page }) => {
