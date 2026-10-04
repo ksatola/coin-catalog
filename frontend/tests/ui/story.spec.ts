@@ -95,7 +95,38 @@ function buildTree(pages: StoryPage[]): StoryPageTree[] {
   return childrenOf(null)
 }
 
+async function mockStoryDependencies(page: Page): Promise<void> {
+  await page.route('**/api/**', async (route) => {
+    await route.abort()
+  })
+
+  await page.route('**/api/dictionaries/*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    })
+  })
+
+  await page.route('**/api/categories', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    })
+  })
+
+  await page.route('**/api/collections', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    })
+  })
+}
+
 async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise<void> {
+  await mockStoryDependencies(page)
   const pages = initialPages.map((item) => ({ ...item }))
   let nextId = pages.reduce((max, item) => Math.max(max, item.id), 0) + 1
 
