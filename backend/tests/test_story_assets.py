@@ -35,10 +35,18 @@ def client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient]:
         engine.dispose()
 
 
-def jpeg_bytes(size: tuple[int, int] = (1200, 600)) -> bytes:
+def image_bytes(image_format: str, size: tuple[int, int] = (1200, 600)) -> bytes:
     buffer = BytesIO()
-    Image.new("RGB", size, "white").save(buffer, format="JPEG")
+    Image.new("RGB", size, "white").save(buffer, format=image_format)
     return buffer.getvalue()
+
+
+def jpeg_bytes(size: tuple[int, int] = (1200, 600)) -> bytes:
+    return image_bytes("JPEG", size)
+
+
+def png_bytes(size: tuple[int, int] = (1200, 600)) -> bytes:
+    return image_bytes("PNG", size)
 
 
 def test_upload_asset_persists_metadata_and_files(client: TestClient) -> None:
@@ -57,8 +65,23 @@ def test_upload_asset_persists_metadata_and_files(client: TestClient) -> None:
     assert (story_assets.THUMBNAILS_DIR / "1.jpg").is_file()
 
 
-def test_upload_rejects_non_jpeg(client: TestClient) -> None:
-    response = client.post("/story/assets", files={"upload": ("not.png", b"not-an-image", "image/png")})
+def test_upload_png_persists_metadata_and_files(client: TestClient) -> None:
+    response = client.post("/story/assets", files={"upload": ("oryginal.png", png_bytes(), "image/png")})
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["id"] == 1
+    assert payload["filename"] == "1.png"
+    assert payload["original_filename"] == "oryginal.png"
+    assert payload["mime_type"] == "image/png"
+    assert payload["file_size_bytes"] > 0
+    assert payload["width"] == 1200
+    assert payload["height"] == 600
+    assert (story_assets.ASSETS_DIR / "1.png").is_file()
+    assert (story_assets.THUMBNAILS_DIR / "1.jpg").is_file()
+
+
+def test_upload_rejects_non_image(client: TestClient) -> None:
+    response = client.post("/story/assets", files={"upload": ("not.gif", b"not-an-image", "image/gif")})
     assert response.status_code == 400
 
 
