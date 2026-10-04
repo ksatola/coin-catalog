@@ -329,15 +329,34 @@ def reorder_story_page(
             return response(page, session)
 
         target = session.get(StoryPage, reorder_data.target_id)
-        if target is None or target.parent_id != page.parent_id:
-            raise HTTPException(status_code=409, detail="Target is not a sibling")
+        if target is None:
+            raise HTTPException(status_code=404, detail="Target story page not found")
 
-        siblings.remove(page)
+        validate_parent_move(
+            page,
+            target.parent_id,
+            title=page.title,
+            slug=page.slug,
+            session=session,
+        )
+
+        destination_parent_id = target.parent_id
+        siblings = list(
+            session.scalars(
+                select(StoryPage)
+                .where(StoryPage.parent_id == destination_parent_id)
+                .order_by(StoryPage.sort_order, StoryPage.id)
+            ).all()
+        )
+        if page in siblings:
+            siblings.remove(page)
+
         target_index = siblings.index(target)
         insert_at = target_index if reorder_data.position == "before" else target_index + 1
         siblings.insert(insert_at, page)
 
         now = datetime.now(UTC)
+        page.parent_id = destination_parent_id
         for index, sibling in enumerate(siblings):
             sibling.sort_order = index
             sibling.updated_at = now
