@@ -1,4 +1,4 @@
-from __future__ import annotations
+from __future__
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -295,7 +295,7 @@ class Coin(Base):
     collection: Mapped[Collection] = relationship(back_populates="coins")
     country: Mapped[Country] = relationship(back_populates="coins")
     issuer: Mapped[Issuer | None] = relationship(back_populates="coins")
-    denomination: Mapped[Denomination] = relationship(back_populates="denomination")
+    denomination: Mapped[Denomination] = relationship(back_populates="coins")
     from_era: Mapped[Era | None] = relationship(
         back_populates="from_coins",
         foreign_keys=[from_era_id],
@@ -306,7 +306,7 @@ class Coin(Base):
     )
     mint: Mapped[Mint | None] = relationship(back_populates="coins")
     material: Mapped[Material | None] = relationship(back_populates="coins")
-    state: Mapped[State | None] = relationship(back_populates="state")
+    state: Mapped[State | None] = relationship(back_populates="coins")
     acquisition_method: Mapped[AcquisitionMethod | None] = relationship(
         back_populates="coins"
     )
