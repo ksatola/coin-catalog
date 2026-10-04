@@ -290,7 +290,17 @@ def move_story_page(
         slug=page.slug,
         session=session,
     )
+    sibling_max = session.scalar(
+        select(StoryPage.sort_order)
+        .where(
+            StoryPage.parent_id == move_data.parent_id,
+            StoryPage.id != page.id,
+        )
+        .order_by(StoryPage.sort_order.desc())
+        .limit(1)
+    )
     page.parent_id = move_data.parent_id
+    page.sort_order = (sibling_max + 1) if sibling_max is not None else 0
     page.updated_at = datetime.now(UTC)
     session.commit()
     session.refresh(page)
