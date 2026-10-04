@@ -10,15 +10,15 @@ export type StoryTreeItem = StoryPageTree & {
   activePath?: string
 }
 
-defineProps<{
+const props = defineProps<{
   item: StoryTreeItem
   depth: number
   expanded: boolean
 }>()
 
-const emit = defineEmits<{
-  'set-expanded': [value: boolean]
-}>()
+function toggleExpanded(): void {
+  props.item.expanded = !props.expanded
+}
 </script>
 
 <template>
@@ -30,7 +30,7 @@ const emit = defineEmits<{
         type="button"
         :aria-label="expanded ? 'Zwiń ' + item.title : 'Rozwiń ' + item.title"
         :aria-expanded="expanded"
-        @click.stop="emit('set-expanded', !expanded)"
+        @click.stop="toggleExpanded"
       >
         {{ expanded ? '▾' : '▸' }}
       </button>
