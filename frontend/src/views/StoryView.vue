@@ -29,6 +29,9 @@ async function reload(): Promise<void> {
   error.value=''
   try { await Promise.all([loadTree(), loadPage()]) } catch { error.value='Nie udało się wczytać Opowieści.' }
 }
+function updateTree(nextTree: StoryPageTree[]): void {
+  tree.value = nextTree
+}
 async function reorderTo(id:number, targetId:number, position:'before'|'inside'|'after'): Promise<void> {
   const response = await fetch('/api/story/pages/' + id + '/reorder', {
     method:'POST',
@@ -86,7 +89,7 @@ onMounted(() => void reload())
   <section class="story-layout">
     <aside class="sidebar">
       <div class="sidebar-header"><h1>Opowieść</h1><RouterLink to="/opowiesc/edytuj/nowa">+ Nowa strona</RouterLink></div>
-      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @reorder-to="reorderTo" @delete="remove" />
+      <StoryTree :nodes="tree" :active-path="page?.path" @update:nodes="updateTree" @select="select" @edit="edit" @reorder-to="reorderTo" @delete="remove" />
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>
