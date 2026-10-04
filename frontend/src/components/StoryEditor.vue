@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import StoryRenderer from './StoryRenderer.vue'
 import StoryCoinPicker from './StoryCoinPicker.vue'
-import type { StoryPage, StoryPageTree } from '../types'
+import type { Coin, StoryEmbeddedCoin, StoryPage, StoryPageTree } from '../types'
 
 const props = defineProps<{ page: StoryPage | null; tree: StoryPageTree[] }>()
 const emit = defineEmits<{ save: [payload: { title: string; parent_id: number | null; content: string }] }>()
@@ -13,6 +13,7 @@ const content = ref('')
 const mobileTab = ref<'markdown' | 'preview'>('markdown')
 const showCoinPicker = ref(false)
 const contentInput = ref<HTMLTextAreaElement | null>(null)
+const embeddedCoins = ref<StoryEmbeddedCoin[]>([])
 
 const parentOptions = computed(() => {
   const options: Array<{ id:number; label:string }> = []
@@ -28,18 +29,30 @@ const parentOptions = computed(() => {
   return options
 })
 
-function insertCoin(id: number): void {
+async function insertCoin(id: number): Promise<void> {
   const token = '{{ coin:' + id + ' }}'
   const start = contentInput.value?.selectionStart ?? content.value.length
   const end = contentInput.value?.selectionEnd ?? start
   content.value = content.value.slice(0, start) + token + content.value.slice(end)
   showCoinPicker.value = false
+
+  if (embeddedCoins.value.some((item) => item.id === id)) return
+
+  try {
+    const response = await fetch(`/api/coins/${id}`, { cache: 'no-store' })
+    if (!response.ok) return
+    const coin = await response.json() as Coin
+    embeddedCoins.value = [...embeddedCoins.value, { id, coin, deleted: coin.is_deleted }]
+  } catch {
+    // Renderer shows a neutral placeholder until coin data becomes available.
+  }
 }
 
 watch(() => props.page, (page) => {
   title.value = page?.title ?? ''
   parentId.value = page?.parent_id ?? null
   content.value = page?.content ?? ''
+  embeddedCoins.value = [...(page?.embedded_coins ?? [])]
 }, { immediate:true })
 </script>
 
@@ -60,7 +73,7 @@ watch(() => props.page, (page) => {
       </section>
       <section class="preview-pane" :class="{ 'mobile-hidden': mobileTab !== 'preview' }">
         <h2>Podgląd</h2>
-        <StoryRenderer :content="content" :embedded-coins="page?.embedded_coins ?? []" />
+        <StoryRenderer :content="content" :embedded-coins="embeddedCoins" />
       </section>
     </div>
 
