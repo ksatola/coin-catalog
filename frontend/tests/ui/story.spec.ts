@@ -329,16 +329,34 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
     }
 
     if (parts[1] === 'reorder' && method === 'POST') {
-      const body = route.request().postDataJSON() as { direction: 'up' | 'down' }
+      const body = route.request().postDataJSON() as {
+        direction?: 'up' | 'down'
+        target_id?: number
+        position?: 'before' | 'after'
+      }
       const siblings = pages
         .filter((item) => item.parent_id === storyPage.parent_id)
         .sort((a, b) => a.sort_order - b.sort_order)
-      const index = siblings.findIndex((item) => item.id === storyPage.id)
-      const targetIndex = body.direction === 'up' ? index - 1 : index + 1
-      if (targetIndex >= 0 && targetIndex < siblings.length) {
-        const other = siblings[targetIndex]
-        ;[storyPage.sort_order, other.sort_order] = [other.sort_order, storyPage.sort_order]
+
+      if (body.target_id !== undefined) {
+        const target = siblings.find((item) => item.id === body.target_id)
+        if (!target || !body.position) {
+          await route.fulfill({ status: 409, body: '' })
+          return
+        }
+        siblings.splice(siblings.indexOf(storyPage), 1)
+        const targetIndex = siblings.indexOf(target)
+        siblings.splice(body.position === 'before' ? targetIndex : targetIndex + 1, 0, storyPage)
+      } else {
+        const index = siblings.findIndex((item) => item.id === storyPage.id)
+        const targetIndex = body.direction === 'up' ? index - 1 : index + 1
+        if (targetIndex >= 0 && targetIndex < siblings.length) {
+          const other = siblings[targetIndex]
+          ;[storyPage.sort_order, other.sort_order] = [other.sort_order, storyPage.sort_order]
+        }
       }
+
+      siblings.forEach((item, index) => { item.sort_order = index })
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -450,6 +468,25 @@ test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ 
 
   await page.getByRole('button', { name: 'Rozwiń Monety królewskie' }).click()
   await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toBeVisible()
+})
+
+test('Opowieść pozwala przeciągnąć stronę przed lub za rodzeństwo', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({ title: 'Korzeń', slug: 'korzen', path: 'korzen' }),
+    storyPage({ id: 2, parent_id: 1, title: 'Pierwsza', slug: 'pierwsza', sort_order: 0, path: 'korzen/pierwsza' }),
+    storyPage({ id: 3, parent_id: 1, title: 'Druga', slug: 'druga', sort_order: 1, path: 'korzen/druga' }),
+    storyPage({ id: 4, parent_id: 1, title: 'Trzecia', slug: 'trzecia', sort_order: 2, path: 'korzen/trzecia' }),
+  ])
+
+  await page.goto('/opowiesc/korzen')
+
+  const source = page.getByRole('button', { name: 'Trzecia' })
+  const target = page.getByRole('button', { name: 'Pierwsza' })
+  await source.dragTo(target, { targetPosition: { x: 10, y: 1 } })
+
+  const rows = page.locator('.tree > .tree-item')
+  await expect(rows.nth(1).getByRole('button', { name: 'Trzecia' })).toBeVisible()
+  await expect(rows.nth(2).getByRole('button', { name: 'Druga' })).toBeVisible()
 })
 
 test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async ({ page }) => {
