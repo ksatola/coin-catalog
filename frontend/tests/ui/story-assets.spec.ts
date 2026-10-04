@@ -75,6 +75,19 @@ async function mockStory(page: Page, content = ''): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(response) })
   })
   await page.route('**/api/story/assets', async (route) => {
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataBuffer()
+      const requestText = body ? body.toString('latin1') : ''
+      const uploadedAsset = requestText.includes('mapa.png')
+        ? { ...asset, original_filename: 'mapa.png', filename: '17.png', mime_type: 'image/png' }
+        : asset
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify(uploadedAsset),
+      })
+      return
+    }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([asset]) })
   })
   await page.route('**/api/story/assets/17/file', async (route) => {
@@ -104,4 +117,45 @@ test('StoryRenderer renderuje osadzony asset obrazu', async ({ page }) => {
   await page.goto('/opowiesc/asset-test')
   await expect(page.locator('.story-renderer .story-asset img')).toHaveAttribute('src', '/api/story/assets/17/file')
   await expect(page.locator('.story-renderer .story-asset img')).toHaveAttribute('alt', 'Mapa Polski')
+})
+
+
+async function dropFile(page: Page, filename: string, mimeType: string): Promise<void> {
+  await page.locator('.asset-picker .image-drop-zone').evaluate((element, data) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File(['test-image'], data.filename, { type: data.mimeType }))
+    element.dispatchEvent(new DragEvent('drop', {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer: transfer,
+    }))
+  }, { filename, mimeType })
+}
+
+test('Wstaw obraz przyjmuje JPG przez drag & drop i wstawia referencję', async ({ page }) => {
+  await mockStory(page)
+  await page.goto('/opowiesc/edytuj/nowa')
+  const textarea = page.getByLabel('Treść Markdown')
+  await textarea.fill('Przed ')
+  await textarea.evaluate((element) => (element as HTMLTextAreaElement).setSelectionRange(7, 7))
+  await page.getByRole('button', { name: 'Wstaw obraz' }).click()
+  await expect(page.getByRole('dialog', { name: 'Wybierz asset' })).toBeVisible()
+
+  await dropFile(page, 'mapa.jpg', 'image/jpeg')
+
+  await expect(textarea).toHaveValue('Przed {{ image:17 }}')
+})
+
+test('Wstaw obraz przyjmuje PNG przez drag & drop i wstawia referencję', async ({ page }) => {
+  await mockStory(page)
+  await page.goto('/opowiesc/edytuj/nowa')
+  const textarea = page.getByLabel('Treść Markdown')
+  await textarea.fill('Przed ')
+  await textarea.evaluate((element) => (element as HTMLTextAreaElement).setSelectionRange(7, 7))
+  await page.getByRole('button', { name: 'Wstaw obraz' }).click()
+  await expect(page.getByRole('dialog', { name: 'Wybierz asset' })).toBeVisible()
+
+  await dropFile(page, 'mapa.png', 'image/png')
+
+  await expect(textarea).toHaveValue('Przed {{ image:17 }}')
 })
