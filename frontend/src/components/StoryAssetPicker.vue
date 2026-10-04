@@ -65,7 +65,11 @@ void loadAssets()
         Tekst alternatywny
         <input v-model="altText" aria-label="Tekst alternatywny" />
       </label>
-      <CoinImageDropZone title="Dodaj obraz" @files="uploadAsset" />
+      <CoinImageDropZone
+        title="Dodaj obraz"
+        :accepted-mime-types="['image/jpeg', 'image/png']"
+        @files="uploadAsset"
+      />
       <p v-if="uploading">Wgrywanie…</p>
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="loading">Ładowanie…</p>
