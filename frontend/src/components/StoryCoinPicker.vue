@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useStoryCoinSelection } from '../composables/useStoryCoinSelection'
+import { useStoryCoinCatalogScope } from '../composables/useStoryCoinCatalogScope'
 import type { Coin, CoinPageResponse } from '../types'
 
 const emit = defineEmits<{ select: [id: number]; close: [] }>()
-const selection = useStoryCoinSelection()
-const mode = ref<'catalog' | 'selected'>('catalog')
+const catalogScope = useStoryCoinCatalogScope()
+const mode = ref<'catalog' | 'current'>('catalog')
 const search = ref('')
 const coins = ref<Coin[]>([])
 const loading = ref(false)
@@ -14,7 +14,7 @@ let timer: ReturnType<typeof setTimeout> | undefined
 
 async function loadCatalog(): Promise<void> {
   const value = search.value.trim()
-  if (value && value.split(/\s+/).some((token) => token.length < 3)) {
+  if (value && value.split(/s+/).some((token) => token.length < 3)) {
     coins.value = []
     error.value = 'Każdy fragment wyszukiwania musi mieć co najmniej 3 znaki.'
     return
@@ -28,30 +28,48 @@ async function loadCatalog(): Promise<void> {
     if (!response.ok) throw new Error()
     const payload = await response.json() as CoinPageResponse | Coin[]
     coins.value = Array.isArray(payload) ? payload : payload.items
-  } catch { error.value = 'Nie udało się pobrać monet.' }
-  finally { loading.value = false }
-}
-
-async function loadSelected(): Promise<void> {
-  const result: Coin[] = []
-  for (const id of selection.ids.value) {
-    try {
-      const response = await fetch('/api/coins/' + id, { cache: 'no-store' })
-      if (response.ok) result.push(await response.json() as Coin)
-    } catch {}
+  } catch {
+    error.value = 'Nie udało się pobrać monet.'
+  } finally {
+    loading.value = false
   }
-  coins.value = result
 }
 
-function switchMode(next: 'catalog' | 'selected'): void {
+async function loadCurrentCatalog(): Promise<void> {
+  const query = catalogScope.query.value
+  if (query === null) {
+    coins.value = []
+    error.value = 'Brak aktualnego zakresu z widoku Monety. Najpierw otwórz widok Monety i zastosuj wyszukiwanie lub filtry.'
+    return
+  }
+  loading.value = true
+  error.value = ''
+  try {
+    const params = new URLSearchParams(query)
+    params.set('limit', '50')
+    params.delete('cursor')
+    const response = await fetch('/api/coins?' + params.toString(), { cache: 'no-store' })
+    if (!response.ok) throw new Error()
+    const payload = await response.json() as CoinPageResponse | Coin[]
+    coins.value = Array.isArray(payload) ? payload : payload.items
+  } catch {
+    error.value = 'Nie udało się pobrać aktualnego zakresu monet.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function switchMode(next: 'catalog' | 'current'): void {
   mode.value = next
   if (next === 'catalog') void loadCatalog()
-  else void loadSelected()
+  else void loadCurrentCatalog()
 }
+
 watch(search, () => {
   if (timer !== undefined) clearTimeout(timer)
   timer = setTimeout(() => void loadCatalog(), 250)
 })
+
 onMounted(() => void loadCatalog())
 </script>
 
@@ -61,7 +79,7 @@ onMounted(() => void loadCatalog())
       <header class="picker-header"><div><h2 id="story-coin-picker-title">Wstaw monetę</h2><p>Wybierz monetę, aby wstawić referencję do Markdown.</p></div><button type="button" class="close-button" aria-label="Zamknij" @click="emit('close')">×</button></header>
       <div class="mode-tabs" role="tablist" aria-label="Źródło monet">
         <button type="button" :aria-selected="mode === 'catalog'" @click="switchMode('catalog')">Katalog</button>
-        <button type="button" :aria-selected="mode === 'selected'" @click="switchMode('selected')">Wybrane w widoku Monety ({{ selection.ids.value.length }})</button>
+        <button type="button" :aria-selected="mode === 'current'" @click="switchMode('current')">Aktualne wyniki z widoku Monety</button>
       </div>
       <label v-if="mode === 'catalog'" class="search">Szukaj<input v-model="search" type="search" placeholder="np. polska grosz" /></label>
       <p v-if="error" class="error">{{ error }}</p><p v-else-if="loading" class="status">Ładowanie…</p><div v-else-if="coins.length === 0" class="status">Brak monet.</div>

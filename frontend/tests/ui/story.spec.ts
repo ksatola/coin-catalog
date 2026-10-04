@@ -398,25 +398,31 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
   await expect(textarea).toHaveValue('Przed {{ coin:123 }}')
 })
 
-test('picker Opowieści pokazuje monety zaznaczone w widoku Monety', async ({ page }) => {
+test('picker Opowieści korzysta z aktualnego zakresu filtrów widoku Monety', async ({ page }) => {
   await mockStoryApi(page)
+  let lastSearch = ''
+  await page.route('**/api/collections', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
+  })
   await page.route('**/api/coins*', async (route) => {
     const url = new URL(route.request().url())
-    if (url.pathname.endsWith('/12') || url.pathname.endsWith('/27')) {
-      const id = Number(url.pathname.split('/').pop())
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id }) })
-      return
-    }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [{ id: 12 }, { id: 27 }], next_cursor: null, has_more: false }) })
+    lastSearch = url.searchParams.get('search') ?? ''
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: [{ id: 12 }, { id: 27 }], next_cursor: null, has_more: false }),
+    })
   })
+
   await page.goto('/monety')
-  await expect(page.getByRole('checkbox', { name: 'Wybierz monetę #12' })).toBeVisible()
-  await page.getByRole('checkbox', { name: 'Wybierz monetę #12' }).check()
-  await page.getByRole('checkbox', { name: 'Wybierz monetę #27' }).check()
-  await page.getByRole('button', { name: 'Dodaj do Opowieści' }).click()
-  await page.waitForURL('/opowiesc/edytuj/nowa')
+  const search = page.getByLabel('Szukaj monet')
+  await search.fill('polska grosz')
+  await expect.poll(() => lastSearch).toBe('polska grosz')
+  await expect(page.getByRole('checkbox', { name: /Wybierz monetę/ })).toHaveCount(0)
+
+  await page.goto('/opowiesc/edytuj/nowa')
   await page.getByRole('button', { name: 'Wstaw monetę' }).click()
-  await page.getByRole('button', { name: /Wybrane w widoku Monety \(2\)/ }).click()
+  await page.getByRole('button', { name: 'Aktualne wyniki z widoku Monety' }).click()
   await expect(page.getByText('#12')).toBeVisible()
   await expect(page.getByText('#27')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Wstaw' })).toHaveCount(2)

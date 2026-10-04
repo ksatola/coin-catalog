@@ -9,7 +9,7 @@ import CoinList from '../components/CoinList.vue'
 import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
-import { useStoryCoinSelection } from '../composables/useStoryCoinSelection'
+import { useStoryCoinCatalogScope } from '../composables/useStoryCoinCatalogScope'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
@@ -23,7 +23,7 @@ const props = defineProps<{
 
 const router = useRouter()
 const filters = useCoinFilters(props.scope)
-const storySelection = useStoryCoinSelection()
+const storyCatalogScope = useStoryCoinCatalogScope()
 const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
 const errorMessage = ref('')
@@ -175,6 +175,7 @@ async function loadCoins(): Promise<void> {
     nextCursor.value = page.next_cursor
     hasMore.value = page.has_more
     appliedFilterQuery.value = query
+    if (!isArchive) storyCatalogScope.setQuery(query)
     errorMessage.value = ''
     await nextTick()
     const savedScrollY = typeof history.state?.scroll?.top === 'number'
@@ -263,14 +264,6 @@ function openCoinDetails(coin: Coin): void {
   router.push(`/monety/${coin.id}${query ? `?${query}` : ''}`)
 }
 
-function toggleStoryCoin(id: number): void {
-  if (storySelection.has(id)) storySelection.remove(id)
-  else storySelection.add(id)
-}
-
-function addSelectedCoinsToStory(): void {
-  void router.push('/opowiesc/edytuj/nowa')
-}
 
 function resetFilters(): void {
   resetCoinFilters(filters, isArchive ? 'archived' : 'active')
@@ -430,8 +423,6 @@ onUnmounted(() => {
       <div class="results-bar" aria-label="Zakres wyników">
         <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
         <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
-        <span v-if="storySelection.ids.value.length" class="selection-count">Wybrano: {{ storySelection.ids.value.length }}</span>
-        <button v-if="storySelection.ids.value.length && !isArchive" type="button" class="story-selection-button" @click="addSelectedCoinsToStory">Dodaj do Opowieści</button>
       </div>
 
       <CoinImageGrid
@@ -439,8 +430,6 @@ onUnmounted(() => {
         :coins="coins"
         :columns="galleryColumns"
         :detail-query="appliedFilterQuery"
-        :selected-ids="storySelection.ids.value"
-        @toggle-selection="toggleStoryCoin"
       />
       <CoinSizeGallery
         v-else-if="viewMode === 'size-gallery'"
@@ -448,10 +437,8 @@ onUnmounted(() => {
         :scale="sizeGalleryScale"
         :pixels-per-mm="sizeGalleryPixelsPerMm"
         :detail-query="appliedFilterQuery"
-        :selected-ids="storySelection.ids.value"
-        @toggle-selection="toggleStoryCoin"
       />
-      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" :selected-ids="storySelection.ids.value" @toggle-selection="toggleStoryCoin" />
+      <CoinGrid v-else-if="viewMode === 'grid'" :coins="coins" :detail-query="appliedFilterQuery" />
 
       <CoinList
         v-else
@@ -459,8 +446,6 @@ onUnmounted(() => {
         @details="openCoinDetails"
         @archive="archiveCoin"
         @restore="restoreCoin"
-        :selected-ids="storySelection.ids.value"
-        @toggle-selection="toggleStoryCoin"
       />
 
       <div ref="sentinel" class="infinite-scroll-sentinel" aria-hidden="true">

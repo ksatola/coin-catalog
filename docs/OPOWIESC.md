@@ -383,7 +383,7 @@ Nie należy tworzyć osobnego systemu wyszukiwania tylko dla Opowieści.
 
 Należy wykorzystać istniejący mechanizm wyszukiwania, filtrów i pobierania monet.
 
-### Tryb 2 — Wybrane w widoku „Monety”
+### Tryb 2 — Aktualne wyniki z widoku „Monety”
 
 Użytkownik może najpierw przejść do widoku:
 
@@ -391,60 +391,52 @@ Użytkownik może najpierw przejść do widoku:
 Monety
 ```
 
-i użyć istniejącego wyszukiwania oraz filtrów, aby ograniczyć aktualny zakres wyników.
+i użyć istniejącego wyszukiwania oraz filtrów, aby ustawić aktualny zakres wyników.
 
-Następnie może zaznaczyć monety w gridzie/listingu.
-
-Po zaznaczeniu monet może przejść do dodawania monet do Opowieści.
+Nie musi zaznaczać pojedynczych monet ani zmieniać interfejsu widoku `Monety`.
 
 W pickerze Opowieści powinien wtedy być dostępny tryb:
 
 ```
-Wybrane w widoku Monety
+Aktualne wyniki z widoku Monety
 ```
 
-i w tym trybie użytkownik widzi tylko wcześniej zaznaczone monety.
+W tym trybie picker ponownie pobiera monety z wykorzystaniem aktualnie zastosowanego zakresu wyszukiwania/filtrowania z widoku `Monety`.
 
 To jest wybór:
 
 ```
 Katalog
 ALBO
-Wybrane w widoku Monety
+Aktualne wyniki z widoku Monety
 ```
 
 a nie połączenie obu źródeł.
 
 ---
 
-## 13. Wybór monet w widoku „Monety”
+## 13. Aktualny zakres z widoku „Monety”
 
-W istniejącym widoku `Monety` należy umożliwić zaznaczanie wielu monet w aktualnie wyświetlanym zakresie.
+Istniejący widok `Monety` pozostaje bez zmian wizualnych i funkcjonalnych.
 
-Zakres jest definiowany przez istniejące:
+Zakres przekazywany do pickera Opowieści jest definiowany przez istniejące:
 
 - wyszukiwanie,
 - filtry,
 - sortowanie,
 - inne istniejące kryteria katalogu.
 
-Nie należy tworzyć osobnego mechanizmu wyszukiwania tylko po to, aby wybrać monety do Opowieści.
+Nie należy dodawać checkboxów, przycisków ani osobnego trybu zaznaczania monet w widoku `Monety`.
 
-Do przekazania tymczasowego wyboru pomiędzy widokiem `Monety` i pickerem Opowieści można wykorzystać frontendowy composable, np.:
+Do przekazania aktualnego zakresu pomiędzy widokiem `Monety` i pickerem Opowieści można wykorzystać frontendowy composable, np.:
 
 ```
-useStoryCoinSelection()
+useStoryCoinCatalogScope()
 ```
 
-z przechowywanym:
+z tymczasowo przechowywanym zapytaniem filtrującym.
 
-```ts
-Set<number>
-```
-
-Nie ma potrzeby zapisywania tego tymczasowego wyboru w bazie.
-
-Nie ma również potrzeby umieszczania listy wszystkich wybranych ID w URL.
+Stan jest tylko in-memory — bez zapisu w bazie, localStorage i bez umieszczania listy ID w URL.
 
 ---
 
@@ -866,9 +858,8 @@ Implementacja:
 - wykorzystanie istniejących komponentów coin/image,
 - picker monet — **M3.2 zaimplementowane**,
 - tryb `Katalog` — **M3.2 zaimplementowane**,
-- tryb `Wybrane w widoku Monety` — **M3.2 zaimplementowane**,
-- zaznaczanie wielu monet w widoku `Monety` — **M3.2 zaimplementowane**,
-- tymczasowe przechowywanie zaznaczonych ID przez frontendowy composable — **M3.2 zaimplementowane**,
+- tryb `Aktualne wyniki z widoku Monety` — **M3.2 zaimplementowane**,
+- przekazywanie aktualnego zakresu wyszukiwania/filtrowania z widoku `Monety` do pickera — **M3.2 zaimplementowane**,
 - wstawianie referencji `{{ coin:id }}` do Markdown — **M3.2 zaimplementowane**,
 - obsługa usuniętych monet — **M3.1 zaimplementowane**,
 - odpowiednie testy dla każdej nowej funkcjonalności.
@@ -930,9 +921,9 @@ Opowieść
 11. Do Markdown używamy `markdown-it`.
 12. Raw HTML może być wyłączony.
 13. Puste linie realizujemy standardowym Markdown, bez potrzeby używania `<br>`.
-14. Picker monet ma dwa wzajemnie wykluczające się tryby: `Katalog` albo `Wybrane w widoku Monety`.
-15. W widoku `Monety` użytkownik może zaznaczyć wiele monet z aktualnego zakresu wyszukiwania/filtrowania.
-16. Tymczasowy wybór monet nie musi być przechowywany w bazie.
+14. Picker monet ma dwa wzajemnie wykluczające się tryby: `Katalog` albo `Aktualne wyniki z widoku Monety`.
+15. Widok `Monety` pozostaje bez checkboxów i dodatkowych akcji związanych z Opowieścią; picker korzysta z jego aktualnego zakresu wyszukiwania/filtrowania.
+16. Aktualny zakres jest przekazywany tymczasowo po stronie frontendu i nie jest przechowywany w bazie.
 17. Assety są osobnymi zasobami.
 18. Metadata assetów są w SQLite, pliki na filesystemie.
 19. Assety są referencjonowane przez ID, np. `{{ image:17 }}`.
