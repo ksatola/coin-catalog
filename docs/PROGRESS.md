@@ -188,6 +188,16 @@ Standalone Windows/macOS packaging is the current Phase 9 work. Production deplo
 - Dodano izolowane testy Playwright wykorzystujące `page.route()` bez zapisu do runtime DB.
 - Weryfikacja lokalna pozostaje po stronie projektu; checkout repozytorium nie jest dostępny w tym środowisku.
 
+
+### 2026-10-04 — Opowieść — hierarchiczne drzewo stron
+
+- Ulepszono lewy panel Opowieści, aby wizualnie pokazywał relacje parent-child przez wcięcia, linie gałęzi oraz chevrony rozwijania/zwijania.
+- Drzewo jest domyślnie rozwinięte, a wejście bezpośrednio na zagnieżdżoną stronę rozwija jej przodków.
+- Dodano izolowany test Playwright dla wielopoziomowego drzewa oraz operacji zwijania/rozwijania.
+- Test wykorzystuje istniejący mechanizm izolacji mockStoryApi() oparty na page.route() i nie zapisuje do runtime DB.
+- Weryfikacja testu nie została jeszcze wykonana w tym środowisku: checkout repozytorium nie jest dostępny lokalnie, a dla brancha nie ma uruchomionego workflow GitHub Actions.
+
+
 ## Current Next Step
 
 Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is established and implementation is at the early-start stage.
@@ -278,4 +288,45 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - User-reported verification: frontend type-check completed successfully after the tooltip typing fix.
 - The tooltip is implemented as custom HTML/CSS rather than a native `title` attribute.
 
+## 2026-10-04 — przenoszenie stron Opowieści między poziomami
 
+- Rozszerzono drzewo Opowieści o przeciąganie strony na inną stronę, co zmienia jej rodzica i pozwala przenosić ją między poziomami hierarchii.
+- Endpoint przenoszenia ustawia przeniesioną stronę na końcu rodzeństwa nowego rodzica, zachowując istniejące podstrony.
+- Dodano izolowany test Playwright sprawdzający przeniesienie strony drag&drop oraz izolowany test backendu sprawdzający kolejność po zmianie rodzica.
+- Testy nie zostały uruchomione lokalnie w tym środowisku.
+
+## 2026-10-04 — drag&drop kolejności stron Opowieści
+
+- Usunięto strzałki ↑/↓ z drzewa Opowieści; kolejność rodzeństwa można zmieniać przez drag&drop.
+- Upuszczenie w górnej części węzła umieszcza stronę przed nim, a w dolnej części — za nim.
+- Upuszczenie na stronę z innego poziomu nadal zmienia rodzica.
+- Dodano izolowane testy backendu i Playwright dla zmiany kolejności przez pozycję docelową.
+- Testy nie zostały uruchomione lokalnie w tym środowisku.
+
+## 2026-10-04 — poprawa drag&drop drzewa Opowieści
+
+- Zmieniono obsługę dropów na trzy jednoznaczne strefy: **przed**, **wewnątrz parenta** i **za** elementem.
+- Usunięto zależność od `dragleave`, która powodowała znikanie celu podczas przechodzenia kursorem nad zawartością wiersza.
+- Backend obsługuje teraz zmianę rodzica również przy dropie przed/za elementem z innego poziomu oraz drop bezpośrednio na parenta.
+- Dodano izolowane testy backendowe i Playwright dla przenoszenia między poziomami oraz kolejności rodzeństwa.
+- Testy nie zostały uruchomione lokalnie w tym środowisku.
+
+
+## 2026-10-04 — przebudowa drag&drop drzewa Opowieści
+
+- Przebudowano mechanizm drag&drop od podstaw, zachowując obecny interfejs z uchwytem `⋮⋮` oraz kursorem/oznaczeniem `not-allowed` dla niedozwolonych celów.
+- Stan aktywnego przeciągania jest współdzielony przez całe rekurencyjne drzewo przez Vue provide/inject, więc cel może znajdować się na dowolnym poziomie.
+- Przeciąganie korzysta z pointer events i pointer capture zamiast HTML5 `dragTo()`.
+- Cel drop jest wyznaczany z całego drzewa, a przestrzeń między wierszami wskazuje linię `before` lub `after`.
+- Zmieniono testy Playwright tak, aby wykonywały rzeczywisty gest myszy przez `page.mouse`; nadal używany jest `page.route()` i brak zapisu do runtime DB.
+- Weryfikacja wykonania testów pozostaje nieprzeprowadzona w tym środowisku; zmiany zostały zapisane na branchu `feature/story-tree-ui`.
+
+
+## 2026-10-04 — Story tree: gotowa biblioteka DnD
+
+- Zastąpiono własny mechanizm pointer events biblioteką `vue-tree-dnd@0.2.4`.
+- Biblioteka obsługuje zagnieżdżone drzewo, poprawne miejsca dropu, zmianę poziomu i collapse/expand.
+- Renderer elementu zachowuje obecny wygląd drzewa oraz akcje wyboru, edycji i usuwania.
+- Mutacja biblioteki `LEFT/RIGHT/FIRST_CHILD/LAST_CHILD` jest mapowana na istniejące API `before/after/inside`.
+- Testy Playwright pozostają izolowane przez `page.route()` i nie korzystają z runtime DB.
+- Weryfikacja uruchomienia testów w tym środowisku: nie wykonano; stan testów należy oznaczać jako niezweryfikowany do czasu uruchomienia.

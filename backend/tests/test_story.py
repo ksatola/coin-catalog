@@ -232,6 +232,15 @@ def test_story_page_move_preserves_descendants(client: TestClient) -> None:
     assert grandchild_data["parent_id"] == child["id"]
     assert grandchild_data["path"] == "target/child/grandchild"
 
+    sibling = create_page(client, "Existing child", target["id"])
+    moved_tree = client.get("/story/pages/tree").json()
+    target_node = next(item for item in moved_tree if item["id"] == target["id"])
+    assert [item["title"] for item in target_node["children"]] == [
+        "Child",
+        "Existing child",
+    ]
+    assert moved.json()["sort_order"] < sibling["sort_order"]
+
 
 def test_story_page_reorder(client: TestClient) -> None:
     first = create_page(client, "First")
@@ -261,6 +270,53 @@ def test_story_page_reorder(client: TestClient) -> None:
         "Third",
         "Second",
     ]
+
+
+def test_story_page_reorder_to_target(client: TestClient) -> None:
+    first = create_page(client, "First")
+    second = create_page(client, "Second")
+    third = create_page(client, "Third")
+
+    moved = client.post(
+        "/story/pages/" + str(third["id"]) + "/reorder",
+        json={"target_id": first["id"], "position": "before"},
+    )
+    assert moved.status_code == 200
+
+    tree = client.get("/story/pages/tree").json()
+    assert [item["title"] for item in tree] == ["Third", "First", "Second"]
+
+    moved_after = client.post(
+        "/story/pages/" + str(third["id"]) + "/reorder",
+        json={"target_id": second["id"], "position": "after"},
+    )
+    assert moved_after.status_code == 200
+    assert [item["title"] for item in client.get("/story/pages/tree").json()] == [
+        "First",
+        "Second",
+        "Third",
+    ]
+
+
+def test_story_page_reorder_can_change_parent(client: TestClient) -> None:
+    root = create_page(client, "Root")
+    source = create_page(client, "Source", root["id"])
+    target = create_page(client, "Target", root["id"])
+    child = create_page(client, "Child", target["id"])
+
+    moved_before = client.post(
+        "/story/pages/" + str(source["id"]) + "/reorder",
+        json={"target_id": child["id"], "position": "before"},
+    )
+    assert moved_before.status_code == 200
+    assert moved_before.json()["parent_id"] == target["id"]
+
+    moved_inside = client.post(
+        "/story/pages/" + str(source["id"]) + "/reorder",
+        json={"target_id": root["id"], "position": "inside"},
+    )
+    assert moved_inside.status_code == 200
+    assert moved_inside.json()["parent_id"] == root["id"]
 
 
 def test_story_page_path_lookup(client: TestClient) -> None:

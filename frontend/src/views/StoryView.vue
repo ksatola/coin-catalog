@@ -29,10 +29,30 @@ async function reload(): Promise<void> {
   error.value=''
   try { await Promise.all([loadTree(), loadPage()]) } catch { error.value='Nie udało się wczytać Opowieści.' }
 }
-async function move(id:number, direction:'up'|'down'): Promise<void> {
-  const response = await fetch('/api/story/pages/' + id + '/reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ direction }) })
-  if (!response.ok) { error.value='Nie udało się zmienić kolejności.'; return }
-  await reload()
+function updateTree(nextTree: StoryPageTree[]): void {
+  tree.value = nextTree
+}
+async function reorderTo(id:number, targetId:number, position:'before'|'inside'|'after'): Promise<void> {
+  const response = await fetch('/api/story/pages/' + id + '/reorder', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: position === 'inside'
+      ? JSON.stringify({ target_id: targetId, position: 'inside' })
+      : JSON.stringify({ target_id: targetId, position }),
+  })
+  if (!response.ok) {
+    error.value = response.status === 409
+      ? 'Nie można przenieść strony w to miejsce.'
+      : 'Nie udało się zmienić kolejności.'
+    try {
+      await loadTree()
+    } catch {
+      error.value = 'Nie udało się odświeżyć drzewa Opowieści.'
+    }
+    return
+  }
+
+  await loadTree()
 }
 function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
   for (const node of nodes) {
@@ -44,7 +64,7 @@ function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
 }
 async function remove(id:number): Promise<void> {
   const node = findNode(tree.value, id)
-  if (!node || !window.confirm(`Usunąć stronę „${node.title}”?`)) return
+  if (!node || !window.confirm(`Usunąć stronę „${node.title}”? `)) return
 
   const response = await fetch('/api/story/pages/' + id, { method:'DELETE' })
   if (!response.ok) {
@@ -69,7 +89,7 @@ onMounted(() => void reload())
   <section class="story-layout">
     <aside class="sidebar">
       <div class="sidebar-header"><h1>Opowieść</h1><RouterLink to="/opowiesc/edytuj/nowa">+ Nowa strona</RouterLink></div>
-      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move="move" @delete="remove" />
+      <StoryTree :nodes="tree" :active-path="page?.path" @update:nodes="updateTree" @select="select" @edit="edit" @reorder-to="reorderTo" @delete="remove" />
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>

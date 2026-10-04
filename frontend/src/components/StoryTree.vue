@@ -1,43 +1,163 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+import VueTreeDnd from 'vue-tree-dnd'
+import StoryTreeItem, { type StoryTreeItem as DndStoryTreeItem } from './StoryTreeItem.vue'
 import type { StoryPageTree } from '../types'
-defineProps<{ nodes: StoryPageTree[]; activePath?: string }>()
+
+type DropPosition = 'before' | 'inside' | 'after'
+type MoveMutation = {
+  id: number | string
+  targetId: number | string
+  position: 'LEFT' | 'RIGHT' | 'FIRST_CHILD' | 'LAST_CHILD'
+}
+
+const props = defineProps<{
+  nodes: StoryPageTree[]
+  activePath?: string
+}>()
+
 const emit = defineEmits<{
   select: [path: string]
   edit: [id: number]
-  move: [id: number, direction: 'up' | 'down']
+  reorderTo: [id: number, targetId: number, position: DropPosition]
   delete: [id: number]
 }>()
+
+const tree = ref<DndStoryTreeItem[]>([])
+
+function buildTree(nodes: StoryPageTree[]): DndStoryTreeItem[] {
+  return nodes.map((node) => ({
+    ...node,
+    expanded: true,
+    activePath: props.activePath,
+    onSelect: (path: string) => emit('select', path),
+    onEdit: (id: number) => emit('edit', id),
+    onDelete: (id: number) => emit('delete', id),
+    children: buildTree(node.children),
+  }))
+}
+
+function syncTree(): void {
+  tree.value = buildTree(props.nodes)
+}
+
+type NodeLocation = {
+  node: DndStoryTreeItem
+  siblings: DndStoryTreeItem[]
+  parent: DndStoryTreeItem | null
+}
+
+function findLocation(
+  nodes: DndStoryTreeItem[],
+  id: number,
+  parent: DndStoryTreeItem | null = null,
+): NodeLocation | null {
+  for (const node of nodes) {
+    if (node.id === id) return { node, siblings: nodes, parent }
+    const child = findLocation(node.children, id, node)
+    if (child) return child
+  }
+  return null
+}
+
+function applyMove(move: MoveMutation): void {
+  const id = Number(move.id)
+  const targetId = Number(move.targetId)
+  const source = findLocation(tree.value, id)
+  const target = findLocation(tree.value, targetId)
+
+  if (!source || !target || source.node.id === target.node.id) return
+
+  const sourceIndex = source.siblings.indexOf(source.node)
+  if (sourceIndex < 0) return
+  source.siblings.splice(sourceIndex, 1)
+
+  if (move.position === 'FIRST_CHILD') {
+    target.node.children.unshift(source.node)
+    source.node.parent_id = target.node.id
+    return
+  }
+
+  if (move.position === 'LAST_CHILD') {
+    target.node.children.push(source.node)
+    source.node.parent_id = target.node.id
+    return
+  }
+
+  if (move.position === 'LEFT' || move.position === 'RIGHT') {
+    const targetIndex = target.siblings.indexOf(target.node)
+    if (targetIndex < 0) return
+
+    const insertIndex = move.position === 'LEFT' ? targetIndex : targetIndex + 1
+    source.node.parent_id = target.parent?.id ?? null
+    target.siblings.splice(insertIndex, 0, source.node)
+    return
+  }
+
+  target.node.children.push(source.node)
+  source.node.parent_id = target.node.id
+}
+
+function handleMove(move: MoveMutation): void {
+  applyMove(move)
+
+  const id = Number(move.id)
+  const targetId = Number(move.targetId)
+
+  if (move.position === 'FIRST_CHILD') {
+    const target = findLocation(tree.value, targetId)
+    const firstChild = target?.node.children[0]
+    if (firstChild && firstChild.id === id) {
+      const actualTarget = target.node.children[1]
+      if (actualTarget) {
+        emit('reorderTo', id, actualTarget.id, 'before')
+      } else {
+        emit('reorderTo', id, targetId, 'inside')
+      }
+      return
+    }
+  }
+
+  const position: DropPosition =
+    move.position === 'LEFT'
+      ? 'before'
+      : move.position === 'RIGHT'
+        ? 'after'
+        : 'inside'
+
+  emit('reorderTo', id, targetId, position)
+}
+
+watch(
+  () => [props.nodes, props.activePath],
+  syncTree,
+  { immediate: true, deep: true },
+)
 </script>
+
 <template>
-  <ul class="tree">
-    <li v-for="node in nodes" :key="node.id">
-      <div class="node-row">
-        <button class="node-link" type="button" :class="{ active: activePath === node.path }" @click="emit('select', node.path)">{{ node.title }}</button>
-        <span class="node-actions">
-          <button type="button" aria-label="Przenieś wyżej" @click="emit('move', node.id, 'up')">↑</button>
-          <button type="button" aria-label="Przenieś niżej" @click="emit('move', node.id, 'down')">↓</button>
-          <button type="button" aria-label="Edytuj stronę" @click="emit('edit', node.id)">Edytuj</button>
-          <button type="button" aria-label="Usuń stronę" @click="emit('delete', node.id)">Usuń</button>
-        </span>
-      </div>
-      <StoryTree
-        v-if="node.children.length"
-        :nodes="node.children"
-        :active-path="activePath"
-        @select="emit('select', $event)"
-        @edit="emit('edit', $event)"
-        @move="(id, direction) => emit('move', id, direction)"
-        @delete="emit('delete', $event)"
-      />
-    </li>
-  </ul>
+  <div class="story-tree">
+    <VueTreeDnd
+      v-model="tree"
+      :component="StoryTreeItem"
+      :locked="false"
+      @move="handleMove"
+    />
+  </div>
 </template>
+
 <style scoped>
-.tree { list-style:none; margin:0; padding:0; }
-.tree .tree { padding-left:18px; }
-.node-row { display:flex; align-items:center; gap:6px; padding:3px 0; }
-.node-link { flex:1; border:0; background:transparent; padding:7px 8px; border-radius:6px; color:#334155; text-align:left; }
-.node-link.active { background:#e2e8f0; color:#0f172a; font-weight:700; }
-.node-actions { display:flex; gap:2px; }
-.node-actions button { border:0; background:transparent; color:#64748b; padding:5px; }
+.story-tree {
+  min-width: 0;
+}
+
+.story-tree :deep(a[href="javascript:;"]) {
+  display: block;
+}
+
+.story-tree :deep(a[href="javascript:;"]:focus-visible) {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 </style>

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 type StoryEmbeddedCoin = {
   id: number
@@ -329,16 +329,45 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
     }
 
     if (parts[1] === 'reorder' && method === 'POST') {
-      const body = route.request().postDataJSON() as { direction: 'up' | 'down' }
+      const body = route.request().postDataJSON() as {
+        direction?: 'up' | 'down'
+        target_id?: number
+        position?: 'before' | 'inside' | 'after'
+      }
       const siblings = pages
         .filter((item) => item.parent_id === storyPage.parent_id)
         .sort((a, b) => a.sort_order - b.sort_order)
-      const index = siblings.findIndex((item) => item.id === storyPage.id)
-      const targetIndex = body.direction === 'up' ? index - 1 : index + 1
-      if (targetIndex >= 0 && targetIndex < siblings.length) {
-        const other = siblings[targetIndex]
-        ;[storyPage.sort_order, other.sort_order] = [other.sort_order, storyPage.sort_order]
+
+      if (body.target_id !== undefined) {
+        const target = pages.find((item) => item.id === body.target_id)
+        if (!target || !body.position) {
+          await route.fulfill({ status: 409, body: '' })
+          return
+        }
+
+        const destinationParentId = body.position === 'inside' ? target.id : target.parent_id
+        const destinationSiblings = pages
+          .filter((item) => item.parent_id === destinationParentId && item.id !== storyPage.id)
+          .sort((a, b) => a.sort_order - b.sort_order)
+
+        if (body.position === 'inside') {
+          destinationSiblings.push(storyPage)
+        } else {
+          const targetIndex = destinationSiblings.findIndex((item) => item.id === target.id)
+          destinationSiblings.splice(body.position === 'before' ? targetIndex : targetIndex + 1, 0, storyPage)
+        }
+
+        storyPage.parent_id = destinationParentId
+        destinationSiblings.forEach((item, index) => { item.sort_order = index })
+      } else {
+        const index = siblings.findIndex((item) => item.id === storyPage.id)
+        const targetIndex = body.direction === 'up' ? index - 1 : index + 1
+        if (targetIndex >= 0 && targetIndex < siblings.length) {
+          const other = siblings[targetIndex]
+          ;[storyPage.sort_order, other.sort_order] = [other.sort_order, storyPage.sort_order]
+        }
       }
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -361,6 +390,18 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
     }
 
     await route.fallback()
+  })
+}
+
+async function dragInto(source: Locator, target: Locator): Promise<void> {
+  const sourceBox = await source.boundingBox()
+  const targetBox = await target.boundingBox()
+  if (!sourceBox || !targetBox) throw new Error('Could not determine drag coordinates')
+  await source.dragTo(target, {
+    targetPosition: {
+      x: sourceBox.x + sourceBox.width / 2 + 20 - targetBox.x,
+      y: targetBox.height / 2,
+    },
   })
 }
 
@@ -393,6 +434,167 @@ test('Opowieść allows creating and navigating a page', async ({ page }) => {
   await expect(page.getByRole('heading', { name:title })).toBeVisible()
   await expect(page.getByText('Pierwszy akapit.')).toBeVisible()
   await expect(page.getByRole('button', { name:title })).toBeVisible()
+})
+
+test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({
+      title: 'Monety polskie',
+      slug: 'monety-polskie',
+      path: 'monety-polskie',
+    }),
+    storyPage({
+      id: 2,
+      parent_id: 1,
+      title: 'Monety królewskie',
+      slug: 'monety-krolewskie',
+      sort_order: 0,
+      path: 'monety-polskie/monety-krolewskie',
+    }),
+    storyPage({
+      id: 3,
+      parent_id: 2,
+      title: 'Jan Kazimierz',
+      slug: 'jan-kazimierz',
+      sort_order: 0,
+      path: 'monety-polskie/monety-krolewskie/jan-kazimierz',
+    }),
+    storyPage({
+      id: 4,
+      parent_id: 1,
+      title: 'Zabory',
+      slug: 'zabory',
+      sort_order: 1,
+      path: 'monety-polskie/zabory',
+    }),
+  ])
+
+  await page.goto('/opowiesc/monety-polskie/monety-krolewskie/jan-kazimierz')
+
+  await expect(page.getByRole('button', { name: 'Monety polskie', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Monety królewskie', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Jan Kazimierz', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Zabory', exact: true })).toBeVisible()
+
+  await expect(page.getByRole('button', { name: 'Zwiń Monety polskie' })).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByRole('button', { name: 'Zwiń Monety królewskie' })).toHaveAttribute('aria-expanded', 'true')
+
+  await page.getByRole('button', { name: 'Zwiń Monety królewskie' }).click()
+  await expect(page.getByRole('button', { name: 'Rozwiń Monety królewskie' })).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Rozwiń Monety królewskie' }).click()
+  await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toBeVisible()
+})
+
+test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({ title: 'Korzeń', slug: 'korzen', path: 'korzen' }),
+    storyPage({ id: 2, parent_id: 1, title: 'Przenoszona', slug: 'przenoszona', sort_order: 0, path: 'korzen/przenoszona' }),
+    storyPage({ id: 3, parent_id: 1, title: 'Nowy rodzic', slug: 'nowy-rodzic', sort_order: 1, path: 'korzen/nowy-rodzic' }),
+  ])
+
+  await page.goto('/opowiesc/korzen')
+
+  const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona' }) })
+  const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Nowy rodzic' }) })
+  await dragInto(source, target)
+
+  const movedRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona', exact: true }) })
+  await expect(movedRow).toBeVisible()
+  await expect.poll(async () => movedRow.locator('xpath=..').evaluate((element) => parseFloat(getComputedStyle(element).paddingLeft))).toBe(52)
+})
+
+test('Opowieść pokazuje optymistyczne przesunięcie przed odpowiedzią API', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({ title: 'Korzeń', slug: 'korzen', path: 'korzen' }),
+    storyPage({ id: 2, parent_id: 1, title: 'Pierwsza', slug: 'pierwsza', sort_order: 0, path: 'korzen/pierwsza' }),
+    storyPage({ id: 3, parent_id: 1, title: 'Druga', slug: 'druga', sort_order: 1, path: 'korzen/druga' }),
+    storyPage({ id: 4, parent_id: 1, title: 'Trzecia', slug: 'trzecia', sort_order: 2, path: 'korzen/trzecia' }),
+  ])
+
+  let releaseReorder: () => void = () => {}
+  const reorderBlocked = new Promise<void>((resolve) => {
+    releaseReorder = resolve
+  })
+
+  await page.route('**/api/story/pages/4/reorder', async (route) => {
+    await reorderBlocked
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: 4 }),
+    })
+  })
+
+  await page.goto('/opowiesc/korzen')
+
+  const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Trzecia' }) })
+  const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Pierwsza' }) })
+
+  await source.dragTo(target)
+
+  await expect(page.locator('.story-tree .node-title')).toHaveText(['Korzeń', 'Pierwsza', 'Trzecia', 'Druga'])
+
+  releaseReorder()
+})
+
+test('Opowieść pozwala przeciągnąć stronę przed lub za rodzeństwo', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({ title: 'Korzeń', slug: 'korzen', path: 'korzen' }),
+    storyPage({ id: 2, parent_id: 1, title: 'Pierwsza', slug: 'pierwsza', sort_order: 0, path: 'korzen/pierwsza' }),
+    storyPage({ id: 3, parent_id: 1, title: 'Druga', slug: 'druga', sort_order: 1, path: 'korzen/druga' }),
+    storyPage({ id: 4, parent_id: 1, title: 'Trzecia', slug: 'trzecia', sort_order: 2, path: 'korzen/trzecia' }),
+  ])
+
+  await page.goto('/opowiesc/korzen')
+
+  const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Trzecia' }) })
+  const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Pierwsza' }) })
+  await source.dragTo(target)
+
+  await expect(page.locator('.story-tree .node-title')).toHaveText(['Korzeń', 'Pierwsza', 'Trzecia', 'Druga'])
+})
+
+test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({
+      title: 'Korzeń',
+      slug: 'korzen',
+      path: 'korzen',
+    }),
+    storyPage({
+      id: 2,
+      parent_id: 1,
+      title: 'Przenoszona',
+      slug: 'przenoszona',
+      sort_order: 0,
+      path: 'korzen/przenoszona',
+    }),
+    storyPage({
+      id: 3,
+      parent_id: 1,
+      title: 'Nowy rodzic',
+      slug: 'nowy-rodzic',
+      sort_order: 1,
+      path: 'korzen/nowy-rodzic',
+    }),
+  ])
+
+  await page.goto('/opowiesc/korzen/przenoszona')
+
+  const source = page.locator('.node-row').filter({
+    has: page.getByRole('button', { name: 'Przenoszona' }),
+  })
+  const target = page.locator('.node-row').filter({
+    has: page.getByRole('button', { name: 'Nowy rodzic' }),
+  })
+
+  await dragInto(source, target)
+
+  const movedRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona', exact: true }) })
+  await expect(movedRow).toBeVisible()
+  await expect.poll(async () => movedRow.locator('xpath=..').evaluate((element) => parseFloat(getComputedStyle(element).paddingLeft))).toBe(52)
 })
 
 test('Opowieść renders Markdown and real coin embeds without executing raw HTML', async ({ page }) => {
@@ -471,12 +673,12 @@ test('Opowieść nie pozwala usunąć strony posiadającej podstrony', async ({ 
   await page.goto('/opowiesc/strona-nadrzedna')
   await expect(page.getByRole('heading', { name: 'Strona nadrzędna' })).toBeVisible()
 
-  const parentRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Strona nadrzędna' }) })
+  const parentRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Strona nadrzędna', exact: true }) })
   page.once('dialog', (dialog) => dialog.accept())
   await parentRow.getByRole('button', { name: 'Usuń stronę' }).click()
 
   await expect(page.getByText('Nie można usunąć strony, która ma podstrony.')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Strona nadrzędna' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Strona nadrzędna', exact: true })).toBeVisible()
 })
 
 test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ page }) => {

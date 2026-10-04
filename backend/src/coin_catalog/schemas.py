@@ -173,7 +173,9 @@ class StoryPageMoveRequest(BaseModel):
 
 
 class StoryPageReorderRequest(BaseModel):
-    direction: str
+    direction: str | None = None
+    target_id: int | None = None
+    position: str | None = None
 
 
 class StoryEmbeddedCoinResponse(BaseModel):
