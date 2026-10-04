@@ -18,6 +18,7 @@ const emit = defineEmits<{
 const expanded = ref<Set<number>>(new Set())
 const dropTarget = ref<{ id: number; position: 'before' | 'inside' | 'after' } | null>(null)
 const dragged = ref<{ id: number; path: string; parentId: number | null } | null>(null)
+const dragging = ref(false)
 
 function resetExpanded(): void {
   expanded.value = new Set(
@@ -49,59 +50,67 @@ function toggle(node: StoryPageTree): void {
   expanded.value = next
 }
 
-function startDrag(event: DragEvent, node: StoryPageTree): void {
-  if (!event.dataTransfer) return
+function startDrag(node: StoryPageTree): void {
   dragged.value = { id: node.id, path: node.path, parentId: node.parent_id }
-  event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('text/plain', JSON.stringify(dragged.value))
+  dragging.value = true
+  document.body.classList.add('story-tree-dragging')
+  window.addEventListener('pointermove', handlePointerMove)
+  window.addEventListener('pointerup', finishPointerDrag, { once: true })
 }
 
-function dragOver(node: StoryPageTree, event: DragEvent): void {
-  if (!event.dataTransfer || !dragged.value) return
-  if (dragged.value.id === node.id || node.path.startsWith(dragged.value.path + '/')) return
+function handlePointerMove(event: PointerEvent): void {
+  if (!dragged.value) return
 
-  event.preventDefault()
-  event.dataTransfer.dropEffect = 'move'
-
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  const relativeY = event.clientY - rect.top
-  const ratio = relativeY / rect.height
-
-  let position: 'before' | 'inside' | 'after'
-  if (ratio < 0.25) {
-    position = 'before'
-  } else if (ratio > 0.75) {
-    position = 'after'
-  } else {
-    position = 'inside'
+  const element = document.elementFromPoint(event.clientX, event.clientY)
+  const row = element?.closest<HTMLElement>('.node-row[data-node-id]')
+  if (!row) {
+    dropTarget.value = null
+    return
   }
+
+  const nodeId = Number(row.dataset.nodeId)
+  const node = findNode(props.nodes, nodeId)
+  if (!node || dragged.value.id === node.id || node.path.startsWith(dragged.value.path + '/')) {
+    dropTarget.value = node ? { id: node.id, position: 'inside' } : null
+    return
+  }
+
+  const rect = row.getBoundingClientRect()
+  const ratio = (event.clientY - rect.top) / rect.height
+  const position: 'before' | 'inside' | 'after' =
+    ratio < 0.25 ? 'before' : ratio > 0.75 ? 'after' : 'inside'
 
   dropTarget.value = { id: node.id, position }
 }
 
-function finishDrag(): void {
-  dropTarget.value = null
+function finishPointerDrag(event: PointerEvent): void {
+  const payload = dragged.value
+  const target = dropTarget.value
+  const element = document.elementFromPoint(event.clientX, event.clientY)
+  const row = element?.closest<HTMLElement>('.node-row[data-node-id]')
+  const nodeId = row ? Number(row.dataset.nodeId) : null
+  const node = nodeId === null ? null : findNode(props.nodes, nodeId)
+
+  if (payload && target && node && target.id === node.id) {
+    if (payload.id !== node.id && !node.path.startsWith(payload.path + '/')) {
+      emit('reorderTo', payload.id, node.id, target.position)
+    }
+  }
+
+  dragging.value = false
   dragged.value = null
+  dropTarget.value = null
+  document.body.classList.remove('story-tree-dragging')
+  window.removeEventListener('pointermove', handlePointerMove)
 }
 
-function drop(event: DragEvent, node: StoryPageTree): void {
-  event.preventDefault()
-  const target = dropTarget.value
-  const payload = dragged.value
-  dropTarget.value = null
-
-  if (!target || !payload || target.id !== node.id) {
-    dragged.value = null
-    return
+function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
+  for (const node of nodes) {
+    if (node.id === id) return node
+    const child = findNode(node.children, id)
+    if (child) return child
   }
-
-  if (payload.id === node.id || node.path.startsWith(payload.path + '/')) {
-    dragged.value = null
-    return
-  }
-
-  emit('reorderTo', payload.id, node.id, target.position)
-  dragged.value = null
+  return null
 }
 
 watch(() => props.nodes, resetExpanded, { immediate: true })
@@ -113,13 +122,13 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
     <li v-for="node in nodes" :key="node.id" class="tree-item">
       <div
         class="node-row"
+        :data-node-id="node.id"
         :class="{
           'drop-target-before': dropTarget?.id === node.id && dropTarget.position === 'before',
           'drop-target-inside': dropTarget?.id === node.id && dropTarget.position === 'inside',
           'drop-target-after': dropTarget?.id === node.id && dropTarget.position === 'after',
+          'drop-invalid': dragging && dropTarget?.id === node.id && dropTarget.position === 'inside' && (node.id === dragged?.id || node.path.startsWith((dragged?.path ?? '') + '/')),
         }"
-        @dragover="dragOver(node, $event)"
-        @drop="drop($event, node)"
       >
         <button
           v-if="node.children.length"
@@ -134,12 +143,10 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
         <span v-else class="expand-placeholder" aria-hidden="true"></span>
         <span
           class="drag-handle"
-          draggable="true"
           role="button"
           tabindex="0"
           aria-label="Przeciągnij stronę"
-          @dragstart="startDrag($event, node)"
-          @dragend="finishDrag"
+          @pointerdown.prevent="startDrag(node)"
         >⋮⋮</span>
 
         <button
@@ -270,15 +277,29 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   text-align: center;
   cursor: grab;
   user-select: none;
-  touch-action: none;
+  touch-action: none; -webkit-user-drag: none;
 }
 
 .drag-handle:hover {
   color: #475569;
 }
 
-.drag-handle:active {
+.drag-handle:active,
+.story-tree-dragging .drag-handle {
   cursor: grabbing;
+}
+
+.story-tree-dragging {
+  cursor: grabbing;
+}
+
+.node-row.drop-invalid {
+  cursor: not-allowed;
+}
+
+.node-row.drop-invalid .node-link {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .node-row .node-actions,
