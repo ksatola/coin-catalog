@@ -67,6 +67,7 @@ void loadAssets()
       </label>
       <CoinImageDropZone
         title="Dodaj obraz"
+        accepted-types-label="JPG lub PNG"
         :accepted-mime-types="['image/jpeg', 'image/png']"
         @files="uploadAsset"
       />
