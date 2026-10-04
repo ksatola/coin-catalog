@@ -185,4 +185,4 @@ class StoryPageTreeResponse(BaseModel):
     slug: str
     sort_order: int
     path: str
-    children: list["StoryPageTreeResponse"] = Field(default_factory=list)
+    children: list[StoryPageTreeResponse] = Field(default_factory=list)

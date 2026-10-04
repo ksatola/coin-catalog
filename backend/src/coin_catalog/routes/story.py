@@ -43,14 +43,18 @@ def embedded_coin_ids(content: str) -> list[int]:
     return ids
 
 
-def load_embedded_coins(page: StoryPage, session: Session) -> list[StoryEmbeddedCoinResponse]:
+def load_embedded_coins(
+    page: StoryPage, session: Session
+) -> list[StoryEmbeddedCoinResponse]:
     ids = embedded_coin_ids(page.content)
     if not ids:
         return []
 
     coins = session.scalars(
         select(Coin)
-        .options(selectinload(Coin.images.and_(CoinImage.kind.in_(("avers", "rewers")))))
+        .options(
+            selectinload(Coin.images.and_(CoinImage.kind.in_(("avers", "rewers"))))
+        )
         .where(Coin.id.in_(ids))
     ).all()
     coins_by_id = {coin.id: coin for coin in coins}
@@ -59,7 +63,9 @@ def load_embedded_coins(page: StoryPage, session: Session) -> list[StoryEmbedded
     for coin_id in ids:
         coin = coins_by_id.get(coin_id)
         if coin is None or coin.is_deleted:
-            result.append(StoryEmbeddedCoinResponse(id=coin_id, coin=None, deleted=True))
+            result.append(
+                StoryEmbeddedCoinResponse(id=coin_id, coin=None, deleted=True)
+            )
             continue
         result.append(
             StoryEmbeddedCoinResponse(
@@ -114,7 +120,9 @@ def list_story_tree(session: Session = Depends(get_db)) -> list[StoryPageTreeRes
 
 
 @router.get("/path/{slug_path:path}", response_model=StoryPageResponse)
-def get_story_page_by_path(slug_path: str, session: Session = Depends(get_db)) -> StoryPageResponse:
+def get_story_page_by_path(
+    slug_path: str, session: Session = Depends(get_db)
+) -> StoryPageResponse:
     segments = [segment for segment in slug_path.split("/") if segment]
     if not segments:
         raise HTTPException(status_code=404, detail="Story page not found")
@@ -139,7 +147,9 @@ def get_story_page_by_path(slug_path: str, session: Session = Depends(get_db)) -
 
 
 @router.get("/{page_id}", response_model=StoryPageResponse)
-def get_story_page(page_id: int, session: Session = Depends(get_db)) -> StoryPageResponse:
+def get_story_page(
+    page_id: int, session: Session = Depends(get_db)
+) -> StoryPageResponse:
     return response(get_page_or_404(page_id, session), session)
 
 
@@ -148,9 +158,14 @@ def create_story_page(
     page_data: StoryPageCreate,
     session: Session = Depends(get_db),
 ) -> StoryPageResponse:
-    title, slug = normalize_page_fields(page_data.title, page_data.content, page_data.slug)
+    title, slug = normalize_page_fields(
+        page_data.title, page_data.content, page_data.slug
+    )
 
-    if page_data.parent_id is not None and session.get(StoryPage, page_data.parent_id) is None:
+    if (
+        page_data.parent_id is not None
+        and session.get(StoryPage, page_data.parent_id) is None
+    ):
         raise HTTPException(status_code=404, detail="Parent story page not found")
 
     if siblings_conflict(page_data.parent_id, title, slug, session):
@@ -188,7 +203,9 @@ def update_story_page(
     session: Session = Depends(get_db),
 ) -> StoryPageResponse:
     page = get_page_or_404(page_id, session)
-    title, slug = normalize_page_fields(page_data.title, page_data.content, page_data.slug)
+    title, slug = normalize_page_fields(
+        page_data.title, page_data.content, page_data.slug
+    )
 
     validate_parent_move(
         page,
@@ -215,7 +232,9 @@ def delete_story_page(page_id: int, session: Session = Depends(get_db)) -> None:
         select(StoryPage.id).where(StoryPage.parent_id == page.id).limit(1)
     )
     if child_id is not None:
-        raise HTTPException(status_code=409, detail="Story page with children cannot be deleted")
+        raise HTTPException(
+            status_code=409, detail="Story page with children cannot be deleted"
+        )
     session.delete(page)
     session.commit()
 

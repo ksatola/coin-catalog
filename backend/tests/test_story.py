@@ -39,16 +39,27 @@ def client(session: Session) -> Generator[TestClient]:
         app.dependency_overrides.clear()
 
 
-def create_page(client: TestClient, title: str, parent_id: int | None = None, content: str | None = None) -> dict:
+def create_page(
+    client: TestClient,
+    title: str,
+    parent_id: int | None = None,
+    content: str | None = None,
+) -> dict:
     response = client.post(
         "/story/pages",
-        json={"title": title, "parent_id": parent_id, "content": content if content is not None else "# " + title},
+        json={
+            "title": title,
+            "parent_id": parent_id,
+            "content": content if content is not None else "# " + title,
+        },
     )
     assert response.status_code == 201
     return response.json()
 
 
-def create_coin(session: Session, coin_id: int | None = None, deleted: bool = False) -> Coin:
+def create_coin(
+    session: Session, coin_id: int | None = None, deleted: bool = False
+) -> Coin:
     collection = Collection(name=f"Collection {coin_id or 'new'}")
     country = Country(name=f"Country {coin_id or 'new'}")
     denomination = Denomination(name=f"Denomination {coin_id or 'new'}")
@@ -162,7 +173,12 @@ def test_story_page_rejects_sibling_conflicts(client: TestClient) -> None:
 
     duplicate_slug = client.post(
         "/story/pages",
-        json={"title": "Different", "slug": "child", "parent_id": root["id"], "content": ""},
+        json={
+            "title": "Different",
+            "slug": "child",
+            "parent_id": root["id"],
+            "content": "",
+        },
     )
     assert duplicate_slug.status_code == 409
 
@@ -173,21 +189,30 @@ def test_story_page_move_rejects_cycles_and_conflicts(client: TestClient) -> Non
     grandchild = create_page(client, "Grandchild", child["id"])
     target = create_page(client, "Target")
 
-    assert client.post(
-        "/story/pages/" + str(child["id"]) + "/move",
-        json={"parent_id": child["id"]},
-    ).status_code == 409
+    assert (
+        client.post(
+            "/story/pages/" + str(child["id"]) + "/move",
+            json={"parent_id": child["id"]},
+        ).status_code
+        == 409
+    )
 
-    assert client.post(
-        "/story/pages/" + str(root["id"]) + "/move",
-        json={"parent_id": grandchild["id"]},
-    ).status_code == 409
+    assert (
+        client.post(
+            "/story/pages/" + str(root["id"]) + "/move",
+            json={"parent_id": grandchild["id"]},
+        ).status_code
+        == 409
+    )
 
     create_page(client, "Child", target["id"])
-    assert client.post(
-        "/story/pages/" + str(child["id"]) + "/move",
-        json={"parent_id": target["id"]},
-    ).status_code == 409
+    assert (
+        client.post(
+            "/story/pages/" + str(child["id"]) + "/move",
+            json={"parent_id": target["id"]},
+        ).status_code
+        == 409
+    )
 
 
 def test_story_page_move_preserves_descendants(client: TestClient) -> None:
@@ -213,20 +238,28 @@ def test_story_page_reorder(client: TestClient) -> None:
     create_page(client, "Second")
     third = create_page(client, "Third")
 
-    assert client.post(
-        "/story/pages/" + str(third["id"]) + "/reorder",
-        json={"direction": "up"},
-    ).status_code == 200
+    assert (
+        client.post(
+            "/story/pages/" + str(third["id"]) + "/reorder",
+            json={"direction": "up"},
+        ).status_code
+        == 200
+    )
 
     tree = client.get("/story/pages/tree").json()
     assert [item["title"] for item in tree] == ["First", "Third", "Second"]
 
-    assert client.post(
-        "/story/pages/" + str(first["id"]) + "/reorder",
-        json={"direction": "up"},
-    ).status_code == 200
+    assert (
+        client.post(
+            "/story/pages/" + str(first["id"]) + "/reorder",
+            json={"direction": "up"},
+        ).status_code
+        == 200
+    )
     assert [item["title"] for item in client.get("/story/pages/tree").json()] == [
-        "First", "Third", "Second"
+        "First",
+        "Third",
+        "Second",
     ]
 
 
@@ -239,7 +272,9 @@ def test_story_page_path_lookup(client: TestClient) -> None:
     assert response.json()["title"] == "Jan Kazimierz"
 
 
-def test_story_page_rejects_missing_parent_and_non_leaf_delete(client: TestClient) -> None:
+def test_story_page_rejects_missing_parent_and_non_leaf_delete(
+    client: TestClient,
+) -> None:
     missing_parent = client.post(
         "/story/pages",
         json={"title": "Orphan", "parent_id": 999999, "content": ""},

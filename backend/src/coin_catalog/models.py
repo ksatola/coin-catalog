@@ -322,7 +322,6 @@ class Coin(Base):
     )
 
 
-
 class StoryPage(Base):
     __tablename__ = "story_page"
 

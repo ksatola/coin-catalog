@@ -12,7 +12,9 @@ from coin_catalog.models import StoryPage
 
 
 def slugify(title: str) -> str:
-    value = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii")
+    value = (
+        unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii")
+    )
     value = re.sub(r"[^a-zA-Z0-9]+", "-", value).strip("-").lower()
     return value or "strona"
 
@@ -20,7 +22,9 @@ def slugify(title: str) -> str:
 def get_page_or_404(page_id: int, session: Session) -> StoryPage:
     page = session.get(StoryPage, page_id)
     if page is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Story page not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Story page not found"
+        )
     return page
 
 
@@ -52,11 +56,15 @@ def subtree_ids(page_id: int, session: Session) -> set[int]:
 
 def validate_parent_move(page, parent_id, title, slug, session: Session) -> None:
     if parent_id == page.id:
-        raise HTTPException(status_code=409, detail="Story page cannot be its own parent")
+        raise HTTPException(
+            status_code=409, detail="Story page cannot be its own parent"
+        )
     if parent_id is not None and session.get(StoryPage, parent_id) is None:
         raise HTTPException(status_code=404, detail="Parent story page not found")
     if parent_id is not None and parent_id in subtree_ids(page.id, session):
-        raise HTTPException(status_code=409, detail="Story page cannot be moved inside its own subtree")
+        raise HTTPException(
+            status_code=409, detail="Story page cannot be moved inside its own subtree"
+        )
     if siblings_conflict(parent_id, title, slug, session, page.id):
         raise HTTPException(
             status_code=409,
@@ -64,11 +72,15 @@ def validate_parent_move(page, parent_id, title, slug, session: Session) -> None
         )
 
 
-def normalize_page_fields(title: str, content: str, slug: str | None) -> tuple[str, str]:
+def normalize_page_fields(
+    title: str, content: str, slug: str | None
+) -> tuple[str, str]:
     normalized_title = title.strip()
     if not normalized_title:
         raise HTTPException(status_code=400, detail="Title cannot be empty")
-    normalized_slug = slugify(normalized_title) if slug is None or not slug.strip() else slugify(slug)
+    normalized_slug = (
+        slugify(normalized_title) if slug is None or not slug.strip() else slugify(slug)
+    )
     return normalized_title, normalized_slug
 
 
