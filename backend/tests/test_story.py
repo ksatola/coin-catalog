@@ -272,6 +272,32 @@ def test_story_page_reorder(client: TestClient) -> None:
     ]
 
 
+def test_story_page_reorder_to_target(client: TestClient) -> None:
+    first = create_page(client, "First")
+    second = create_page(client, "Second")
+    third = create_page(client, "Third")
+
+    moved = client.post(
+        "/story/pages/" + str(third["id"]) + "/reorder",
+        json={"target_id": first["id"], "position": "before"},
+    )
+    assert moved.status_code == 200
+
+    tree = client.get("/story/pages/tree").json()
+    assert [item["title"] for item in tree] == ["Third", "First", "Second"]
+
+    moved_after = client.post(
+        "/story/pages/" + str(third["id"]) + "/reorder",
+        json={"target_id": second["id"], "position": "after"},
+    )
+    assert moved_after.status_code == 200
+    assert [item["title"] for item in client.get("/story/pages/tree").json()] == [
+        "First",
+        "Second",
+        "Third",
+    ]
+
+
 def test_story_page_path_lookup(client: TestClient) -> None:
     root = create_page(client, "Monety polskie")
     create_page(client, "Jan Kazimierz", root["id"])
