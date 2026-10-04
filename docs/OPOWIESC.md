@@ -521,13 +521,16 @@ Obecny mechanizm obsługuje:
 - czyszczenie obrazu,
 - lokalne preview przez `URL.createObjectURL()`.
 
-Obecna implementacja akceptuje:
+Obecna implementacja powinna akceptować:
 
 ```
 image/jpeg
+image/png
 ```
 
-czyli JPG.
+czyli JPG i PNG.
+
+W formularzu `Monety` dotychczasowe zachowanie pozostaje bez zmian: jego użycie domyślnie akceptuje JPG. W kontekście `Opowieści` wspólny komponent może zostać skonfigurowany do akceptowania również PNG.
 
 Jeżeli wymagania dotyczące typów assetów zostaną w przyszłości rozszerzone, należy rozszerzyć wspólny mechanizm, a nie tworzyć osobną implementację tylko dla Opowieści.
 
