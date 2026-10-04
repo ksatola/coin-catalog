@@ -34,6 +34,20 @@ async function move(id:number, direction:'up'|'down'): Promise<void> {
   if (!response.ok) { error.value='Nie udało się zmienić kolejności.'; return }
   await reload()
 }
+async function moveTo(id:number, parentId:number): Promise<void> {
+  const response = await fetch('/api/story/pages/' + id + '/move', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ parent_id: parentId }),
+  })
+  if (!response.ok) {
+    error.value = response.status === 409
+      ? 'Nie można przenieść strony w to miejsce.'
+      : 'Nie udało się przenieść strony.'
+    return
+  }
+  await reload()
+}
 function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
   for (const node of nodes) {
     if (node.id === id) return node
@@ -69,7 +83,7 @@ onMounted(() => void reload())
   <section class="story-layout">
     <aside class="sidebar">
       <div class="sidebar-header"><h1>Opowieść</h1><RouterLink to="/opowiesc/edytuj/nowa">+ Nowa strona</RouterLink></div>
-      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move="move" @delete="remove" />
+      <StoryTree :nodes="tree" :active-path="page?.path" @select="select" @edit="edit" @move="move" @move-to="moveTo" @delete="remove" />
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>
