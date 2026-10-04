@@ -1,6 +1,20 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { inject, provide, ref, watch } from 'vue'
+import type { InjectionKey, Ref } from 'vue'
 import type { StoryPageTree } from '../types'
+
+type DropPosition = 'before' | 'inside' | 'after'
+type DropTarget = { id: number; position: DropPosition }
+type DraggedPage = { id: number; path: string }
+
+type StoryTreeDnd = {
+  dragged: Ref<DraggedPage | null>
+  dropTarget: Ref<DropTarget | null>
+  dragging: Ref<boolean>
+  setRoot: (element: Element | null) => void
+  start: (node: StoryPageTree, event: PointerEvent) => void
+  stop: (event: PointerEvent) => void
+}
 
 const props = defineProps<{
   nodes: StoryPageTree[]
@@ -11,14 +25,150 @@ const props = defineProps<{
 const emit = defineEmits<{
   select: [path: string]
   edit: [id: number]
-  reorderTo: [id: number, targetId: number, position: 'before' | 'inside' | 'after']
+  reorderTo: [id: number, targetId: number, position: DropPosition]
   delete: [id: number]
 }>()
 
 const expanded = ref<Set<number>>(new Set())
-const dropTarget = ref<{ id: number; position: 'before' | 'inside' | 'after' } | null>(null)
-const dragged = ref<{ id: number; path: string; parentId: number | null } | null>(null)
-const dragging = ref(false)
+const STORY_TREE_DND_KEY = Symbol('story-tree-dnd') as InjectionKey<StoryTreeDnd>
+
+function createDnd(): StoryTreeDnd {
+  const dragged = ref<DraggedPage | null>(null)
+  const dropTarget = ref<DropTarget | null>(null)
+  const dragging = ref(false)
+  const root = ref<HTMLElement | null>(null)
+  let pointerId: number | null = null
+
+  function setRoot(element: Element | null): void {
+    if (element) root.value = element as HTMLElement
+  }
+
+  function clear(): void {
+    dragged.value = null
+    dropTarget.value = null
+    dragging.value = false
+    pointerId = null
+    document.body.classList.remove('story-tree-dragging')
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointercancel', onPointerCancel)
+  }
+
+  function isInvalidTarget(target: HTMLElement): boolean {
+    const targetPath = target.dataset.nodePath ?? ''
+    return (
+      !targetPath ||
+      !dragged.value ||
+      Number(target.dataset.nodeId) === dragged.value.id ||
+      targetPath.startsWith(dragged.value.path + '/')
+    )
+  }
+
+  function findTarget(event: PointerEvent): DropTarget | null {
+    const container = root.value
+    if (!container || !dragged.value) return null
+
+    const rows = Array.from(
+      container.querySelectorAll<HTMLElement>('.node-row[data-node-id]'),
+    )
+    if (!rows.length) return null
+
+    const y = event.clientY
+    const hovered = rows.find((row) => {
+      const rect = row.getBoundingClientRect()
+      return y >= rect.top && y <= rect.bottom
+    })
+
+    if (hovered) {
+      const rect = hovered.getBoundingClientRect()
+      const ratio = (y - rect.top) / rect.height
+      const position: DropPosition =
+        ratio < 0.25 ? 'before' : ratio > 0.75 ? 'after' : 'inside'
+      return { id: Number(hovered.dataset.nodeId), position }
+    }
+
+    let previous: HTMLElement | null = null
+    let next: HTMLElement | null = null
+
+    for (const row of rows) {
+      const rect = row.getBoundingClientRect()
+      if (rect.bottom < y) {
+        previous = row
+        continue
+      }
+      if (rect.top > y) {
+        next = row
+        break
+      }
+    }
+
+    if (next) return { id: Number(next.dataset.nodeId), position: 'before' }
+    if (previous) return { id: Number(previous.dataset.nodeId), position: 'after' }
+    return null
+  }
+
+  function onPointerMove(event: PointerEvent): void {
+    if (!dragged.value || (pointerId !== null && event.pointerId !== pointerId)) return
+    dropTarget.value = findTarget(event)
+  }
+
+  function finish(event: PointerEvent): void {
+    if (!dragged.value || (pointerId !== null && event.pointerId !== pointerId)) {
+      clear()
+      return
+    }
+
+    const target = dropTarget.value
+    const targetRow = target
+      ? root.value?.querySelector<HTMLElement>(
+          `.node-row[data-node-id="${target.id}"]`,
+        )
+      : null
+
+    if (target && targetRow && !isInvalidTarget(targetRow)) {
+      emit('reorderTo', dragged.value.id, target.id, target.position)
+    }
+
+    clear()
+  }
+
+  function onPointerUp(event: PointerEvent): void {
+    finish(event)
+  }
+
+  function onPointerCancel(): void {
+    clear()
+  }
+
+  function start(node: StoryPageTree, event: PointerEvent): void {
+    if (dragging.value) return
+
+    pointerId = event.pointerId
+    dragged.value = { id: node.id, path: node.path }
+    dropTarget.value = null
+    dragging.value = true
+    event.currentTarget instanceof HTMLElement
+      ? event.currentTarget.setPointerCapture?.(event.pointerId)
+      : undefined
+    document.body.classList.add('story-tree-dragging')
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
+  }
+
+  function stop(event: PointerEvent): void {
+    finish(event)
+  }
+
+  return { dragged, dropTarget, dragging, setRoot, start, stop }
+}
+
+const injectedDnd = inject(STORY_TREE_DND_KEY, null)
+const dnd = injectedDnd ?? createDnd()
+
+if (!injectedDnd) {
+  provide(STORY_TREE_DND_KEY, dnd)
+}
 
 function resetExpanded(): void {
   expanded.value = new Set(
@@ -50,77 +200,31 @@ function toggle(node: StoryPageTree): void {
   expanded.value = next
 }
 
-function startDrag(node: StoryPageTree): void {
-  dragged.value = { id: node.id, path: node.path, parentId: node.parent_id }
-  dragging.value = true
-  document.body.classList.add('story-tree-dragging')
-  window.addEventListener('pointermove', handlePointerMove)
-  window.addEventListener('pointerup', finishPointerDrag, { once: true })
+function setTreeRoot(element: Element | null): void {
+  if (!props.nested) dnd.setRoot(element)
 }
-
-function handlePointerMove(event: PointerEvent): void {
-  if (!dragged.value) return
-
-  const element = document.elementFromPoint(event.clientX, event.clientY)
-  const row = element?.closest<HTMLElement>('.node-row[data-node-id]')
-  if (!row) {
-    dropTarget.value = null
-    return
-  }
-
-  const nodeId = Number(row.dataset.nodeId)
-  const nodePath = row.dataset.nodePath ?? ''
-  if (!nodePath || dragged.value.id === nodeId || nodePath.startsWith(dragged.value.path + '/')) {
-    dropTarget.value = nodePath ? { id: nodeId, position: 'inside' } : null
-    return
-  }
-
-  const rect = row.getBoundingClientRect()
-  const ratio = (event.clientY - rect.top) / rect.height
-  const position: 'before' | 'inside' | 'after' =
-    ratio < 0.25 ? 'before' : ratio > 0.75 ? 'after' : 'inside'
-
-  dropTarget.value = { id: node.id, position }
-}
-
-function finishPointerDrag(event: PointerEvent): void {
-  const payload = dragged.value
-  const target = dropTarget.value
-  const element = document.elementFromPoint(event.clientX, event.clientY)
-  const row = element?.closest<HTMLElement>('.node-row[data-node-id]')
-  const nodeId = row ? Number(row.dataset.nodeId) : null
-  const nodePath = row?.dataset.nodePath ?? ''
-
-  if (payload && target && nodeId !== null && target.id === nodeId) {
-    if (payload.id !== nodeId && !nodePath.startsWith(payload.path + '/')) {
-      emit('reorderTo', payload.id, nodeId, target.position)
-    }
-  }
-
-  dragging.value = false
-  dragged.value = null
-  dropTarget.value = null
-  document.body.classList.remove('story-tree-dragging')
-  window.removeEventListener('pointermove', handlePointerMove)
-}
-
 
 watch(() => props.nodes, resetExpanded, { immediate: true })
 watch(() => props.activePath, expandActivePath, { immediate: true })
 </script>
 
 <template>
-  <ul class="tree" :class="{ nested: nested }">
+  <ul
+    class="tree"
+    :class="{ nested: nested, 'story-tree-root': !nested }"
+    :ref="!nested ? setTreeRoot : undefined"
+  >
     <li v-for="node in nodes" :key="node.id" class="tree-item">
       <div
         class="node-row"
         :data-node-id="node.id"
         :data-node-path="node.path"
         :class="{
-          'drop-target-before': dropTarget?.id === node.id && dropTarget.position === 'before',
-          'drop-target-inside': dropTarget?.id === node.id && dropTarget.position === 'inside',
-          'drop-target-after': dropTarget?.id === node.id && dropTarget.position === 'after',
-          'drop-invalid': dragging && dropTarget?.id === node.id && dropTarget.position === 'inside' && (node.id === dragged?.id || node.path.startsWith((dragged?.path ?? '') + '/')),
+          'drop-target-before': dnd.dropTarget?.id === node.id && dnd.dropTarget.position === 'before',
+          'drop-target-inside': dnd.dropTarget?.id === node.id && dnd.dropTarget.position === 'inside',
+          'drop-target-after': dnd.dropTarget?.id === node.id && dnd.dropTarget.position === 'after',
+          'drop-invalid': dnd.dragging && dnd.dropTarget?.id === node.id && (node.id === dnd.dragged?.id || node.path.startsWith((dnd.dragged?.path ?? '') + '/')),
+          'is-dragged': dnd.dragged?.id === node.id,
         }"
       >
         <button
@@ -134,12 +238,14 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
           {{ expanded.has(node.id) ? '▾' : '▸' }}
         </button>
         <span v-else class="expand-placeholder" aria-hidden="true"></span>
+
         <span
           class="drag-handle"
           role="button"
           tabindex="0"
           aria-label="Przeciągnij stronę"
-          @pointerdown.prevent="startDrag(node)"
+          @pointerdown.prevent.stop="dnd.start(node, $event)"
+          @pointerup.stop="dnd.stop($event)"
         >⋮⋮</span>
 
         <button
@@ -270,7 +376,8 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   text-align: center;
   cursor: grab;
   user-select: none;
-  touch-action: none; -webkit-user-drag: none;
+  touch-action: none;
+  -webkit-user-drag: none;
 }
 
 .drag-handle:hover {
@@ -284,6 +391,10 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
 
 .story-tree-dragging {
   cursor: grabbing;
+}
+
+.node-row.is-dragged {
+  opacity: 0.55;
 }
 
 .node-row.drop-invalid {
@@ -306,18 +417,19 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   position: absolute;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background: #2563eb;
   pointer-events: none;
   z-index: 2;
+  border-radius: 2px;
 }
 
 .node-row.drop-target-before::before {
-  top: -2px;
+  top: -3px;
 }
 
 .node-row.drop-target-after::after {
-  bottom: -2px;
+  bottom: -3px;
 }
 
 .node-row.drop-target-inside .node-link {
