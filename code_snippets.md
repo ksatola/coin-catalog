@@ -22,3 +22,7 @@ npx playwright test tests/ui/story.spec.ts
 # Wygenerowanie lockfile w Twoim kontenerze
 cd /workspaces/coin-catalog/frontend
 npm install --package-lock-only
+
+
+npm run type-check
+npm run test:ui -- tests/ui/story.spec.ts

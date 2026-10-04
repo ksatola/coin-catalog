@@ -332,7 +332,9 @@ def reorder_story_page(
         if target is None:
             raise HTTPException(status_code=404, detail="Target story page not found")
 
-        destination_parent_id = target.id if reorder_data.position == "inside" else target.parent_id
+        destination_parent_id = (
+            target.id if reorder_data.position == "inside" else target.parent_id
+        )
         validate_parent_move(
             page,
             destination_parent_id,
@@ -354,7 +356,9 @@ def reorder_story_page(
             insert_at = len(siblings)
         else:
             target_index = siblings.index(target)
-            insert_at = target_index if reorder_data.position == "before" else target_index + 1
+            insert_at = (
+                target_index if reorder_data.position == "before" else target_index + 1
+            )
         siblings.insert(insert_at, page)
 
         now = datetime.now(UTC)
