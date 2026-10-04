@@ -491,7 +491,7 @@ test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) =>
 
   await page.goto('/opowiesc/korzen')
 
-  const source = page.getByRole('button', { name: 'Przenoszona' })
+  const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona' }) })
   const target = page.getByRole('button', { name: 'Nowy rodzic' })
   await source.dragTo(target, { targetPosition: { x: 10, y: 15 } })
 
@@ -509,7 +509,7 @@ test('Opowieść pozwala przeciągnąć stronę przed lub za rodzeństwo', async
 
   await page.goto('/opowiesc/korzen')
 
-  const source = page.getByRole('button', { name: 'Trzecia' })
+  const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Trzecia' }) })
   const target = page.getByRole('button', { name: 'Pierwsza' })
   await source.dragTo(target, { targetPosition: { x: 10, y: 1 } })
 
