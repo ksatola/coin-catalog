@@ -101,3 +101,50 @@ export interface CoinPageResponse {
   next_cursor: string | null
   has_more: boolean
 }
+
+export interface StoryEmbeddedCoin {
+  id: number
+  coin: Coin | null
+  deleted: boolean
+}
+
+export interface StoryAsset {
+  id: number
+  filename: string
+  original_filename: string
+  mime_type: string
+  file_size_bytes: number
+  width: number
+  height: number
+  alt_text: string
+  created_at: string
+}
+
+export interface StoryEmbeddedAsset {
+  id: number
+  asset: StoryAsset | null
+}
+
+export interface StoryPage {
+  id: number
+  parent_id: number | null
+  title: string
+  slug: string
+  content: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+  path: string
+  embedded_coins: StoryEmbeddedCoin[]
+  embedded_assets: StoryEmbeddedAsset[]
+}
+
+export interface StoryPageTree {
+  id: number
+  parent_id: number | null
+  title: string
+  slug: string
+  sort_order: number
+  path: string
+  children: StoryPageTree[]
+}

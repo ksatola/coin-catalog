@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string
   previewUrl?: string | null
   multiple?: boolean
   pendingCount?: number
-}>()
+  acceptedMimeTypes?: string[]
+  acceptedTypesLabel?: string
+}>(), {
+  acceptedMimeTypes: () => ['image/jpeg'],
+  acceptedTypesLabel: 'JPG',
+})
 
 const emit = defineEmits<{
   files: [files: File[]]
@@ -42,7 +47,7 @@ watch(
 )
 
 function acceptedFiles(files: File[]): File[] {
-  return files.filter((file) => file.type === 'image/jpeg')
+  return files.filter((file) => props.acceptedMimeTypes.includes(file.type))
 }
 
 function acceptFiles(files: File[]): void {
@@ -120,7 +125,7 @@ onBeforeUnmount(revokeLocalPreview)
 
     <div v-else class="drop-content">
       <strong>{{ title }}</strong>
-      <span>Przeciągnij JPG lub wklej Ctrl+V</span>
+      <span>Przeciągnij {{ acceptedTypesLabel }} lub wklej Ctrl+V</span>
 
       <span v-if="multiple && pendingCount">
         Wybrano zdjęć: {{ pendingCount }}

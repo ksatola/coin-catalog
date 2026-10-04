@@ -85,6 +85,16 @@ Tests should verify behavior rather than implementation details. Database and AP
 
 Do not use an arbitrary 100% coverage target as a substitute for useful tests.
 
+### 4.1 Test Isolation
+
+All automated tests must be isolated from real user and runtime resources.
+
+- Tests must not mutate the real application database or persistent user data.
+- Tests must not depend on real runtime records created by previous test runs.
+- Use mocks, fixtures, temporary resources, or the established test-isolation mechanism appropriate to the test level.
+- Reuse the project's existing test isolation patterns before introducing a new test database, runtime configuration, or other ad-hoc isolation mechanism.
+- A test that passes by modifying real runtime data is not an acceptable test and must be corrected before the test is considered verified.
+
 ## 5. Error Handling
 
 - Do not silently swallow exceptions.

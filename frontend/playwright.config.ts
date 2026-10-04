@@ -9,6 +9,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://127.0.0.1:5173',
+    serviceWorkers: 'block',
     trace: 'retain-on-failure',
   },
   projects: [
@@ -17,19 +18,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: [
-    {
-      command:
-        'uv run --project /workspaces/coin-catalog/backend uvicorn --app-dir /workspaces/coin-catalog/backend/src coin_catalog.main:app --host 127.0.0.1 --port 8000',
-      url: 'http://127.0.0.1:8000/health',
-      reuseExistingServer: !process.env.CI,
-      timeout: 120_000,
+  webServer: {
+    command: 'npm run dev -- --host 127.0.0.1',
+    url: 'http://127.0.0.1:5173',
+    reuseExistingServer: true,
+    timeout: 120_000,
+    env: {
+      ...process.env,
+      VITE_API_TARGET: 'http://127.0.0.1:1',
     },
-    {
-      command: 'npm run dev -- --host 127.0.0.1',
-      url: 'http://127.0.0.1:5173',
-      reuseExistingServer: !process.env.CI,
-      timeout: 120_000,
-    },
-  ],
+  },
 })

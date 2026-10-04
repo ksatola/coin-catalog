@@ -9,6 +9,8 @@ import CoinsView from '../views/CoinsView.vue'
 import CollectionDetailView from '../views/CollectionDetailView.vue'
 import CollectionsView from '../views/CollectionsView.vue'
 import DictionariesView from '../views/DictionariesView.vue'
+import StoryEditView from '../views/StoryEditView.vue'
+import StoryView from '../views/StoryView.vue'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = createRouter({
@@ -27,6 +29,9 @@ const router = createRouter({
     { path: '/kategorie', component: CategoriesView },
     { path: '/kolekcje', component: CollectionsView },
     { path: '/kolekcje/:id', component: CollectionDetailView },
+    { path: '/opowiesc/edytuj/:id', component: StoryEditView },
+    { path: '/opowiesc', component: StoryView },
+    { path: '/opowiesc/:pathMatch(.*)*', component: StoryView },
   ],
 })
 

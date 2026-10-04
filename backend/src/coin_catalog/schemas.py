@@ -136,3 +136,73 @@ class CoinImageResponse(BaseModel):
     thumbnail_revision: int | None
     thumbnail_generator_version: int | None
     created_at: datetime
+
+
+class StoryAssetResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    filename: str
+    original_filename: str
+    mime_type: str
+    file_size_bytes: int
+    width: int
+    height: int
+    alt_text: str
+    created_at: datetime
+
+
+class StoryEmbeddedAssetResponse(BaseModel):
+    id: int
+    asset: StoryAssetResponse | None = None
+
+
+class StoryPageCreate(BaseModel):
+    title: str
+    content: str = ""
+    parent_id: int | None = None
+    slug: str | None = None
+
+
+class StoryPageUpdate(StoryPageCreate):
+    pass
+
+
+class StoryPageMoveRequest(BaseModel):
+    parent_id: int | None = None
+
+
+class StoryPageReorderRequest(BaseModel):
+    direction: str
+
+
+class StoryEmbeddedCoinResponse(BaseModel):
+    id: int
+    coin: CoinListResponse | None = None
+    deleted: bool
+
+
+class StoryPageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    parent_id: int | None
+    title: str
+    slug: str
+    content: str
+    sort_order: int
+    created_at: datetime
+    updated_at: datetime
+    path: str
+    embedded_coins: list[StoryEmbeddedCoinResponse] = Field(default_factory=list)
+    embedded_assets: list[StoryEmbeddedAssetResponse] = Field(default_factory=list)
+
+
+class StoryPageTreeResponse(BaseModel):
+    id: int
+    parent_id: int | None
+    title: str
+    slug: str
+    sort_order: int
+    path: str
+    children: list[StoryPageTreeResponse] = Field(default_factory=list)

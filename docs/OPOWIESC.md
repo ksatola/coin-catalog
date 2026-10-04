@@ -238,27 +238,29 @@ Zmiana danych monety w katalogu powinna być automatycznie widoczna we wszystkic
 
 Frontend powinien otrzymywać Markdown oraz dane monet potrzebnych do jego renderowania.
 
-Przykładowa odpowiedź:
+Aktualna odpowiedź API zawiera pola strony bezpośrednio oraz listę `embedded_coins`:
 
 ```json
 {
-  "page": {
-    "id": 10,
-    "title": "Jan Kazimierz",
-    "slug": "jan-kazimierz",
-    "parent_id": 4,
-    "content": "..."
-  },
+  "id": 10,
+  "title": "Jan Kazimierz",
+  "slug": "jan-kazimierz",
+  "parent_id": 4,
+  "content": "...",
   "embedded_coins": [
     {
+      "id": 123,
       "coin": {
-        "id": 123
+        "id": 123,
+        "images": []
       },
       "deleted": false
     }
   ]
 }
 ```
+
+Backend wyciąga unikalne ID z `{{ coin:id }}` w kolejności wystąpienia i pobiera potrzebne monety jednym zapytaniem. Dla brakującej albo usuniętej monety zwracane jest `coin: null` i `deleted: true`.
 
 Nie należy umieszczać pełnych danych monet w Markdown.
 
@@ -381,7 +383,7 @@ Nie należy tworzyć osobnego systemu wyszukiwania tylko dla Opowieści.
 
 Należy wykorzystać istniejący mechanizm wyszukiwania, filtrów i pobierania monet.
 
-### Tryb 2 — Wybrane w widoku „Monety”
+### Tryb 2 — Aktualne wyniki z widoku „Monety”
 
 Użytkownik może najpierw przejść do widoku:
 
@@ -389,60 +391,52 @@ Użytkownik może najpierw przejść do widoku:
 Monety
 ```
 
-i użyć istniejącego wyszukiwania oraz filtrów, aby ograniczyć aktualny zakres wyników.
+i użyć istniejącego wyszukiwania oraz filtrów, aby ustawić aktualny zakres wyników.
 
-Następnie może zaznaczyć monety w gridzie/listingu.
-
-Po zaznaczeniu monet może przejść do dodawania monet do Opowieści.
+Nie musi zaznaczać pojedynczych monet ani zmieniać interfejsu widoku `Monety`.
 
 W pickerze Opowieści powinien wtedy być dostępny tryb:
 
 ```
-Wybrane w widoku Monety
+Aktualne wyniki z widoku Monety
 ```
 
-i w tym trybie użytkownik widzi tylko wcześniej zaznaczone monety.
+W tym trybie picker ponownie pobiera monety z wykorzystaniem aktualnie zastosowanego zakresu wyszukiwania/filtrowania z widoku `Monety`.
 
 To jest wybór:
 
 ```
 Katalog
 ALBO
-Wybrane w widoku Monety
+Aktualne wyniki z widoku Monety
 ```
 
 a nie połączenie obu źródeł.
 
 ---
 
-## 13. Wybór monet w widoku „Monety”
+## 13. Aktualny zakres z widoku „Monety”
 
-W istniejącym widoku `Monety` należy umożliwić zaznaczanie wielu monet w aktualnie wyświetlanym zakresie.
+Istniejący widok `Monety` pozostaje bez zmian wizualnych i funkcjonalnych.
 
-Zakres jest definiowany przez istniejące:
+Picker Opowieści korzysta z istniejącego współdzielonego stanu filtrów katalogu dla zakresu `coins`. Ten sam stan jest używany przez widok `Monety` oraz przez picker w trybie:
+
+```
+Aktualne wyniki z widoku Monety
+```
+
+Zakres obejmuje istniejące kryteria katalogu, w szczególności:
 
 - wyszukiwanie,
 - filtry,
 - sortowanie,
-- inne istniejące kryteria katalogu.
+- pozostałe pola istniejącego stanu filtrów.
 
-Nie należy tworzyć osobnego mechanizmu wyszukiwania tylko po to, aby wybrać monety do Opowieści.
+Picker nie przejmuje listy wcześniej pobranych monet. Po przełączeniu na tryb „Aktualne wyniki z widoku Monety” ponownie wykonuje zapytanie do istniejącego endpointu pobierania monet, budując je z aktualnego współdzielonego stanu filtrów.
 
-Do przekazania tymczasowego wyboru pomiędzy widokiem `Monety` i pickerem Opowieści można wykorzystać frontendowy composable, np.:
+Nie należy dodawać checkboxów, przycisków ani osobnego mechanizmu zaznaczania monet w widoku `Monety`.
 
-```
-useStoryCoinSelection()
-```
-
-z przechowywanym:
-
-```ts
-Set<number>
-```
-
-Nie ma potrzeby zapisywania tego tymczasowego wyboru w bazie.
-
-Nie ma również potrzeby umieszczania listy wszystkich wybranych ID w URL.
+Stan filtrów pozostaje frontendowym stanem in-memory. Nie jest zapisywany w bazie danych, localStorage ani jako lista ID monet w URL.
 
 ---
 
@@ -527,13 +521,16 @@ Obecny mechanizm obsługuje:
 - czyszczenie obrazu,
 - lokalne preview przez `URL.createObjectURL()`.
 
-Obecna implementacja akceptuje:
+Obecna implementacja powinna akceptować:
 
 ```
 image/jpeg
+image/png
 ```
 
-czyli JPG.
+czyli JPG i PNG.
+
+W formularzu `Monety` dotychczasowe zachowanie pozostaje bez zmian: jego użycie domyślnie akceptuje JPG. W kontekście `Opowieści` wspólny komponent może zostać skonfigurowany do akceptowania również PNG.
 
 Jeżeli wymagania dotyczące typów assetów zostaną w przyszłości rozszerzone, należy rozszerzyć wspólny mechanizm, a nie tworzyć osobną implementację tylko dla Opowieści.
 
@@ -859,15 +856,15 @@ Implementacja:
 
 Implementacja:
 
-- pobieranie danych osadzonych monet,
-- `StoryCoinEmbed`,
+- pobieranie danych osadzonych monet — **M3.1 zaimplementowane**,
+- `StoryCoinEmbed` — **M3.1 zaimplementowane**,
 - wykorzystanie istniejących komponentów coin/image,
-- picker monet,
-- tryb `Katalog`,
-- tryb `Wybrane w widoku Monety`,
-- zaznaczanie wielu monet w widoku `Monety`,
-- tymczasowe przechowywanie zaznaczonych ID,
-- obsługa usuniętych monet,
+- picker monet — **M3.2 zaimplementowane**,
+- tryb `Katalog` — **M3.2 zaimplementowane**,
+- tryb `Aktualne wyniki z widoku Monety` — **M3.2 zaimplementowane**,
+- przekazywanie aktualnego zakresu wyszukiwania/filtrowania z widoku `Monety` do pickera — **M3.2 zaimplementowane**,
+- wstawianie referencji `{{ coin:id }}` do Markdown — **M3.2 zaimplementowane**,
+- obsługa usuniętych monet — **M3.1 zaimplementowane**,
 - odpowiednie testy dla każdej nowej funkcjonalności.
 
 ### M4 — assets
@@ -927,15 +924,16 @@ Opowieść
 11. Do Markdown używamy `markdown-it`.
 12. Raw HTML może być wyłączony.
 13. Puste linie realizujemy standardowym Markdown, bez potrzeby używania `<br>`.
-14. Picker monet ma dwa wzajemnie wykluczające się tryby: `Katalog` albo `Wybrane w widoku Monety`.
-15. W widoku `Monety` użytkownik może zaznaczyć wiele monet z aktualnego zakresu wyszukiwania/filtrowania.
-16. Tymczasowy wybór monet nie musi być przechowywany w bazie.
+14. Picker monet ma dwa wzajemnie wykluczające się tryby: `Katalog` albo `Aktualne wyniki z widoku Monety`.
+15. Widok `Monety` pozostaje bez checkboxów i dodatkowych akcji związanych z Opowieścią; picker korzysta z jego aktualnego zakresu wyszukiwania/filtrowania.
+16. Aktualny zakres jest przekazywany tymczasowo po stronie frontendu i nie jest przechowywany w bazie.
 17. Assety są osobnymi zasobami.
 18. Metadata assetów są w SQLite, pliki na filesystemie.
 19. Assety są referencjonowane przez ID, np. `{{ image:17 }}`.
 20. Dodawanie i edycja assetów wykorzystuje istniejący mechanizm drag & drop z formularza dodawania/edycji monet.
 21. Należy ponownie wykorzystać `CoinImageDropZone.vue`, zamiast tworzyć drugi niezależny mechanizm drag & drop.
-22. `Opowieść` jest osobnym modułem, ale nie może niepotrzebnie duplikować istniejącej funkcjonalności katalogu.
-23. Nie ma potrzeby historii wersji.
-24. Pierwsza implementacja powinna być wykonana etapami M1–M4.
-25. Dla każdej nowej funkcjonalności trzeba napisać test — backend/frontend, end-to-end, itp. w zależności od potrzeby.
+22. Assety Opowieści mogą być dodawane jako JPG lub PNG; wspólny dropzone jest konfigurowany dla tych typów bez zmiany domyślnego zachowania formularza „Monety”.
+23. `Opowieść` jest osobnym modułem, ale nie może niepotrzebnie duplikować istniejącej funkcjonalności katalogu.
+24. Nie ma potrzeby historii wersji.
+25. Pierwsza implementacja powinna być wykonana etapami M1–M4.
+26. Dla każdej nowej funkcjonalności trzeba napisać test — backend/frontend, end-to-end, itp. w zależności od potrzeby.

@@ -452,3 +452,20 @@ The project is currently in:
 Phase 1 — Development Environment, Phase 2 — Application Skeleton, Phase 3 — Database Foundation, Phase 4 — Coin Entry and Browser, Phase 5 — Search and Filtering, Phase 6 — UI Foundation, Phase 7 — Collection Number, and Phase 8 — Collections have been completed and verified.
 
 Phase 9 planning is documented in `docs/CROSS_PLATFORM_STANDALONE_PACKAGING.md`. The Phase 9 implementation is currently at the planning/early-start stage; it must not be described as completed until the standalone packaging work and its verification are actually finished.
+
+### 19.5 Repository-Connected Collaboration and Isolated Tests
+
+Repository collaboration:
+
+- The assistant must work through the connected GitHub repository whenever repository access is available.
+- The assistant must inspect and modify repository files directly rather than asking the project owner to copy, paste, or manually apply changes that can be handled through the repository connection.
+- The assistant must not provide unified diffs or patch instructions as the normal form of repository changes. After the project owner approves a proposed change, the assistant should apply the change directly to the repository and then verify the resulting repository state.
+- Repository writes remain subject to the approval and GitHub write-safety rules in this document.
+
+Test isolation:
+
+- **All automated tests must be isolated from real user resources and production/runtime data.**
+- Tests must not create, modify, or delete records in the project's real runtime database, real filesystem data, real external services, or other persistent user resources.
+- Test doubles, mocks, fixtures, temporary resources, or the repository's established test-isolation mechanisms must be used as appropriate for the test level.
+- Before adding or changing tests, inspect existing tests and reuse the project's established isolation mechanism instead of introducing a separate ad-hoc test environment without approval.
+- A test that passes while mutating real user/runtime data is not considered an acceptable or verified test.

@@ -156,3 +156,5 @@ test('przedział między erą BC i AD nie jest blokowany przez kolejność warto
   expect(updates).toBe(1)
   expect(uploaded).toHaveLength(0)
 })
+
+
