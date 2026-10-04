@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 type StoryEmbeddedCoin = {
   id: number
@@ -188,6 +188,26 @@ async function mockCoinApi(page: Page, coinIds: number[] = [123]): Promise<void>
   }
 }
 
+async function dragHandleTo(page: Page, source: Locator, target: Locator, targetRatio = 0.5): Promise<void> {
+  const sourceBox = await source.boundingBox()
+  const targetBox = await target.boundingBox()
+  if (!sourceBox || !targetBox) {
+    throw new Error('Drag source or target is not visible')
+  }
+
+  await page.mouse.move(
+    sourceBox.x + sourceBox.width / 2,
+    sourceBox.y + sourceBox.height / 2,
+  )
+  await page.mouse.down()
+  await page.mouse.move(
+    targetBox.x + targetBox.width / 2,
+    targetBox.y + targetBox.height * targetRatio,
+    { steps: 12 },
+  )
+  await page.mouse.up()
+}
+
 async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise<void> {
   await mockStoryDependencies(page)
   const pages = initialPages.map((item) => ({ ...item }))
@@ -332,7 +352,7 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
       const body = route.request().postDataJSON() as {
         direction?: 'up' | 'down'
         target_id?: number
-        position?: 'before' | 'after'
+        position?: 'before' | 'inside' | 'after'
       }
       const siblings = pages
         .filter((item) => item.parent_id === storyPage.parent_id)
@@ -425,7 +445,6 @@ test('Opowieść allows creating and navigating a page', async ({ page }) => {
   await expect(page.getByRole('button', { name:title })).toBeVisible()
 })
 
-
 test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ page }) => {
   await mockStoryApi(page, [
     storyPage({
@@ -493,7 +512,7 @@ test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) =>
 
   const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona' }) }).locator('.drag-handle')
   const target = page.getByRole('button', { name: 'Nowy rodzic' })
-  await source.dragTo(target, { targetPosition: { x: 10, y: 15 } })
+  await dragHandleTo(page, source, target, 0.5)
 
   const targetRow = page.locator('.node-row').filter({ has: target })
   await expect(targetRow.locator('xpath=..').locator('.tree.nested .node-link')).toContainText('Przenoszona')
@@ -511,7 +530,7 @@ test('Opowieść pozwala przeciągnąć stronę przed lub za rodzeństwo', async
 
   const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Trzecia' }) }).locator('.drag-handle')
   const target = page.getByRole('button', { name: 'Pierwsza' })
-  await source.dragTo(target, { targetPosition: { x: 10, y: 1 } })
+  await dragHandleTo(page, source, target, 0.05)
 
   const rows = page.locator('.tree > .tree-item')
   await expect(rows.nth(1).getByRole('button', { name: 'Trzecia' })).toBeVisible()
@@ -552,7 +571,7 @@ test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async
     has: page.getByRole('button', { name: 'Nowy rodzic' }),
   })
 
-  await source.dragTo(targetRow)
+  await dragHandleTo(page, source, targetRow, 0.5)
 
   await expect(targetRow.locator('xpath=..').locator('.tree .node-link')).toContainText('Przenoszona')
 })
