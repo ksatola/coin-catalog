@@ -55,7 +55,6 @@ defineProps<{
 
 <style scoped>
 .tree-item {
-  position: relative;
   padding-left: calc(var(--tree-depth) * 26px);
 }
 
@@ -145,35 +144,5 @@ defineProps<{
   color: #0f172a;
   background: #f1f5f9;
   border-radius: 4px;
-}
-
-/*
- * vue-tree-dnd renders its own drag ghost at the exact proposed drop
- * position and adjusts its depth for FIRST_CHILD/LAST_CHILD.
- * Make that library-provided ghost visible and remove the old tree lines.
- */
-:global(.story-tree) :deep(a[style*="opacity: 0.3"]) {
-  opacity: 1 !important;
-  pointer-events: none;
-}
-
-:global(.story-tree) :deep(a[style*="opacity: 0.3"] .tree-item) {
-  padding-top: 2px;
-  padding-bottom: 2px;
-}
-
-:global(.story-tree) :deep(a[style*="opacity: 0.3"] .node-row) {
-  border: 1px dashed #64748b;
-  border-radius: 6px;
-  background: #f8fafc;
-}
-
-:global(.story-tree) :deep(a[style*="opacity: 0.3"] .node-link) {
-  color: #475569;
-  font-weight: 600;
-}
-
-:global(.story-tree) :deep(a[style*="opacity: 0.3"] .drag-handle) {
-  color: #64748b;
 }
 </style>
