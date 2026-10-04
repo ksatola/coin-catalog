@@ -29,11 +29,6 @@ async function reload(): Promise<void> {
   error.value=''
   try { await Promise.all([loadTree(), loadPage()]) } catch { error.value='Nie udało się wczytać Opowieści.' }
 }
-async function move(id:number, direction:'up'|'down'): Promise<void> {
-  const response = await fetch('/api/story/pages/' + id + '/reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ direction }) })
-  if (!response.ok) { error.value='Nie udało się zmienić kolejności.'; return }
-  await reload()
-}
 async function moveTo(id:number, parentId:number): Promise<void> {
   const response = await fetch('/api/story/pages/' + id + '/move', {
     method:'POST',
