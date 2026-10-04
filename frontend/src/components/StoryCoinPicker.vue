@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useStoryCoinCatalogScope } from '../composables/useStoryCoinCatalogScope'
+import { buildCoinFilterQuery, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse } from '../types'
 
 const emit = defineEmits<{ select: [id: number]; close: [] }>()
-const catalogScope = useStoryCoinCatalogScope()
+const coinFilters = useCoinFilters('coins')
 const mode = ref<'catalog' | 'current'>('catalog')
 const search = ref('')
 const coins = ref<Coin[]>([])
@@ -14,7 +14,7 @@ let timer: ReturnType<typeof setTimeout> | undefined
 
 async function loadCatalog(): Promise<void> {
   const value = search.value.trim()
-  if (value && value.split(/s+/).some((token) => token.length < 3)) {
+  if (value && value.split(/\s+/).some((token) => token.length < 3)) {
     coins.value = []
     error.value = 'Każdy fragment wyszukiwania musi mieć co najmniej 3 znaki.'
     return
@@ -36,12 +36,7 @@ async function loadCatalog(): Promise<void> {
 }
 
 async function loadCurrentCatalog(): Promise<void> {
-  const query = catalogScope.query.value
-  if (query === null) {
-    coins.value = []
-    error.value = 'Brak aktualnego zakresu z widoku Monety. Najpierw otwórz widok Monety i zastosuj wyszukiwanie lub filtry.'
-    return
-  }
+  const query = buildCoinFilterQuery(coinFilters)
   loading.value = true
   error.value = ''
   try {
