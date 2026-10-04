@@ -295,7 +295,7 @@ class Coin(Base):
     collection: Mapped[Collection] = relationship(back_populates="coins")
     country: Mapped[Country] = relationship(back_populates="coins")
     issuer: Mapped[Issuer | None] = relationship(back_populates="coins")
-    denomination: Mapped[Denomination] = relationship(back_populates="coins")
+    denomination: Mapped[Denomination] = relationship(back_populates="denomination")
     from_era: Mapped[Era | None] = relationship(
         back_populates="from_coins",
         foreign_keys=[from_era_id],
@@ -306,7 +306,7 @@ class Coin(Base):
     )
     mint: Mapped[Mint | None] = relationship(back_populates="coins")
     material: Mapped[Material | None] = relationship(back_populates="coins")
-    state: Mapped[State | None] = relationship(back_populates="coins")
+    state: Mapped[State | None] = relationship(back_populates="state")
     acquisition_method: Mapped[AcquisitionMethod | None] = relationship(
         back_populates="coins"
     )
@@ -333,7 +333,11 @@ class StoryAsset(Base):
     width: Mapped[int] = mapped_column(Integer, nullable=False)
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     alt_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    created_at: Mapped[datetime] = mapped_column(\n        DateTime,\n        nullable=False,\n        default=lambda: datetime.now(UTC),\n    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
 
 
 class StoryPage(Base):
