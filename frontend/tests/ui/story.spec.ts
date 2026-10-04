@@ -368,7 +368,10 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
         }
       }
 
-      siblings.forEach((item, index) => { item.sort_order = index })
+      const reorderedSiblings = pages
+        .filter((item) => item.parent_id === storyPage.parent_id)
+        .sort((a, b) => a.sort_order - b.sort_order)
+      reorderedSiblings.forEach((item, index) => { item.sort_order = index })
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -391,6 +394,18 @@ async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise
     }
 
     await route.fallback()
+  })
+}
+
+async function dragInto(source: Locator, target: Locator): Promise<void> {
+  const sourceBox = await source.boundingBox()
+  const targetBox = await target.boundingBox()
+  if (!sourceBox || !targetBox) throw new Error('Could not determine drag coordinates')
+  await source.dragTo(target, {
+    targetPosition: {
+      x: sourceBox.x + sourceBox.width / 2 + 20 - targetBox.x,
+      y: targetBox.height / 2,
+    },
   })
 }
 
@@ -487,7 +502,7 @@ test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) =>
 
   const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona' }) })
   const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Nowy rodzic' }) })
-  await source.dragTo(target)
+  await dragInto(source, target)
 
   const movedRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona', exact: true }) })
   await expect(movedRow).toBeVisible()
@@ -579,7 +594,7 @@ test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async
     has: page.getByRole('button', { name: 'Nowy rodzic' }),
   })
 
-  await source.dragTo(target)
+  await dragInto(source, target)
 
   const movedRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona', exact: true }) })
   await expect(movedRow).toBeVisible()
