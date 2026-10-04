@@ -2,7 +2,11 @@
 import { ref, watch } from 'vue'
 import type { StoryPageTree } from '../types'
 
-const props = defineProps<{ nodes: StoryPageTree[]; activePath?: string }>()
+const props = defineProps<{
+  nodes: StoryPageTree[]
+  activePath?: string
+  nested?: boolean
+}>()
 
 const emit = defineEmits<{
   select: [path: string]
@@ -48,7 +52,7 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
 </script>
 
 <template>
-  <ul class="tree" :class="{ nested: false }">
+  <ul class="tree" :class="{ nested: nested }">
     <li v-for="node in nodes" :key="node.id" class="tree-item">
       <div class="node-row">
         <button
@@ -83,9 +87,9 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
 
       <StoryTree
         v-if="node.children.length && expanded.has(node.id)"
-        class="nested-tree"
         :nodes="node.children"
         :active-path="activePath"
+        :nested="true"
         @select="emit('select', $event)"
         @edit="emit('edit', $event)"
         @move="(id, direction) => emit('move', id, direction)"
