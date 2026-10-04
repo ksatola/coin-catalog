@@ -294,3 +294,11 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Endpoint przenoszenia ustawia przeniesioną stronę na końcu rodzeństwa nowego rodzica, zachowując istniejące podstrony.
 - Dodano izolowany test Playwright sprawdzający przeniesienie strony drag&drop oraz izolowany test backendu sprawdzający kolejność po zmianie rodzica.
 - Testy nie zostały uruchomione lokalnie w tym środowisku.
+
+## 2026-10-04 — drag&drop kolejności stron Opowieści
+
+- Usunięto strzałki ↑/↓ z drzewa Opowieści; kolejność rodzeństwa można zmieniać przez drag&drop.
+- Upuszczenie w górnej części węzła umieszcza stronę przed nim, a w dolnej części — za nim.
+- Upuszczenie na stronę z innego poziomu nadal zmienia rodzica.
+- Dodano izolowane testy backendu i Playwright dla zmiany kolejności przez pozycję docelową.
+- Testy nie zostały uruchomione lokalnie w tym środowisku.
