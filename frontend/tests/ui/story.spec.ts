@@ -385,6 +385,15 @@ test('Opowieść nie pozwala usunąć strony posiadającej podstrony', async ({ 
 test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ page }) => {
   await mockStoryApi(page)
   await page.route('**/api/coins*', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname === '/api/coins/123') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 123, is_deleted: false, collection_number: 'A-123', from_year: 1930, to_year: 1930, images: [] }),
+      })
+      return
+    }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [{ id: 123, collection_number: 'A-123' }], next_cursor: null, has_more: false }) })
   })
   await page.goto('/opowiesc/edytuj/nowa')
@@ -396,6 +405,8 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('button', { name: 'Wstaw' }).click()
   await expect(textarea).toHaveValue('Przed {{ coin:123 }}')
+  await expect(page.getByRole('link', { name: 'Moneta #123' })).toBeVisible()
+  await expect(page.getByText('⚠ Moneta została usunięta')).toHaveCount(0)
 })
 
 test('picker Opowieści korzysta z aktualnego zakresu filtrów widoku Monety', async ({ page }) => {
