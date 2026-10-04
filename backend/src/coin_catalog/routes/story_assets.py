@@ -98,7 +98,10 @@ def upload_asset(
         ".png": ("PNG", "image/png"),
     }
     image_type = allowed_types.get(suffix)
-    if image_type is None or content_type not in {image_type[1], "image/jpg", ""}:
+    accepted_content_types = {image_type[1], ""} if image_type else set()
+    if image_type and suffix in {".jpg", ".jpeg"}:
+        accepted_content_types.add("image/jpg")
+    if image_type is None or content_type not in accepted_content_types:
         raise HTTPException(status_code=400, detail="Only JPG and PNG images are supported")
 
     data = upload.file.read()
