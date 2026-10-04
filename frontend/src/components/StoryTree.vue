@@ -11,13 +11,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   select: [path: string]
   edit: [id: number]
-  move: [id: number, direction: 'up' | 'down']
   moveTo: [id: number, parentId: number]
+  reorderTo: [id: number, targetId: number, position: 'before' | 'after']
   delete: [id: number]
 }>()
 
 const expanded = ref<Set<number>>(new Set())
-const dropTargetId = ref<number | null>(null)
+const dropTarget = ref<{ id: number; position: 'before' | 'after' } | null>(null)
 
 function resetExpanded(): void {
   expanded.value = new Set(
@@ -52,24 +52,31 @@ function toggle(node: StoryPageTree): void {
 function startDrag(event: DragEvent, node: StoryPageTree): void {
   if (!event.dataTransfer) return
   event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('text/plain', JSON.stringify({ id: node.id, path: node.path }))
+  event.dataTransfer.setData(
+    'text/plain',
+    JSON.stringify({ id: node.id, path: node.path, parentId: node.parent_id }),
+  )
 }
 
 function dragOver(node: StoryPageTree, event: DragEvent): void {
   if (!event.dataTransfer) return
   event.preventDefault()
   event.dataTransfer.dropEffect = 'move'
-  dropTargetId.value = node.id
+
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const position = event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
+  dropTarget.value = { id: node.id, position }
 }
 
 function drop(event: DragEvent, node: StoryPageTree): void {
   event.preventDefault()
-  dropTargetId.value = null
+  const position = dropTarget.value?.id === node.id ? dropTarget.value.position : 'after'
+  dropTarget.value = null
   const raw = event.dataTransfer?.getData('text/plain')
   if (!raw) return
 
   try {
-    const payload = JSON.parse(raw) as { id?: number; path?: string }
+    const payload = JSON.parse(raw) as { id?: number; path?: string; parentId?: number | null }
     if (
       typeof payload.id !== 'number'
       || payload.id === node.id
@@ -78,7 +85,12 @@ function drop(event: DragEvent, node: StoryPageTree): void {
     ) {
       return
     }
-    emit('moveTo', payload.id, node.id)
+
+    if (payload.parentId === node.parent_id) {
+      emit('reorderTo', payload.id, node.id, position)
+    } else {
+      emit('moveTo', payload.id, node.id)
+    }
   } catch {
     // Ignore malformed drag payloads.
   }
@@ -93,9 +105,12 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
     <li v-for="node in nodes" :key="node.id" class="tree-item">
       <div
         class="node-row"
-        :class="{ 'drop-target': dropTargetId === node.id }"
+        :class="{
+          'drop-target-before': dropTarget?.id === node.id && dropTarget.position === 'before',
+          'drop-target-after': dropTarget?.id === node.id && dropTarget.position === 'after',
+        }"
         @dragover="dragOver(node, $event)"
-        @dragleave="dropTargetId = null"
+        @dragleave="dropTarget = null"
         @drop="drop($event, node)"
       >
         <button
@@ -117,15 +132,13 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
           :aria-current="activePath === node.path ? 'page' : undefined"
           draggable="true"
           @dragstart="startDrag($event, node)"
-          @dragend="dropTargetId = null"
+          @dragend="dropTarget = null"
           @click="emit('select', node.path)"
         >
           <span class="node-title">{{ node.title }}</span>
         </button>
 
         <span class="node-actions">
-          <button type="button" aria-label="Przenieś wyżej" @click="emit('move', node.id, 'up')">↑</button>
-          <button type="button" aria-label="Przenieś niżej" @click="emit('move', node.id, 'down')">↓</button>
           <button type="button" aria-label="Edytuj stronę" @click="emit('edit', node.id)">Edytuj</button>
           <button type="button" aria-label="Usuń stronę" @click="emit('delete', node.id)">Usuń</button>
         </span>
@@ -138,8 +151,8 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
         :nested="true"
         @select="emit('select', $event)"
         @edit="emit('edit', $event)"
-        @move="(id, direction) => emit('move', id, direction)"
         @move-to="(id, parentId) => emit('moveTo', id, parentId)"
+        @reorder-to="(id, targetId, position) => emit('reorderTo', id, targetId, position)"
         @delete="emit('delete', $event)"
       />
     </li>
@@ -242,10 +255,28 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   cursor: grabbing;
 }
 
-.node-row.drop-target .node-link {
-  outline: 2px solid #2563eb;
-  outline-offset: -2px;
-  background: #eff6ff;
+.node-row.drop-target-before,
+.node-row.drop-target-after {
+  position: relative;
+}
+
+.node-row.drop-target-before::before,
+.node-row.drop-target-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #2563eb;
+  pointer-events: none;
+}
+
+.node-row.drop-target-before::before {
+  top: -1px;
+}
+
+.node-row.drop-target-after::after {
+  bottom: -1px;
 }
 
 .node-link.active {
