@@ -452,6 +452,43 @@ test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ 
   await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toBeVisible()
 })
 
+test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({
+      title: 'Korzeń',
+      slug: 'korzen',
+      path: 'korzen',
+    }),
+    storyPage({
+      id: 2,
+      parent_id: 1,
+      title: 'Przenoszona',
+      slug: 'przenoszona',
+      sort_order: 0,
+      path: 'korzen/przenoszona',
+    }),
+    storyPage({
+      id: 3,
+      parent_id: 1,
+      title: 'Nowy rodzic',
+      slug: 'nowy-rodzic',
+      sort_order: 1,
+      path: 'korzen/nowy-rodzic',
+    }),
+  ])
+
+  await page.goto('/opowiesc/korzen/przenoszona')
+
+  const source = page.getByRole('button', { name: 'Przenoszona' })
+  const targetRow = page.locator('.node-row').filter({
+    has: page.getByRole('button', { name: 'Nowy rodzic' }),
+  })
+
+  await source.dragTo(targetRow)
+
+  await expect(targetRow.locator('xpath=..').locator('.tree .node-link')).toContainText('Przenoszona')
+})
+
 test('Opowieść renders Markdown and real coin embeds without executing raw HTML', async ({ page }) => {
   await mockStoryApi(page)
 
