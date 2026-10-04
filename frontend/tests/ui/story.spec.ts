@@ -489,7 +489,9 @@ test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) =>
   const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Nowy rodzic' }) })
   await source.dragTo(target)
 
-  await expect(target.locator('xpath=..').getByRole('button', { name: 'Przenoszona', exact: true })).toBeVisible()
+  const movedRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Przenoszona', exact: true }) })
+  await expect(movedRow).toBeVisible()
+  await expect.poll(async () => movedRow.locator('xpath=..').evaluate((element) => parseFloat(getComputedStyle(element).paddingLeft))).toBe(52)
 })
 
 test('Opowieść pokazuje optymistyczne przesunięcie przed odpowiedzią API', async ({ page }) => {
@@ -521,7 +523,7 @@ test('Opowieść pokazuje optymistyczne przesunięcie przed odpowiedzią API', a
 
   await source.dragTo(target)
 
-  await expect(page.locator('.story-tree .node-title')).toHaveText(['Korzeń', 'Trzecia', 'Pierwsza', 'Druga'])
+  await expect(page.locator('.story-tree .node-title')).toHaveText(['Korzeń', 'Pierwsza', 'Trzecia', 'Druga'])
 
   releaseReorder()
 })
@@ -540,7 +542,7 @@ test('Opowieść pozwala przeciągnąć stronę przed lub za rodzeństwo', async
   const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Pierwsza' }) })
   await source.dragTo(target)
 
-  await expect(page.locator('.story-tree .node-title')).toHaveText(['Korzeń', 'Trzecia', 'Pierwsza', 'Druga'])
+  await expect(page.locator('.story-tree .node-title')).toHaveText(['Korzeń', 'Pierwsza', 'Trzecia', 'Druga'])
 })
 
 test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async ({ page }) => {
@@ -663,7 +665,7 @@ test('Opowieść nie pozwala usunąć strony posiadającej podstrony', async ({ 
   await parentRow.getByRole('button', { name: 'Usuń stronę' }).click()
 
   await expect(page.getByText('Nie można usunąć strony, która ma podstrony.')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Strona nadrzędna' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Strona nadrzędna', exact: true })).toBeVisible()
 })
 
 test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ page }) => {
