@@ -395,6 +395,58 @@ test('Opowieść allows creating and navigating a page', async ({ page }) => {
   await expect(page.getByRole('button', { name:title })).toBeVisible()
 })
 
+
+test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({
+      title: 'Monety polskie',
+      slug: 'monety-polskie',
+      path: 'monety-polskie',
+    }),
+    storyPage({
+      id: 2,
+      parent_id: 1,
+      title: 'Monety królewskie',
+      slug: 'monety-krolewskie',
+      sort_order: 0,
+      path: 'monety-polskie/monety-krolewskie',
+    }),
+    storyPage({
+      id: 3,
+      parent_id: 2,
+      title: 'Jan Kazimierz',
+      slug: 'jan-kazimierz',
+      sort_order: 0,
+      path: 'monety-polskie/monety-krolewskie/jan-kazimierz',
+    }),
+    storyPage({
+      id: 4,
+      parent_id: 1,
+      title: 'Zabory',
+      slug: 'zabory',
+      sort_order: 1,
+      path: 'monety-polskie/zabory',
+    }),
+  ])
+
+  await page.goto('/opowiesc/monety-polskie/monety-krolewskie/jan-kazimierz')
+
+  await expect(page.getByRole('button', { name: 'Monety polskie' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Monety królewskie' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Zabory' })).toBeVisible()
+
+  await expect(page.getByRole('button', { name: 'Zwiń Monety polskie' })).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByRole('button', { name: 'Zwiń Monety królewskie' })).toHaveAttribute('aria-expanded', 'true')
+
+  await page.getByRole('button', { name: 'Zwiń Monety królewskie' }).click()
+  await expect(page.getByRole('button', { name: 'Rozwiń Monety królewskie' })).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Rozwiń Monety królewskie' }).click()
+  await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toBeVisible()
+})
+
 test('Opowieść renders Markdown and real coin embeds without executing raw HTML', async ({ page }) => {
   await mockStoryApi(page)
 
