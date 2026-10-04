@@ -28,11 +28,11 @@ def thumbnail_path(asset: StoryAsset) -> Path:
     return THUMBNAILS_DIR / f"{asset.id}.jpg"
 
 
-def validate_jpeg(data: bytes) -> tuple[int, int]:
+def validate_image(data: bytes, expected_format: str) -> tuple[int, int]:
     try:
         with Image.open(BytesIO(data)) as image:
-            if image.format != "JPEG":
-                raise HTTPException(status_code=400, detail="Only JPG images are supported")
+            if image.format != expected_format:
+                raise HTTPException(status_code=400, detail="Uploaded file type does not match the image")
             image.verify()
         with Image.open(BytesIO(data)) as image:
             return image.size
@@ -90,18 +90,27 @@ def upload_asset(
     session: Session = Depends(get_db),
 ) -> StoryAsset:
     filename = (upload.filename or "").strip()
-    if not filename.lower().endswith(".jpg") or (upload.content_type or "").lower() not in {"image/jpeg", "image/jpg", ""}:
-        raise HTTPException(status_code=400, detail="Only JPG images are supported")
+    suffix = Path(filename).suffix.lower()
+    content_type = (upload.content_type or "").lower()
+    allowed_types = {
+        ".jpg": ("JPEG", "image/jpeg"),
+        ".jpeg": ("JPEG", "image/jpeg"),
+        ".png": ("PNG", "image/png"),
+    }
+    image_type = allowed_types.get(suffix)
+    if image_type is None or content_type not in {image_type[1], "image/jpg", ""}:
+        raise HTTPException(status_code=400, detail="Only JPG and PNG images are supported")
 
     data = upload.file.read()
-    width, height = validate_jpeg(data)
+    image_format, mime_type = image_type
+    width, height = validate_image(data, image_format)
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     THUMBNAILS_DIR.mkdir(parents=True, exist_ok=True)
 
     asset = StoryAsset(
-        filename="pending.jpg",
+        filename=f"pending{suffix}",
         original_filename=filename,
-        mime_type="image/jpeg",
+        mime_type=mime_type,
         file_size_bytes=len(data),
         width=width,
         height=height,
@@ -109,7 +118,7 @@ def upload_asset(
     )
     session.add(asset)
     session.flush()
-    asset.filename = f"{asset.id}.jpg"
+    asset.filename = f"{asset.id}{suffix}"
     target = asset_path(asset)
     try:
         target.write_bytes(data)
