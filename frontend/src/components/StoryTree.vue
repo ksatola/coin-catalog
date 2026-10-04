@@ -21,9 +21,11 @@ const emit = defineEmits<{
   edit: [id: number]
   reorderTo: [id: number, targetId: number, position: DropPosition]
   delete: [id: number]
+  'update:nodes': [nodes: StoryPageTree[]]
 }>()
 
 const tree = ref<DndStoryTreeItem[]>([])
+let skipNextSync = false
 
 function buildTree(nodes: StoryPageTree[]): DndStoryTreeItem[] {
   return nodes.map((node) => ({
@@ -38,7 +40,23 @@ function buildTree(nodes: StoryPageTree[]): DndStoryTreeItem[] {
 }
 
 function syncTree(): void {
+  if (skipNextSync) {
+    skipNextSync = false
+    return
+  }
   tree.value = buildTree(props.nodes)
+}
+
+function toStoryTree(nodes: DndStoryTreeItem[]): StoryPageTree[] {
+  return nodes.map((node) => ({
+    id: node.id,
+    parent_id: node.parent_id,
+    title: node.title,
+    slug: node.slug,
+    sort_order: node.sort_order,
+    path: node.path,
+    children: toStoryTree(node.children),
+  }))
 }
 
 function findNode(nodes: DndStoryTreeItem[], id: number): DndStoryTreeItem | null {
@@ -58,6 +76,8 @@ function handleMove(move: MoveMutation): void {
     const target = findNode(tree.value, targetId)
     const firstChild = target?.children[0]
     if (firstChild) {
+      skipNextSync = true
+      emit('update:nodes', toStoryTree(tree.value))
       emit('reorderTo', id, firstChild.id, 'before')
       return
     }
@@ -70,6 +90,8 @@ function handleMove(move: MoveMutation): void {
         ? 'after'
         : 'inside'
 
+  skipNextSync = true
+  emit('update:nodes', toStoryTree(tree.value))
   emit('reorderTo', id, targetId, position)
 }
 
