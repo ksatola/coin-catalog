@@ -60,7 +60,7 @@ watch(() => props.page, (page) => {
       </section>
       <section class="preview-pane" :class="{ 'mobile-hidden': mobileTab !== 'preview' }">
         <h2>Podgląd</h2>
-        <StoryRenderer :content="content" />
+        <StoryRenderer :content="content" :embedded-coins="page?.embedded_coins ?? []" />
       </section>
     </div>
 
