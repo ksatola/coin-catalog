@@ -420,7 +420,10 @@ test('picker Opowieści korzysta z aktualnego zakresu filtrów widoku Monety', a
   await expect.poll(() => lastSearch).toBe('polska grosz')
   await expect(page.getByRole('checkbox', { name: /Wybierz monetę/ })).toHaveCount(0)
 
-  await page.goto('/opowiesc/edytuj/nowa')
+  await page.getByRole('navigation', { name: 'Główna nawigacja' }).getByRole('link', { name: 'Opowieść', exact: true }).click()
+  await page.waitForURL('/opowiesc')
+  await page.getByRole('link', { name: 'Nowa strona' }).click()
+  await page.waitForURL('/opowiesc/edytuj/nowa')
   await page.getByRole('button', { name: 'Wstaw monetę' }).click()
   await page.getByRole('button', { name: 'Aktualne wyniki z widoku Monety' }).click()
   await expect(page.getByText('#12')).toBeVisible()
