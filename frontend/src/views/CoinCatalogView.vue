@@ -9,7 +9,6 @@ import CoinList from '../components/CoinList.vue'
 import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
-import { useStoryCoinCatalogScope } from '../composables/useStoryCoinCatalogScope'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 
 type CatalogScope = 'coins' | 'archive'
@@ -23,7 +22,6 @@ const props = defineProps<{
 
 const router = useRouter()
 const filters = useCoinFilters(props.scope)
-const storyCatalogScope = useStoryCoinCatalogScope()
 const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
 const errorMessage = ref('')
@@ -175,7 +173,6 @@ async function loadCoins(): Promise<void> {
     nextCursor.value = page.next_cursor
     hasMore.value = page.has_more
     appliedFilterQuery.value = query
-    if (!isArchive) storyCatalogScope.setQuery(query)
     errorMessage.value = ''
     await nextTick()
     const savedScrollY = typeof history.state?.scroll?.top === 'number'
@@ -263,7 +260,6 @@ function openCoinDetails(coin: Coin): void {
   const query = appliedFilterQuery.value
   router.push(`/monety/${coin.id}${query ? `?${query}` : ''}`)
 }
-
 
 function resetFilters(): void {
   resetCoinFilters(filters, isArchive ? 'archived' : 'active')
@@ -673,7 +669,7 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
-.selection-count{padding-left:10px;color:#0f172a;font-weight:700}.story-selection-button{margin-left:auto;padding:7px 11px;border:0;border-radius:6px;background:#2563eb;color:#fff;font-weight:700}.results-scope {
+.results-scope {
   padding-left: 10px;
   border-left: 1px solid #cbd5e1;
   color: #64748b;
