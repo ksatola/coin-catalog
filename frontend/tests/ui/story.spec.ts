@@ -460,10 +460,10 @@ test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ 
 
   await page.goto('/opowiesc/monety-polskie/monety-krolewskie/jan-kazimierz')
 
-  await expect(page.getByRole('button', { name: 'Monety polskie' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Monety królewskie' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Zabory' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Monety polskie', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Monety królewskie', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Jan Kazimierz', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Zabory', exact: true })).toBeVisible()
 
   await expect(page.getByRole('button', { name: 'Zwiń Monety polskie' })).toHaveAttribute('aria-expanded', 'true')
   await expect(page.getByRole('button', { name: 'Zwiń Monety królewskie' })).toHaveAttribute('aria-expanded', 'true')
@@ -494,7 +494,7 @@ test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) =>
   const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Nowy rodzic' }) })
   await source.dragTo(target)
 
-  await expect(target.locator('xpath=..').locator('.tree-item .node-link')).toContainText('Przenoszona')
+  await expect(target.locator('xpath=..').getByRole('button', { name: 'Przenoszona', exact: true })).toBeVisible()
 })
 
 test('Opowieść pokazuje optymistyczne przesunięcie przed odpowiedzią API', async ({ page }) => {
@@ -526,9 +526,7 @@ test('Opowieść pokazuje optymistyczne przesunięcie przed odpowiedzią API', a
 
   await source.dragTo(target)
 
-  const rows = page.locator('.story-tree .node-row')
-  await expect(rows.nth(1).getByRole('button', { name: 'Trzecia' })).toBeVisible()
-  await expect(rows.nth(2).getByRole('button', { name: 'Pierwsza' })).toBeVisible()
+  await expect(page.locator('.story-tree .node-title')).toHaveText(['Korzeń', 'Trzecia', 'Pierwsza', 'Druga'])
 
   releaseReorder()
 })
@@ -588,7 +586,7 @@ test('Opowieść pozwala przeciągnąć stronę do innego poziomu drzewa', async
 
   await source.dragTo(target)
 
-  await expect(target.locator('xpath=..').locator('.tree-item .node-link')).toContainText('Przenoszona')
+  await expect(target.locator('xpath=..').getByRole('button', { name: 'Przenoszona', exact: true })).toBeVisible()
 })
 
 test('Opowieść renders Markdown and real coin embeds without executing raw HTML', async ({ page }) => {
@@ -667,7 +665,7 @@ test('Opowieść nie pozwala usunąć strony posiadającej podstrony', async ({ 
   await page.goto('/opowiesc/strona-nadrzedna')
   await expect(page.getByRole('heading', { name: 'Strona nadrzędna' })).toBeVisible()
 
-  const parentRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Strona nadrzędna' }) })
+  const parentRow = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Strona nadrzędna', exact: true }) })
   page.once('dialog', (dialog) => dialog.accept())
   await parentRow.getByRole('button', { name: 'Usuń stronę' }).click()
 
