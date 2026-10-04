@@ -439,6 +439,11 @@ test('Opowieść pokazuje wielopoziomowe drzewo i pozwala je zwijać', async ({ 
   await expect(page.getByRole('button', { name: 'Zwiń Monety polskie' })).toHaveAttribute('aria-expanded', 'true')
   await expect(page.getByRole('button', { name: 'Zwiń Monety królewskie' })).toHaveAttribute('aria-expanded', 'true')
 
+  const nestedItems = page.locator('.tree.nested > .tree-item')
+  await expect(nestedItems).toHaveCount(2)
+  await expect(nestedItems.first().evaluate((element) => getComputedStyle(element, '::after').bottom)).toBe('0px')
+  await expect(nestedItems.last().evaluate((element) => getComputedStyle(element, '::after').bottom)).toBe('19px')
+
   await page.getByRole('button', { name: 'Zwiń Monety królewskie' }).click()
   await expect(page.getByRole('button', { name: 'Rozwiń Monety królewskie' })).toHaveAttribute('aria-expanded', 'false')
   await expect(page.getByRole('button', { name: 'Jan Kazimierz' })).toHaveCount(0)
