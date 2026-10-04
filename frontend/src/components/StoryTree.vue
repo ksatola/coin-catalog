@@ -30,6 +30,7 @@ const emit = defineEmits<{
 }>()
 
 const expanded = ref<Set<number>>(new Set())
+
 const STORY_TREE_DND_KEY = Symbol('story-tree-dnd') as InjectionKey<StoryTreeDnd>
 
 function createDnd(): StoryTreeDnd {
