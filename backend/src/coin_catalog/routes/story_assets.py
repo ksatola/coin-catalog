@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy import select
@@ -32,12 +32,17 @@ def validate_image(data: bytes, expected_format: str) -> tuple[int, int]:
     try:
         with Image.open(BytesIO(data)) as image:
             if image.format != expected_format:
-                raise HTTPException(status_code=400, detail="Uploaded file type does not match the image")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Uploaded file type does not match the image",
+                )
             image.verify()
         with Image.open(BytesIO(data)) as image:
             return image.size
     except UnidentifiedImageError as error:
-        raise HTTPException(status_code=400, detail="Uploaded file is not a valid image") from error
+        raise HTTPException(
+            status_code=400, detail="Uploaded file is not a valid image"
+        ) from error
 
 
 def write_thumbnail(data: bytes, target: Path) -> None:
@@ -66,11 +71,15 @@ def get_asset_file(asset_id: int, session: Session = Depends(get_db)) -> FileRes
     target = asset_path(asset)
     if not target.is_file():
         raise HTTPException(status_code=404, detail="Story asset file not found")
-    return FileResponse(target, media_type=asset.mime_type, headers={"Cache-Control": "no-store"})
+    return FileResponse(
+        target, media_type=asset.mime_type, headers={"Cache-Control": "no-store"}
+    )
 
 
 @router.get("/{asset_id}/thumbnail")
-def get_asset_thumbnail(asset_id: int, session: Session = Depends(get_db)) -> FileResponse:
+def get_asset_thumbnail(
+    asset_id: int, session: Session = Depends(get_db)
+) -> FileResponse:
     asset = session.get(StoryAsset, asset_id)
     if asset is None:
         raise HTTPException(status_code=404, detail="Story asset not found")
@@ -80,7 +89,9 @@ def get_asset_thumbnail(asset_id: int, session: Session = Depends(get_db)) -> Fi
     thumbnail = thumbnail_path(asset)
     if not thumbnail.is_file():
         write_thumbnail(original.read_bytes(), thumbnail)
-    return FileResponse(thumbnail, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+    return FileResponse(
+        thumbnail, media_type="image/jpeg", headers={"Cache-Control": "no-store"}
+    )
 
 
 @router.post("", response_model=StoryAssetResponse, status_code=201)
@@ -102,7 +113,9 @@ def upload_asset(
     if image_type and suffix in {".jpg", ".jpeg"}:
         accepted_content_types.add("image/jpg")
     if image_type is None or content_type not in accepted_content_types:
-        raise HTTPException(status_code=400, detail="Only JPG and PNG images are supported")
+        raise HTTPException(
+            status_code=400, detail="Only JPG and PNG images are supported"
+        )
 
     data = upload.file.read()
     image_format, mime_type = image_type

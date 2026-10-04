@@ -15,7 +15,9 @@ from coin_catalog.routes import story_assets
 
 @pytest.fixture
 def client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient]:
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine)
 
@@ -24,7 +26,9 @@ def client(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient]:
             yield session
 
     monkeypatch.setattr(story_assets, "ASSETS_DIR", tmp_path / "story" / "assets")
-    monkeypatch.setattr(story_assets, "THUMBNAILS_DIR", tmp_path / "story" / "assets" / "thumbnails")
+    monkeypatch.setattr(
+        story_assets, "THUMBNAILS_DIR", tmp_path / "story" / "assets" / "thumbnails"
+    )
     app.dependency_overrides[get_db] = override_get_db
     test_client = TestClient(app)
     try:
@@ -50,7 +54,11 @@ def png_bytes(size: tuple[int, int] = (1200, 600)) -> bytes:
 
 
 def test_upload_asset_persists_metadata_and_files(client: TestClient) -> None:
-    response = client.post("/story/assets", files={"upload": ("oryginal.jpg", jpeg_bytes(), "image/jpeg")}, data={"alt_text": "Ilustracja opowieści"})
+    response = client.post(
+        "/story/assets",
+        files={"upload": ("oryginal.jpg", jpeg_bytes(), "image/jpeg")},
+        data={"alt_text": "Ilustracja opowieści"},
+    )
     assert response.status_code == 201
     payload = response.json()
     assert payload["id"] == 1
@@ -66,7 +74,9 @@ def test_upload_asset_persists_metadata_and_files(client: TestClient) -> None:
 
 
 def test_upload_png_persists_metadata_and_files(client: TestClient) -> None:
-    response = client.post("/story/assets", files={"upload": ("oryginal.png", png_bytes(), "image/png")})
+    response = client.post(
+        "/story/assets", files={"upload": ("oryginal.png", png_bytes(), "image/png")}
+    )
     assert response.status_code == 201
     payload = response.json()
     assert payload["id"] == 1
@@ -81,12 +91,16 @@ def test_upload_png_persists_metadata_and_files(client: TestClient) -> None:
 
 
 def test_upload_rejects_non_image(client: TestClient) -> None:
-    response = client.post("/story/assets", files={"upload": ("not.gif", b"not-an-image", "image/gif")})
+    response = client.post(
+        "/story/assets", files={"upload": ("not.gif", b"not-an-image", "image/gif")}
+    )
     assert response.status_code == 400
 
 
 def test_asset_file_and_thumbnail_are_served(client: TestClient) -> None:
-    upload = client.post("/story/assets", files={"upload": ("photo.jpg", jpeg_bytes(), "image/jpeg")})
+    upload = client.post(
+        "/story/assets", files={"upload": ("photo.jpg", jpeg_bytes(), "image/jpeg")}
+    )
     assert upload.status_code == 201
     asset_id = upload.json()["id"]
     assert client.get(f"/story/assets/{asset_id}/file").status_code == 200
