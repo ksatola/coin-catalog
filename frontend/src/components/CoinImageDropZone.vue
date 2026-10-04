@@ -7,8 +7,10 @@ const props = withDefaults(defineProps<{
   multiple?: boolean
   pendingCount?: number
   acceptedMimeTypes?: string[]
+  acceptedTypesLabel?: string
 }>(), {
   acceptedMimeTypes: () => ['image/jpeg'],
+  acceptedTypesLabel: 'JPG',
 })
 
 const emit = defineEmits<{
@@ -123,7 +125,7 @@ onBeforeUnmount(revokeLocalPreview)
 
     <div v-else class="drop-content">
       <strong>{{ title }}</strong>
-      <span>Przeciągnij JPG lub wklej Ctrl+V</span>
+      <span>Przeciągnij {{ acceptedTypesLabel }} lub wklej Ctrl+V</span>
 
       <span v-if="multiple && pendingCount">
         Wybrano zdjęć: {{ pendingCount }}
