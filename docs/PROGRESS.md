@@ -288,4 +288,9 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - User-reported verification: frontend type-check completed successfully after the tooltip typing fix.
 - The tooltip is implemented as custom HTML/CSS rather than a native `title` attribute.
 
+## 2026-10-04 — przenoszenie stron Opowieści między poziomami
 
+- Rozszerzono drzewo Opowieści o przeciąganie strony na inną stronę, co zmienia jej rodzica i pozwala przenosić ją między poziomami hierarchii.
+- Endpoint przenoszenia ustawia przeniesioną stronę na końcu rodzeństwa nowego rodzica, zachowując istniejące podstrony.
+- Dodano izolowany test Playwright sprawdzający przeniesienie strony drag&drop oraz izolowany test backendu sprawdzający kolejność po zmianie rodzica.
+- Testy nie zostały uruchomione lokalnie w tym środowisku.
