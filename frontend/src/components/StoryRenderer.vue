@@ -20,11 +20,14 @@ function safeHref(href: string): string {
 
 function renderCoin(id: number, embeddedCoins: StoryEmbeddedCoin[], key: string | number): VNode {
   const embedded = embeddedCoins.find((item) => item.id === id)
+  if (!embedded) {
+    return h('span', { key, class: 'story-coin-placeholder', 'data-coin-id': id }, `Moneta #${id} — ładowanie danych…`)
+  }
   return h(StoryCoinEmbed, {
     key,
     id,
-    coin: embedded?.coin ?? null,
-    deleted: embedded?.deleted ?? true,
+    coin: embedded.coin,
+    deleted: embedded.deleted,
   })
 }
 
