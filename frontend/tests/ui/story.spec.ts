@@ -144,7 +144,7 @@ async function mockCoinApi(page: Page, coinIds: number[] = [123]): Promise<void>
     to_year: 1930,
   }))
 
-  await page.route('**/api/coins', async (route) => {
+  await page.route('**/api/coins?*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -405,7 +405,7 @@ test('Opowieść renders Markdown and real coin embeds without executing raw HTM
   await page.getByRole('button', { name:'Zapisz' }).click()
 
   await expect(page.getByRole('heading', { name:'Nagłówek', exact:true })).toBeVisible()
-  await expect(page.locator('strong')).toHaveText('ważny')
+  await expect(page.locator('.story-renderer p').filter({ hasText: 'Pierwszy' }).locator('strong')).toHaveText('ważny')
   await expect(page.locator('.reader .story-renderer ul li')).toHaveText(['jeden', 'dwa'])
   await expect(page.getByRole('link', { name:'Moneta #123' })).toHaveAttribute('href', '/monety/123')
   await expect(page.locator('.story-renderer p').filter({ hasText: 'Tekst przed' })).toContainText('Tekst przed')
@@ -485,7 +485,7 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
   await textarea.evaluate((element) => (element as HTMLTextAreaElement).setSelectionRange(7, 7))
   await page.getByRole('button', { name: 'Wstaw monetę' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await page.getByRole('button', { name: 'Wstaw' }).click()
+  await page.getByRole('button', { name: 'Wstaw', exact: true }).click()
   await expect(textarea).toHaveValue('Przed {{ coin:123 }}')
   await expect(page.getByRole('link', { name: 'Moneta #123' })).toBeVisible()
   await expect(page.locator('.story-coin img')).toHaveCount(2)
@@ -496,7 +496,7 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
 test('picker Opowieści korzysta z aktualnego zakresu filtrów widoku Monety', async ({ page }) => {
   await mockStoryApi(page)
   let lastSearch = ''
-  await page.route('**/api/coins', async (route) => {
+  await page.route('**/api/coins?*', async (route) => {
     const url = new URL(route.request().url())
     lastSearch = url.searchParams.get('search') ?? ''
     await route.fulfill({
