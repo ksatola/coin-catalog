@@ -132,6 +132,9 @@ def get_story_page_by_path(slug_path: str, session: Session = Depends(get_db)) -
             raise HTTPException(status_code=404, detail="Story page not found")
         parent_id = page.id
 
+    if page is None:
+        raise HTTPException(status_code=404, detail="Story page not found")
+
     return response(page, session)
 
 
