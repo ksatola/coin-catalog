@@ -386,11 +386,19 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
   await mockStoryApi(page)
   await page.route('**/api/coins*', async (route) => {
     const url = new URL(route.request().url())
+    if (url.pathname === '/api/coins/123/images') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ id: 1231, kind: 'avers', revision: 2 }, { id: 1232, kind: 'rewers', revision: 3 }]),
+      })
+      return
+    }
     if (url.pathname === '/api/coins/123') {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ id: 123, is_deleted: false, collection_number: 'A-123', from_year: 1930, to_year: 1930, images: [] }),
+        body: JSON.stringify({ id: 123, is_deleted: false, collection_number: 'A-123', from_year: 1930, to_year: 1930 }),
       })
       return
     }
@@ -406,6 +414,8 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
   await page.getByRole('button', { name: 'Wstaw' }).click()
   await expect(textarea).toHaveValue('Przed {{ coin:123 }}')
   await expect(page.getByRole('link', { name: 'Moneta #123' })).toBeVisible()
+  await expect(page.locator('.story-coin img')).toHaveCount(2)
+  await expect(page.locator('.story-coin img').first()).toHaveAttribute('src', /\/api\/coins\/123\/images\/1231\/thumbnail\?v=2/)
   await expect(page.getByText('⚠ Moneta została usunięta')).toHaveCount(0)
 })
 
