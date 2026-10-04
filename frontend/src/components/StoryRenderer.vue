@@ -75,13 +75,16 @@ function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[]
   let index = 0
   while (index < children.length) {
     const child = children[index]
-    if (child.type === 'strong_open' || child.type === 'em_open' || child.type === 's_open') {
+    if (!child) break
+    if (child.type === 'strong_open' || child.type === 'em_open' || child.type === 's_open')
       const closeType = child.type.replace('_open', '_close')
       let depth = 1
       let close = index + 1
       for (; close < children.length; close += 1) {
-        if (children[close].type === child.type) depth += 1
-        if (children[close].type === closeType) {
+        const candidate = children[close]
+        if (!candidate) break
+        if (candidate.type === child.type) depth += 1
+        if (candidate.type === closeType) {
           depth -= 1
           if (depth === 0) break
         }
@@ -95,8 +98,10 @@ function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[]
       let depth = 1
       let close = index + 1
       for (; close < children.length; close += 1) {
-        if (children[close].type === 'link_open') depth += 1
-        if (children[close].type === 'link_close') {
+        const candidate = children[close]
+        if (!candidate) break
+        if (candidate.type === 'link_open') depth += 1
+        if (candidate.type === 'link_close') {
           depth -= 1
           if (depth === 0) break
         }
@@ -120,8 +125,10 @@ function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[]
 function findClose(tokens: Token[], start: number, openType: string, closeType: string): number {
   let depth = 0
   for (let index = start; index < tokens.length; index += 1) {
-    if (tokens[index].type === openType) depth += 1
-    if (tokens[index].type === closeType) {
+    const token = tokens[index]
+    if (!token) break
+    if (token.type === openType) depth += 1
+    if (token.type === closeType) {
       depth -= 1
       if (depth === 0) return index
     }
@@ -134,6 +141,7 @@ function renderTokens(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[], start
   let index = start
   while (index < end) {
     const token = tokens[index]
+    if (!token) break
     if (token.type === 'inline') {
       nodes.push(...renderInline(token, embeddedCoins))
       index += 1
