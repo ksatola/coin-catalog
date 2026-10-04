@@ -41,9 +41,28 @@ function syncTree(): void {
   tree.value = buildTree(props.nodes)
 }
 
+function findNode(nodes: DndStoryTreeItem[], id: number): DndStoryTreeItem | null {
+  for (const node of nodes) {
+    if (node.id === id) return node
+    const child = findNode(node.children, id)
+    if (child) return child
+  }
+  return null
+}
+
 function handleMove(move: MoveMutation): void {
   const id = Number(move.id)
   const targetId = Number(move.targetId)
+
+  if (move.position === 'FIRST_CHILD') {
+    const target = findNode(tree.value, targetId)
+    const firstChild = target?.children[0]
+    if (firstChild) {
+      emit('reorderTo', id, firstChild.id, 'before')
+      return
+    }
+  }
+
   const position: DropPosition =
     move.position === 'LEFT'
       ? 'before'
@@ -52,7 +71,6 @@ function handleMove(move: MoveMutation): void {
         : 'inside'
 
   emit('reorderTo', id, targetId, position)
-  syncTree()
 }
 
 watch(
