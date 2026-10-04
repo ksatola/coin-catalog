@@ -412,7 +412,7 @@ test('Opowieść renders Markdown and real coin embeds without executing raw HTM
   await expect(page.locator('.story-renderer p').filter({ hasText: 'tekst po' })).toContainText('tekst po')
   await expect(page.locator('.story-renderer strong').filter({ hasText: 'Ważna' })).toContainText('Ważna')
   await expect(page.locator('.story-renderer strong').filter({ hasText: /^Ważna / })).toContainText('Moneta #123')
-  await expect(page.locator('.story-coin img')).toHaveAttribute('src', /\/api\/coins\/123\/images\/1231\/thumbnail\?v=2/)
+  await expect(\n    page.locator('.story-renderer .story-coin').first().locator('img').first(),\n  ).toHaveAttribute('src', /\/api\/coins\/123\/images\/1231\/thumbnail\?v=2/)
   await expect(page.getByText('⚠ Moneta została usunięta')).toBeVisible()
   await expect(page.locator('.reader .story-renderer script')).toHaveCount(0)
   await expect(page.getByText('<script>alert("nie wykonuj")</script>')).toBeVisible()
