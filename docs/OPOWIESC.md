@@ -932,7 +932,8 @@ Opowieść
 19. Assety są referencjonowane przez ID, np. `{{ image:17 }}`.
 20. Dodawanie i edycja assetów wykorzystuje istniejący mechanizm drag & drop z formularza dodawania/edycji monet.
 21. Należy ponownie wykorzystać `CoinImageDropZone.vue`, zamiast tworzyć drugi niezależny mechanizm drag & drop.
-22. `Opowieść` jest osobnym modułem, ale nie może niepotrzebnie duplikować istniejącej funkcjonalności katalogu.
-23. Nie ma potrzeby historii wersji.
-24. Pierwsza implementacja powinna być wykonana etapami M1–M4.
-25. Dla każdej nowej funkcjonalności trzeba napisać test — backend/frontend, end-to-end, itp. w zależności od potrzeby.
+22. Assety Opowieści mogą być dodawane jako JPG lub PNG; wspólny dropzone jest konfigurowany dla tych typów bez zmiany domyślnego zachowania formularza „Monety”.
+23. `Opowieść` jest osobnym modułem, ale nie może niepotrzebnie duplikować istniejącej funkcjonalności katalogu.
+24. Nie ma potrzeby historii wersji.
+25. Pierwsza implementacja powinna być wykonana etapami M1–M4.
+26. Dla każdej nowej funkcjonalności trzeba napisać test — backend/frontend, end-to-end, itp. w zależności od potrzeby.
