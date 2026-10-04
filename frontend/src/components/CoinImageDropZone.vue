@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string
   previewUrl?: string | null
   multiple?: boolean
   pendingCount?: number
-}>()
+  acceptedMimeTypes?: string[]
+}>(), {
+  acceptedMimeTypes: () => ['image/jpeg'],
+})
 
 const emit = defineEmits<{
   files: [files: File[]]
@@ -42,7 +45,7 @@ watch(
 )
 
 function acceptedFiles(files: File[]): File[] {
-  return files.filter((file) => file.type === 'image/jpeg')
+  return files.filter((file) => props.acceptedMimeTypes.includes(file.type))
 }
 
 function acceptFiles(files: File[]): void {
