@@ -42,14 +42,18 @@ async function moveTo(id:number, parentId:number): Promise<void> {
     return
   }
   await reload()
-}async function reorderTo(id:number, targetId:number, position:'before'|'after'): Promise<void> {
+}async function reorderTo(id:number, targetId:number, position:'before'|'inside'|'after'): Promise<void> {
   const response = await fetch('/api/story/pages/' + id + '/reorder', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ target_id: targetId, position }),
+    body: position === 'inside'
+      ? JSON.stringify({ target_id: targetId, position: 'inside' })
+      : JSON.stringify({ target_id: targetId, position }),
   })
   if (!response.ok) {
-    error.value = 'Nie udało się zmienić kolejności.'
+    error.value = response.status === 409
+      ? 'Nie można przenieść strony w to miejsce.'
+      : 'Nie udało się zmienić kolejności.'
     return
   }
   await reload()
