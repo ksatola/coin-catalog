@@ -27,7 +27,7 @@ export type CoinFilterState = {
   sortOrder: string
 }
 
-function createState(statusFilter: string): CoinFilterState {
+export function createCoinFilterState(statusFilter: string): CoinFilterState {
   return reactive({
     search: '',
     dictionarySelections: {
@@ -53,8 +53,8 @@ function createState(statusFilter: string): CoinFilterState {
 }
 
 const states: Record<CoinFilterScope, CoinFilterState> = {
-  coins: createState('active'),
-  archive: createState('archived'),
+  coins: createCoinFilterState('active'),
+  archive: createCoinFilterState('archived'),
 }
 
 export function useCoinFilters(scope: CoinFilterScope): CoinFilterState {
