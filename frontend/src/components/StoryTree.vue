@@ -12,10 +12,12 @@ const emit = defineEmits<{
   select: [path: string]
   edit: [id: number]
   move: [id: number, direction: 'up' | 'down']
+  moveTo: [id: number, parentId: number]
   delete: [id: number]
 }>()
 
 const expanded = ref<Set<number>>(new Set())
+const dropTargetId = ref<number | null>(null)
 
 function resetExpanded(): void {
   expanded.value = new Set(
@@ -47,6 +49,41 @@ function toggle(node: StoryPageTree): void {
   expanded.value = next
 }
 
+function startDrag(event: DragEvent, node: StoryPageTree): void {
+  if (!event.dataTransfer) return
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', JSON.stringify({ id: node.id, path: node.path }))
+}
+
+function dragOver(node: StoryPageTree, event: DragEvent): void {
+  if (!event.dataTransfer) return
+  event.preventDefault()
+  event.dataTransfer.dropEffect = 'move'
+  dropTargetId.value = node.id
+}
+
+function drop(event: DragEvent, node: StoryPageTree): void {
+  event.preventDefault()
+  dropTargetId.value = null
+  const raw = event.dataTransfer?.getData('text/plain')
+  if (!raw) return
+
+  try {
+    const payload = JSON.parse(raw) as { id?: number; path?: string }
+    if (
+      typeof payload.id !== 'number'
+      || payload.id === node.id
+      || typeof payload.path !== 'string'
+      || node.path.startsWith(payload.path + '/')
+    ) {
+      return
+    }
+    emit('moveTo', payload.id, node.id)
+  } catch {
+    // Ignore malformed drag payloads.
+  }
+}
+
 watch(() => props.nodes, resetExpanded, { immediate: true })
 watch(() => props.activePath, expandActivePath, { immediate: true })
 </script>
@@ -54,7 +91,13 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
 <template>
   <ul class="tree" :class="{ nested: nested }">
     <li v-for="node in nodes" :key="node.id" class="tree-item">
-      <div class="node-row">
+      <div
+        class="node-row"
+        :class="{ 'drop-target': dropTargetId === node.id }"
+        @dragover="dragOver(node, $event)"
+        @dragleave="dropTargetId = null"
+        @drop="drop($event, node)"
+      >
         <button
           v-if="node.children.length"
           class="expand-toggle"
@@ -72,6 +115,9 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
           type="button"
           :class="{ active: activePath === node.path }"
           :aria-current="activePath === node.path ? 'page' : undefined"
+          draggable="true"
+          @dragstart="startDrag($event, node)"
+          @dragend="dropTargetId = null"
           @click="emit('select', node.path)"
         >
           <span class="node-title">{{ node.title }}</span>
@@ -93,6 +139,7 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
         @select="emit('select', $event)"
         @edit="emit('edit', $event)"
         @move="(id, direction) => emit('move', id, direction)"
+        @move-to="(id, parentId) => emit('moveTo', id, parentId)"
         @delete="emit('delete', $event)"
       />
     </li>
@@ -185,6 +232,20 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
 
 .node-link:hover {
   background: #f1f5f9;
+}
+
+.node-link[draggable="true"] {
+  cursor: grab;
+}
+
+.node-link[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.node-row.drop-target .node-link {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+  background: #eff6ff;
 }
 
 .node-link.active {
