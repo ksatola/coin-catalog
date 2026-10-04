@@ -310,3 +310,13 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Backend obsługuje teraz zmianę rodzica również przy dropie przed/za elementem z innego poziomu oraz drop bezpośrednio na parenta.
 - Dodano izolowane testy backendowe i Playwright dla przenoszenia między poziomami oraz kolejności rodzeństwa.
 - Testy nie zostały uruchomione lokalnie w tym środowisku.
+
+
+## 2026-10-04 — przebudowa drag&drop drzewa Opowieści
+
+- Przebudowano mechanizm drag&drop od podstaw, zachowując obecny interfejs z uchwytem `⋮⋮` oraz kursorem/oznaczeniem `not-allowed` dla niedozwolonych celów.
+- Stan aktywnego przeciągania jest współdzielony przez całe rekurencyjne drzewo przez Vue provide/inject, więc cel może znajdować się na dowolnym poziomie.
+- Przeciąganie korzysta z pointer events i pointer capture zamiast HTML5 `dragTo()`.
+- Cel drop jest wyznaczany z całego drzewa, a przestrzeń między wierszami wskazuje linię `before` lub `after`.
+- Zmieniono testy Playwright tak, aby wykonywały rzeczywisty gest myszy przez `page.mouse`; nadal używany jest `page.route()` i brak zapisu do runtime DB.
+- Weryfikacja wykonania testów pozostaje nieprzeprowadzona w tym środowisku; zmiany zostały zapisane na branchu `feature/story-tree-ui`.
