@@ -109,7 +109,6 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
 .tree.nested {
   margin-left: 12px;
   padding-left: 14px;
-  border-left: 1px solid #cbd5e1;
 }
 
 .tree.nested .tree-item {
@@ -123,6 +122,19 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   left: -14px;
   width: 14px;
   border-top: 1px solid #cbd5e1;
+}
+
+.tree.nested .tree-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -14px;
+  border-left: 1px solid #cbd5e1;
+}
+
+.tree.nested .tree-item:last-child::after {
+  bottom: calc(100% - 19px);
 }
 
 .node-row {
