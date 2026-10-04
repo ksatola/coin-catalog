@@ -30,7 +30,7 @@ function toggleExpanded(): void {
         type="button"
         :aria-label="expanded ? 'Zwiń ' + item.title : 'Rozwiń ' + item.title"
         :aria-expanded="expanded"
-        @click.stop="toggleExpanded"
+        @pointerdown.stop.prevent="toggleExpanded"
       >
         {{ expanded ? '▾' : '▸' }}
       </button>
