@@ -302,3 +302,11 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Upuszczenie na stronę z innego poziomu nadal zmienia rodzica.
 - Dodano izolowane testy backendu i Playwright dla zmiany kolejności przez pozycję docelową.
 - Testy nie zostały uruchomione lokalnie w tym środowisku.
+
+## 2026-10-04 — poprawa drag&drop drzewa Opowieści
+
+- Zmieniono obsługę dropów na trzy jednoznaczne strefy: **przed**, **wewnątrz parenta** i **za** elementem.
+- Usunięto zależność od `dragleave`, która powodowała znikanie celu podczas przechodzenia kursorem nad zawartością wiersza.
+- Backend obsługuje teraz zmianę rodzica również przy dropie przed/za elementem z innego poziomu oraz drop bezpośrednio na parenta.
+- Dodano izolowane testy backendowe i Playwright dla przenoszenia między poziomami oraz kolejności rodzeństwa.
+- Testy nie zostały uruchomione lokalnie w tym środowisku.
