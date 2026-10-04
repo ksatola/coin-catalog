@@ -313,9 +313,6 @@ def reorder_story_page(
     reorder_data: StoryPageReorderRequest,
     session: Session = Depends(get_db),
 ) -> StoryPageResponse:
-    if reorder_data.direction not in {"up", "down"}:
-        raise HTTPException(status_code=400, detail="Invalid reorder direction")
-
     page = get_page_or_404(page_id, session)
     siblings = list(
         session.scalars(
@@ -324,6 +321,33 @@ def reorder_story_page(
             .order_by(StoryPage.sort_order, StoryPage.id)
         ).all()
     )
+
+    if reorder_data.target_id is not None:
+        if reorder_data.position not in {"before", "after"}:
+            raise HTTPException(status_code=400, detail="Invalid target position")
+        if reorder_data.target_id == page.id:
+            return response(page, session)
+
+        target = session.get(StoryPage, reorder_data.target_id)
+        if target is None or target.parent_id != page.parent_id:
+            raise HTTPException(status_code=409, detail="Target is not a sibling")
+
+        siblings.remove(page)
+        target_index = siblings.index(target)
+        insert_at = target_index if reorder_data.position == "before" else target_index + 1
+        siblings.insert(insert_at, page)
+
+        now = datetime.now(UTC)
+        for index, sibling in enumerate(siblings):
+            sibling.sort_order = index
+            sibling.updated_at = now
+        session.commit()
+        session.refresh(page)
+        return response(page, session)
+
+    if reorder_data.direction not in {"up", "down"}:
+        raise HTTPException(status_code=400, detail="Invalid reorder direction")
+
     index = siblings.index(page)
     target_index = index - 1 if reorder_data.direction == "up" else index + 1
     if target_index < 0 or target_index >= len(siblings):
