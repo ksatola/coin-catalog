@@ -41,12 +41,12 @@ async function reorderTo(id:number, targetId:number, position:'before'|'inside'|
     error.value = response.status === 409
       ? 'Nie można przenieść strony w to miejsce.'
       : 'Nie udało się zmienić kolejności.'
+    try {
+      await loadTree()
+    } catch {
+      error.value = 'Nie udało się odświeżyć drzewa Opowieści.'
+    }
     return
-  }
-  try {
-    await loadTree()
-  } catch {
-    error.value = 'Nie udało się odświeżyć drzewa Opowieści.'
   }
 }
 function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
