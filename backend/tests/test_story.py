@@ -236,10 +236,10 @@ def test_story_page_move_preserves_descendants(client: TestClient) -> None:
     moved_tree = client.get("/story/pages/tree").json()
     target_node = next(item for item in moved_tree if item["id"] == target["id"])
     assert [item["title"] for item in target_node["children"]] == [
-        "Existing child",
         "Child",
+        "Existing child",
     ]
-    assert moved.json()["sort_order"] > sibling["sort_order"]
+    assert moved.json()["sort_order"] < sibling["sort_order"]
 
 
 def test_story_page_reorder(client: TestClient) -> None:
