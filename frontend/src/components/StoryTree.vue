@@ -113,6 +113,9 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
     <li v-for="node in nodes" :key="node.id" class="tree-item">
       <div
         class="node-row"
+        draggable="true"
+        @dragstart="startDrag($event, node)"
+        @dragend="finishDrag"
         :class="{
           'drop-target-before': dropTarget?.id === node.id && dropTarget.position === 'before',
           'drop-target-inside': dropTarget?.id === node.id && dropTarget.position === 'inside',
@@ -138,9 +141,6 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
           type="button"
           :class="{ active: activePath === node.path }"
           :aria-current="activePath === node.path ? 'page' : undefined"
-          draggable="true"
-          @dragstart="startDrag($event, node)"
-          @dragend="finishDrag"
           @click="emit('select', node.path)"
         >
           <span class="node-title">{{ node.title }}</span>
@@ -255,12 +255,17 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   background: #f1f5f9;
 }
 
-.node-link[draggable="true"] {
+.node-row[draggable="true"] {
   cursor: grab;
 }
 
-.node-link[draggable="true"]:active {
+.node-row[draggable="true"]:active {
   cursor: grabbing;
+}
+
+.node-row .node-actions,
+.node-row .expand-toggle {
+  cursor: default;
 }
 
 .node-row.drop-target-before::before,
