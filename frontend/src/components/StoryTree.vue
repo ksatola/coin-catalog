@@ -389,7 +389,11 @@ watch(() => props.activePath, expandActivePath, { immediate: true })
   cursor: grabbing;
 }
 
-.story-tree-dragging {
+:global(body.story-tree-dragging) {
+  cursor: grabbing;
+}
+
+:global(body.story-tree-dragging) .drag-handle {
   cursor: grabbing;
 }
 
