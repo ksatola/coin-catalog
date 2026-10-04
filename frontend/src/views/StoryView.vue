@@ -48,6 +48,8 @@ async function reorderTo(id:number, targetId:number, position:'before'|'inside'|
     }
     return
   }
+
+  await loadTree()
 }
 function findNode(nodes: StoryPageTree[], id: number): StoryPageTree | null {
   for (const node of nodes) {
