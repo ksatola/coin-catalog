@@ -497,6 +497,42 @@ test('Opowieść pozwala przeciągnąć stronę na parenta', async ({ page }) =>
   await expect(target.locator('xpath=..').locator('.tree-item .node-link')).toContainText('Przenoszona')
 })
 
+test('Opowieść pokazuje optymistyczne przesunięcie przed odpowiedzią API', async ({ page }) => {
+  await mockStoryApi(page, [
+    storyPage({ title: 'Korzeń', slug: 'korzen', path: 'korzen' }),
+    storyPage({ id: 2, parent_id: 1, title: 'Pierwsza', slug: 'pierwsza', sort_order: 0, path: 'korzen/pierwsza' }),
+    storyPage({ id: 3, parent_id: 1, title: 'Druga', slug: 'druga', sort_order: 1, path: 'korzen/druga' }),
+    storyPage({ id: 4, parent_id: 1, title: 'Trzecia', slug: 'trzecia', sort_order: 2, path: 'korzen/trzecia' }),
+  ])
+
+  let releaseReorder: () => void = () => {}
+  const reorderBlocked = new Promise<void>((resolve) => {
+    releaseReorder = resolve
+  })
+
+  await page.route('**/api/story/pages/4/reorder', async (route) => {
+    await reorderBlocked
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: 4 }),
+    })
+  })
+
+  await page.goto('/opowiesc/korzen')
+
+  const source = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Trzecia' }) })
+  const target = page.locator('.node-row').filter({ has: page.getByRole('button', { name: 'Pierwsza' }) })
+
+  await source.dragTo(target)
+
+  const rows = page.locator('.story-tree .node-row')
+  await expect(rows.nth(1).getByRole('button', { name: 'Trzecia' })).toBeVisible()
+  await expect(rows.nth(2).getByRole('button', { name: 'Pierwsza' })).toBeVisible()
+
+  releaseReorder()
+})
+
 test('Opowieść pozwala przeciągnąć stronę przed lub za rodzeństwo', async ({ page }) => {
   await mockStoryApi(page, [
     storyPage({ title: 'Korzeń', slug: 'korzen', path: 'korzen' }),
