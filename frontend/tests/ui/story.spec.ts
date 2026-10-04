@@ -100,13 +100,23 @@ async function mockStoryDependencies(page: Page): Promise<void> {
     await route.abort()
   })
 
-  await page.route('**/api/dictionaries/*', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([]),
+  for (const name of [
+    'countries',
+    'issuers',
+    'denominations',
+    'mints',
+    'materials',
+    'states',
+    'eras',
+  ]) {
+    await page.route(`**/api/dictionaries/${name}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      })
     })
-  })
+  }
 
   await page.route('**/api/categories', async (route) => {
     await route.fulfill({
@@ -123,6 +133,58 @@ async function mockStoryDependencies(page: Page): Promise<void> {
       body: JSON.stringify([]),
     })
   })
+}
+
+async function mockCoinApi(page: Page, coinIds: number[] = [123]): Promise<void> {
+  const coins = coinIds.map((id) => ({
+    id,
+    is_deleted: false,
+    collection_number: `A-${id}`,
+    from_year: 1930,
+    to_year: 1930,
+  }))
+
+  await page.route('**/api/coins', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: coins, next_cursor: null, has_more: false }),
+    })
+  })
+
+  for (const coin of coins) {
+    await page.route(`**/api/coins/${coin.id}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(coin),
+      })
+    })
+
+    await page.route(`**/api/coins/${coin.id}/images`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: coin.id * 10 + 1, kind: 'avers', revision: 2 },
+          { id: coin.id * 10 + 2, kind: 'rewers', revision: 3 },
+        ]),
+      })
+    })
+
+    for (const image of [
+      { id: coin.id * 10 + 1, revision: 2 },
+      { id: coin.id * 10 + 2, revision: 3 },
+    ]) {
+      await page.route(`**/api/coins/${coin.id}/images/${image.id}/thumbnail`, async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'image/svg+xml',
+          body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>',
+        })
+      })
+    }
+  }
 }
 
 async function mockStoryApi(page: Page, initialPages: StoryPage[] = []): Promise<void> {
@@ -415,26 +477,7 @@ test('Opowieść nie pozwala usunąć strony posiadającej podstrony', async ({ 
 
 test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ page }) => {
   await mockStoryApi(page)
-  await page.route('**/api/coins*', async (route) => {
-    const url = new URL(route.request().url())
-    if (url.pathname === '/api/coins/123/images') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([{ id: 1231, kind: 'avers', revision: 2 }, { id: 1232, kind: 'rewers', revision: 3 }]),
-      })
-      return
-    }
-    if (url.pathname === '/api/coins/123') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ id: 123, is_deleted: false, collection_number: 'A-123', from_year: 1930, to_year: 1930 }),
-      })
-      return
-    }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ items: [{ id: 123, collection_number: 'A-123' }], next_cursor: null, has_more: false }) })
-  })
+  await mockCoinApi(page)
   await page.goto('/opowiesc/edytuj/nowa')
   await page.getByLabel('Tytuł').fill('Picker test')
   await page.getByLabel('Treść Markdown').fill('Przed ')
@@ -453,10 +496,7 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
 test('picker Opowieści korzysta z aktualnego zakresu filtrów widoku Monety', async ({ page }) => {
   await mockStoryApi(page)
   let lastSearch = ''
-  await page.route('**/api/collections', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
-  })
-  await page.route('**/api/coins*', async (route) => {
+  await page.route('**/api/coins', async (route) => {
     const url = new URL(route.request().url())
     lastSearch = url.searchParams.get('search') ?? ''
     await route.fulfill({
