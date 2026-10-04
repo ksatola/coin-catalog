@@ -138,6 +138,25 @@ class CoinImageResponse(BaseModel):
     created_at: datetime
 
 
+class StoryAssetResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    filename: str
+    original_filename: str
+    mime_type: str
+    file_size_bytes: int
+    width: int
+    height: int
+    alt_text: str
+    created_at: datetime
+
+
+class StoryEmbeddedAssetResponse(BaseModel):
+    id: int
+    asset: StoryAssetResponse | None = None
+
+
 class StoryPageCreate(BaseModel):
     title: str
     content: str = ""
@@ -176,6 +195,7 @@ class StoryPageResponse(BaseModel):
     updated_at: datetime
     path: str
     embedded_coins: list[StoryEmbeddedCoinResponse] = Field(default_factory=list)
+    embedded_assets: list[StoryEmbeddedAssetResponse] = Field(default_factory=list)
 
 
 class StoryPageTreeResponse(BaseModel):

@@ -23,6 +23,7 @@ type StoryPage = {
   updated_at: string
   path: string
   embedded_coins: StoryEmbeddedCoin[]
+  embedded_assets: { id: number; asset: null }[]
 }
 
 type StoryPageTree = Omit<StoryPage, 'content' | 'created_at' | 'updated_at' | 'embedded_coins'> & {
@@ -375,6 +376,7 @@ function storyPage(overrides: Partial<StoryPage>): StoryPage {
     updated_at: '2026-10-03T00:00:00Z',
     path: 'strona-testowa',
     embedded_coins: [],
+    embedded_assets: [],
     ...overrides,
   }
 }

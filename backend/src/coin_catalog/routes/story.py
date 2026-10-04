@@ -8,9 +8,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.database import get_db
-from coin_catalog.models import Coin, CoinImage, StoryPage
+from coin_catalog.models import Coin, CoinImage, StoryAsset, StoryPage
 from coin_catalog.schemas import (
     CoinListResponse,
+    StoryAssetResponse,
+    StoryEmbeddedAssetResponse,
     StoryEmbeddedCoinResponse,
     StoryPageCreate,
     StoryPageMoveRequest,
@@ -30,6 +32,7 @@ from coin_catalog.story import (
 router = APIRouter(prefix="/story/pages", tags=["story"])
 
 COIN_REFERENCE_RE = re.compile(r"\{\{\s*coin:(\d+)\s*\}\}")
+IMAGE_REFERENCE_RE = re.compile(r"\{\{\s*image:(\d+)\s*\}\}")
 
 
 def embedded_coin_ids(content: str) -> list[int]:
@@ -77,6 +80,39 @@ def load_embedded_coins(
     return result
 
 
+def embedded_asset_ids(content: str) -> list[int]:
+    seen: set[int] = set()
+    ids: list[int] = []
+    for match in IMAGE_REFERENCE_RE.finditer(content):
+        asset_id = int(match.group(1))
+        if asset_id not in seen:
+            seen.add(asset_id)
+            ids.append(asset_id)
+    return ids
+
+
+def load_embedded_assets(
+    page: StoryPage, session: Session
+) -> list[StoryEmbeddedAssetResponse]:
+    ids = embedded_asset_ids(page.content)
+    if not ids:
+        return []
+
+    assets = session.scalars(select(StoryAsset).where(StoryAsset.id.in_(ids))).all()
+    assets_by_id = {asset.id: asset for asset in assets}
+    return [
+        StoryEmbeddedAssetResponse(
+            id=asset_id,
+            asset=(
+                StoryAssetResponse.model_validate(assets_by_id[asset_id])
+                if asset_id in assets_by_id
+                else None
+            ),
+        )
+        for asset_id in ids
+    ]
+
+
 def response(page: StoryPage, session: Session) -> StoryPageResponse:
     return StoryPageResponse(
         id=page.id,
@@ -89,6 +125,7 @@ def response(page: StoryPage, session: Session) -> StoryPageResponse:
         updated_at=page.updated_at,
         path=page_path(page, session),
         embedded_coins=load_embedded_coins(page, session),
+        embedded_assets=load_embedded_assets(page, session),
     )
 
 

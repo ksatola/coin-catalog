@@ -108,6 +108,23 @@ export interface StoryEmbeddedCoin {
   deleted: boolean
 }
 
+export interface StoryAsset {
+  id: number
+  filename: string
+  original_filename: string
+  mime_type: string
+  file_size_bytes: number
+  width: number
+  height: number
+  alt_text: string
+  created_at: string
+}
+
+export interface StoryEmbeddedAsset {
+  id: number
+  asset: StoryAsset | null
+}
+
 export interface StoryPage {
   id: number
   parent_id: number | null
@@ -119,6 +136,7 @@ export interface StoryPage {
   updated_at: string
   path: string
   embedded_coins: StoryEmbeddedCoin[]
+  embedded_assets: StoryEmbeddedAsset[]
 }
 
 export interface StoryPageTree {

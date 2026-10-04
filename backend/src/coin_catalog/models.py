@@ -322,6 +322,20 @@ class Coin(Base):
     )
 
 
+class StoryAsset(Base):
+    __tablename__ = "story_asset"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    filename: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    original_filename: Mapped[str] = mapped_column(Text, nullable=False)
+    mime_type: Mapped[str] = mapped_column(Text, nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    alt_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(\n        DateTime,\n        nullable=False,\n        default=lambda: datetime.now(UTC),\n    )
+
+
 class StoryPage(Base):
     __tablename__ = "story_page"
 

@@ -3,7 +3,8 @@ import MarkdownIt from 'markdown-it'
 import type { Token } from 'markdown-it'
 import { defineComponent, h, type VNode } from 'vue'
 import StoryCoinEmbed from './StoryCoinEmbed.vue'
-import type { StoryEmbeddedCoin } from '../types'
+import StoryAssetEmbed from './StoryAssetEmbed.vue'
+import type { StoryEmbeddedAsset, StoryEmbeddedCoin } from '../types'
 
 const markdown = new MarkdownIt({
   html: false,
@@ -16,6 +17,11 @@ function safeHref(href: string): string {
   const value = href.trim()
   if (/^(https?:|mailto:|\/|#)/i.test(value)) return value
   return '#'
+}
+
+function renderAsset(id: number, embeddedAssets: StoryEmbeddedAsset[], key: string | number): VNode {
+  const embedded = embeddedAssets.find((item) => item.id === id)
+  return h(StoryAssetEmbed, { key, id, asset: embedded?.asset ?? null })
 }
 
 function renderCoin(id: number, embeddedCoins: StoryEmbeddedCoin[], key: string | number): VNode {
@@ -31,8 +37,8 @@ function renderCoin(id: number, embeddedCoins: StoryEmbeddedCoin[], key: string 
   })
 }
 
-function renderText(content: string, embeddedCoins: StoryEmbeddedCoin[], keyPrefix: string | number): VNode[] {
-  const pattern = /\{\{\s*coin:(\d+)\s*\}\}/g
+function renderText(content: string, embeddedCoins: StoryEmbeddedCoin[], embeddedAssets: StoryEmbeddedAsset[], keyPrefix: string | number): VNode[] {
+  const pattern = /\{\{\s*(coin|image):(\d+)\s*\}\}/g
   const nodes: VNode[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
@@ -42,7 +48,10 @@ function renderText(content: string, embeddedCoins: StoryEmbeddedCoin[], keyPref
     if (match.index > lastIndex) {
       nodes.push(h('span', { key: `${keyPrefix}-text-${part++}` }, content.slice(lastIndex, match.index)))
     }
-    nodes.push(renderCoin(Number(match[1]), embeddedCoins, `${keyPrefix}-coin-${part++}`))
+    const id = Number(match[2])
+    nodes.push(match[1] === 'coin'
+      ? renderCoin(id, embeddedCoins, `${keyPrefix}-coin-${part++}`)
+      : renderAsset(id, embeddedAssets, `${keyPrefix}-image-${part++}`))
     lastIndex = match.index + match[0].length
   }
 
@@ -53,10 +62,10 @@ function renderText(content: string, embeddedCoins: StoryEmbeddedCoin[], keyPref
   return nodes
 }
 
-function inlineNodes(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[] = []): VNode[] {
+function inlineNodes(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[] = [], embeddedAssets: StoryEmbeddedAsset[] = []): VNode[] {
   return tokens.flatMap((token, index) => {
     if (token.type === 'text') {
-      return renderText(token.content, embeddedCoins, index)
+      return renderText(token.content, embeddedCoins, embeddedAssets, index)
     }
     if (token.type === 'softbreak' || token.type === 'hardbreak') return [h('br', { key: index })]
     if (token.type === 'code_inline') return [h('code', { key: index }, token.content)]
@@ -69,7 +78,7 @@ function inlineNodes(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[] = []): 
   })
 }
 
-function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[] {
+function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[], embeddedAssets: StoryEmbeddedAsset[]): VNode[] {
   const children = token.children ?? []
   const nodes: VNode[] = []
   let index = 0
@@ -90,7 +99,7 @@ function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[]
         }
       }
       const tag = child.type === 'strong_open' ? 'strong' : child.type === 'em_open' ? 'em' : 's'
-      nodes.push(h(tag, { key: index }, inlineNodes(children.slice(index + 1, close), embeddedCoins)))
+      nodes.push(h(tag, { key: index }, inlineNodes(children.slice(index + 1, close), embeddedCoins, embeddedAssets)))
       index = close + 1
       continue
     }
@@ -107,16 +116,16 @@ function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[]
         }
       }
       const href = safeHref(child.attrGet('href') ?? '')
-      nodes.push(h('a', { key: index, href, target: /^https?:/i.test(href) ? '_blank' : undefined, rel: /^https?:/i.test(href) ? 'noopener noreferrer' : undefined }, inlineNodes(children.slice(index + 1, close), embeddedCoins)))
+      nodes.push(h('a', { key: index, href, target: /^https?:/i.test(href) ? '_blank' : undefined, rel: /^https?:/i.test(href) ? 'noopener noreferrer' : undefined }, inlineNodes(children.slice(index + 1, close), embeddedCoins, embeddedAssets)))
       index = close + 1
       continue
     }
     if (child.type === 'text') {
-      nodes.push(...renderText(child.content, embeddedCoins, index))
+      nodes.push(...renderText(child.content, embeddedCoins, embeddedAssets, index))
       index += 1
       continue
     }
-    nodes.push(...inlineNodes([child], embeddedCoins))
+    nodes.push(...inlineNodes([child], embeddedCoins, embeddedAssets))
     index += 1
   }
   return nodes
@@ -136,14 +145,14 @@ function findClose(tokens: Token[], start: number, openType: string, closeType: 
   return tokens.length
 }
 
-function renderTokens(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[], start = 0, end = tokens.length): VNode[] {
+function renderTokens(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[], embeddedAssets: StoryEmbeddedAsset[], start = 0, end = tokens.length): VNode[] {
   const nodes: VNode[] = []
   let index = start
   while (index < end) {
     const token = tokens[index]
     if (!token) break
     if (token.type === 'inline') {
-      nodes.push(...renderInline(token, embeddedCoins))
+      nodes.push(...renderInline(token, embeddedCoins, embeddedAssets))
       index += 1
       continue
     }
@@ -175,7 +184,7 @@ function renderTokens(tokens: Token[], embeddedCoins: StoryEmbeddedCoin[], start
     const container = containers[token.type]
     if (container) {
       const close = findClose(tokens, index, token.type, container.close)
-      nodes.push(h(container.tag, { key: index }, renderTokens(tokens, embeddedCoins, index + 1, close)))
+      nodes.push(h(container.tag, { key: index }, renderTokens(tokens, embeddedCoins, embeddedAssets, index + 1, close)))
       index = close + 1
       continue
     }
@@ -189,9 +198,10 @@ export default defineComponent({
   props: {
     content: { type: String, required: true },
     embeddedCoins: { type: Array as () => StoryEmbeddedCoin[], default: () => [] },
+    embeddedAssets: { type: Array as () => StoryEmbeddedAsset[], default: () => [] },
   },
   setup(props) {
-    return () => h('div', { class: 'story-renderer' }, renderTokens(markdown.parse(props.content, {}), props.embeddedCoins))
+    return () => h('div', { class: 'story-renderer' }, renderTokens(markdown.parse(props.content, {}), props.embeddedCoins, props.embeddedAssets))
   },
 })
 </script>

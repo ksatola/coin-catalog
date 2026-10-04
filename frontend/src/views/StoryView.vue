@@ -73,7 +73,7 @@ onMounted(() => void reload())
     </aside>
     <main class="reader">
       <p v-if="error" class="error">{{ error }}</p>
-      <template v-else-if="page"><nav class="breadcrumb">{{ page.path.replaceAll('/', ' / ') }}</nav><h2>{{ page.title }}</h2><StoryRenderer :content="page.content" :embedded-coins="page.embedded_coins" /></template>
+      <template v-else-if="page"><nav class="breadcrumb">{{ page.path.replaceAll('/', ' / ') }}</nav><h2>{{ page.title }}</h2><StoryRenderer :content="page.content" :embedded-coins="page.embedded_coins" :embedded-assets="page.embedded_assets" /></template>
       <div v-else class="empty">Wybierz stronę z drzewa.</div>
     </main>
   </section>
