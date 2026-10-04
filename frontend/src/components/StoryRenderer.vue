@@ -76,7 +76,7 @@ function renderInline(token: Token, embeddedCoins: StoryEmbeddedCoin[]): VNode[]
   while (index < children.length) {
     const child = children[index]
     if (!child) break
-    if (child.type === 'strong_open' || child.type === 'em_open' || child.type === 's_open')
+    if (child.type === 'strong_open' || child.type === 'em_open' || child.type === 's_open') {
       const closeType = child.type.replace('_open', '_close')
       let depth = 1
       let close = index + 1
