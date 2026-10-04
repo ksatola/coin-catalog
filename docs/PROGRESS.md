@@ -320,3 +320,13 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Cel drop jest wyznaczany z całego drzewa, a przestrzeń między wierszami wskazuje linię `before` lub `after`.
 - Zmieniono testy Playwright tak, aby wykonywały rzeczywisty gest myszy przez `page.mouse`; nadal używany jest `page.route()` i brak zapisu do runtime DB.
 - Weryfikacja wykonania testów pozostaje nieprzeprowadzona w tym środowisku; zmiany zostały zapisane na branchu `feature/story-tree-ui`.
+
+
+## 2026-10-04 — Story tree: gotowa biblioteka DnD
+
+- Zastąpiono własny mechanizm pointer events biblioteką `vue-tree-dnd@0.2.4`.
+- Biblioteka obsługuje zagnieżdżone drzewo, poprawne miejsca dropu, zmianę poziomu i collapse/expand.
+- Renderer elementu zachowuje obecny wygląd drzewa oraz akcje wyboru, edycji i usuwania.
+- Mutacja biblioteki `LEFT/RIGHT/FIRST_CHILD/LAST_CHILD` jest mapowana na istniejące API `before/after/inside`.
+- Testy Playwright pozostają izolowane przez `page.route()` i nie korzystają z runtime DB.
+- Weryfikacja uruchomienia testów w tym środowisku: nie wykonano; stan testów należy oznaczać jako niezweryfikowany do czasu uruchomienia.
