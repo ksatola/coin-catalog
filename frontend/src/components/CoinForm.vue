@@ -428,15 +428,15 @@ onBeforeUnmount(revokePendingAdditionalPreviewUrls)
       <div class="section-heading"><h3>Dane zakupu</h3></div>
       <div class="purchase-fields">
         <label class="field-card">Cena zakupu <input :value="purchasePriceInput" type="text" inputmode="decimal" @input="updateDecimalInput('purchase_price', $event)" @blur="formatDecimalOnBlur('purchase_price')" /></label>
-        <fieldset class="field-card purchase-date-field">
-          <legend>Data zakupu</legend>
+        <label class="field-card purchase-date-field">
+          Data zakupu
           <div class="purchase-date-control">
             <input id="purchase-date" :value="purchaseDateInput" type="text" inputmode="numeric" autocomplete="off" placeholder="YYYY-MM-DD" aria-label="Data zakupu" aria-describedby="purchase-date-error" :aria-invalid="Boolean(purchaseDateError)" @input="handlePurchaseDateInput" />
             <button type="button" aria-label="Otwórz kalendarz daty zakupu" @click="openPurchaseDatePicker">📅</button>
             <input ref="purchaseDatePicker" :value="purchaseDateInput" type="date" class="purchase-date-picker" tabindex="-1" aria-hidden="true" @input="handlePurchaseDateInput" @change="handlePurchaseDateInput" />
           </div>
           <span v-if="purchaseDateError" id="purchase-date-error" class="field-error">{{ purchaseDateError }}</span>
-        </fieldset>
+        </label>
       </div>
     </section>
 
