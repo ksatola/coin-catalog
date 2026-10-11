@@ -134,6 +134,7 @@ function coinStyle(coin: Coin): Record<string, string> {
   const size = renderedSize(coin)
   return {
     '--coin-size': `${size}px`,
+    '--coin-frame-padding': `${size * 0.2}px`,
   }
 }
 
@@ -260,9 +261,9 @@ onMounted(() => void loadDictionaries())
 .missing-image {
   display: grid;
   width: var(--coin-size);
-  height: var(--coin-size);
+  height: calc(var(--coin-size) + var(--coin-frame-padding));
   min-width: var(--coin-size);
-  min-height: var(--coin-size);
+  min-height: calc(var(--coin-size) + var(--coin-frame-padding));
   place-items: center;
   background: #ffffff;
 }
@@ -270,9 +271,8 @@ onMounted(() => void loadDictionaries())
 .coin-side :deep(img) {
   display: block;
   width: 100%;
-  height: 100%;
+  height: var(--coin-size);
   max-width: 100%;
-  max-height: 100%;
   object-fit: contain;
   object-position: center;
 }
