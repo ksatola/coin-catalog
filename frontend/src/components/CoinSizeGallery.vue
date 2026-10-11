@@ -265,7 +265,6 @@ onMounted(() => void loadDictionaries())
   min-height: var(--coin-size);
   place-items: center;
   overflow: hidden;
-  border-radius: 50%;
   background: #f8fafc;
 }
 
