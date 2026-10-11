@@ -279,7 +279,17 @@ onMounted(() => void loadDictionaries())
 }
 
 .coin-side + .coin-side {
-  border-left: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.coin-side + .coin-side::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: #e2e8f0;
+  content: '';
 }
 
 .missing-image {
