@@ -264,15 +264,17 @@ onMounted(() => void loadDictionaries())
   min-width: var(--coin-size);
   min-height: var(--coin-size);
   place-items: center;
-  overflow: hidden;
-  background: #f8fafc;
+  background: #ffffff;
 }
 
 .coin-side :deep(img) {
   display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  object-position: center;
 }
 
 .coin-side + .coin-side {
