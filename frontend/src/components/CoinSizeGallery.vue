@@ -201,6 +201,7 @@ onMounted(() => void loadDictionaries())
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, calc(var(--coin-size) + var(--coin-frame-padding)));
+  column-gap: 12px;
   align-items: center;
   padding: 10px;
   border: 1px solid #dbe3ee;
@@ -277,7 +278,17 @@ onMounted(() => void loadDictionaries())
 }
 
 .coin-side + .coin-side {
-  border-left: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.coin-side + .coin-side::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -7px;
+  width: 1px;
+  background: #e2e8f0;
+  content: '';
 }
 
 .missing-image {
