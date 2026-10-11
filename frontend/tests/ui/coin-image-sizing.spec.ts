@@ -117,10 +117,10 @@ test('Rozmiar utrzymuje skalowanie i odstęp między stronami z separatorem poś
   expect(initial.gap).toBe('12px')
   expect(initial.dividerWidth).toBe('1px')
   expect(initial.firstWidth).toBe(initial.secondWidth)
-  expect(initial.coinSize).toBe('75.5906px')
+  expect(Number.parseFloat(initial.coinSize)).toBeCloseTo(20 * 96 / 25.4, 5)
 
   await page.getByRole('button', { name: 'Skala 50%' }).click()
   await expect.poll(() => tile.evaluate((element) =>
-    getComputedStyle(element).getPropertyValue('--coin-size').trim(),
-  )).toBe('37.7953px')
+    Number.parseFloat(getComputedStyle(element).getPropertyValue('--coin-size')),
+  )).toBeCloseTo(20 * 96 / 25.4 * 0.5, 5)
 })
