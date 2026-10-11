@@ -57,6 +57,10 @@ function addCreatedCollection(collection: Collection): void {
   markDirty()
 }
 
+function clearCategorySelection(): void {
+  selectedCategoryIds.value = []
+}
+
 async function uploadFile(coinId: number, file: File, kind: 'avers' | 'rewers' | 'additional'): Promise<void> {
   const formData = new FormData()
   formData.append('upload', file)
@@ -141,7 +145,17 @@ onMounted(() => {
             </option>
           </select>
         </label>
-        <small>Możesz wybrać więcej niż jedną kategorię, także parenta i childa.</small>
+        <div class="category-selection-actions">
+          <small>Możesz wybrać więcej niż jedną kategorię, także parenta i childa.</small>
+          <button
+            type="button"
+            class="clear-selection-button"
+            :disabled="selectedCategoryIds.length === 0"
+            @click="clearCategorySelection"
+          >
+            Wyczyść wybór
+          </button>
+        </div>
         <InlineCategoryCreate :categories="categories" @created="addCreatedCategory" />
       </section>
     </div>
@@ -219,8 +233,33 @@ onMounted(() => {
   outline-offset: 2px;
 }
 
+.category-selection-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .category-card small {
   color: #475569;
   font-size: .8rem;
+}
+
+.clear-selection-button {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: .875rem;
+  cursor: pointer;
+}
+
+.clear-selection-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
 </style>
