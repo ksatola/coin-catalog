@@ -60,20 +60,23 @@ test('widok rozmiarów zachowuje proporcje średnic i skalę', async ({ page }) 
   await page.goto('/monety')
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
-  const sizes = page.locator('.coin-size-tile .missing-image')
-  await expect(sizes).toHaveCount(2)
+  const tiles = page.locator('.coin-size-tile')
+  await expect(tiles).toHaveCount(2)
+  await expect(page.locator('.coin-size-tile .missing-image')).toHaveCount(2)
 
-  const initialSizes = await sizes.evaluateAll((elements) =>
-    elements.map((element) => element.getBoundingClientRect().width),
+  const initialSizes = await tiles.evaluateAll((elements) =>
+    elements.map((element) => Number.parseFloat(getComputedStyle(element).getPropertyValue('--coin-size'))),
   )
-  expect(initialSizes).toEqual([200, 100])
+  expect(initialSizes[0]).toBeCloseTo(200, 5)
+  expect(initialSizes[1]).toBeCloseTo(100, 5)
 
   await page.getByRole('button', { name: 'Skala 50%' }).click()
 
-  const halfSizes = await sizes.evaluateAll((elements) =>
-    elements.map((element) => element.getBoundingClientRect().width),
+  const halfSizes = await tiles.evaluateAll((elements) =>
+    elements.map((element) => Number.parseFloat(getComputedStyle(element).getPropertyValue('--coin-size'))),
   )
-  expect(halfSizes).toEqual([100, 50])
+  expect(halfSizes[0]).toBeCloseTo(100, 5)
+  expect(halfSizes[1]).toBeCloseTo(50, 5)
 })
 
 test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
@@ -103,18 +106,22 @@ test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
   await dialog.getByRole('button', { name: 'Zapisz kalibrację' }).click()
 
   await expect(page.getByRole('button', { name: 'Skala 100%, skalibrowana' })).toBeVisible()
-  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
+  const tile = page.locator('.coin-size-tile')
+  const renderedSize = () => tile.evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).getPropertyValue('--coin-size')),
+  )
+  await expect.poll(renderedSize).toBeCloseTo(200, 5)
 
   await page.getByRole('button', { name: 'Skala 125%' }).click()
-  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 250)
+  await expect.poll(renderedSize).toBeCloseTo(250, 5)
   await page.getByRole('button', { name: 'Skala 150%' }).click()
-  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 300)
+  await expect.poll(renderedSize).toBeCloseTo(300, 5)
   await page.getByRole('button', { name: 'Skala 200%' }).click()
-  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 400)
+  await expect.poll(renderedSize).toBeCloseTo(400, 5)
 
   await page.reload()
   await expect(page.getByRole('button', { name: 'Skala 100%, skalibrowana' })).toBeVisible()
-  await expect(page.locator('.coin-size-tile .missing-image')).toHaveJSProperty('offsetWidth', 200)
+  await expect.poll(renderedSize).toBeCloseTo(200, 5)
 })
 
 test('widok rozmiarów przeskalowuje wcześniej załadowane monety po infinite scroll', async ({ page }) => {
@@ -146,12 +153,15 @@ test('widok rozmiarów przeskalowuje wcześniej załadowane monety po infinite s
   await page.goto('/monety')
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
 
-  const sizes = page.locator('.coin-size-tile .missing-image')
-  await expect(sizes).toHaveCount(3)
-  await expect.poll(() => sizes.nth(0).evaluate((element) => element.getBoundingClientRect().width)).toBe(200)
-  await expect.poll(() => sizes.nth(0).evaluate((element) => element.getBoundingClientRect().width)).toBe(200)
-  await expect.poll(() => sizes.nth(1).evaluate((element) => element.getBoundingClientRect().width)).toBe(100)
-  await expect.poll(() => sizes.nth(2).evaluate((element) => element.getBoundingClientRect().width)).toBe(400)
+  const tiles = page.locator('.coin-size-tile')
+  await expect(tiles).toHaveCount(3)
+  await expect(page.locator('.coin-size-tile .missing-image')).toHaveCount(3)
+  const renderedSize = (index: number) => tiles.nth(index).evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).getPropertyValue('--coin-size')),
+  )
+  await expect.poll(() => renderedSize(0)).toBeCloseTo(200, 5)
+  await expect.poll(() => renderedSize(1)).toBeCloseTo(100, 5)
+  await expect.poll(() => renderedSize(2)).toBeCloseTo(400, 5)
 })
 
 
