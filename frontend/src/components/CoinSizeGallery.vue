@@ -260,9 +260,9 @@ onMounted(() => void loadDictionaries())
 .coin-side,
 .missing-image {
   display: grid;
-  width: var(--coin-size);
+  width: calc(var(--coin-size) + var(--coin-frame-padding));
   height: calc(var(--coin-size) + var(--coin-frame-padding));
-  min-width: var(--coin-size);
+  min-width: calc(var(--coin-size) + var(--coin-frame-padding));
   min-height: calc(var(--coin-size) + var(--coin-frame-padding));
   place-items: center;
   background: #ffffff;
@@ -270,9 +270,10 @@ onMounted(() => void loadDictionaries())
 
 .coin-side :deep(img) {
   display: block;
-  width: 100%;
+  width: var(--coin-size);
   height: var(--coin-size);
   max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   object-position: center;
 }
