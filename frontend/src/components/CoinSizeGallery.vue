@@ -268,7 +268,7 @@ onMounted(() => void loadDictionaries())
   background: #f8fafc;
 }
 
-.coin-side img {
+.coin-side :deep(img) {
   display: block;
   width: 100%;
   height: 100%;
