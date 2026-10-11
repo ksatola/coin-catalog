@@ -201,7 +201,7 @@ onMounted(() => void loadDictionaries())
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   padding: 10px;
   border: 1px solid #dbe3ee;
   border-radius: 10px;
