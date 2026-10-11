@@ -199,9 +199,9 @@ onMounted(() => void loadDictionaries())
 
 .coin-size-tile {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, calc(var(--coin-size) + var(--coin-frame-padding)));
   align-items: center;
-  gap: 0;
   padding: 10px;
   border: 1px solid #dbe3ee;
   border-radius: 10px;
@@ -260,9 +260,7 @@ onMounted(() => void loadDictionaries())
 .coin-side,
 .missing-image {
   display: grid;
-  width: calc(var(--coin-size) + var(--coin-frame-padding));
-  height: calc(var(--coin-size) + var(--coin-frame-padding));
-  min-width: calc(var(--coin-size) + var(--coin-frame-padding));
+  min-width: 0;
   min-height: calc(var(--coin-size) + var(--coin-frame-padding));
   place-items: center;
   background: #ffffff;
@@ -279,17 +277,7 @@ onMounted(() => void loadDictionaries())
 }
 
 .coin-side + .coin-side {
-  position: relative;
-}
-
-.coin-side + .coin-side::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 1px;
-  background: #e2e8f0;
-  content: '';
+  border-left: 1px solid #e2e8f0;
 }
 
 .missing-image {
