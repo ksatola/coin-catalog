@@ -134,6 +134,7 @@ function coinStyle(coin: Coin): Record<string, string> {
   const size = renderedSize(coin)
   return {
     '--coin-size': `${size}px`,
+    '--coin-frame-padding': `${size * 0.2}px`,
   }
 }
 
@@ -198,9 +199,10 @@ onMounted(() => void loadDictionaries())
 
 .coin-size-tile {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, calc(var(--coin-size) + var(--coin-frame-padding)));
+  column-gap: 12px;
   align-items: center;
-  gap: 10px;
   padding: 10px;
   border: 1px solid #dbe3ee;
   border-radius: 10px;
@@ -259,25 +261,34 @@ onMounted(() => void loadDictionaries())
 .coin-side,
 .missing-image {
   display: grid;
-  width: var(--coin-size);
-  height: var(--coin-size);
-  min-width: var(--coin-size);
-  min-height: var(--coin-size);
+  min-width: 0;
+  min-height: calc(var(--coin-size) + var(--coin-frame-padding));
   place-items: center;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #f8fafc;
+  background: #ffffff;
 }
 
-.coin-side img {
+.coin-side :deep(img) {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: var(--coin-size);
+  height: var(--coin-size);
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  object-position: center;
 }
 
 .coin-side + .coin-side {
-  border-left: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.coin-side + .coin-side::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -7px;
+  width: 1px;
+  background: #e2e8f0;
+  content: '';
 }
 
 .missing-image {

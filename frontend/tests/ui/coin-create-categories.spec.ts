@@ -106,3 +106,24 @@ test('dodanie monety pozwala utworzyć kolekcję bez opuszczania formularza', as
   await page.getByRole('button', { name: 'Dodaj', exact: true }).click()
   await expect(page.getByLabel('Wybierz kolekcję')).toHaveValue('2')
 })
+
+
+test('przycisk Wyczyść wybór odznacza wszystkie kategorie bez usuwania ich z listy', async ({ page }) => {
+  const assignedCategoryIds: number[] = []
+  await mockCreateApi(page, assignedCategoryIds)
+  await page.goto('/dodaj')
+
+  const categorySelect = page.getByLabel('Wybierz kategorie')
+  await expect(categorySelect.locator('option')).toHaveCount(3)
+
+  await categorySelect.selectOption(['1', '2'])
+  await expect(categorySelect.locator('option:checked')).toHaveCount(2)
+
+  const clearButton = page.getByRole('button', { name: 'Wyczyść wybór' })
+  await expect(clearButton).toBeEnabled()
+  await clearButton.click()
+
+  await expect(categorySelect.locator('option:checked')).toHaveCount(0)
+  await expect(categorySelect.locator('option')).toHaveCount(3)
+  await expect(clearButton).toBeDisabled()
+})
