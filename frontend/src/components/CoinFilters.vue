@@ -22,7 +22,11 @@ const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMod
 type DictionaryModeKey = (typeof dictionaryModeKeys)[keyof typeof dictionaryModeKeys]
 
 function dictionaryModeKey(name: string): DictionaryModeKey {
-  return dictionaryModeKeys[name as keyof typeof dictionaryModeKeys]
+  const key = dictionaryModeKeys[name as keyof typeof dictionaryModeKeys]
+  if (!key) {
+    throw new Error(`Unknown coin dictionary: ${name}`)
+  }
+  return key
 }
 
 
