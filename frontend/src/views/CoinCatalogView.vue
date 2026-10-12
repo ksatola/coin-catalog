@@ -702,14 +702,15 @@ onUnmounted(() => {
 
 .advanced-filters {
   position: fixed;
-  top: 220px;
-  right: 20px;
-  bottom: 16px;
-  left: 20px;
-  z-index: 19;
+  inset: 0;
+  z-index: 1000;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 20px;
+  padding: 24px;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: 0 0 0 100vmax rgba(15, 23, 42, 0.42);
   border: 1px solid #dbe3ee;
   border-radius: 12px;
   background: #ffffff;
@@ -800,7 +801,7 @@ onUnmounted(() => {
 
 @media (max-width: 900px) {
   .advanced-filters {
-    top: 300px;
+    padding: 16px;
   }
 
   .page-header {
@@ -816,9 +817,7 @@ onUnmounted(() => {
 
 @media (max-width: 600px) {
   .advanced-filters {
-    top: 370px;
-    right: 12px;
-    left: 12px;
+    padding: 12px;
   }
 
   .header-controls {
