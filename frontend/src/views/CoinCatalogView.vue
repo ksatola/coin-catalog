@@ -32,6 +32,7 @@ const loadingMore = ref(false)
 const initialLoading = ref(true)
 const sentinel = ref<HTMLElement | null>(null)
 const showAdvancedFilters = ref(false)
+const advancedFiltersDialog = ref<HTMLDialogElement | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestGeneration = 0
 let observer: IntersectionObserver | undefined
@@ -267,8 +268,20 @@ function resetFilters(): void {
 }
 
 function toggleAdvancedFilters(): void {
-  showAdvancedFilters.value = !showAdvancedFilters.value
+  if (showAdvancedFilters.value) {
+    advancedFiltersDialog.value?.close()
+    showAdvancedFilters.value = false
+  } else {
+    showAdvancedFilters.value = true
+  }
 }
+
+watch(showAdvancedFilters, async (isOpen) => {
+  if (!isOpen) return
+  await nextTick()
+  const dialog = advancedFiltersDialog.value
+  if (dialog && !dialog.open) dialog.showModal()
+})
 
 watch([sentinel, loadingMore], ([element, isLoading]) => {
   observer?.disconnect()
@@ -414,7 +427,7 @@ onUnmounted(() => {
         <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
       </div>
 
-      <div v-if="showAdvancedFilters" id="advanced-coin-filters" class="advanced-filters">
+      <dialog v-if="showAdvancedFilters" ref="advancedFiltersDialog" id="advanced-coin-filters" class="advanced-filters" @close="showAdvancedFilters = false">
       <div class="advanced-filters-header">
         <div>
           <h2>Filtry</h2>
@@ -425,7 +438,7 @@ onUnmounted(() => {
 
       <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
       </div>
-    </div>
+    </dialog>
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
 
@@ -701,25 +714,23 @@ onUnmounted(() => {
 }
 
 .advanced-filters {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: min(1200px, 100vw);
+  width: min(1200px, 100%);
+  max-width: 100%;
+  max-height: 100dvh;
+  height: 100dvh;
   box-sizing: border-box;
-  transform: translateX(-50%);
-  z-index: 1000;
+  margin: 0 auto;
+  padding: 24px 20px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 24px 20px;
   border: 0;
-  border-radius: 0;
   background: #ffffff;
-  box-shadow: 0 0 0 100vmax rgba(15, 23, 42, 0.42);
-  border: 1px solid #dbe3ee;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+}
+
+.advanced-filters::backdrop {
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(2px);
 }
 
 .advanced-filters-header {
