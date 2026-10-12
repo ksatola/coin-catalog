@@ -481,7 +481,7 @@ onUnmounted(() => {
   z-index: 20;
   display: grid;
   gap: 12px;
-  padding: 8px 0 0;
+  padding: 16px 0 0;
   background: #f5f7fa;
   box-shadow: 0 12px 0 #f5f7fa;
 }
