@@ -8,7 +8,7 @@ type DictionaryItem = { id: number; name: string }
 type Dictionaries = Record<string, DictionaryItem[]>
 
 const props = defineProps<{ filters: CoinFilterState; showStatus?: boolean }>()
-const emit = defineEmits<{ submit: [] }>()
+const emit = defineEmits<{ submit: []; reset: [] }>()
 
 const dictionaries = ref<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
 const categories = ref<Category[]>([])
@@ -157,6 +157,7 @@ onMounted(loadFilters)
 
     <div class="form-actions">
       <button class="submit-button" type="submit">Szukaj / filtruj</button>
+      <button class="reset-button" type="button" @click="emit('reset')">Wyczyść filtry</button>
       <p v-if="errorMessage" class="filter-error">{{ errorMessage }}</p>
     </div>
   </form>
@@ -366,9 +367,33 @@ onMounted(loadFilters)
 }
 
 .form-actions {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
   padding-top: 2px;
+}
+
+.form-actions .submit-button {
+  flex: 1 1 220px;
+  width: auto;
+}
+
+.reset-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reset-button:hover {
+  background: #f8fafc;
 }
 
 .submit-button {
