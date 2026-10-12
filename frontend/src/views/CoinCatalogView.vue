@@ -486,6 +486,17 @@ onUnmounted(() => {
   box-shadow: 0 12px 0 #f5f7fa;
 }
 
+.sticky-catalog-toolbar::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 24px;
+  background: #f5f7fa;
+  z-index: -1;
+}
+
 .page-header {
   display: flex;
   align-items: end;
