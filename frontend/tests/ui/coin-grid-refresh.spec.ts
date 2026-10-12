@@ -36,7 +36,7 @@ async function mockApi(
   await page.route('**/api/categories', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
   await page.route('**/api/coins*', async (route) => {
     const url = new URL(route.request().url())
-    const search = url.searchParams.get('search')
+    const search = url.searchParams.get('search') || url.searchParams.get('quick_search')
     const coins = Array.from({ length: coinCount }, (_, index) => ({
       ...coin1,
       id: index + 1,
