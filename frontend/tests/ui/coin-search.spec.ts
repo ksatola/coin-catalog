@@ -49,8 +49,8 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   const coinRequests: URL[] = []
   await mockCatalog(page, coinRequests)
   await page.goto('/monety')
-  await openAdvancedFilters(page)
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('polska grosz')
+  await openAdvancedFilters(page)
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
   await expect.poll(() =>
@@ -99,8 +99,8 @@ test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączy�
 test('wyszukiwanie krótsze niż trzy znaki jest blokowane w UI', async ({ page }) => {
   await mockCatalog(page)
   await page.goto('/monety')
-  await openAdvancedFilters(page)
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('ab')
+  await openAdvancedFilters(page)
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByText('Każdy fragment wyszukiwania musi mieć co najmniej 3 znaki.')).toBeVisible()
 })
