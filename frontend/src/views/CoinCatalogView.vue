@@ -380,14 +380,24 @@ onUnmounted(() => {
           aria-label="Szukaj monet"
         />
       </div>
-      <button
-        class="quick-search-mode"
-        type="button"
-        :aria-pressed="filters.quickSearchMode === 'exclude'"
-        @click="filters.quickSearchMode = filters.quickSearchMode === 'include' ? 'exclude' : 'include'"
-      >
-        {{ filters.quickSearchMode === 'exclude' ? '− Wyklucz' : '+ Uwzględnij' }}
-      </button>
+      <div class="quick-search-mode mode-toggle" role="group" aria-label="Tryb wyszukiwania">
+        <button
+          type="button"
+          :class="{ active: filters.quickSearchMode === 'include' }"
+          :aria-pressed="filters.quickSearchMode === 'include'"
+          aria-label="Uwzględnij dopasowania"
+          title="Uwzględnij dopasowania"
+          @click="filters.quickSearchMode = 'include'"
+        >+</button>
+        <button
+          type="button"
+          :class="{ active: filters.quickSearchMode === 'exclude' }"
+          :aria-pressed="filters.quickSearchMode === 'exclude'"
+          aria-label="Wyklucz dopasowania"
+          title="Wyklucz dopasowania"
+          @click="filters.quickSearchMode = 'exclude'"
+        >−</button>
+      </div>
       <button
         class="filters-toggle"
         type="button"
@@ -603,7 +613,6 @@ onUnmounted(() => {
 }
 
 .filters-toggle,
-.quick-search-mode,
 .collapse-button {
   flex: 0 0 auto;
   min-height: 44px;
@@ -613,6 +622,41 @@ onUnmounted(() => {
   background: #ffffff;
   color: #334155;
   font-weight: 700;
+}
+
+.quick-search-mode {
+  align-self: center;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid #dbe3ee;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.quick-search-mode button {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.quick-search-mode button.active {
+  background: #e2e8f0;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px #cbd5e1;
+}
+
+.quick-search-mode button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .filters-toggle:hover,
