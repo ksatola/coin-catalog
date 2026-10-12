@@ -413,9 +413,8 @@ onUnmounted(() => {
         <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
         <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
       </div>
-    </div>
 
-    <div v-if="showAdvancedFilters" id="advanced-coin-filters" class="advanced-filters">
+      <div v-if="showAdvancedFilters" id="advanced-coin-filters" class="advanced-filters">
       <div class="advanced-filters-header">
         <div>
           <h2>Filtry</h2>
@@ -425,6 +424,7 @@ onUnmounted(() => {
       </div>
 
       <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
+      </div>
     </div>
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
