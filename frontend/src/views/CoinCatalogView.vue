@@ -437,7 +437,6 @@ onUnmounted(() => {
       </div>
 
       <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
-      </div>
     </dialog>
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
