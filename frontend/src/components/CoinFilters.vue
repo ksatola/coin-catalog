@@ -21,7 +21,7 @@ const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMod
 
 
 function submit(): void {
-  const validationError = validateCoinSearch(props.filters.search)
+  const validationError = validateCoinSearch(props.filters.quickSearch)
   errorMessage.value = validationError
   if (!validationError) emit('submit')
 }
@@ -54,22 +54,6 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
-    <section class="filter-section text-search-section">
-      <div class="section-heading">
-        <div>
-          <h3>Wyszukiwanie tekstowe</h3>
-          <p>Wpisz nazwę, kraj, emitenta lub inne słowa kluczowe.</p>
-        </div>
-      </div>
-      <div class="text-search-controls">
-        <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" aria-label="Szukaj tekstowo" />
-        <div class="mode-toggle" role="group" aria-label="Tryb wyszukiwania tekstowego">
-          <button type="button" :class="{ active: props.filters.searchMode === 'include' }" :aria-pressed="props.filters.searchMode === 'include'" @click="props.filters.searchMode = 'include'">Uwzględnij</button>
-          <button type="button" :class="{ active: props.filters.searchMode === 'exclude' }" :aria-pressed="props.filters.searchMode === 'exclude'" @click="props.filters.searchMode = 'exclude'">Wyklucz</button>
-        </div>
-      </div>
-    </section>
-
     <section class="filter-section">
       <div class="section-heading">
         <div>
@@ -226,13 +210,6 @@ onMounted(loadFilters)
   font-size: 12px;
   font-weight: 400;
   line-height: 1.45;
-}
-
-.text-search-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
 }
 
 .coin-filters label,
@@ -450,11 +427,6 @@ onMounted(loadFilters)
   .year-grid,
   .options-grid {
     grid-template-columns: 1fr;
-  }
-
-  .text-search-controls {
-    grid-template-columns: 1fr;
-    justify-items: start;
   }
 
   .section-heading .mode-toggle {
