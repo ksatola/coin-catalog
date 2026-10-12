@@ -50,14 +50,14 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   await mockCatalog(page, coinRequests)
   await page.goto('/monety')
   await openAdvancedFilters(page)
-  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('polska grosz')
+  await page.getByRole('searchbox', { name: 'Szukaj tekstowo', exact: true }).fill('polska grosz')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
 
   expect(coinRequests.at(-1)?.searchParams.get('search')).toBe('polska grosz')
   expect(coinRequests.at(-1)?.searchParams.get('status')).toBe('active')
 
-  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('grosz polska')
+  await page.getByRole('searchbox', { name: 'Szukaj tekstowo', exact: true }).fill('grosz polska')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   expect(coinRequests.at(-1)?.searchParams.get('search')).toBe('grosz polska')
 })
@@ -95,7 +95,53 @@ test('wyszukiwanie krótsze niż trzy znaki jest blokowane w UI', async ({ page 
   await mockCatalog(page)
   await page.goto('/monety')
   await openAdvancedFilters(page)
-  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('ab')
+  await page.getByRole('searchbox', { name: 'Szukaj tekstowo', exact: true }).fill('ab')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByText('Każdy fragment wyszukiwania musi mieć co najmniej 3 znaki.')).toBeVisible()
+})
+
+
+test('quick search has an independent include/exclude toggle', async ({ page }) => {
+  const coinRequests: URL[] = []
+  await mockCatalog(page, coinRequests)
+  await page.goto('/monety')
+  await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('polska')
+  await expect.poll(() => coinRequests.at(-1)?.searchParams.get('quick_search')).toBe('polska')
+  expect(coinRequests.at(-1)?.searchParams.get('search')).toBeNull()
+
+  await page.getByRole('button', { name: '+ Uwzględnij' }).click()
+  await expect.poll(() => coinRequests.at(-1)?.searchParams.get('quick_search_mode')).toBe('exclude')
+  expect(coinRequests.at(-1)?.searchParams.get('quick_search')).toBe('polska')
+})
+
+test('advanced criteria serialize their include/exclude mode separately', async ({ page }) => {
+  const coinRequests: URL[] = []
+  await mockCatalog(page, coinRequests)
+  await page.goto('/monety')
+  await openAdvancedFilters(page)
+  await page.getByRole('searchbox', { name: 'Szukaj tekstowo', exact: true }).fill('srebrny')
+  await page.getByLabel('Tryb wyszukiwania tekstowego').selectOption('exclude')
+  await page.getByLabel('Kraj — tryb').selectOption('exclude')
+  await page.locator('label').filter({ hasText: 'Kraj' }).locator('select[multiple]').selectOption('1')
+  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+
+  const request = coinRequests.at(-1)
+  expect(request?.searchParams.get('search')).toBe('srebrny')
+  expect(request?.searchParams.get('search_mode')).toBe('exclude')
+  expect(request?.searchParams.get('country_mode')).toBe('exclude')
+  expect(request?.searchParams.getAll('country_id')).toEqual(['1'])
+})
+
+test('reset restores negative search modes to include', async ({ page }) => {
+  const coinRequests: URL[] = []
+  await mockCatalog(page, coinRequests)
+  await page.goto('/monety')
+  await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('polska')
+  await page.getByRole('button', { name: '+ Uwzględnij' }).click()
+  await openAdvancedFilters(page)
+  await page.getByLabel('Tryb wyszukiwania tekstowego').selectOption('exclude')
+  await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+
+  await expect.poll(() => coinRequests.at(-1)?.searchParams.has('quick_search_mode')).toBe(false)
+  await expect.poll(() => coinRequests.at(-1)?.searchParams.has('search_mode')).toBe(false)
 })
