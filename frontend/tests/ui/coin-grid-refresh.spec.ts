@@ -405,6 +405,7 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
 
   await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
   await assertImages(6)
+  await page.getByRole('button', { name: 'Zwiń' }).click()
 
   await page.getByRole('button', { name: '3 monet w wierszu' }).click()
   await assertImages(6)
