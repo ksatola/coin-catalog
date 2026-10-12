@@ -486,11 +486,6 @@ onUnmounted(() => {
   box-shadow: 0 12px 0 #f5f7fa;
 }
 
-.sticky-catalog-toolbar:has(.advanced-filters) {
-  max-height: calc(100vh - 24px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
 
 .sticky-catalog-toolbar::before {
   content: '';
@@ -706,6 +701,14 @@ onUnmounted(() => {
 }
 
 .advanced-filters {
+  position: fixed;
+  top: 220px;
+  right: 20px;
+  bottom: 16px;
+  left: 20px;
+  z-index: 19;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 20px;
   border: 1px solid #dbe3ee;
   border-radius: 12px;
@@ -796,6 +799,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 900px) {
+  .advanced-filters {
+    top: 300px;
+  }
+
   .page-header {
     align-items: flex-start;
     flex-direction: column;
@@ -808,6 +815,12 @@ onUnmounted(() => {
 }
 
 @media (max-width: 600px) {
+  .advanced-filters {
+    top: 370px;
+    right: 12px;
+    left: 12px;
+  }
+
   .header-controls {
     display: grid;
     grid-template-columns: 1fr;
