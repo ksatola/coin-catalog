@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
 import CoinGrid from '../components/CoinGrid.vue'
@@ -49,6 +49,7 @@ const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
 const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
+const scrollPositionStorageKey = `coin-catalog:scroll-position:${props.scope}`
 const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
 function loadViewMode(): ViewMode {
@@ -306,9 +307,19 @@ watch([sentinel, loadingMore], ([element, isLoading]) => {
   observer.observe(element)
 })
 
+onBeforeRouteLeave(() => {
+  sessionStorage.setItem(scrollPositionStorageKey, String(window.scrollY))
+})
+
 onMounted(async () => {
   await Promise.all([loadCoins(), loadCollections()])
   hasMountedCatalog = true
+
+  const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey))
+  if (Number.isFinite(savedScrollPosition) && savedScrollPosition > 0) {
+    await nextTick()
+    window.scrollTo(0, savedScrollPosition)
+  }
 })
 
 onUnmounted(() => {
