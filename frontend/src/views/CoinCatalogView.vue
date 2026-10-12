@@ -486,6 +486,12 @@ onUnmounted(() => {
   box-shadow: 0 12px 0 #f5f7fa;
 }
 
+.sticky-catalog-toolbar:has(.advanced-filters) {
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .sticky-catalog-toolbar::before {
   content: '';
   position: fixed;
