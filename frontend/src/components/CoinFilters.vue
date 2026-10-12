@@ -31,7 +31,8 @@ function dictionaryModeKey(name: string): DictionaryModeKey {
 }
 
 function submit(): void {
-  validationErrorMessage.value = validateCoinSearch(props.filters.quickSearch)
+  validationErrorMessage.value =
+    validateCoinSearch(props.filters.search) || validateCoinSearch(props.filters.quickSearch)
   if (!validationErrorMessage.value) emit('submit')
 }
 
