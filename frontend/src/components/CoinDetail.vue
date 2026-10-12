@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import CoinCategoriesReadOnly from './CoinCategoriesReadOnly.vue'
@@ -62,7 +62,23 @@ function closeImage(): void { selectedImageIndex.value = null }
 function showPreviousImage(): void { if (selectedImageIndex.value === null || allImages.value.length < 2) return; selectedImageIndex.value = (selectedImageIndex.value - 1 + allImages.value.length) % allImages.value.length }
 function showNextImage(): void { if (selectedImageIndex.value === null || allImages.value.length < 2) return; selectedImageIndex.value = (selectedImageIndex.value + 1) % allImages.value.length }
 function handleViewerKeydown(event: KeyboardEvent): void { if (selectedImageIndex.value === null) return; if (event.key === 'Escape') closeImage(); else if (event.key === 'ArrowLeft') showPreviousImage(); else if (event.key === 'ArrowRight') showNextImage() }
+
+let previousBodyOverflow = ''
+
+watch(selectedImageIndex, (index) => {
+  if (index !== null) {
+    previousBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = previousBodyOverflow
+  }
+})
+
 onMounted(() => { void loadDictionaries(); void loadCollection(); void loadImages(); window.addEventListener('keydown', handleViewerKeydown) })
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleViewerKeydown)
+  document.body.style.overflow = previousBodyOverflow
+})
 </script>
 
 <template>
