@@ -418,8 +418,7 @@ onUnmounted(() => {
         <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
       </div>
 
-      <CoinFilters :filters="filters" show-status @submit="loadCoins" />
-      <button class="reset-button" type="button" @click="resetFilters">Wyczyść filtry</button>
+      <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
     </div>
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -698,21 +697,6 @@ onUnmounted(() => {
   padding: 0;
   border: 0;
   box-shadow: none;
-}
-
-.reset-button {
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  background: #ffffff;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.reset-button:hover {
-  background: #f8fafc;
 }
 
 .results-bar {
