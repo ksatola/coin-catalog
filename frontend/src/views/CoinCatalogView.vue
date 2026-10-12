@@ -475,10 +475,12 @@ onUnmounted(() => {
 }
 
 .page-header,
-.simple-search {
+.simple-search,
+.results-bar {
   position: sticky;
   z-index: 9;
   background: #f5f7fa;
+  box-shadow: 0 10px 0 #f5f7fa;
 }
 
 .page-header {
@@ -489,6 +491,13 @@ onUnmounted(() => {
 .simple-search {
   top: 68px;
   padding: 4px 0 8px;
+}
+
+.results-bar {
+  top: 124px;
+  z-index: 8;
+  min-height: 32px;
+  padding: 6px 0 10px;
 }
 
 .page-header {
@@ -794,6 +803,10 @@ onUnmounted(() => {
 
   .simple-search {
     top: 60px;
+  }
+
+  .results-bar {
+    top: 116px;
   }
 
   .header-controls {
