@@ -1,4 +1,4 @@
-
+analyze in code possible problem causing the tests to fail. do not guess, do not assume. provide me with the command to run only the affected tests. do not change the code of the app.
 
 
 ## Testy
@@ -26,3 +26,6 @@ npm install --package-lock-only
 
 npm run type-check
 npm run test:ui -- tests/ui/story.spec.ts
+
+cd /workspaces/coin-catalog/frontend
+npm run type-check && npx playwright test tests/ui/coin-search.spec.ts

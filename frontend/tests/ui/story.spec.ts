@@ -701,10 +701,10 @@ test('picker Opowieści wstawia monetę z katalogu w miejscu kursora', async ({ 
 
 test('picker Opowieści korzysta z aktualnego zakresu filtrów widoku Monety', async ({ page }) => {
   await mockStoryApi(page)
-  let lastSearch = ''
+  let lastQuickSearch = ''
   await page.route('**/api/coins?*', async (route) => {
     const url = new URL(route.request().url())
-    lastSearch = url.searchParams.get('search') ?? ''
+    lastQuickSearch = url.searchParams.get('quick_search') ?? ''
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -715,7 +715,7 @@ test('picker Opowieści korzysta z aktualnego zakresu filtrów widoku Monety', a
   await page.goto('/monety')
   const search = page.getByLabel('Szukaj monet')
   await search.fill('polska grosz')
-  await expect.poll(() => lastSearch).toBe('polska grosz')
+  await expect.poll(() => lastQuickSearch).toBe('polska grosz')
   await expect(page.getByRole('checkbox', { name: /Wybierz monetę/ })).toHaveCount(0)
 
   await page.getByRole('navigation', { name: 'Główna nawigacja' }).getByRole('link', { name: 'Opowieść', exact: true }).click()

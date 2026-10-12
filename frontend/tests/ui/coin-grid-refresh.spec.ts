@@ -36,7 +36,7 @@ async function mockApi(
   await page.route('**/api/categories', async (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
   await page.route('**/api/coins*', async (route) => {
     const url = new URL(route.request().url())
-    const search = url.searchParams.get('search')
+    const search = url.searchParams.get('search') || url.searchParams.get('quick_search')
     const coins = Array.from({ length: coinCount }, (_, index) => ({
       ...coin1,
       id: index + 1,
@@ -405,6 +405,7 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
 
   await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
   await assertImages(6)
+  await page.getByRole('button', { name: 'Zwiń' }).click()
 
   await page.getByRole('button', { name: '3 monet w wierszu' }).click()
   await assertImages(6)

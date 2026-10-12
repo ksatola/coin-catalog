@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
 import CoinGrid from '../components/CoinGrid.vue'
@@ -32,6 +32,7 @@ const loadingMore = ref(false)
 const initialLoading = ref(true)
 const sentinel = ref<HTMLElement | null>(null)
 const showAdvancedFilters = ref(false)
+const advancedFiltersDialog = ref<HTMLDialogElement | null>(null)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestGeneration = 0
 let observer: IntersectionObserver | undefined
@@ -48,6 +49,7 @@ const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
 const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
+const scrollPositionStorageKey = `coin-catalog:scroll-position:${props.scope}`
 const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
 function loadViewMode(): ViewMode {
@@ -125,13 +127,13 @@ function saveSizeGalleryCalibration(pixelsPerMm: number): void {
 }
 
 function isSearchReady(): boolean {
-  const search = filters.search.trim()
-  if (!search) return true
-
-  return !search.split(/\s+/).some((token) => token.length < 3)
+  return [filters.search, filters.quickSearch].every((value) => {
+    const search = value.trim()
+    return !search || !search.split(/\s+/).some((token) => token.length < 3)
+  })
 }
 
-watch(() => filters.search, () => {
+watch(() => [filters.search, filters.searchMode, filters.quickSearch, filters.quickSearchMode], () => {
   if (searchTimer !== undefined) {
     clearTimeout(searchTimer)
   }
@@ -175,13 +177,13 @@ async function loadCoins(): Promise<void> {
     appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
-    const savedScrollY = typeof history.state?.scroll?.top === 'number'
-      ? history.state.scroll.top
-      : null
-    if (savedScrollY !== null) {
-      window.scrollTo(0, savedScrollY)
-    } else if (hasMountedCatalog) {
+    // Preserve the user's current position when filters trigger a reload.
+    // Router-restored scroll is only relevant during the initial catalog load;
+    // reusing history.state.scroll.top on every filter change jumps the page.
+    if (hasMountedCatalog) {
       window.scrollTo(0, scrollY)
+    } else if (typeof history.state?.scroll?.top === 'number') {
+      window.scrollTo(0, history.state.scroll.top)
     }
   } catch {
     if (generation !== requestGeneration) return
@@ -267,8 +269,28 @@ function resetFilters(): void {
 }
 
 function toggleAdvancedFilters(): void {
-  showAdvancedFilters.value = !showAdvancedFilters.value
+  if (showAdvancedFilters.value) {
+    advancedFiltersDialog.value?.close()
+    showAdvancedFilters.value = false
+  } else {
+    showAdvancedFilters.value = true
+  }
 }
+
+let previousBodyOverflow = ''
+
+watch(showAdvancedFilters, async (isOpen) => {
+  if (isOpen) {
+    previousBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    await nextTick()
+    const dialog = advancedFiltersDialog.value
+    if (dialog && !dialog.open) dialog.showModal()
+    return
+  }
+
+  document.body.style.overflow = previousBodyOverflow
+})
 
 watch([sentinel, loadingMore], ([element, isLoading]) => {
   observer?.disconnect()
@@ -285,20 +307,39 @@ watch([sentinel, loadingMore], ([element, isLoading]) => {
   observer.observe(element)
 })
 
+onBeforeRouteLeave(() => {
+  sessionStorage.setItem(scrollPositionStorageKey, String(window.scrollY))
+
+  // A route change can happen while the native filter dialog is open.
+  // Release its body scroll lock synchronously before the next view mounts.
+  if (showAdvancedFilters.value) {
+    advancedFiltersDialog.value?.close()
+    showAdvancedFilters.value = false
+    document.body.style.overflow = previousBodyOverflow
+  }
+})
+
 onMounted(async () => {
   await Promise.all([loadCoins(), loadCollections()])
   hasMountedCatalog = true
+
+  const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey))
+  if (Number.isFinite(savedScrollPosition) && savedScrollPosition > 0) {
+    await nextTick()
+    window.scrollTo(0, savedScrollPosition)
+  }
 })
 
 onUnmounted(() => {
   observer?.disconnect()
   if (searchTimer !== undefined) clearTimeout(searchTimer)
-
+  document.body.style.overflow = previousBodyOverflow
 })
 </script>
 
 <template>
   <section class="coins-view">
+    <div class="sticky-catalog-toolbar">
     <header class="page-header">
       <div>
         <h1>{{ pageTitle }}</h1>
@@ -374,11 +415,29 @@ onUnmounted(() => {
       <div class="search-field">
         <span class="search-icon" aria-hidden="true">⌕</span>
         <input
-          v-model="filters.search"
+          v-model="filters.quickSearch"
           type="search"
           placeholder="Szukaj monet, np. polska grosz"
           aria-label="Szukaj monet"
         />
+      </div>
+      <div class="quick-search-mode mode-toggle" role="group" aria-label="Tryb wyszukiwania">
+        <button
+          type="button"
+          :class="{ active: filters.quickSearchMode === 'include' }"
+          :aria-pressed="filters.quickSearchMode === 'include'"
+          aria-label="Uwzględnij dopasowania"
+          title="Uwzględnij dopasowania"
+          @click="filters.quickSearchMode = 'include'"
+        >+</button>
+        <button
+          type="button"
+          :class="{ active: filters.quickSearchMode === 'exclude' }"
+          :aria-pressed="filters.quickSearchMode === 'exclude'"
+          aria-label="Wyklucz dopasowania"
+          title="Wyklucz dopasowania"
+          @click="filters.quickSearchMode = 'exclude'"
+        >−</button>
       </div>
       <button
         class="filters-toggle"
@@ -390,8 +449,12 @@ onUnmounted(() => {
         ⚙ Filtry
       </button>
     </form>
+      <div v-if="!initialLoading && coins.length > 0" class="results-bar" aria-label="Zakres wyników">
+        <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
+        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
+      </div>
 
-    <div v-if="showAdvancedFilters" id="advanced-coin-filters" class="advanced-filters">
+      <dialog v-if="showAdvancedFilters" ref="advancedFiltersDialog" id="advanced-coin-filters" class="advanced-filters" @close="showAdvancedFilters = false">
       <div class="advanced-filters-header">
         <div>
           <h2>Filtry</h2>
@@ -400,8 +463,8 @@ onUnmounted(() => {
         <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
       </div>
 
-      <CoinFilters :filters="filters" show-status @submit="loadCoins" />
-      <button class="reset-button" type="button" @click="resetFilters">Wyczyść filtry</button>
+      <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
+    </dialog>
     </div>
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -416,11 +479,6 @@ onUnmounted(() => {
     </div>
 
     <template v-else>
-      <div class="results-bar" aria-label="Zakres wyników">
-        <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
-        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
-      </div>
-
       <CoinImageGrid
         v-if="viewMode === 'image-grid'"
         :coins="coins"
@@ -457,11 +515,51 @@ onUnmounted(() => {
   gap: 20px;
 }
 
+.sticky-catalog-toolbar {
+  position: sticky;
+  top: 24px;
+  z-index: 20;
+  display: grid;
+  gap: 12px;
+  padding: 16px 0 0;
+  background: #f5f7fa;
+  box-shadow: 0 12px 0 #f5f7fa;
+}
+
+
+.sticky-catalog-toolbar::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 24px;
+  background: #f5f7fa;
+  z-index: -1;
+}
+
 .page-header {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: 20px;
+  padding: 0 0 4px;
+}
+
+.simple-search {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  padding: 0 0 4px;
+}
+
+.results-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 6px 0 12px;
+  line-height: 1.5;
 }
 
 .page-header h1 {
@@ -550,12 +648,6 @@ onUnmounted(() => {
   color: #16a34a;
 }
 
-.simple-search {
-  display: flex;
-  gap: 10px;
-  align-items: stretch;
-}
-
 .search-field {
   display: flex;
   flex: 1;
@@ -606,18 +698,66 @@ onUnmounted(() => {
   font-weight: 700;
 }
 
+.quick-search-mode {
+  align-self: center;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid #dbe3ee;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.quick-search-mode button {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.quick-search-mode button.active {
+  background: #e2e8f0;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px #cbd5e1;
+}
+
+.quick-search-mode button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .filters-toggle:hover,
+.quick-search-mode:hover,
 .collapse-button:hover {
   border-color: #94a3b8;
   background: #f8fafc;
 }
 
 .advanced-filters {
-  padding: 20px;
-  border: 1px solid #dbe3ee;
-  border-radius: 12px;
+  width: min(1200px, 100%);
+  max-width: 100%;
+  max-height: 100dvh;
+  height: 100dvh;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 24px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 0;
   background: #ffffff;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+}
+
+.advanced-filters::backdrop {
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(2px);
 }
 
 .advanced-filters-header {
@@ -646,25 +786,7 @@ onUnmounted(() => {
   box-shadow: none;
 }
 
-.reset-button {
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  background: #ffffff;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.reset-button:hover {
-  background: #f8fafc;
-}
-
 .results-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   color: #475569;
   font-size: 14px;
 }
@@ -721,6 +843,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 900px) {
+  .advanced-filters {
+    padding: 16px;
+  }
+
   .page-header {
     align-items: flex-start;
     flex-direction: column;
@@ -733,6 +859,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 600px) {
+  .advanced-filters {
+    padding: 12px;
+  }
+
   .header-controls {
     display: grid;
     grid-template-columns: 1fr;
@@ -759,7 +889,8 @@ onUnmounted(() => {
     flex-direction: column;
   }
 
-  .filters-toggle {
+  .filters-toggle,
+  .quick-search-mode {
     width: 100%;
   }
 
