@@ -471,7 +471,7 @@ onUnmounted(() => {
 <style scoped>
 .coins-view {
   display: grid;
-  gap: 20px;
+  gap: 0;
 }
 
 .page-header,
@@ -485,21 +485,20 @@ onUnmounted(() => {
 
 .page-header {
   top: 0;
-  padding: 8px 0 4px;
+  padding: 4px 0;
 }
 
 .simple-search {
-  top: 68px;
-  padding: 4px 0 8px;
+  top: 56px;
+  padding: 4px 0;
 }
 
 .results-bar {
-  top: 124px;
+  top: 112px;
   z-index: 10;
-  min-height: 42px;
-  padding: 10px 0 12px;
-  line-height: 1.5;
-  margin-top: -2px;
+  min-height: 38px;
+  padding: 8px 0;
+  line-height: 1.4;
 }
 
 .page-header {
@@ -804,11 +803,11 @@ onUnmounted(() => {
   }
 
   .simple-search {
-    top: 60px;
+    top: 52px;
   }
 
   .results-bar {
-    top: 116px;
+    top: 108px;
   }
 
   .header-controls {
