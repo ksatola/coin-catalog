@@ -55,20 +55,20 @@ onMounted(loadFilters)
 <template>
   <form class="coin-filters" @submit.prevent="submit">
     <label>Szukaj tekstowo
-      <select v-model="props.filters.searchMode" aria-label="Tryb wyszukiwania tekstowego">
-        <option value="include">Uwzględnij dopasowania</option>
-        <option value="exclude">Wyklucz dopasowania</option>
-      </select>
+      <div class="mode-toggle" role="group" aria-label="Tryb wyszukiwania tekstowego">
+        <button type="button" :class="{ active: props.filters.searchMode === 'include' }" :aria-pressed="props.filters.searchMode === 'include'" @click="props.filters.searchMode = 'include'">Uwzględnij</button>
+        <button type="button" :class="{ active: props.filters.searchMode === 'exclude' }" :aria-pressed="props.filters.searchMode === 'exclude'" @click="props.filters.searchMode = 'exclude'">Wyklucz</button>
+      </div>
       <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" aria-label="Szukaj tekstowo" />
     </label>
 
     <div class="filter-grid">
       <label v-for="(items, name) in dictionaries" :key="name">
         {{ dictionaryLabels[name] }}
-        <select v-model="props.filters[dictionaryModeKeys[name]]" :aria-label="`${dictionaryLabels[name]} — tryb`">
-          <option value="include">Uwzględnij</option>
-          <option value="exclude">Wyklucz</option>
-        </select>
+        <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="`${dictionaryLabels[name]} — tryb`">
+          <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'include' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'include'" @click="props.filters[dictionaryModeKeys[name]] = 'include'">Uwzględnij</button>
+          <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'exclude'" @click="props.filters[dictionaryModeKeys[name]] = 'exclude'">Wyklucz</button>
+        </div>
         <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4">
           <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
         </select>
@@ -79,10 +79,10 @@ onMounted(loadFilters)
         </select>
       </label>
       <label>Kategorie
-        <select v-model="props.filters.categoryMode" aria-label="Tryb kategorii">
-          <option value="include">Uwzględnij</option>
-          <option value="exclude">Wyklucz</option>
-        </select>
+        <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb kategorii">
+          <button type="button" :class="{ active: props.filters.categoryMode === 'include' }" :aria-pressed="props.filters.categoryMode === 'include'" @click="props.filters.categoryMode = 'include'">Uwzględnij</button>
+          <button type="button" :class="{ active: props.filters.categoryMode === 'exclude' }" :aria-pressed="props.filters.categoryMode === 'exclude'" @click="props.filters.categoryMode = 'exclude'">Wyklucz</button>
+        </div>
         <select v-model="props.filters.categoryIds" multiple size="4">
           <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
         </select>
@@ -92,11 +92,11 @@ onMounted(loadFilters)
     <label class="checkbox-field"><input v-model="props.filters.includeCategoryChildren" type="checkbox" /> Uwzględniaj podkategorie</label>
 
     <div class="range-filter">
-      <label>Tryb zakresu lat
-        <select v-model="props.filters.yearMode">
-          <option value="include">Uwzględnij zakres</option>
-          <option value="exclude">Wyklucz zakres</option>
-        </select>
+      <label>Zakres lat
+        <div class="mode-toggle" role="group" aria-label="Tryb zakresu lat">
+          <button type="button" :class="{ active: props.filters.yearMode === 'include' }" :aria-pressed="props.filters.yearMode === 'include'" @click="props.filters.yearMode = 'include'">Uwzględnij</button>
+          <button type="button" :class="{ active: props.filters.yearMode === 'exclude' }" :aria-pressed="props.filters.yearMode === 'exclude'" @click="props.filters.yearMode = 'exclude'">Wyklucz</button>
+        </div>
       </label>
       <label>Rok od <input v-model.number="props.filters.fromYear" type="number" /></label>
       <label>Rok do <input v-model.number="props.filters.toYear" type="number" /></label>
@@ -104,11 +104,17 @@ onMounted(loadFilters)
 
     <div class="filter-row">
       <label>Zdjęcie
-        <select v-model="props.filters.imageMode" aria-label="Tryb zdjęcia"><option value="include">Uwzględnij</option><option value="exclude">Wyklucz</option></select>
+        <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb zdjęcia">
+          <button type="button" :class="{ active: props.filters.imageMode === 'include' }" :aria-pressed="props.filters.imageMode === 'include'" @click="props.filters.imageMode = 'include'">Uwzględnij</button>
+          <button type="button" :class="{ active: props.filters.imageMode === 'exclude' }" :aria-pressed="props.filters.imageMode === 'exclude'" @click="props.filters.imageMode = 'exclude'">Wyklucz</button>
+        </div>
         <select v-model="props.filters.hasImage"><option value="">Dowolne</option><option value="true">Ma zdjęcie</option><option value="false">Brak zdjęcia</option></select>
       </label>
       <label>Wideo
-        <select v-model="props.filters.videoMode" aria-label="Tryb wideo"><option value="include">Uwzględnij</option><option value="exclude">Wyklucz</option></select>
+        <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb wideo">
+          <button type="button" :class="{ active: props.filters.videoMode === 'include' }" :aria-pressed="props.filters.videoMode === 'include'" @click="props.filters.videoMode = 'include'">Uwzględnij</button>
+          <button type="button" :class="{ active: props.filters.videoMode === 'exclude' }" :aria-pressed="props.filters.videoMode === 'exclude'" @click="props.filters.videoMode = 'exclude'">Wyklucz</button>
+        </div>
         <select v-model="props.filters.hasVideo"><option value="">Dowolne</option><option value="true">Ma wideo</option><option value="false">Brak wideo</option></select>
       </label>
       <label v-if="props.showStatus">Status
@@ -153,6 +159,50 @@ onMounted(loadFilters)
   font-family: inherit;
   font-size: 16px;
   line-height: 1.4;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-self: start;
+  width: fit-content;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.mode-toggle button {
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mode-toggle button.active {
+  background: #e2e8f0;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px #cbd5e1;
+}
+
+.mode-toggle button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.mode-toggle-compact {
+  width: 100%;
+}
+
+.mode-toggle-compact button {
+  flex: 1;
+  padding-inline: 5px;
 }
 
 .filter-grid {
