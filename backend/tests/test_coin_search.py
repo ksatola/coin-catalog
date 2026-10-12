@@ -377,6 +377,9 @@ def test_negative_dictionary_category_year_and_media_filters(
         client.get(f"/coins?status=all&country_id={country_id}&country_mode=exclude")
     ) == []
     assert ids(
+        client.get("/coins?status=all&issuer_id=999999&issuer_mode=exclude")
+    ) == [coin.id, archived.id]
+    assert ids(
         client.get(
             f"/coins?status=all&category_id={category_id}&category_mode=exclude"
         )
@@ -413,3 +416,18 @@ def test_negative_search_applies_to_detail_navigation(
     )
     assert response.status_code == 200
     assert response.json() == {"previous_id": None, "next_id": None}
+
+
+def test_negative_search_is_applied_before_cursor_pagination(
+    client: TestClient,
+    data: dict[str, Coin | Category],
+) -> None:
+    archived = cast(Coin, data["archived"])
+    response = client.get(
+        "/coins?status=all&search=srebrny&search_mode=exclude&limit=1"
+    )
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()["items"]] == [archived.id]
+    assert response.json()["has_more"] is False
+    assert response.json()["next_cursor"] is None
