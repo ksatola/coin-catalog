@@ -54,100 +54,189 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
-    <label>Szukaj tekstowo
-      <div class="mode-toggle" role="group" aria-label="Tryb wyszukiwania tekstowego">
-        <button type="button" :class="{ active: props.filters.searchMode === 'include' }" :aria-pressed="props.filters.searchMode === 'include'" @click="props.filters.searchMode = 'include'">Uwzględnij</button>
-        <button type="button" :class="{ active: props.filters.searchMode === 'exclude' }" :aria-pressed="props.filters.searchMode === 'exclude'" @click="props.filters.searchMode = 'exclude'">Wyklucz</button>
+    <section class="filter-section text-search-section">
+      <div class="section-heading">
+        <div>
+          <h3>Wyszukiwanie tekstowe</h3>
+          <p>Wpisz nazwę, kraj, emitenta lub inne słowa kluczowe.</p>
+        </div>
       </div>
-      <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" aria-label="Szukaj tekstowo" />
-    </label>
-
-    <div class="filter-grid">
-      <label v-for="(items, name) in dictionaries" :key="name">
-        {{ dictionaryLabels[name] }}
-        <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="`${dictionaryLabels[name]} — tryb`">
-          <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'include' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'include'" @click="props.filters[dictionaryModeKeys[name]] = 'include'">Uwzględnij</button>
-          <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'exclude'" @click="props.filters[dictionaryModeKeys[name]] = 'exclude'">Wyklucz</button>
+      <div class="text-search-controls">
+        <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" aria-label="Szukaj tekstowo" />
+        <div class="mode-toggle" role="group" aria-label="Tryb wyszukiwania tekstowego">
+          <button type="button" :class="{ active: props.filters.searchMode === 'include' }" :aria-pressed="props.filters.searchMode === 'include'" @click="props.filters.searchMode = 'include'">Uwzględnij</button>
+          <button type="button" :class="{ active: props.filters.searchMode === 'exclude' }" :aria-pressed="props.filters.searchMode === 'exclude'" @click="props.filters.searchMode = 'exclude'">Wyklucz</button>
         </div>
-        <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4">
-          <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
-        </select>
-      </label>
-      <label>Kolekcje
-        <select v-model="props.filters.collectionIds" multiple size="4">
-          <option v-for="collection in collections" :key="collection.id" :value="collection.id">{{ collection.name }}</option>
-        </select>
-      </label>
-      <label>Kategorie
-        <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb kategorii">
-          <button type="button" :class="{ active: props.filters.categoryMode === 'include' }" :aria-pressed="props.filters.categoryMode === 'include'" @click="props.filters.categoryMode = 'include'">Uwzględnij</button>
-          <button type="button" :class="{ active: props.filters.categoryMode === 'exclude' }" :aria-pressed="props.filters.categoryMode === 'exclude'" @click="props.filters.categoryMode = 'exclude'">Wyklucz</button>
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <div class="section-heading">
+        <div>
+          <h3>Cechy monety</h3>
+          <p>Wybierz jedną lub więcej wartości. Tryb określa, czy mają pasować, czy zostać pominięte.</p>
         </div>
-        <select v-model="props.filters.categoryIds" multiple size="4">
-          <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
-        </select>
-      </label>
-    </div>
+      </div>
+      <div class="filter-grid">
+        <div v-for="(items, name) in dictionaries" :key="name" class="filter-card">
+          <div class="filter-card-heading">
+            <label class="filter-label">{{ dictionaryLabels[name] }}</label>
+            <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="dictionaryLabels[name] + ' — tryb'">
+              <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'include' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'include'" @click="props.filters[dictionaryModeKeys[name]] = 'include'">+</button>
+              <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'exclude'" @click="props.filters[dictionaryModeKeys[name]] = 'exclude'">−</button>
+            </div>
+          </div>
+          <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4" :aria-label="dictionaryLabels[name]">
+            <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
+          </select>
+          <span class="mode-hint">{{ props.filters[dictionaryModeKeys[name]] === 'exclude' ? 'Wybrane wartości zostaną wykluczone' : 'Wybrane wartości zostaną uwzględnione' }}</span>
+        </div>
+      </div>
+    </section>
 
-    <label class="checkbox-field"><input v-model="props.filters.includeCategoryChildren" type="checkbox" /> Uwzględniaj podkategorie</label>
+    <section class="filter-section">
+      <div class="section-heading">
+        <div>
+          <h3>Kolekcje i kategorie</h3>
+          <p>Ogranicz wyniki do wybranych kolekcji lub kategorii.</p>
+        </div>
+      </div>
+      <div class="filter-grid secondary-grid">
+        <div class="filter-card">
+          <div class="filter-card-heading"><label class="filter-label">Kolekcje</label></div>
+          <select v-model="props.filters.collectionIds" multiple size="4" aria-label="Kolekcje">
+            <option v-for="collection in collections" :key="collection.id" :value="collection.id">{{ collection.name }}</option>
+          </select>
+          <span class="mode-hint">Można wybrać kilka kolekcji</span>
+        </div>
+        <div class="filter-card">
+          <div class="filter-card-heading">
+            <label class="filter-label">Kategorie</label>
+            <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb kategorii">
+              <button type="button" :class="{ active: props.filters.categoryMode === 'include' }" :aria-pressed="props.filters.categoryMode === 'include'" @click="props.filters.categoryMode = 'include'">+</button>
+              <button type="button" :class="{ active: props.filters.categoryMode === 'exclude' }" :aria-pressed="props.filters.categoryMode === 'exclude'" @click="props.filters.categoryMode = 'exclude'">−</button>
+            </div>
+          </div>
+          <select v-model="props.filters.categoryIds" multiple size="4" aria-label="Kategorie">
+            <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+          </select>
+          <label class="checkbox-field"><input v-model="props.filters.includeCategoryChildren" type="checkbox" /> Uwzględniaj podkategorie</label>
+          <span class="mode-hint">{{ props.filters.categoryMode === 'exclude' ? 'Wybrane kategorie zostaną wykluczone' : 'Wybrane kategorie zostaną uwzględnione' }}</span>
+        </div>
+      </div>
+    </section>
 
-    <div class="range-filter">
-      <label>Zakres lat
+    <section class="filter-section">
+      <div class="section-heading">
+        <div>
+          <h3>Rok emisji</h3>
+          <p>Podaj granice zakresu. Możesz zostawić jedną z nich pustą.</p>
+        </div>
         <div class="mode-toggle" role="group" aria-label="Tryb zakresu lat">
-          <button type="button" :class="{ active: props.filters.yearMode === 'include' }" :aria-pressed="props.filters.yearMode === 'include'" @click="props.filters.yearMode = 'include'">Uwzględnij</button>
-          <button type="button" :class="{ active: props.filters.yearMode === 'exclude' }" :aria-pressed="props.filters.yearMode === 'exclude'" @click="props.filters.yearMode = 'exclude'">Wyklucz</button>
+          <button type="button" :class="{ active: props.filters.yearMode === 'include' }" :aria-pressed="props.filters.yearMode === 'include'" @click="props.filters.yearMode = 'include'">Uwzględnij zakres</button>
+          <button type="button" :class="{ active: props.filters.yearMode === 'exclude' }" :aria-pressed="props.filters.yearMode === 'exclude'" @click="props.filters.yearMode = 'exclude'">Wyklucz zakres</button>
         </div>
-      </label>
-      <label>Rok od <input v-model.number="props.filters.fromYear" type="number" /></label>
-      <label>Rok do <input v-model.number="props.filters.toYear" type="number" /></label>
-    </div>
+      </div>
+      <div class="year-grid">
+        <label>Rok od<input v-model.number="props.filters.fromYear" type="number" placeholder="np. 1800" /></label>
+        <label>Rok do<input v-model.number="props.filters.toYear" type="number" placeholder="np. 1900" /></label>
+      </div>
+    </section>
 
-    <div class="filter-row">
-      <label>Zdjęcie
-        <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb zdjęcia">
-          <button type="button" :class="{ active: props.filters.imageMode === 'include' }" :aria-pressed="props.filters.imageMode === 'include'" @click="props.filters.imageMode = 'include'">Uwzględnij</button>
-          <button type="button" :class="{ active: props.filters.imageMode === 'exclude' }" :aria-pressed="props.filters.imageMode === 'exclude'" @click="props.filters.imageMode = 'exclude'">Wyklucz</button>
+    <section class="filter-section">
+      <div class="section-heading">
+        <div>
+          <h3>Dodatkowe opcje</h3>
+          <p>Media, status i kolejność wyświetlania wyników.</p>
         </div>
-        <select v-model="props.filters.hasImage"><option value="">Dowolne</option><option value="true">Ma zdjęcie</option><option value="false">Brak zdjęcia</option></select>
-      </label>
-      <label>Wideo
-        <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb wideo">
-          <button type="button" :class="{ active: props.filters.videoMode === 'include' }" :aria-pressed="props.filters.videoMode === 'include'" @click="props.filters.videoMode = 'include'">Uwzględnij</button>
-          <button type="button" :class="{ active: props.filters.videoMode === 'exclude' }" :aria-pressed="props.filters.videoMode === 'exclude'" @click="props.filters.videoMode = 'exclude'">Wyklucz</button>
+      </div>
+      <div class="options-grid">
+        <div class="option-card">
+          <label class="filter-label">Zdjęcie</label>
+          <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb zdjęcia">
+            <button type="button" :class="{ active: props.filters.imageMode === 'include' }" :aria-pressed="props.filters.imageMode === 'include'" @click="props.filters.imageMode = 'include'">Uwzględnij</button>
+            <button type="button" :class="{ active: props.filters.imageMode === 'exclude' }" :aria-pressed="props.filters.imageMode === 'exclude'" @click="props.filters.imageMode = 'exclude'">Wyklucz</button>
+          </div>
+          <select v-model="props.filters.hasImage"><option value="">Dowolne</option><option value="true">Ma zdjęcie</option><option value="false">Brak zdjęcia</option></select>
         </div>
-        <select v-model="props.filters.hasVideo"><option value="">Dowolne</option><option value="true">Ma wideo</option><option value="false">Brak wideo</option></select>
-      </label>
-      <label v-if="props.showStatus">Status
-        <select v-model="props.filters.statusFilter"><option value="active">Aktywne</option><option value="archived">Archiwalne</option><option value="all">Wszystkie</option></select>
-      </label>
-      <label>Sortuj po
-        <select v-model="props.filters.sortBy"><option value="id">ID</option><option value="from_year">Rok od</option><option value="to_year">Rok do</option></select>
-      </label>
-      <label>Kierunek
-        <select v-model="props.filters.sortOrder"><option value="asc">Rosnąco</option><option value="desc">Malejąco</option></select>
-      </label>
-    </div>
+        <div class="option-card">
+          <label class="filter-label">Wideo</label>
+          <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb wideo">
+            <button type="button" :class="{ active: props.filters.videoMode === 'include' }" :aria-pressed="props.filters.videoMode === 'include'" @click="props.filters.videoMode = 'include'">Uwzględnij</button>
+            <button type="button" :class="{ active: props.filters.videoMode === 'exclude' }" :aria-pressed="props.filters.videoMode === 'exclude'" @click="props.filters.videoMode = 'exclude'">Wyklucz</button>
+          </div>
+          <select v-model="props.filters.hasVideo"><option value="">Dowolne</option><option value="true">Ma wideo</option><option value="false">Brak wideo</option></select>
+        </div>
+        <label v-if="props.showStatus" class="option-card">Status
+          <select v-model="props.filters.statusFilter"><option value="active">Aktywne</option><option value="archived">Archiwalne</option><option value="all">Wszystkie</option></select>
+        </label>
+        <label class="option-card">Sortuj po
+          <select v-model="props.filters.sortBy"><option value="id">ID</option><option value="from_year">Rok od</option><option value="to_year">Rok do</option></select>
+        </label>
+        <label class="option-card">Kierunek
+          <select v-model="props.filters.sortOrder"><option value="asc">Rosnąco</option><option value="desc">Malejąco</option></select>
+        </label>
+      </div>
+    </section>
 
-    <button class="submit-button" type="submit">Szukaj / filtruj</button>
-    <p v-if="errorMessage" class="filter-error">{{ errorMessage }}</p>
+    <div class="form-actions">
+      <button class="submit-button" type="submit">Szukaj / filtruj</button>
+      <p v-if="errorMessage" class="filter-error">{{ errorMessage }}</p>
+    </div>
   </form>
 </template>
 
 <style scoped>
 .coin-filters {
   display: grid;
-  gap: 20px;
-  margin: 28px 0 20px;
-  padding: 24px;
+  gap: 22px;
+  margin: 24px 0 20px;
+  padding: 22px;
   border: 1px solid #dbe3ee;
   border-radius: 12px;
-  background: #ffffff;
+  background: #fff;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 }
 
-.coin-filters label {
+.filter-section {
   display: grid;
-  gap: 7px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e8edf4;
+}
+
+.section-heading h3 {
+  margin: 0;
+  color: #172554;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.section-heading p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.text-search-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.coin-filters label,
+.filter-label {
   color: #334155;
   font-size: 13px;
   font-weight: 600;
@@ -155,16 +244,66 @@ onMounted(loadFilters)
 
 .coin-filters input,
 .coin-filters select {
-  min-height: 48px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 40px;
+  width: 100%;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.4;
+}
+
+.coin-filters input[type="search"],
+.coin-filters input[type="number"],
+.coin-filters select:not([multiple]) {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #0f172a;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.filter-card,
+.option-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #fbfcfe;
+}
+
+.filter-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.filter-card select[multiple] {
+  height: 126px;
+  padding: 5px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.filter-card select[multiple] option {
+  padding: 4px;
 }
 
 .mode-toggle {
   display: inline-flex;
-  align-self: start;
-  width: fit-content;
+  flex: 0 0 auto;
   gap: 2px;
   padding: 3px;
   border: 1px solid #dbe3ee;
@@ -178,10 +317,11 @@ onMounted(loadFilters)
   border: 0;
   border-radius: 5px;
   background: transparent;
-  color: #475569;
+  color: #64748b;
   font: inherit;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -197,66 +337,69 @@ onMounted(loadFilters)
 }
 
 .mode-toggle-compact {
-  width: 100%;
+  gap: 1px;
+  padding: 2px;
 }
 
 .mode-toggle-compact button {
-  flex: 1;
-  padding-inline: 5px;
+  min-width: 28px;
+  min-height: 26px;
+  padding: 4px 8px;
 }
 
-.filter-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+.mode-hint {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 400;
 }
 
-.filter-grid label:first-child {
-  grid-column: span 2;
-}
-
-.filter-grid select {
-  min-width: 0;
-  width: 100%;
-  min-height: 132px;
-  padding: 6px 4px;
-}
-
-.filter-grid option {
-  padding: 5px 4px;
-  font: inherit;
+.secondary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .checkbox-field {
-  display: flex !important;
-  grid-template-columns: none !important;
+  display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 9px !important;
-  width: fit-content;
+  gap: 7px;
   font-weight: 500 !important;
 }
 
 .checkbox-field input {
-  width: 16px;
-  height: 16px;
-  min-height: 16px;
+  width: 15px;
+  min-height: 15px;
+  height: 15px;
   margin: 0;
 }
 
-.range-filter,
-.filter-row {
+.year-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
-.filter-row {
+.year-grid label {
+  display: grid;
+  gap: 7px;
+}
+
+.options-grid {
+  display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.filter-row select {
-  min-height: 48px;
+.option-card {
+  gap: 8px;
+}
+
+.option-card select {
+  align-self: end;
+}
+
+.form-actions {
+  display: grid;
+  gap: 8px;
+  padding-top: 2px;
 }
 
 .submit-button {
@@ -265,8 +408,9 @@ onMounted(loadFilters)
   border: 0;
   border-radius: 7px;
   background: #2563eb;
-  color: #ffffff;
+  color: #fff;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .submit-button:hover {
@@ -274,39 +418,51 @@ onMounted(loadFilters)
 }
 
 .filter-error {
-  margin: -4px 0 0;
+  margin: 0;
   color: #b91c1c;
   font-size: 13px;
   font-weight: 600;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 900px) {
   .filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .filter-grid label:first-child {
-    grid-column: span 2;
+  .options-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .filter-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
 @media (max-width: 600px) {
   .coin-filters {
-    padding: 16px;
+    gap: 18px;
+    padding: 14px;
   }
 
   .filter-grid,
-  .range-filter,
-  .filter-row {
+  .secondary-grid,
+  .year-grid,
+  .options-grid {
     grid-template-columns: 1fr;
   }
 
-  .filter-grid label:first-child {
-    grid-column: auto;
+  .text-search-controls {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .section-heading .mode-toggle {
+    max-width: 100%;
+  }
+
+  .mode-toggle button {
+    padding-inline: 8px;
   }
 }
 </style>
