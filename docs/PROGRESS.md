@@ -330,3 +330,11 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Mutacja biblioteki `LEFT/RIGHT/FIRST_CHILD/LAST_CHILD` jest mapowana na istniejące API `before/after/inside`.
 - Testy Playwright pozostają izolowane przez `page.route()` i nie korzystają z runtime DB.
 - Weryfikacja uruchomienia testów w tym środowisku: nie wykonano; stan testów należy oznaczać jako niezweryfikowany do czasu uruchomienia.
+
+
+### 2026-10-12 — Negative search and per-criterion exclusion
+
+- Added backend query modes for include/exclude text matching, quick-search text, dictionary selections, categories, year ranges, image presence, and video presence.
+- Kept quick-search text independent from advanced text search; exclusion is applied in the database query so pagination and detail navigation use the same criteria.
+- Added frontend controls and URL/query serialization for the new modes, plus backend and Playwright regression tests.
+- **Verification status: not yet verified.** The repository-connected environment used for these changes does not provide the project's local `uv`/frontend test execution environment. No passing test, lint, type-check, build, or Playwright result is claimed.
