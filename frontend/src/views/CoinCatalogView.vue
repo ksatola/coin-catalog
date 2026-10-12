@@ -299,6 +299,7 @@ onUnmounted(() => {
 
 <template>
   <section class="coins-view">
+    <div class="sticky-catalog-toolbar">
     <header class="page-header">
       <div>
         <h1>{{ pageTitle }}</h1>
@@ -408,6 +409,11 @@ onUnmounted(() => {
         ⚙ Filtry
       </button>
     </form>
+      <div v-if="!initialLoading && coins.length > 0" class="results-bar" aria-label="Zakres wyników">
+        <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
+        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
+      </div>
+    </div>
 
     <div v-if="showAdvancedFilters" id="advanced-coin-filters" class="advanced-filters">
       <div class="advanced-filters-header">
@@ -433,11 +439,6 @@ onUnmounted(() => {
     </div>
 
     <template v-else>
-      <div class="results-bar" aria-label="Zakres wyników">
-        <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
-        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
-      </div>
-
       <CoinImageGrid
         v-if="viewMode === 'image-grid'"
         :coins="coins"
@@ -474,32 +475,15 @@ onUnmounted(() => {
   gap: 20px;
 }
 
-.page-header,
-.simple-search,
-.results-bar {
+.sticky-catalog-toolbar {
   position: sticky;
-  z-index: 9;
-  background: #f5f7fa;
-  box-shadow: 0 10px 0 #f5f7fa;
-}
-
-.page-header {
   top: 0;
-  padding: 8px 0 4px;
-}
-
-.simple-search {
-  top: 68px;
-  padding: 4px 0 8px;
-}
-
-.results-bar {
-  top: 124px;
-  z-index: 10;
-  min-height: 42px;
-  padding: 10px 0 12px;
-  line-height: 1.5;
-  margin-top: -2px;
+  z-index: 20;
+  display: grid;
+  gap: 12px;
+  padding: 8px 0 0;
+  background: #f5f7fa;
+  box-shadow: 0 12px 0 #f5f7fa;
 }
 
 .page-header {
@@ -507,6 +491,23 @@ onUnmounted(() => {
   align-items: end;
   justify-content: space-between;
   gap: 20px;
+  padding: 0 0 4px;
+}
+
+.simple-search {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  padding: 0 0 4px;
+}
+
+.results-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 6px 0 12px;
+  line-height: 1.5;
 }
 
 .page-header h1 {
@@ -593,12 +594,6 @@ onUnmounted(() => {
 
 .gallery-scale button.scale-calibrated .scale-value small {
   color: #16a34a;
-}
-
-.simple-search {
-  display: flex;
-  gap: 10px;
-  align-items: stretch;
 }
 
 .search-field {
@@ -728,9 +723,6 @@ onUnmounted(() => {
 }
 
 .results-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   color: #475569;
   font-size: 14px;
 }
@@ -799,18 +791,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 600px) {
-  .page-header {
-    top: 0;
-  }
-
-  .simple-search {
-    top: 60px;
-  }
-
-  .results-bar {
-    top: 116px;
-  }
-
   .header-controls {
     display: grid;
     grid-template-columns: 1fr;
