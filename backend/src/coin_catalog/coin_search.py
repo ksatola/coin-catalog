@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import Select, String, and_, cast, exists, or_, select
+from sqlalchemy import Select, String, and_, cast, exists, func, or_, select
 
 from coin_catalog.models import (
     Category,
@@ -154,7 +154,9 @@ def build_coin_query(
             continue
         tokens = [token for token in text.split() if token]
         conditions = [
-            _text_search_condition(token, include_category_children)
+            func.coalesce(
+                _text_search_condition(token, include_category_children), False
+            )
             for token in tokens
         ]
         if conditions:
