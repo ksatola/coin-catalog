@@ -65,11 +65,13 @@ function handleViewerKeydown(event: KeyboardEvent): void { if (selectedImageInde
 
 let previousBodyOverflow = ''
 
-watch(selectedImageIndex, (index) => {
-  if (index !== null) {
+watch(selectedImageIndex, (index, previousIndex) => {
+  // Changing between images must not overwrite the original overflow value
+  // with 'hidden'. Only lock on opening and restore on closing the viewer.
+  if (previousIndex === null && index !== null) {
     previousBodyOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-  } else {
+  } else if (previousIndex !== null && index === null) {
     document.body.style.overflow = previousBodyOverflow
   }
 })
