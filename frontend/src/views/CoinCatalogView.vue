@@ -702,11 +702,16 @@ onUnmounted(() => {
 
 .advanced-filters {
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(1200px, 100vw);
+  box-sizing: border-box;
+  transform: translateX(-50%);
   z-index: 1000;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 24px;
+  padding: 24px 20px;
   border: 0;
   border-radius: 0;
   background: #ffffff;
