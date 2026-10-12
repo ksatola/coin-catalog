@@ -263,15 +263,25 @@ function openCoinDetails(coin: Coin): void {
   router.push(`/monety/${coin.id}${query ? `?${query}` : ''}`)
 }
 
+function closeAdvancedFilters(): void {
+  advancedFiltersDialog.value?.close()
+  showAdvancedFilters.value = false
+}
+
 function resetFilters(): void {
   resetCoinFilters(filters, isArchive ? 'archived' : 'active')
   void loadCoins()
+  closeAdvancedFilters()
+}
+
+function applyAdvancedFilters(): void {
+  void loadCoins()
+  closeAdvancedFilters()
 }
 
 function toggleAdvancedFilters(): void {
   if (showAdvancedFilters.value) {
-    advancedFiltersDialog.value?.close()
-    showAdvancedFilters.value = false
+    closeAdvancedFilters()
   } else {
     showAdvancedFilters.value = true
   }
@@ -463,7 +473,7 @@ onUnmounted(() => {
         <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
       </div>
 
-      <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
+      <CoinFilters :filters="filters" show-status @submit="applyAdvancedFilters" @reset="resetFilters" />
     </dialog>
     </div>
 
