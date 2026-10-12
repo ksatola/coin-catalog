@@ -125,13 +125,13 @@ function saveSizeGalleryCalibration(pixelsPerMm: number): void {
 }
 
 function isSearchReady(): boolean {
-  const search = filters.search.trim()
-  if (!search) return true
-
-  return !search.split(/\s+/).some((token) => token.length < 3)
+  return [filters.search, filters.quickSearch].every((value) => {
+    const search = value.trim()
+    return !search || !search.split(/\s+/).some((token) => token.length < 3)
+  })
 }
 
-watch(() => filters.search, () => {
+watch(() => [filters.search, filters.searchMode, filters.quickSearch, filters.quickSearchMode], () => {
   if (searchTimer !== undefined) {
     clearTimeout(searchTimer)
   }
@@ -374,12 +374,20 @@ onUnmounted(() => {
       <div class="search-field">
         <span class="search-icon" aria-hidden="true">⌕</span>
         <input
-          v-model="filters.search"
+          v-model="filters.quickSearch"
           type="search"
           placeholder="Szukaj monet, np. polska grosz"
           aria-label="Szukaj monet"
         />
       </div>
+      <button
+        class="quick-search-mode"
+        type="button"
+        :aria-pressed="filters.quickSearchMode === 'exclude'"
+        @click="filters.quickSearchMode = filters.quickSearchMode === 'include' ? 'exclude' : 'include'"
+      >
+        {{ filters.quickSearchMode === 'exclude' ? '− Wyklucz' : '+ Uwzględnij' }}
+      </button>
       <button
         class="filters-toggle"
         type="button"
@@ -595,6 +603,7 @@ onUnmounted(() => {
 }
 
 .filters-toggle,
+.quick-search-mode,
 .collapse-button {
   flex: 0 0 auto;
   min-height: 44px;
@@ -607,6 +616,7 @@ onUnmounted(() => {
 }
 
 .filters-toggle:hover,
+.quick-search-mode:hover,
 .collapse-button:hover {
   border-color: #94a3b8;
   background: #f8fafc;
@@ -759,7 +769,8 @@ onUnmounted(() => {
     flex-direction: column;
   }
 
-  .filters-toggle {
+  .filters-toggle,
+  .quick-search-mode {
     width: 100%;
   }
 
