@@ -474,6 +474,23 @@ onUnmounted(() => {
   gap: 20px;
 }
 
+.page-header,
+.simple-search {
+  position: sticky;
+  z-index: 9;
+  background: #f5f7fa;
+}
+
+.page-header {
+  top: 0;
+  padding: 8px 0 4px;
+}
+
+.simple-search {
+  top: 68px;
+  padding: 4px 0 8px;
+}
+
 .page-header {
   display: flex;
   align-items: end;
@@ -771,6 +788,14 @@ onUnmounted(() => {
 }
 
 @media (max-width: 600px) {
+  .page-header {
+    top: 0;
+  }
+
+  .simple-search {
+    top: 60px;
+  }
+
   .header-controls {
     display: grid;
     grid-template-columns: 1fr;
