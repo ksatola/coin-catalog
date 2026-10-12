@@ -309,6 +309,14 @@ watch([sentinel, loadingMore], ([element, isLoading]) => {
 
 onBeforeRouteLeave(() => {
   sessionStorage.setItem(scrollPositionStorageKey, String(window.scrollY))
+
+  // A route change can happen while the native filter dialog is open.
+  // Release its body scroll lock synchronously before the next view mounts.
+  if (showAdvancedFilters.value) {
+    advancedFiltersDialog.value?.close()
+    showAdvancedFilters.value = false
+    document.body.style.overflow = previousBodyOverflow
+  }
 })
 
 onMounted(async () => {
