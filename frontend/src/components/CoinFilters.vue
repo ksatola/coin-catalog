@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 
 import type { Category, CategoryGraphItem, Collection } from '../types'
-import { validateCoinSearch, type CoinFilterState, type FilterMode } from '../composables/useCoinFilters'
+import { validateCoinSearch, type CoinFilterState } from '../composables/useCoinFilters'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = Record<string, DictionaryItem[]>
