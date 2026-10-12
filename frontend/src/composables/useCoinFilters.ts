@@ -12,9 +12,25 @@ type DictionarySelections = {
   eras: number[]
 }
 
+export type FilterMode = 'include' | 'exclude'
+
 export type CoinFilterState = {
   search: string
+  searchMode: FilterMode
+  quickSearch: string
+  quickSearchMode: FilterMode
   dictionarySelections: DictionarySelections
+  countryMode: FilterMode
+  issuerMode: FilterMode
+  denominationMode: FilterMode
+  mintMode: FilterMode
+  materialMode: FilterMode
+  stateMode: FilterMode
+  eraMode: FilterMode
+  categoryMode: FilterMode
+  yearMode: FilterMode
+  imageMode: FilterMode
+  videoMode: FilterMode
   collectionIds: number[]
   categoryIds: number[]
   includeCategoryChildren: boolean
@@ -30,6 +46,9 @@ export type CoinFilterState = {
 export function createCoinFilterState(statusFilter: string): CoinFilterState {
   return reactive({
     search: '',
+    searchMode: 'include',
+    quickSearch: '',
+    quickSearchMode: 'include',
     dictionarySelections: {
       countries: [],
       issuers: [],
@@ -39,6 +58,17 @@ export function createCoinFilterState(statusFilter: string): CoinFilterState {
       states: [],
       eras: [],
     },
+    countryMode: 'include',
+    issuerMode: 'include',
+    denominationMode: 'include',
+    mintMode: 'include',
+    materialMode: 'include',
+    stateMode: 'include',
+    eraMode: 'include',
+    categoryMode: 'include',
+    yearMode: 'include',
+    imageMode: 'include',
+    videoMode: 'include',
     collectionIds: [],
     categoryIds: [],
     includeCategoryChildren: true,
@@ -81,6 +111,9 @@ export function parseCoinFilterQuery(query: string | URLSearchParams): CoinFilte
 
   return {
     search: params.get('search') ?? '',
+    searchMode: params.get('search_mode') === 'exclude' ? 'exclude' : 'include',
+    quickSearch: params.get('quick_search') ?? '',
+    quickSearchMode: params.get('quick_search_mode') === 'exclude' ? 'exclude' : 'include',
     dictionarySelections: {
       countries: parsePositiveIds(params, 'country_id'),
       issuers: parsePositiveIds(params, 'issuer_id'),
@@ -90,6 +123,17 @@ export function parseCoinFilterQuery(query: string | URLSearchParams): CoinFilte
       states: parsePositiveIds(params, 'state_id'),
       eras: parsePositiveIds(params, 'era_id'),
     },
+    countryMode: params.get('country_mode') === 'exclude' ? 'exclude' : 'include',
+    issuerMode: params.get('issuer_mode') === 'exclude' ? 'exclude' : 'include',
+    denominationMode: params.get('denomination_mode') === 'exclude' ? 'exclude' : 'include',
+    mintMode: params.get('mint_mode') === 'exclude' ? 'exclude' : 'include',
+    materialMode: params.get('material_mode') === 'exclude' ? 'exclude' : 'include',
+    stateMode: params.get('state_mode') === 'exclude' ? 'exclude' : 'include',
+    eraMode: params.get('era_mode') === 'exclude' ? 'exclude' : 'include',
+    categoryMode: params.get('category_mode') === 'exclude' ? 'exclude' : 'include',
+    yearMode: params.get('year_mode') === 'exclude' ? 'exclude' : 'include',
+    imageMode: params.get('image_mode') === 'exclude' ? 'exclude' : 'include',
+    videoMode: params.get('video_mode') === 'exclude' ? 'exclude' : 'include',
     collectionIds: parsePositiveIds(params, 'collection_id'),
     categoryIds: parsePositiveIds(params, 'category_id'),
     includeCategoryChildren: params.get('include_category_children') !== 'false',
@@ -119,6 +163,9 @@ export function validateCoinSearch(search: string): string {
 export function buildCoinFilterQuery(filters: CoinFilterState): string {
   const params = new URLSearchParams()
   if (filters.search.trim()) params.set('search', filters.search.trim())
+  if (filters.searchMode === 'exclude') params.set('search_mode', filters.searchMode)
+  if (filters.quickSearch.trim()) params.set('quick_search', filters.quickSearch.trim())
+  if (filters.quickSearchMode === 'exclude') params.set('quick_search_mode', filters.quickSearchMode)
 
   for (const id of filters.dictionarySelections.countries) params.append('country_id', String(id))
   for (const id of filters.dictionarySelections.issuers) params.append('issuer_id', String(id))
@@ -127,14 +174,27 @@ export function buildCoinFilterQuery(filters: CoinFilterState): string {
   for (const id of filters.dictionarySelections.materials) params.append('material_id', String(id))
   for (const id of filters.dictionarySelections.states) params.append('state_id', String(id))
   for (const id of filters.dictionarySelections.eras) params.append('era_id', String(id))
+  for (const [key, mode] of Object.entries({
+    country_mode: filters.countryMode,
+    issuer_mode: filters.issuerMode,
+    denomination_mode: filters.denominationMode,
+    mint_mode: filters.mintMode,
+    material_mode: filters.materialMode,
+    state_mode: filters.stateMode,
+    era_mode: filters.eraMode,
+  })) if (mode === 'exclude') params.set(key, mode)
   for (const id of filters.collectionIds) params.append('collection_id', String(id))
   for (const id of filters.categoryIds) params.append('category_id', String(id))
+  if (filters.categoryMode === 'exclude') params.set('category_mode', filters.categoryMode)
 
   params.set('include_category_children', String(filters.includeCategoryChildren))
   if (filters.fromYear !== null) params.set('from_year', String(filters.fromYear))
   if (filters.toYear !== null) params.set('to_year', String(filters.toYear))
+  if (filters.yearMode === 'exclude') params.set('year_mode', filters.yearMode)
   if (filters.hasImage) params.set('has_image', filters.hasImage)
+  if (filters.imageMode === 'exclude') params.set('image_mode', filters.imageMode)
   if (filters.hasVideo) params.set('has_video', filters.hasVideo)
+  if (filters.videoMode === 'exclude') params.set('video_mode', filters.videoMode)
   params.set('status', filters.statusFilter)
   params.set('sort_by', filters.sortBy)
   params.set('sort_order', filters.sortOrder)
@@ -144,6 +204,9 @@ export function buildCoinFilterQuery(filters: CoinFilterState): string {
 
 export function resetCoinFilters(filters: CoinFilterState, defaultStatus: string): void {
   filters.search = ''
+  filters.searchMode = 'include'
+  filters.quickSearch = ''
+  filters.quickSearchMode = 'include'
   filters.dictionarySelections.countries = []
   filters.dictionarySelections.issuers = []
   filters.dictionarySelections.denominations = []
@@ -151,6 +214,17 @@ export function resetCoinFilters(filters: CoinFilterState, defaultStatus: string
   filters.dictionarySelections.materials = []
   filters.dictionarySelections.states = []
   filters.dictionarySelections.eras = []
+  filters.countryMode = 'include'
+  filters.issuerMode = 'include'
+  filters.denominationMode = 'include'
+  filters.mintMode = 'include'
+  filters.materialMode = 'include'
+  filters.stateMode = 'include'
+  filters.eraMode = 'include'
+  filters.categoryMode = 'include'
+  filters.yearMode = 'include'
+  filters.imageMode = 'include'
+  filters.videoMode = 'include'
   filters.collectionIds = []
   filters.categoryIds = []
   filters.includeCategoryChildren = true
