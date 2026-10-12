@@ -495,9 +495,11 @@ onUnmounted(() => {
 
 .results-bar {
   top: 124px;
-  z-index: 8;
-  min-height: 32px;
-  padding: 6px 0 10px;
+  z-index: 10;
+  min-height: 42px;
+  padding: 10px 0 12px;
+  line-height: 1.5;
+  margin-top: -2px;
 }
 
 .page-header {
