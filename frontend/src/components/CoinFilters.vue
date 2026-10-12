@@ -137,18 +137,10 @@ onMounted(loadFilters)
       <div class="options-grid">
         <div class="option-card">
           <label class="filter-label">Zdjęcie</label>
-          <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb zdjęcia">
-            <button type="button" :class="{ active: props.filters.imageMode === 'include' }" :aria-pressed="props.filters.imageMode === 'include'" @click="props.filters.imageMode = 'include'">Uwzględnij</button>
-            <button type="button" :class="{ active: props.filters.imageMode === 'exclude' }" :aria-pressed="props.filters.imageMode === 'exclude'" @click="props.filters.imageMode = 'exclude'">Wyklucz</button>
-          </div>
           <select v-model="props.filters.hasImage"><option value="">Dowolne</option><option value="true">Ma zdjęcie</option><option value="false">Brak zdjęcia</option></select>
         </div>
         <div class="option-card">
           <label class="filter-label">Wideo</label>
-          <div class="mode-toggle mode-toggle-compact" role="group" aria-label="Tryb wideo">
-            <button type="button" :class="{ active: props.filters.videoMode === 'include' }" :aria-pressed="props.filters.videoMode === 'include'" @click="props.filters.videoMode = 'include'">Uwzględnij</button>
-            <button type="button" :class="{ active: props.filters.videoMode === 'exclude' }" :aria-pressed="props.filters.videoMode === 'exclude'" @click="props.filters.videoMode = 'exclude'">Wyklucz</button>
-          </div>
           <select v-model="props.filters.hasVideo"><option value="">Dowolne</option><option value="true">Ma wideo</option><option value="false">Brak wideo</option></select>
         </div>
         <label v-if="props.showStatus" class="option-card">Status
