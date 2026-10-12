@@ -19,6 +19,12 @@ const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMod
   countries: 'countryMode', issuers: 'issuerMode', denominations: 'denominationMode', mints: 'mintMode', materials: 'materialMode', states: 'stateMode', eras: 'eraMode',
 }
 
+type DictionaryModeKey = (typeof dictionaryModeKeys)[keyof typeof dictionaryModeKeys]
+
+function dictionaryModeKey(name: string): DictionaryModeKey {
+  return dictionaryModeKeys[name as keyof typeof dictionaryModeKeys]
+}
+
 
 function submit(): void {
   const validationError = validateCoinSearch(props.filters.quickSearch)
@@ -66,14 +72,14 @@ onMounted(loadFilters)
           <div class="filter-card-heading">
             <label class="filter-label">{{ dictionaryLabels[name] }}</label>
             <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="dictionaryLabels[name] + ' — tryb'">
-              <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'include' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'include'" @click="props.filters[dictionaryModeKeys[name]] = 'include'">+</button>
-              <button type="button" :class="{ active: props.filters[dictionaryModeKeys[name]] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKeys[name]] === 'exclude'" @click="props.filters[dictionaryModeKeys[name]] = 'exclude'">−</button>
+              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'include' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'include'" @click="props.filters[dictionaryModeKey(name)] = 'include'">+</button>
+              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'exclude'" @click="props.filters[dictionaryModeKey(name)] = 'exclude'">−</button>
             </div>
           </div>
           <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4" :aria-label="dictionaryLabels[name]">
             <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
           </select>
-          <span class="mode-hint">{{ props.filters[dictionaryModeKeys[name]] === 'exclude' ? 'Wybrane wartości zostaną wykluczone' : 'Wybrane wartości zostaną uwzględnione' }}</span>
+          <span class="mode-hint">{{ props.filters[dictionaryModeKey(name)] === 'exclude' ? 'Wybrane wartości zostaną wykluczone' : 'Wybrane wartości zostaną uwzględnione' }}</span>
         </div>
       </div>
     </section>
