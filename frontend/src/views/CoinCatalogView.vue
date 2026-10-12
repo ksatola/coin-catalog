@@ -276,11 +276,19 @@ function toggleAdvancedFilters(): void {
   }
 }
 
+let previousBodyOverflow = ''
+
 watch(showAdvancedFilters, async (isOpen) => {
-  if (!isOpen) return
-  await nextTick()
-  const dialog = advancedFiltersDialog.value
-  if (dialog && !dialog.open) dialog.showModal()
+  if (isOpen) {
+    previousBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    await nextTick()
+    const dialog = advancedFiltersDialog.value
+    if (dialog && !dialog.open) dialog.showModal()
+    return
+  }
+
+  document.body.style.overflow = previousBodyOverflow
 })
 
 watch([sentinel, loadingMore], ([element, isLoading]) => {
@@ -306,7 +314,7 @@ onMounted(async () => {
 onUnmounted(() => {
   observer?.disconnect()
   if (searchTimer !== undefined) clearTimeout(searchTimer)
-
+  document.body.style.overflow = previousBodyOverflow
 })
 </script>
 
