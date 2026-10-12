@@ -45,6 +45,7 @@ test('zachowuje filtry Archiwum po przejściu do Dodaj monetę i z powrotem', as
   await (await advancedSearch(page)).fill('polska grosz')
   await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('button', { name: 'Zwiń' }).click()
   await page.getByRole('link', { name: 'Dodaj monetę' }).click()
   await page.getByRole('link', { name: 'Archiwum' }).click()
   await openAdvancedFilters(page)
