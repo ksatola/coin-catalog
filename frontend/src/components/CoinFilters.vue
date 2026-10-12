@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 
 import type { Category, CategoryGraphItem, Collection } from '../types'
-import { validateCoinSearch, type CoinFilterState } from '../composables/useCoinFilters'
+import { validateCoinSearch, type CoinFilterState, type FilterMode } from '../composables/useCoinFilters'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = Record<string, DictionaryItem[]>
@@ -15,6 +15,13 @@ const categories = ref<Category[]>([])
 const collections = ref<Collection[]>([])
 const errorMessage = ref('')
 const dictionaryLabels: Record<string, string> = { countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica', materials: 'Materiał', states: 'Stan', eras: 'Era' }
+const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMode' | 'issuerMode' | 'denominationMode' | 'mintMode' | 'materialMode' | 'stateMode' | 'eraMode'>> = {
+  countries: 'countryMode', issuers: 'issuerMode', denominations: 'denominationMode', mints: 'mintMode', materials: 'materialMode', states: 'stateMode', eras: 'eraMode',
+}
+
+function modeLabel(mode: FilterMode): string {
+  return mode === 'exclude' ? 'Wyklucz' : 'Uwzględnij'
+}
 
 function submit(): void {
   const validationError = validateCoinSearch(props.filters.search)
@@ -50,13 +57,21 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
-    <label>Szukaj
+    <label>Szukaj tekstowo
+      <select v-model="props.filters.searchMode" aria-label="Tryb wyszukiwania tekstowego">
+        <option value="include">Uwzględnij dopasowania</option>
+        <option value="exclude">Wyklucz dopasowania</option>
+      </select>
       <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" />
     </label>
 
     <div class="filter-grid">
       <label v-for="(items, name) in dictionaries" :key="name">
         {{ dictionaryLabels[name] }}
+        <select v-model="props.filters[dictionaryModeKeys[name]]" :aria-label="`${dictionaryLabels[name]} — tryb`">
+          <option value="include">Uwzględnij</option>
+          <option value="exclude">Wyklucz</option>
+        </select>
         <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4">
           <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
         </select>
@@ -67,6 +82,10 @@ onMounted(loadFilters)
         </select>
       </label>
       <label>Kategorie
+        <select v-model="props.filters.categoryMode" aria-label="Tryb kategorii">
+          <option value="include">Uwzględnij</option>
+          <option value="exclude">Wyklucz</option>
+        </select>
         <select v-model="props.filters.categoryIds" multiple size="4">
           <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
         </select>
@@ -76,15 +95,23 @@ onMounted(loadFilters)
     <label class="checkbox-field"><input v-model="props.filters.includeCategoryChildren" type="checkbox" /> Uwzględniaj podkategorie</label>
 
     <div class="range-filter">
+      <label>Tryb zakresu lat
+        <select v-model="props.filters.yearMode">
+          <option value="include">Uwzględnij zakres</option>
+          <option value="exclude">Wyklucz zakres</option>
+        </select>
+      </label>
       <label>Rok od <input v-model.number="props.filters.fromYear" type="number" /></label>
       <label>Rok do <input v-model.number="props.filters.toYear" type="number" /></label>
     </div>
 
     <div class="filter-row">
       <label>Zdjęcie
+        <select v-model="props.filters.imageMode" aria-label="Tryb zdjęcia"><option value="include">Uwzględnij</option><option value="exclude">Wyklucz</option></select>
         <select v-model="props.filters.hasImage"><option value="">Dowolne</option><option value="true">Ma zdjęcie</option><option value="false">Brak zdjęcia</option></select>
       </label>
       <label>Wideo
+        <select v-model="props.filters.videoMode" aria-label="Tryb wideo"><option value="include">Uwzględnij</option><option value="exclude">Wyklucz</option></select>
         <select v-model="props.filters.hasVideo"><option value="">Dowolne</option><option value="true">Ma wideo</option><option value="false">Brak wideo</option></select>
       </label>
       <label v-if="props.showStatus">Status
