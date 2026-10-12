@@ -175,13 +175,13 @@ async function loadCoins(): Promise<void> {
     appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
-    const savedScrollY = typeof history.state?.scroll?.top === 'number'
-      ? history.state.scroll.top
-      : null
-    if (savedScrollY !== null) {
-      window.scrollTo(0, savedScrollY)
-    } else if (hasMountedCatalog) {
+    // Preserve the user's current position when filters trigger a reload.
+    // Router-restored scroll is only relevant during the initial catalog load;
+    // reusing history.state.scroll.top on every filter change jumps the page.
+    if (hasMountedCatalog) {
       window.scrollTo(0, scrollY)
+    } else if (typeof history.state?.scroll?.top === 'number') {
+      window.scrollTo(0, history.state.scroll.top)
     }
   } catch {
     if (generation !== requestGeneration) return
