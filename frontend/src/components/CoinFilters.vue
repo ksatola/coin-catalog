@@ -13,7 +13,8 @@ const emit = defineEmits<{ submit: []; reset: [] }>()
 const dictionaries = ref<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
 const categories = ref<Category[]>([])
 const collections = ref<Collection[]>([])
-const errorMessage = ref('')
+const validationErrorMessage = ref('')
+const filtersLoadErrorMessage = ref('')
 const dictionaryLabels: Record<string, string> = { countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica', materials: 'Materiał', states: 'Stan', eras: 'Era' }
 const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMode' | 'issuerMode' | 'denominationMode' | 'mintMode' | 'materialMode' | 'stateMode' | 'eraMode'>> = {
   countries: 'countryMode', issuers: 'issuerMode', denominations: 'denominationMode', mints: 'mintMode', materials: 'materialMode', states: 'stateMode', eras: 'eraMode',
@@ -29,11 +30,9 @@ function dictionaryModeKey(name: string): DictionaryModeKey {
   return key
 }
 
-
 function submit(): void {
-  const validationError = validateCoinSearch(props.filters.quickSearch)
-  errorMessage.value = validationError
-  if (!validationError) emit('submit')
+  validationErrorMessage.value = validateCoinSearch(props.filters.quickSearch)
+  if (!validationErrorMessage.value) emit('submit')
 }
 
 async function loadFilters(): Promise<void> {
@@ -52,9 +51,9 @@ async function loadFilters(): Promise<void> {
     for (const [name, items] of dictionaryResults) dictionaries.value[name] = items
     categories.value = await categoryResponse.json() as CategoryGraphItem[]
     collections.value = await collectionResponse.json() as Collection[]
-    errorMessage.value = ''
+    filtersLoadErrorMessage.value = ''
   } catch {
-    errorMessage.value = 'Nie udało się pobrać danych filtrów.'
+    filtersLoadErrorMessage.value = 'Nie udało się pobrać danych filtrów.'
   }
 }
 
@@ -168,7 +167,8 @@ onMounted(loadFilters)
     <div class="form-actions">
       <button class="submit-button" type="submit">Szukaj / filtruj</button>
       <button class="reset-button" type="button" @click="emit('reset')">Wyczyść filtry</button>
-      <p v-if="errorMessage" class="filter-error">{{ errorMessage }}</p>
+      <p v-if="validationErrorMessage" class="filter-error">{{ validationErrorMessage }}</p>
+      <p v-if="filtersLoadErrorMessage" class="filter-error">{{ filtersLoadErrorMessage }}</p>
     </div>
   </form>
 </template>
