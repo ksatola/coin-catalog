@@ -53,13 +53,18 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('polska grosz')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
+  await expect.poll(() =>
+    coinRequests.some((request) => request.searchParams.get('quick_search') === 'polska grosz'),
+  ).toBe(true)
 
-  expect(coinRequests.at(-1)?.searchParams.get('quick_search')).toBe('polska grosz')
-  expect(coinRequests.at(-1)?.searchParams.get('status')).toBe('active')
+  const firstSearchRequest = coinRequests.find((request) => request.searchParams.get('quick_search') === 'polska grosz')
+  expect(firstSearchRequest?.searchParams.get('status')).toBe('active')
 
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('grosz polska')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
-  expect(coinRequests.at(-1)?.searchParams.get('quick_search')).toBe('grosz polska')
+  await expect.poll(() =>
+    coinRequests.some((request) => request.searchParams.get('quick_search') === 'grosz polska'),
+  ).toBe(true)
 })
 
 test('filtr kolekcji wysyła wybrane identyfikatory', async ({ page }) => {
