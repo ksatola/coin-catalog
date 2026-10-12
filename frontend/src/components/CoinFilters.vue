@@ -19,9 +19,6 @@ const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMod
   countries: 'countryMode', issuers: 'issuerMode', denominations: 'denominationMode', mints: 'mintMode', materials: 'materialMode', states: 'stateMode', eras: 'eraMode',
 }
 
-function modeLabel(mode: FilterMode): string {
-  return mode === 'exclude' ? 'Wyklucz' : 'Uwzględnij'
-}
 
 function submit(): void {
   const validationError = validateCoinSearch(props.filters.search)
@@ -62,7 +59,7 @@ onMounted(loadFilters)
         <option value="include">Uwzględnij dopasowania</option>
         <option value="exclude">Wyklucz dopasowania</option>
       </select>
-      <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" />
+      <input v-model="props.filters.search" type="search" placeholder="np. polska grosz" aria-label="Szukaj tekstowo" />
     </label>
 
     <div class="filter-grid">
