@@ -347,20 +347,21 @@ def test_negative_text_search_and_quick_search_exclude_matching_coins(
     coin = cast(Coin, data["coin"])
     archived = cast(Coin, data["archived"])
 
+    assert ids(client.get("/coins?status=all&search=srebrny&search_mode=exclude")) == [
+        archived.id
+    ]
     assert ids(
-        client.get("/coins?status=all&search=srebrny&search_mode=exclude")
+        client.get("/coins?status=all&quick_search=srebrny&quick_search_mode=exclude")
     ) == [archived.id]
-    assert ids(
-        client.get(
-            "/coins?status=all&quick_search=srebrny&quick_search_mode=exclude"
+    assert (
+        ids(
+            client.get(
+                "/coins?status=all&search=srebrny&search_mode=exclude"
+                "&quick_search=archiwalny&quick_search_mode=exclude"
+            )
         )
-    ) == [archived.id]
-    assert ids(
-        client.get(
-            "/coins?status=all&search=srebrny&search_mode=exclude"
-            "&quick_search=archiwalny&quick_search_mode=exclude"
-        )
-    ) == []
+        == []
+    )
     assert coin.id != archived.id
 
 
@@ -373,26 +374,27 @@ def test_negative_dictionary_category_year_and_media_filters(
     country_id = coin.country_id
     category_id = cast(Category, data["root"]).id
 
-    assert ids(
-        client.get(f"/coins?status=all&country_id={country_id}&country_mode=exclude")
-    ) == []
+    assert (
+        ids(
+            client.get(
+                f"/coins?status=all&country_id={country_id}&country_mode=exclude"
+            )
+        )
+        == []
+    )
     assert ids(
         client.get("/coins?status=all&issuer_id=999999&issuer_mode=exclude")
     ) == [coin.id, archived.id]
     assert ids(
-        client.get(
-            f"/coins?status=all&category_id={category_id}&category_mode=exclude"
-        )
+        client.get(f"/coins?status=all&category_id={category_id}&category_mode=exclude")
     ) == [archived.id]
-    assert ids(
-        client.get("/coins?status=all&from_year=1900&year_mode=exclude")
-    ) == [archived.id]
-    assert ids(
-        client.get("/coins?status=all&has_image=true&image_mode=exclude")
-    ) == [archived.id]
-    assert ids(
-        client.get("/coins?status=all&has_video=false&video_mode=exclude")
-    ) == []
+    assert ids(client.get("/coins?status=all&from_year=1900&year_mode=exclude")) == [
+        archived.id
+    ]
+    assert ids(client.get("/coins?status=all&has_image=true&image_mode=exclude")) == [
+        archived.id
+    ]
+    assert ids(client.get("/coins?status=all&has_video=false&video_mode=exclude")) == []
 
 
 def test_negative_filter_modes_are_validated(
@@ -411,8 +413,7 @@ def test_negative_search_applies_to_detail_navigation(
     archived = cast(Coin, data["archived"])
 
     response = client.get(
-        f"/coins/{archived.id}/navigation"
-        "?status=all&search=srebrny&search_mode=exclude"
+        f"/coins/{archived.id}/navigation?status=all&search=srebrny&search_mode=exclude"
     )
     assert response.status_code == 200
     assert response.json() == {"previous_id": None, "next_id": None}
