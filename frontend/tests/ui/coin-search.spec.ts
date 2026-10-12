@@ -60,7 +60,9 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   const firstSearchRequest = coinRequests.find((request) => request.searchParams.get('quick_search') === 'polska grosz')
   expect(firstSearchRequest?.searchParams.get('status')).toBe('active')
 
+  await page.getByRole('button', { name: 'Zwiń' }).click()
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('grosz polska')
+  await openAdvancedFilters(page)
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect.poll(() =>
     coinRequests.some((request) => request.searchParams.get('quick_search') === 'grosz polska'),
