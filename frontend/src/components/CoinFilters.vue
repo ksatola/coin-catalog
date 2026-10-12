@@ -66,6 +66,18 @@ onMounted(loadFilters)
     <section class="filter-section">
       <div class="section-heading">
         <div>
+          <h3>Wyszukiwanie</h3>
+          <p>Wyszukaj w opisach i pozostałych tekstowych polach monety.</p>
+        </div>
+      </div>
+      <label class="option-card">Szukaj
+        <input v-model="props.filters.search" type="search" aria-label="Szukaj" />
+      </label>
+    </section>
+
+    <section class="filter-section">
+      <div class="section-heading">
+        <div>
           <h3>Cechy monety</h3>
           <p>Wybierz jedną lub więcej wartości. Tryb określa, czy mają pasować, czy zostać pominięte.</p>
         </div>
