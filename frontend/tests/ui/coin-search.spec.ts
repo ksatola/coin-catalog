@@ -54,7 +54,7 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
 
-  expect(coinRequests.at(-1)?.searchParams.get('search')).toBe('polska grosz')
+  expect(coinRequests.at(-1)?.searchParams.get('quick_search')).toBe('polska grosz')
   expect(coinRequests.at(-1)?.searchParams.get('status')).toBe('active')
 
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('grosz polska')
@@ -67,7 +67,7 @@ test('filtr kolekcji wysyła wybrane identyfikatory', async ({ page }) => {
   await mockCatalog(page, coinRequests)
   await page.goto('/monety')
   await openAdvancedFilters(page)
-  await page.locator('label').filter({ hasText: 'Kolekcje' }).locator('select').first().selectOption(['1', '2'])
+  await page.getByRole('listbox', { name: 'Kolekcje' }).selectOption(['1', '2'])
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   expect(coinRequests.at(-1)?.searchParams.getAll('collection_id')).toEqual(['1', '2'])
@@ -78,7 +78,7 @@ test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączy�
   await mockCatalog(page, coinRequests)
   await page.goto('/monety')
   await openAdvancedFilters(page)
-  await page.locator('label').filter({ hasText: 'Kategorie' }).locator('select').first().selectOption('1')
+  await page.getByRole('listbox', { name: 'Kategorie' }).selectOption('1')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   let requestUrl = coinRequests.at(-1)
