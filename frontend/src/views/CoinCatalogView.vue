@@ -477,7 +477,7 @@ onUnmounted(() => {
 
 .sticky-catalog-toolbar {
   position: sticky;
-  top: 0;
+  top: 24px;
   z-index: 20;
   display: grid;
   gap: 12px;
