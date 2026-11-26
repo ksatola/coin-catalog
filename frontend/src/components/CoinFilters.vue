@@ -44,7 +44,7 @@ function isSortOptionDisabled(key: SortKey, index: number): boolean {
   const alreadySelected = props.filters.sortCriteria.some(
     (item, itemIndex) => item.key === key && itemIndex !== index,
   )
-  return alreadySelected || (key === 'id' && index !== props.filters.sortCriteria.length - 1)
+  return alreadySelected
 }
 
 function removeSortCriterion(index: number): void {
@@ -221,8 +221,8 @@ onMounted(loadFilters)
               <option value="asc">Rosnąco</option>
               <option value="desc">Malejąco</option>
             </select>
-            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w górę`" :disabled="index === 0 || criterion.key === 'id'" @click="moveSortCriterion(index, -1)">↑</button>
-            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w dół`" :disabled="index === props.filters.sortCriteria.length - 1 || props.filters.sortCriteria[index + 1]?.key === 'id'" @click="moveSortCriterion(index, 1)">↓</button>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w górę`" :disabled="index === 0" @click="moveSortCriterion(index, -1)">↑</button>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w dół`" :disabled="index === props.filters.sortCriteria.length - 1" @click="moveSortCriterion(index, 1)">↓</button>
             <button type="button" :aria-label="`Usuń kryterium ${index + 1}`" :disabled="props.filters.sortCriteria.length === 1" @click="removeSortCriterion(index)">×</button>
           </div>
           <button type="button" class="add-sort-button" :disabled="props.filters.sortCriteria.length >= sortOptions.length" @click="addSortCriterion">+ Dodaj kryterium</button>
