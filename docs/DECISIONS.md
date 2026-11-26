@@ -1033,5 +1033,8 @@ A user may browse different subsets or presentation modes in separate tabs. Shar
 - Catalogue presentation preferences survive a reload in the same tab but do not overwrite another tab's settings.
 - Screen calibration remains shared within the same browser origin and catalogue scope.
 - Filter state remains tab-local in memory.
+- Catalogue and archive route views retain loaded pages and UI state in memory while temporarily inactive.
+- Ordinary returns from detail or other routes do not refetch catalogue coin pages.
+- Successful mutations explicitly invalidate affected catalogue scopes; a stale scope refreshes on reactivation and restores its prior scroll position.
 - Scroll restoration is scoped to the catalogue/archive view and retains the latest position for that scope across navigation paths.
-- Catalogue scroll restoration and cursor-page reconstruction require Playwright regression coverage.
+- Cache retention, invalidation, scroll restoration, and cursor-page reconstruction require Playwright regression coverage.
