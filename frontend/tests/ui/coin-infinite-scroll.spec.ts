@@ -312,3 +312,19 @@ test('nawigacja szczegółów zachowuje wszystkie priorytety sortowania', async 
   expect(nextUrl.searchParams.getAll('sort_by')).toEqual(['country', 'from_year'])
   expect(nextUrl.searchParams.getAll('sort_order')).toEqual(['asc', 'desc'])
 })
+
+
+test('czyszczenie filtrów nie zmienia niezależnej specyfikacji sortowania', async ({ page }) => {
+  await mockCatalog(page)
+  await page.goto('/monety')
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
+  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
+  await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('country')
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 2' })).toHaveValue('from_year')
+  await expect(page.getByRole('searchbox', { name: 'Szukaj', exact: true })).toHaveValue('')
+})
