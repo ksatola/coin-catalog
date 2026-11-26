@@ -37,6 +37,7 @@ let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestGeneration = 0
 let observer: IntersectionObserver | undefined
 let hasMountedCatalog = false
+let isRestoringScroll = true
 
 const isArchive = props.scope === 'archive'
 const pageTitle = isArchive ? 'Archiwum' : 'Monety'
@@ -236,24 +237,28 @@ async function loadMoreCoins(): Promise<void> {
 }
 
 async function restoreCatalogScrollPosition(): Promise<void> {
-  const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey()))
-  if (!Number.isFinite(savedScrollPosition) || savedScrollPosition <= 0) return
+  try {
+    const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey()))
+    if (!Number.isFinite(savedScrollPosition) || savedScrollPosition <= 0) return
 
-  const maximumScroll = (): number => Math.max(
-    0,
-    Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight,
-  )
+    const maximumScroll = (): number => Math.max(
+      0,
+      Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight,
+    )
 
-  // Rebuild enough of the infinite-scroll result set before restoring the saved position.
-  while (hasMore.value && nextCursor.value && maximumScroll() < savedScrollPosition) {
-    const previousCount = coins.value.length
-    await loadMoreCoins()
+    // Rebuild enough of the infinite-scroll result set before restoring the saved position.
+    while (hasMore.value && nextCursor.value && maximumScroll() < savedScrollPosition) {
+      const previousCount = coins.value.length
+      await loadMoreCoins()
+      await nextTick()
+      if (coins.value.length === previousCount) break
+    }
+
     await nextTick()
-    if (coins.value.length === previousCount) break
+    window.scrollTo(0, Math.min(savedScrollPosition, maximumScroll()))
+  } finally {
+    isRestoringScroll = false
   }
-
-  await nextTick()
-  window.scrollTo(0, Math.min(savedScrollPosition, maximumScroll()))
 }
 
 async function archiveCoin(coin: Coin): Promise<void> {
@@ -314,11 +319,11 @@ watch(showAdvancedFilters, async (isOpen) => {
   document.body.style.overflow = previousBodyOverflow
 })
 
-watch([sentinel, loadingMore], ([element, isLoading]) => {
+watch([sentinel, loadingMore, () => isRestoringScroll], ([element, isLoading, isRestoring]) => {
   observer?.disconnect()
   observer = undefined
 
-  if (!element || isLoading) return
+  if (!element || isLoading || isRestoring) return
 
   observer = new IntersectionObserver((entries) => {
     if (entries.some((entry) => entry.isIntersecting)) {
