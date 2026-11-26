@@ -92,6 +92,7 @@ test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączy�
   expect(requestUrl?.searchParams.getAll('category_id')).toEqual(['1'])
   expect(requestUrl?.searchParams.get('include_category_children')).toBe('true')
 
+  await openAdvancedFilters(page)
   await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
   await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
   requestUrl = coinRequests.at(-1)
