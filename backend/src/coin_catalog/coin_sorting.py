@@ -112,3 +112,11 @@ def cursor_python_value(key: str, value):
     if not isinstance(value, str):
         raise ValueError("Invalid text cursor value")
     return value
+
+
+def apply_reverse_sorting(statement: Select, sort_spec: Sequence[SortCriterion]) -> Select:
+    ordering = []
+    for item in sort_spec:
+        expression = sort_expression(item.key)
+        ordering.append(expression.desc().nulls_first() if item.direction == "asc" else expression.asc().nulls_first())
+    return statement.order_by(None).order_by(*ordering)
