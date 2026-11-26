@@ -397,15 +397,25 @@ function openCoinDetails(coin: Coin): void {
 function resetFilters(): void {
   resetCoinFilters(filters, isArchive ? 'archived' : 'active')
   void loadCoins()
+  closeAdvancedFilters()
+}
+
+function closeAdvancedFilters(): void {
+  advancedFiltersDialog.value?.close()
+  showAdvancedFilters.value = false
 }
 
 function toggleAdvancedFilters(): void {
   if (showAdvancedFilters.value) {
-    advancedFiltersDialog.value?.close()
-    showAdvancedFilters.value = false
+    closeAdvancedFilters()
   } else {
     showAdvancedFilters.value = true
   }
+}
+
+function submitAdvancedFilters(): void {
+  void loadCoins()
+  closeAdvancedFilters()
 }
 
 let previousBodyOverflow = ''
@@ -615,7 +625,7 @@ onUnmounted(() => {
         <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
       </div>
 
-      <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
+      <CoinFilters :filters="filters" show-status @submit="submitAdvancedFilters" @reset="resetFilters" />
     </dialog>
     </div>
 
