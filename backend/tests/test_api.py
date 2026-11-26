@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -1084,3 +1085,58 @@ def test_all_supported_sort_fields_are_accepted(
         params={"sort_by": sort_field, "sort_order": "asc"},
     )
     assert response.status_code == 200
+
+
+def test_purchase_date_cursor_round_trip_and_nulls_last(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            purchase_date=date(2020, 1, 1),
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            purchase_date=date(2019, 1, 1),
+        ),
+        Coin(collection_id=reference_data["collection_id"]),
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    first = client.get(
+        "/coins",
+        params={
+            "limit": 1,
+            "sort_by": "purchase_date",
+            "sort_order": "asc",
+        },
+    )
+    assert first.status_code == 200
+    assert first.json()["items"][0]["id"] == coins[1].id
+
+    second = client.get(
+        "/coins",
+        params={
+            "limit": 1,
+            "sort_by": "purchase_date",
+            "sort_order": "asc",
+            "cursor": first.json()["next_cursor"],
+        },
+    )
+    assert second.status_code == 200
+    assert second.json()["items"][0]["id"] == coins[0].id
+
+    third = client.get(
+        "/coins",
+        params={
+            "limit": 1,
+            "sort_by": "purchase_date",
+            "sort_order": "asc",
+            "cursor": second.json()["next_cursor"],
+        },
+    )
+    assert third.status_code == 200
+    assert third.json()["items"][0]["id"] == coins[2].id
