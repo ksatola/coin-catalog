@@ -7,6 +7,7 @@ import CoinForm from '../components/CoinForm.vue'
 import InlineCategoryCreate from '../components/InlineCategoryCreate.vue'
 import type { CategoryGraphItem, Collection, CoinFormSubmit } from '../types'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
+import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
 const router = useRouter()
 const { markClean, markDirty } = useUnsavedCoinForm()
@@ -96,6 +97,7 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
     await assignCategories(coin.id)
 
     markClean()
+    markCoinCatalogStale('coins')
     errorMessage.value = ''
     await router.push(`/monety/${coin.id}`)
   } catch {
