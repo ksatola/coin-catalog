@@ -255,6 +255,11 @@ test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({
   expect(stored).toContain('sort_by=country')
   expect(stored).toContain('sort_by=from_year')
   expect(savedScroll).toBeNull()
+
+  await page.reload()
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('country')
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 2' })).toHaveValue('from_year')
 })
 
 
