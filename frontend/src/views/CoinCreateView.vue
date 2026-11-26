@@ -90,6 +90,8 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const coin = await response.json() as { id: number }
+    // The coin row already exists even if a later image/category upload fails.
+    markCoinCatalogStale('coins')
 
     await uploadFile(coin.id, payload.images.avers as File, 'avers')
     await uploadFile(coin.id, payload.images.rewers as File, 'rewers')
@@ -97,7 +99,6 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
     await assignCategories(coin.id)
 
     markClean()
-    markCoinCatalogStale('coins')
     errorMessage.value = ''
     await router.push(`/monety/${coin.id}`)
   } catch {
