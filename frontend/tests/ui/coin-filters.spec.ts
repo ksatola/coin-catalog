@@ -144,7 +144,7 @@ test('Wyczyść sortowanie ustawia ID ASC, wysyła request i zachowuje pozostał
   await expect.poll(() => requests.at(-1)?.searchParams.getAll('sort_by')).toEqual(['id'])
   expect(requests.at(-1)?.searchParams.getAll('sort_order')).toEqual(['asc'])
   expect(requests.at(-1)?.searchParams.get('search')).toBe('srebrna moneta')
-  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('id')
+  // Clearing sort submits the form, and the catalog closes the dialog after submission.
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
@@ -218,7 +218,7 @@ test('podsumowanie pokazuje aktywne filtry i priorytety sortowania', async ({ pa
   await openFilters(page)
 
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('srebrna moneta')
-  await page.getByRole('combobox', { name: 'Kraj' }).selectOption(['1'])
+  await page.getByRole('listbox', { name: 'Kraj' }).selectOption(['1'])
   await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
   await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
   await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
