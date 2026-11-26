@@ -9,7 +9,7 @@ type DictionaryItem = { id: number; name: string }
 type Dictionaries = Record<string, DictionaryItem[]>
 
 const props = defineProps<{ filters: CoinFilterState; showStatus?: boolean }>()
-const emit = defineEmits<{ submit: []; reset: [] }>()
+const emit = defineEmits<{ submit: []; reset: []; collapse: [] }>()
 
 const dictionaries = ref<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
 const categories = ref<Category[]>([])
@@ -109,6 +109,9 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
+    <div class="filter-top-actions">
+      <button type="button" class="clear-sorting-button" @click="clearSorting">Wyczyść sortowanie</button>
+    </div>
     <section class="filter-section">
       <div class="section-heading">
         <div>
@@ -216,7 +219,6 @@ onMounted(loadFilters)
         <div class="option-card sort-editor">
           <strong class="filter-label">Kolejność sortowania</strong>
           <p class="mode-hint">Kryteria od góry mają wyższy priorytet. Każde ma własny kierunek.</p>
-          <button type="button" class="clear-sorting-button" @click="clearSorting">Wyczyść sortowanie</button>
           <div v-for="(criterion, index) in props.filters.sortCriteria" :key="`sort-${criterion.key}`" class="sort-row">
             <span class="sort-priority">{{ index + 1 }}.</span>
             <select v-model="criterion.key" :aria-label="`Kryterium sortowania ${index + 1}`">
@@ -231,14 +233,14 @@ onMounted(loadFilters)
             <button type="button" :aria-label="`Usuń kryterium ${index + 1}`" :disabled="props.filters.sortCriteria.length === 1" @click="removeSortCriterion(index)">×</button>
           </div>
           <button type="button" class="add-sort-button" :disabled="props.filters.sortCriteria.length >= sortOptions.length" @click="addSortCriterion">+ Dodaj kryterium</button>
-          <button type="button" class="clear-sorting-button" @click="clearSorting">Wyczyść sortowanie</button>
         </div>
       </div>
     </section>
 
     <div class="form-actions">
-      <button class="submit-button" type="submit">Szukaj / filtruj</button>
-      <button class="reset-button" type="button" @click="emit('reset')">Wyczyść filtry</button>
+      <button class="dialog-submit-button" type="submit">Szukaj / filtruj</button>
+      <button class="dialog-reset-button" type="button" @click="emit('reset')">Wyczyść filtry</button>
+      <button class="collapse-button" type="button" @click="emit('collapse')">Zwiń</button>
       <p v-if="validationErrorMessage" class="filter-error">{{ validationErrorMessage }}</p>
       <p v-if="filtersLoadErrorMessage" class="filter-error">{{ filtersLoadErrorMessage }}</p>
     </div>
@@ -357,20 +359,26 @@ onMounted(loadFilters)
   font-size: 13px;
   font-weight: 600;
 }
+.filter-top-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .clear-sorting-button {
-  justify-self: start;
-  min-height: 36px;
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 8px 16px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 7px;
   background: #fff;
   color: #475569;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.clear-sorting-button:hover {
+.clear-sorting-button:hover,
+.dialog-reset-button:hover,
+.collapse-button:hover {
   background: #f8fafc;
 }
 
@@ -508,41 +516,38 @@ onMounted(loadFilters)
   padding-top: 2px;
 }
 
-.form-actions .submit-button {
-  flex: 1 1 220px;
-  width: auto;
-}
-
-.reset-button {
+.dialog-submit-button,
+.dialog-reset-button,
+.collapse-button {
   flex: 0 0 auto;
   min-height: 44px;
   padding: 8px 16px;
-  border: 1px solid #cbd5e1;
   border-radius: 7px;
-  background: #fff;
-  color: #475569;
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.reset-button:hover {
-  background: #f8fafc;
-}
-
-.submit-button {
-  width: 100%;
-  min-height: 44px;
-  border: 0;
-  border-radius: 7px;
-  background: #2563eb;
-  color: #fff;
   font-weight: 700;
   cursor: pointer;
 }
 
-.submit-button:hover {
+.dialog-submit-button {
+  border: 0;
+  background: #2563eb;
+  color: #fff;
+}
+
+.dialog-submit-button:hover {
   background: #1d4ed8;
+}
+
+.dialog-reset-button,
+.collapse-button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+}
+
+.collapse-button {
+  color: #334155;
+  border-radius: 9px;
 }
 
 .filter-error {
