@@ -323,6 +323,8 @@ test('czyszczenie filtrów nie zmienia niezależnej specyfikacji sortowania', as
   await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
   await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Wyczyść filtry' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
 
   await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('country')
   await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 2' })).toHaveValue('from_year')
