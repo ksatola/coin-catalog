@@ -120,30 +120,6 @@ onMounted(loadFilters)
     <section class="filter-section">
       <div class="section-heading">
         <div>
-          <h3>Cechy monety</h3>
-          <p>Wybierz jedną lub więcej wartości. Tryb określa, czy mają pasować, czy zostać pominięte.</p>
-        </div>
-      </div>
-      <div class="filter-grid">
-        <div v-for="(items, name) in dictionaries" :key="name" class="filter-card">
-          <div class="filter-card-heading">
-            <label class="filter-label">{{ dictionaryLabels[name] }}</label>
-            <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="dictionaryLabels[name] + ' — tryb'">
-              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'include' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'include'" @click="props.filters[dictionaryModeKey(name)] = 'include'">+</button>
-              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'exclude'" @click="props.filters[dictionaryModeKey(name)] = 'exclude'">−</button>
-            </div>
-          </div>
-          <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4" :aria-label="dictionaryLabels[name]">
-            <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
-          </select>
-          <span class="mode-hint">{{ props.filters[dictionaryModeKey(name)] === 'exclude' ? 'Wybrane wartości zostaną wykluczone' : 'Wybrane wartości zostaną uwzględnione' }}</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="filter-section">
-      <div class="section-heading">
-        <div>
           <h3>Kolekcje i kategorie</h3>
           <p>Ogranicz wyniki do wybranych kolekcji lub kategorii.</p>
         </div>
@@ -169,6 +145,30 @@ onMounted(loadFilters)
           </select>
           <label class="checkbox-field"><input v-model="props.filters.includeCategoryChildren" type="checkbox" /> Uwzględniaj podkategorie</label>
           <span class="mode-hint">{{ props.filters.categoryMode === 'exclude' ? 'Wybrane kategorie zostaną wykluczone' : 'Wybrane kategorie zostaną uwzględnione' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <div class="section-heading">
+        <div>
+          <h3>Cechy monety</h3>
+          <p>Wybierz jedną lub więcej wartości. Tryb określa, czy mają pasować, czy zostać pominięte.</p>
+        </div>
+      </div>
+      <div class="filter-grid">
+        <div v-for="(items, name) in dictionaries" :key="name" class="filter-card">
+          <div class="filter-card-heading">
+            <label class="filter-label">{{ dictionaryLabels[name] }}</label>
+            <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="dictionaryLabels[name] + ' — tryb'">
+              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'include' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'include'" @click="props.filters[dictionaryModeKey(name)] = 'include'">+</button>
+              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'exclude'" @click="props.filters[dictionaryModeKey(name)] = 'exclude'">−</button>
+            </div>
+          </div>
+          <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4" :aria-label="dictionaryLabels[name]">
+            <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
+          </select>
+          <span class="mode-hint">{{ props.filters[dictionaryModeKey(name)] === 'exclude' ? 'Wybrane wartości zostaną wykluczone' : 'Wybrane wartości zostaną uwzględnione' }}</span>
         </div>
       </div>
     </section>
