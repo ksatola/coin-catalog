@@ -346,7 +346,8 @@ test.describe('collections', () => {
     await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
     await expect(page.getByText('#202')).toHaveCount(0)
 
-    await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+    await page.getByRole('button', { name: '⚙ Filtry' }).click()
+    await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Wyczyść filtry' }).click()
 
     await expect(page.getByText('#101')).toBeVisible()
     await expect(page.getByText('#202')).toBeVisible()
