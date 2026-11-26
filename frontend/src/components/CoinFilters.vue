@@ -31,6 +31,10 @@ const sortOptions: { value: SortKey; label: string }[] = [
   { value: 'material', label: 'Materiał' },
   { value: 'mint', label: 'Mennica' },
 ]
+function clearSorting(): void {
+  props.filters.sortCriteria.splice(0, props.filters.sortCriteria.length, { key: 'id', direction: 'asc' })
+}
+
 function addSortCriterion(): void {
   const used = props.filters.sortCriteria.map((criterion) => criterion.key)
   const next = sortOptions.find((option) => !used.includes(option.value))
@@ -212,6 +216,7 @@ onMounted(loadFilters)
         <div class="option-card sort-editor">
           <strong class="filter-label">Kolejność sortowania</strong>
           <p class="mode-hint">Kryteria od góry mają wyższy priorytet. Każde ma własny kierunek.</p>
+          <button type="button" class="clear-sorting-button" @click="clearSorting">Wyczyść sortowanie</button>
           <div v-for="(criterion, index) in props.filters.sortCriteria" :key="`sort-${criterion.key}`" class="sort-row">
             <span class="sort-priority">{{ index + 1 }}.</span>
             <select v-model="criterion.key" :aria-label="`Kryterium sortowania ${index + 1}`">
@@ -226,6 +231,7 @@ onMounted(loadFilters)
             <button type="button" :aria-label="`Usuń kryterium ${index + 1}`" :disabled="props.filters.sortCriteria.length === 1" @click="removeSortCriterion(index)">×</button>
           </div>
           <button type="button" class="add-sort-button" :disabled="props.filters.sortCriteria.length >= sortOptions.length" @click="addSortCriterion">+ Dodaj kryterium</button>
+          <button type="button" class="clear-sorting-button" @click="clearSorting">Wyczyść sortowanie</button>
         </div>
       </div>
     </section>
@@ -331,7 +337,8 @@ onMounted(loadFilters)
   text-align: center;
 }
 .sort-row button,
-.add-sort-button {
+.add-sort-button,
+.clear-sorting-button {
   min-height: 36px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -350,6 +357,23 @@ onMounted(loadFilters)
   font-size: 13px;
   font-weight: 600;
 }
+.clear-sorting-button {
+  justify-self: start;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clear-sorting-button:hover {
+  background: #f8fafc;
+}
+
 .option-card {
   display: grid;
   align-content: start;
