@@ -23,7 +23,12 @@ const props = defineProps<{
 
 const router = useRouter()
 const filters = useCoinFilters(props.scope)
+const filterStateStorageKey = `coin-catalog:filter-state:${props.scope}`
 const sortCriteriaStorageKey = `coin-catalog:sort-criteria:${props.scope}`
+const storedFilterState = sessionStorage.getItem(filterStateStorageKey)
+if (storedFilterState) {
+  Object.assign(filters, parseCoinFilterQuery(storedFilterState))
+}
 const storedSortCriteria = sessionStorage.getItem(sortCriteriaStorageKey)
 if (storedSortCriteria) {
   filters.sortCriteria = parseCoinFilterQuery(storedSortCriteria).sortCriteria
@@ -284,6 +289,7 @@ async function loadCoins(): Promise<void> {
     nextCursor.value = page.next_cursor
     hasMore.value = page.has_more
     appliedFilterQuery.value = query
+    sessionStorage.setItem(filterStateStorageKey, query)
     errorMessage.value = ''
     await nextTick()
     // Preserve the current viewport when filters trigger a reload.
