@@ -221,3 +221,35 @@ test('nawigacja szczegółów używa endpointu previous/next z filtrami', async 
   await page.getByRole('button', { name: 'Następna →' }).click()
   await expect(page).toHaveURL(/\/monety\/3\?/)
 })
+
+
+test('wysyła wielokryterialne sortowanie w kolejności priorytetów', async ({ page }) => {
+  const requests = await mockCatalog(page)
+  await page.goto('/monety')
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
+  await page.getByRole('combobox', { name: 'Kierunek sortowania 2' }).selectOption('desc')
+  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+
+  await expect.poll(() => requests.length).toBeGreaterThan(1)
+  const request = requests.at(-1)
+  expect(request?.searchParams.getAll('sort_by')).toEqual(['country', 'from_year', 'id'])
+  expect(request?.searchParams.getAll('sort_order')).toEqual(['asc', 'desc', 'asc'])
+})
+
+test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({ page }) => {
+  await mockCatalog(page)
+  await page.goto('/monety')
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
+  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+
+  const stored = await page.evaluate(() => sessionStorage.getItem('coin-catalog:sort-criteria:coins'))
+  expect(stored).toContain('sort_by=country')
+  expect(stored).toContain('sort_by=from_year')
+})
