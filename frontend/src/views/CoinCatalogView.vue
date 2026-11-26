@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
@@ -10,6 +10,7 @@ import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse, Collection } from '../types'
+import { consumeCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
 type CatalogScope = 'coins' | 'archive'
 type ViewMode = 'image-grid' | 'size-gallery' | 'grid' | 'list'
@@ -348,10 +349,27 @@ onBeforeRouteLeave(() => {
 })
 
 onMounted(async () => {
+  // Initial mount always fetches the first page, so any pending invalidation is consumed.
+  consumeCoinCatalogStale(props.scope)
   await Promise.all([loadCoins(), loadCollections()])
   hasMountedCatalog = true
 
   await restoreCatalogScrollPosition()
+})
+
+onActivated(async () => {
+  if (!hasMountedCatalog) return
+
+  isRestoringScroll.value = true
+  if (consumeCoinCatalogStale(props.scope)) {
+    await loadCoins()
+  }
+  await restoreCatalogScrollPosition()
+})
+
+onDeactivated(() => {
+  observer?.disconnect()
+  observer = undefined
 })
 
 onUnmounted(() => {
