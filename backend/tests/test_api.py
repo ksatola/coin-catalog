@@ -969,7 +969,8 @@ def test_year_sorting_uses_bce_and_ce_chronology(
 ) -> None:
     bce = Era(name="p.n.e.")
     ce = Era(name="n.e.")
-    session.add_all([bce, ce])
+    unknown_era = Era(name="AD")
+    session.add_all([bce, ce, unknown_era])
     session.flush()
     coins = [
         Coin(
@@ -990,7 +991,7 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         Coin(
             collection_id=reference_data["collection_id"],
             from_year=20,
-            from_era_id=reference_data["era_id"],
+            from_era_id=unknown_era.id,
         ),
     ]
     session.add_all(coins)
