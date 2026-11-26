@@ -8,7 +8,7 @@ import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
 import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
-import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
+import { buildCoinFilterQuery, parseCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 import { consumeCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
@@ -23,6 +23,19 @@ const props = defineProps<{
 
 const router = useRouter()
 const filters = useCoinFilters(props.scope)
+const sortCriteriaStorageKey = `coin-catalog:sort-criteria:${props.scope}`
+const storedSortCriteria = sessionStorage.getItem(sortCriteriaStorageKey)
+if (storedSortCriteria) {
+  filters.sortCriteria = parseCoinFilterQuery(storedSortCriteria).sortCriteria
+}
+watch(() => filters.sortCriteria, (criteria) => {
+  const params = new URLSearchParams()
+  for (const criterion of criteria) {
+    params.append('sort_by', criterion.key)
+    params.append('sort_order', criterion.direction)
+  }
+  sessionStorage.setItem(sortCriteriaStorageKey, params.toString())
+}, { deep: true })
 const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
 const errorMessage = ref('')
@@ -181,6 +194,17 @@ async function loadCoins(): Promise<void> {
   try {
     const query = buildCoinFilterQuery(filters)
     const params = new URLSearchParams(query)
+    const previousParams = new URLSearchParams(appliedFilterQuery.value)
+    const sortChanged = appliedFilterQuery.value !== "" && (
+      previousParams.getAll("sort_by").join("|") !== params.getAll("sort_by").join("|") ||
+      previousParams.getAll("sort_order").join("|") !== params.getAll("sort_order").join("|")
+    )
+    if (sortChanged) {
+      for (const mode of ["image-grid", "size-gallery", "grid", "list"] as ViewMode[]) {
+        sessionStorage.removeItem(scrollPositionStorageKey(mode))
+      }
+      window.scrollTo(0, 0)
+    }
     params.set('limit', '50')
     const response = await fetch(`/api/coins?${params.toString()}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -196,7 +220,7 @@ async function loadCoins(): Promise<void> {
     await nextTick()
     // Preserve the current viewport when filters trigger a reload.
     // History-entry restoration runs separately after the initial catalogue load.
-    if (hasMountedCatalog) {
+    if (hasMountedCatalog && !sortChanged) {
       window.scrollTo(0, scrollY)
     }
   } catch {
