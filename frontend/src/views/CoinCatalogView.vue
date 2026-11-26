@@ -419,6 +419,10 @@ function toggleAdvancedFilters(): void {
   }
 }
 
+function triggerAdvancedFilterSubmit(): void {
+  advancedFiltersDialog.value?.querySelector('form')?.requestSubmit()
+}
+
 function submitAdvancedFilters(): void {
   void loadCoins()
   closeAdvancedFilters()
@@ -628,7 +632,11 @@ onUnmounted(() => {
           <h2>Filtry</h2>
           <p>Uściślij wyszukiwanie według cech monety.</p>
         </div>
-        <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
+        <div class="advanced-filters-header-actions">
+          <button type="button" class="dialog-submit-button" @click="triggerAdvancedFilterSubmit">Szukaj / filtruj</button>
+          <button type="button" class="dialog-reset-button" @click="resetFilters">Wyczyść filtry</button>
+          <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
+        </div>
       </div>
 
       <CoinFilters :filters="filters" show-status @submit="submitAdvancedFilters" @reset="resetFilters" />
@@ -966,6 +974,44 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.advanced-filters-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dialog-submit-button,
+.dialog-reset-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dialog-submit-button {
+  border: 0;
+  background: #2563eb;
+  color: #fff;
+}
+
+.dialog-submit-button:hover {
+  background: #1d4ed8;
+}
+
+.dialog-reset-button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+}
+
+.dialog-reset-button:hover {
+  background: #f8fafc;
 }
 
 .advanced-filters-header h2 {
