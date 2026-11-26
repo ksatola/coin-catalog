@@ -975,6 +975,8 @@ def test_year_sorting_uses_bce_and_ce_chronology(
     coins = [
         Coin(
             collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
             from_year=100,
             from_era_id=bce.id,
             to_year=100,
@@ -982,6 +984,8 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         ),
         Coin(
             collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
             from_year=500,
             from_era_id=bce.id,
             to_year=500,
@@ -989,6 +993,8 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         ),
         Coin(
             collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
             from_year=1,
             from_era_id=ce_id,
             to_year=1,
@@ -996,6 +1002,8 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         ),
         Coin(
             collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
             from_year=20,
             from_era_id=unknown_era.id,
             to_year=20,
