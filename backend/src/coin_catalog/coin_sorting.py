@@ -72,11 +72,6 @@ def normalize_sort_spec(
         raise HTTPException(status_code=400, detail="Invalid sort order")
     if len(set(fields)) != len(fields):
         raise HTTPException(status_code=400, detail="Duplicate sort field")
-    if "id" in fields and fields[-1] != "id":
-        raise HTTPException(
-            status_code=400,
-            detail="ID must be the final sort criterion",
-        )
     if fields[-1] != "id":
         fields.append("id")
         directions.append("asc")
