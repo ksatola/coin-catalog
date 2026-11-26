@@ -206,6 +206,9 @@ test('zastosowane filtry są odtwarzane po odświeżeniu karty', async ({ page }
   await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).first().click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect.poll(() => page.evaluate(() =>
+    sessionStorage.getItem('coin-catalog:filter-state:coins'),
+  )).toContain('search=srebrna+moneta')
 
   await page.reload()
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
