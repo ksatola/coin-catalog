@@ -209,8 +209,6 @@ def reconcile_page_thumbnails(coin_ids: list[int]) -> None:
         ensure_page_thumbnails(page_coins, session)
 
 
-
-
 @router.post(
     "",
     response_model=CoinResponse,
