@@ -8,9 +8,9 @@ from coin_catalog.coin_move import move_coin
 from coin_catalog.coin_pagination import (
     apply_after_cursor,
     apply_before_cursor,
+    cursor_for_coin,
     decode_cursor,
     encode_cursor,
-    cursor_for_coin,
 )
 from coin_catalog.coin_search import build_coin_query
 from coin_catalog.coin_sorting import (
@@ -83,7 +83,6 @@ def validate_coin_query(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid status filter",
         )
-
 
 
 def build_filtered_coin_query(
