@@ -59,8 +59,12 @@ def decode_cursor(
             cursor_python_value(item.key, raw)
             for item, raw in zip(sort_spec, raw_values, strict=True)
         )
-        if sort_spec[-1].key == "id" and values[-1] != coin_id:
-            raise ValueError("Cursor ID mismatch")
+        if "id" in (item.key for item in sort_spec):
+            id_index = next(
+                index for index, item in enumerate(sort_spec) if item.key == "id"
+            )
+            if values[id_index] != coin_id:
+                raise ValueError("Cursor ID mismatch")
         return CoinCursor(sort_spec, values, coin_id)
     except (
         AttributeError,
