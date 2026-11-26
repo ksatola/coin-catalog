@@ -232,7 +232,7 @@ test('wysyła wielokryterialne sortowanie w kolejności priorytetów', async ({ 
   await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
   await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
   await page.getByRole('combobox', { name: 'Kierunek sortowania 2' }).selectOption('desc')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   await expect.poll(() => requests.length).toBeGreaterThan(1)
   const request = requests.at(-1)
@@ -248,7 +248,7 @@ test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({
   await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
   await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
   await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   const stored = await page.evaluate(() => sessionStorage.getItem('coin-catalog:sort-criteria:coins'))
   const savedScroll = await page.evaluate(() => sessionStorage.getItem('coin-catalog:scroll-position:coins:image-grid'))
@@ -322,7 +322,7 @@ test('czyszczenie filtrów nie zmienia niezależnej specyfikacji sortowania', as
   await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
   await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
-  await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Wyczyść filtry' }).click()
 
   await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('country')
   await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 2' })).toHaveValue('from_year')
