@@ -35,6 +35,7 @@ const sortOptions: { value: SortKey; label: string }[] = [
 ]
 function clearSorting(): void {
   props.filters.sortCriteria.splice(0, props.filters.sortCriteria.length, { key: 'id', direction: 'asc' })
+  submit()
 }
 
 function addSortCriterion(): void {
