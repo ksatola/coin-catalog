@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import CoinDetail from '../components/CoinDetail.vue'
 import { buildCoinFilterQuery, parseCoinFilterQuery } from '../composables/useCoinFilters'
 import type { Coin } from '../types'
+import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,6 +108,8 @@ async function archiveCoin(): Promise<void> {
       throw new Error(`HTTP ${response.status}`)
     }
 
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
     await loadCoin()
   } catch {
     errorMessage.value = 'Nie udało się zarchiwizować monety.'
@@ -125,6 +128,8 @@ async function restoreCoin(): Promise<void> {
       throw new Error(`HTTP ${response.status}`)
     }
 
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
     await loadCoin()
   } catch {
     errorMessage.value = 'Nie udało się przywrócić monety.'
