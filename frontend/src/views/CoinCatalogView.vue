@@ -419,10 +419,6 @@ function toggleAdvancedFilters(): void {
   }
 }
 
-function triggerAdvancedFilterSubmit(): void {
-  advancedFiltersDialog.value?.querySelector('form')?.requestSubmit()
-}
-
 function submitAdvancedFilters(): void {
   void loadCoins()
   closeAdvancedFilters()
@@ -631,11 +627,6 @@ onUnmounted(() => {
         <div>
           <h2>Filtry</h2>
           <p>Uściślij wyszukiwanie według cech monety.</p>
-        </div>
-        <div class="advanced-filters-header-actions">
-          <button type="button" class="dialog-submit-button" @click="triggerAdvancedFilterSubmit">Szukaj / filtruj</button>
-          <button type="button" class="dialog-reset-button" @click="resetFilters">Wyczyść filtry</button>
-          <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
         </div>
       </div>
 
