@@ -109,6 +109,9 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
+    <div class="filter-top-actions">
+      <button type="button" class="dialog-reset-button" @click="clearSorting">Wyczyść sortowanie</button>
+    </div>
     <section class="filter-section">
       <div class="section-heading">
         <div>
@@ -255,6 +258,11 @@ onMounted(loadFilters)
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.filter-top-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .filter-section {
@@ -491,6 +499,7 @@ onMounted(loadFilters)
 .form-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 10px;
   padding-top: 2px;
