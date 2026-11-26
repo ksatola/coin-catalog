@@ -313,7 +313,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
-    await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+    await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
     await expect(page.getByText('#101')).toBeVisible()
     await expect(page.getByText('#404')).toBeVisible()
@@ -328,7 +328,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption(['1', '2'])
-    await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+    await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
     await expect(page.getByText('#101')).toBeVisible()
     await expect(page.getByText('#202')).toBeVisible()
@@ -343,7 +343,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
-    await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+    await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
     await expect(page.getByText('#202')).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
@@ -363,7 +363,7 @@ test.describe('collections', () => {
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('1')
     await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('TEST-0404')
-    await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+    await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
     await expect(page.getByText('#404')).toBeVisible()
     await expect(page.getByText('#101')).toHaveCount(0)
@@ -377,7 +377,7 @@ test.describe('collections', () => {
 
     await page.getByRole('button', { name: '⚙ Filtry' }).click()
     await page.getByLabel('Kolekcje').selectOption('2')
-    await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+    await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
     await expect(page.getByText('#505')).toBeVisible()
     await expect(page.getByText('#101')).toHaveCount(0)
