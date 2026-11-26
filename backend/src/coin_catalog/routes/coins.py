@@ -13,6 +13,7 @@ from coin_catalog.coin_pagination import (
     encode_cursor,
 )
 from coin_catalog.coin_search import build_coin_query
+from coin_catalog.coin_sorting import SortCriterion, apply_sorting, normalize_sort_spec
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import SessionLocal, get_db
 from coin_catalog.image_storage import collection_images_dir, thumbnail_path
@@ -57,8 +58,6 @@ def validate_coin_query(
     quick_search: str | None,
     modes: dict[str, str],
     coin_status: str,
-    sort_by: str,
-    sort_order: str,
 ) -> None:
     for text in (search, quick_search):
         if text:
@@ -80,16 +79,7 @@ def validate_coin_query(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid status filter",
         )
-    if sort_by not in {"id", "from_year", "to_year"}:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid sort field",
-        )
-    if sort_order not in {"asc", "desc"}:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid sort order",
-        )
+
 
 
 def build_filtered_coin_query(
@@ -124,8 +114,7 @@ def build_filtered_coin_query(
     has_video: bool | None,
     video_mode: str,
     coin_status: str,
-    sort_by: str,
-    sort_order: str,
+    sort_spec: tuple[SortCriterion, ...],
 ):
     return build_coin_query(
         search=search,
@@ -158,8 +147,7 @@ def build_filtered_coin_query(
         has_video=has_video,
         video_mode=video_mode,
         status_filter=coin_status,
-        sort_by=sort_by,
-        sort_order=sort_order,
+        sort_spec=sort_spec,
     )
 
 
@@ -218,18 +206,6 @@ def reconcile_page_thumbnails(coin_ids: list[int]) -> None:
         ensure_page_thumbnails(page_coins, session)
 
 
-def cursor_for_coin(coin: Coin, sort_by: str, sort_order: str) -> CoinCursor:
-    sort_value = {
-        "id": coin.id,
-        "from_year": coin.from_year,
-        "to_year": coin.to_year,
-    }[sort_by]
-    return CoinCursor(
-        sort_by=sort_by,
-        sort_order=sort_order,
-        sort_value=sort_value,
-        coin_id=coin.id,
-    )
 
 
 @router.post(
@@ -288,8 +264,8 @@ def list_coins(
     has_video: bool | None = None,
     video_mode: str = "include",
     coin_status: str = Query("active", alias="status"),
-    sort_by: str = "id",
-    sort_order: str = "asc",
+    sort_by: list[str] = Query(default=["id"]),
+    sort_order: list[str] = Query(default=["asc"]),
     limit: int | None = Query(None, ge=1, le=MAX_PAGE_SIZE),
     cursor: str | None = None,
     session: Session = Depends(get_db),
@@ -313,9 +289,9 @@ def list_coins(
             "video_mode": video_mode,
         },
         coin_status,
-        sort_by,
-        sort_order,
     )
+
+    sort_spec = normalize_sort_spec(sort_by, sort_order)
 
     if cursor is not None and limit is None:
         raise HTTPException(
@@ -354,8 +330,7 @@ def list_coins(
         has_video=has_video,
         video_mode=video_mode,
         coin_status=coin_status,
-        sort_by=sort_by,
-        sort_order=sort_order,
+        sort_spec=sort_spec,
     )
 
     if limit is None:
@@ -363,7 +338,7 @@ def list_coins(
         return list(session.scalars(statement).all())
 
     coin_cursor = (
-        decode_cursor(cursor, sort_by, sort_order) if cursor is not None else None
+        decode_cursor(cursor, sort_spec) if cursor is not None else None
     )
     if coin_cursor is not None:
         statement = apply_after_cursor(statement, coin_cursor)
@@ -377,7 +352,7 @@ def list_coins(
     )
 
     next_cursor = (
-        encode_cursor(cursor_for_coin(page_coins[-1], sort_by, sort_order))
+        encode_cursor(__import__("coin_catalog.coin_pagination", fromlist=["cursor_for_coin"]).cursor_for_coin(page_coins[-1], sort_spec))
         if has_more and page_coins
         else None
     )
@@ -496,22 +471,14 @@ def coin_navigation(
     if current is None:
         return CoinNavigationResponse(previous_id=None, next_id=None)
 
-    current_cursor = cursor_for_coin(current, sort_by, sort_order)
+    from coin_catalog.coin_pagination import cursor_for_coin\n\n    current_cursor = cursor_for_coin(current, sort_spec)
 
     previous_statement = apply_before_cursor(statement, current_cursor)
-    reverse_sort_order = "desc" if sort_order == "asc" else "asc"
-    previous_statement = (
-        previous_statement.order_by(None)
-        .order_by(
-            (
-                getattr(Coin, sort_by).desc()
-                if reverse_sort_order == "desc"
-                else getattr(Coin, sort_by).asc()
-            ),
-            Coin.id.desc(),
-        )
-        .limit(1)
+    reverse_spec = tuple(
+        SortCriterion(item.key, "desc" if item.direction == "asc" else "asc")
+        for item in sort_spec
     )
+    previous_statement = apply_sorting(previous_statement, reverse_spec).limit(1)
     previous = session.scalar(previous_statement)
 
     next_statement = apply_after_cursor(statement, current_cursor).limit(1)
