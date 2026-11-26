@@ -374,7 +374,7 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 
 ## 2026-11-26 — Multi-criteria catalogue sorting
 
-Implementation is in progress on branch feature/catalog-multi-sort.
+Implemented on branch `feature/catalog-multi-sort`.
 
 Implemented in the branch:
 
@@ -386,4 +386,4 @@ Implemented in the branch:
 - Backend and Playwright regression tests, with backend tests patching thumbnail reconciliation so requests cannot open a runtime SessionLocal connection.
 - Architecture and decision documentation updates.
 
-**Verification status:** not yet verified. The project owner must run backend pytest/Ruff, frontend type-check/build, and the relevant Playwright suites in the Dev Container. No test result is claimed. No database schema or migration changes are included.
+**Verification status:** the project owner reported that all 10 tests in `frontend/tests/ui/coin-filters.spec.ts` passed in the Dev Container. This verifies the dedicated filter/sort dialog UI regression suite. A complete verification result for the backend pytest/Ruff suites, frontend type-check/production build, and all other relevant Playwright suites is not established by that report; no broader passing result is claimed. No database schema or migration changes are included.
