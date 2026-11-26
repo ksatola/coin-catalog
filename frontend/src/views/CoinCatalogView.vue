@@ -37,7 +37,7 @@ let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestGeneration = 0
 let observer: IntersectionObserver | undefined
 let hasMountedCatalog = false
-let isRestoringScroll = true
+const isRestoringScroll = ref(true)
 
 const isArchive = props.scope === 'archive'
 const pageTitle = isArchive ? 'Archiwum' : 'Monety'
@@ -257,7 +257,7 @@ async function restoreCatalogScrollPosition(): Promise<void> {
     await nextTick()
     window.scrollTo(0, Math.min(savedScrollPosition, maximumScroll()))
   } finally {
-    isRestoringScroll = false
+    isRestoringScroll.value = false
   }
 }
 
@@ -319,7 +319,7 @@ watch(showAdvancedFilters, async (isOpen) => {
   document.body.style.overflow = previousBodyOverflow
 })
 
-watch([sentinel, loadingMore, () => isRestoringScroll], ([element, isLoading, isRestoring]) => {
+watch([sentinel, loadingMore, () => isRestoringScroll.value], ([element, isLoading, isRestoring]) => {
   observer?.disconnect()
   observer = undefined
 
