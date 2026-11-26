@@ -249,5 +249,4 @@ export function resetCoinFilters(filters: CoinFilterState, defaultStatus: string
   filters.hasImage = ''
   filters.hasVideo = ''
   filters.statusFilter = defaultStatus
-  filters.sortCriteria = [{ key: 'id', direction: 'asc' }]
 }
