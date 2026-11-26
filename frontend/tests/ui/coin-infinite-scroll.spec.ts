@@ -37,7 +37,7 @@ const dictionaries = {
   mints: [],
   materials: [],
   states: [],
-  eras: [{ id: 1, name: 'AD' }],
+  eras: [{ id: 1, name: 'n.e.' }],
 }
 
 async function mockCatalog(page: import('@playwright/test').Page): Promise<URL[]> {
