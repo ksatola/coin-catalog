@@ -370,3 +370,20 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Przy zmianie trybu zapisywana jest pozycja opuszczanego widoku, a po aktualizacji DOM przywracana jest pozycja docelowego trybu.
 - Dodano test Playwright sprawdzający niezależne pozycje Galerii, Grid i Rozmiaru.
 - **Weryfikacja: nieuruchomiona po tej zmianie.** Wymagane uruchomienie testów UI, typecheck i build w Dev Container.
+
+
+## 2026-11-26 — Multi-criteria catalogue sorting
+
+Implementation is in progress on branch feature/catalog-multi-sort.
+
+Implemented in the branch:
+
+- Shared backend sort definitions for all 12 supported fields, including lexicographic collection numbers, dictionary names, timestamps, purchase date, and era-aware issue years.
+- Repeated sort_by/sort_order API parameters with validation and deterministic technical-ID tie-breaking.
+- Versioned multi-value keyset cursors with NULLS LAST handling and matching previous/next navigation predicates.
+- Frontend controls for adding, removing, reordering, and independently directing sort criteria.
+- Tab-scoped sessionStorage persistence for sorting and scroll reset when the applied sort changes.
+- Backend and Playwright regression tests, with backend tests patching thumbnail reconciliation so requests cannot open a runtime SessionLocal connection.
+- Architecture and decision documentation updates.
+
+**Verification status:** not yet verified. The project owner must run backend pytest/Ruff, frontend type-check/build, and the relevant Playwright suites in the Dev Container. No test result is claimed. No database schema or migration changes are included.
