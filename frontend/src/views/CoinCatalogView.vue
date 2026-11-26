@@ -51,11 +51,15 @@ const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
 const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
-function scrollPositionStorageKey(): string {
-  // Keep the latest position per catalogue scope. A per-history-entry key is
-  // unreliable when returning through popstate because Vue Router may expose
-  // the destination entry's state while route-leave guards are running.
-  return `coin-catalog:scroll-position:${props.scope}`
+function scrollPositionStorageKey(mode: ViewMode = viewMode.value): string {
+  // Each presentation has a different layout height, so each needs its own
+  // remembered viewport position. Scope also separates the active catalogue
+  // from the archive.
+  return `coin-catalog:scroll-position:${props.scope}:${mode}`
+}
+
+function saveCatalogScrollPosition(mode: ViewMode = viewMode.value): void {
+  sessionStorage.setItem(scrollPositionStorageKey(mode), String(window.scrollY))
 }
 const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
@@ -114,9 +118,15 @@ async function loadCollections(): Promise<void> {
   }
 }
 
-watch(viewMode, (mode) => {
+watch(viewMode, (mode, previousMode) => {
+  // Capture the outgoing layout before Vue changes its rendered content.
+  saveCatalogScrollPosition(previousMode)
   sessionStorage.setItem(viewModeStorageKey, mode)
-})
+
+  // Restore the last viewport for the incoming layout after its DOM is updated.
+  isRestoringScroll.value = true
+  void nextTick().then(() => restoreCatalogScrollPosition(mode))
+}, { flush: 'sync' })
 
 watch(galleryColumns, (columns) => {
   sessionStorage.setItem(galleryColumnsStorageKey, String(columns))
@@ -238,9 +248,9 @@ async function loadMoreCoins(): Promise<void> {
   }
 }
 
-async function restoreCatalogScrollPosition(): Promise<void> {
+async function restoreCatalogScrollPosition(mode: ViewMode = viewMode.value): Promise<void> {
   try {
-    const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey()))
+    const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey(mode)))
     if (!Number.isFinite(savedScrollPosition) || savedScrollPosition <= 0) return
 
     const maximumScroll = (): number => Math.max(
@@ -337,7 +347,7 @@ watch([sentinel, loadingMore, () => isRestoringScroll.value], ([element, isLoadi
 })
 
 onBeforeRouteLeave(() => {
-  sessionStorage.setItem(scrollPositionStorageKey(), String(window.scrollY))
+  saveCatalogScrollPosition()
 
   // A route change can happen while the native filter dialog is open.
   // Release its body scroll lock synchronously before the next view mounts.
