@@ -126,9 +126,9 @@ test('powrót do katalogu odtwarza scroll i doładowuje brakujące strony', asyn
   // The bottom navigation creates a new history entry rather than going back.
   // It should still restore the latest catalogue position.
   await tiles.nth(140).click()
-  await expect(page).toHaveURL(/\\/monety\\/141/)
+  await expect(page).toHaveURL(/\/monety\/141/)
   await page.getByRole('link', { name: 'Monety' }).click()
-  await expect(page).toHaveURL(/\\/monety$/)
+  await expect(page).toHaveURL(/\/monety$/)
   await expect(tiles).toHaveCount(150)
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(savedScroll - 10)
 })
