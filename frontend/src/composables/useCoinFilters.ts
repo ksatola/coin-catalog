@@ -13,6 +13,9 @@ type DictionarySelections = {
 }
 
 export type FilterMode = 'include' | 'exclude'
+export type SortDirection = 'asc' | 'desc'
+export type SortKey = 'id' | 'collection_number' | 'from_year' | 'to_year' | 'created_at' | 'updated_at' | 'purchase_date' | 'country' | 'issuer' | 'denomination' | 'material' | 'mint'
+export type SortCriterion = { key: SortKey; direction: SortDirection }
 
 export type CoinFilterState = {
   search: string
@@ -39,8 +42,7 @@ export type CoinFilterState = {
   hasImage: string
   hasVideo: string
   statusFilter: string
-  sortBy: string
-  sortOrder: string
+  sortCriteria: SortCriterion[]
 }
 
 export function createCoinFilterState(statusFilter: string): CoinFilterState {
@@ -77,8 +79,7 @@ export function createCoinFilterState(statusFilter: string): CoinFilterState {
     hasImage: '',
     hasVideo: '',
     statusFilter,
-    sortBy: 'id',
-    sortOrder: 'asc',
+    sortCriteria: [{ key: 'id', direction: 'asc' }],
   })
 }
 
@@ -142,9 +143,22 @@ export function parseCoinFilterQuery(query: string | URLSearchParams): CoinFilte
     hasImage: params.get('has_image') ?? '',
     hasVideo: params.get('has_video') ?? '',
     statusFilter: params.get('status') ?? 'active',
-    sortBy: params.get('sort_by') ?? 'id',
-    sortOrder: params.get('sort_order') ?? 'asc',
+    sortCriteria: parseSortCriteria(params),
   }
+}
+
+function parseSortCriteria(params: URLSearchParams): SortCriterion[] {
+  const keys = params.getAll('sort_by')
+  const directions = params.getAll('sort_order')
+  if (keys.length === 0) return [{ key: 'id', direction: 'asc' }]
+  const allowed: SortKey[] = ['id', 'collection_number', 'from_year', 'to_year', 'created_at', 'updated_at', 'purchase_date', 'country', 'issuer', 'denomination', 'material', 'mint']
+  const criteria = keys.flatMap((key, index) => {
+    const direction = directions[index] ?? 'asc'
+    return allowed.includes(key as SortKey) && (direction === 'asc' || direction === 'desc')
+      ? [{ key: key as SortKey, direction: direction as SortDirection }]
+      : []
+  })
+  return criteria.length ? criteria : [{ key: 'id', direction: 'asc' }]
 }
 
 function parseOptionalInteger(value: string | null): number | null {
@@ -196,8 +210,10 @@ export function buildCoinFilterQuery(filters: CoinFilterState): string {
   if (filters.hasVideo) params.set('has_video', filters.hasVideo)
   if (filters.videoMode === 'exclude') params.set('video_mode', filters.videoMode)
   params.set('status', filters.statusFilter)
-  params.set('sort_by', filters.sortBy)
-  params.set('sort_order', filters.sortOrder)
+  for (const criterion of filters.sortCriteria) {
+    params.append('sort_by', criterion.key)
+    params.append('sort_order', criterion.direction)
+  }
 
   return params.toString()
 }
@@ -233,6 +249,5 @@ export function resetCoinFilters(filters: CoinFilterState, defaultStatus: string
   filters.hasImage = ''
   filters.hasVideo = ''
   filters.statusFilter = defaultStatus
-  filters.sortBy = 'id'
-  filters.sortOrder = 'asc'
+  filters.sortCriteria = [{ key: 'id', direction: 'asc' }]
 }
