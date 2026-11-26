@@ -12,7 +12,7 @@ const images = new Map([
 ])
 const dictionaries = {
   countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 2, name: 'Nominał testowy' }],
-  mints: [], materials: [], states: [], eras: [{ id: 3, name: 'AD' }],
+  mints: [], materials: [], states: [], eras: [{ id: 3, name: 'n.e.' }],
 }
 
 const validJpeg = Buffer.from(
