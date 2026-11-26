@@ -93,7 +93,7 @@ test('kalibracja ekranu ustawia rzeczywistą skalę 100%', async ({ page }) => {
     })
   })
 
-  await page.addInitScript(() => localStorage.setItem('coin-catalog:size-gallery-scale:coins', '100'))
+  await page.addInitScript(() => sessionStorage.setItem('coin-catalog:size-gallery-scale:coins', '100'))
   await page.goto('/monety')
   await page.getByRole('button', { name: '◉ Rozmiar' }).click()
   await page.getByRole('button', { name: '⚙ Kalibruj ekran' }).click()
