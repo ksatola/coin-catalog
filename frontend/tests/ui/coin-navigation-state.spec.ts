@@ -29,8 +29,11 @@ test('zachowuje filtry Kategoria testowa po przejściu do Dodaj monetę i z powr
   await openAdvancedFilters(page)
   await (await advancedSearch(page)).fill('polska grosz')
   await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
-  await page.getByRole('button', { name: 'Zwiń' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect.poll(() => page.evaluate(() =>
+    sessionStorage.getItem('coin-catalog:filter-state:coins'),
+  )).toContain('search=polska+grosz')
   await page.getByRole('link', { name: 'Dodaj monetę' }).click()
   await page.getByRole('link', { name: 'Monety' }).click()
   await openAdvancedFilters(page)
@@ -44,8 +47,11 @@ test('zachowuje filtry Archiwum po przejściu do Dodaj monetę i z powrotem', as
   await openAdvancedFilters(page)
   await (await advancedSearch(page)).fill('polska grosz')
   await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
-  await page.getByRole('button', { name: 'Zwiń' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect.poll(() => page.evaluate(() =>
+    sessionStorage.getItem('coin-catalog:filter-state:archive'),
+  )).toContain('search=polska+grosz')
   await page.getByRole('link', { name: 'Dodaj monetę' }).click()
   await page.getByRole('link', { name: 'Archiwum' }).click()
   await openAdvancedFilters(page)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
@@ -8,7 +8,7 @@ import CoinImageGrid from '../components/CoinImageGrid.vue'
 import CoinList from '../components/CoinList.vue'
 import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
-import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
+import { buildCoinFilterQuery, parseCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse, Collection } from '../types'
 import { consumeCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
@@ -23,8 +23,29 @@ const props = defineProps<{
 
 const router = useRouter()
 const filters = useCoinFilters(props.scope)
+const filterStateStorageKey = `coin-catalog:filter-state:${props.scope}`
+const sortCriteriaStorageKey = `coin-catalog:sort-criteria:${props.scope}`
+const storedFilterState = sessionStorage.getItem(filterStateStorageKey)
+if (storedFilterState) {
+  Object.assign(filters, parseCoinFilterQuery(storedFilterState))
+}
+const storedSortCriteria = sessionStorage.getItem(sortCriteriaStorageKey)
+if (storedSortCriteria) {
+  filters.sortCriteria = parseCoinFilterQuery(storedSortCriteria).sortCriteria
+}
+watch(() => filters.sortCriteria, (criteria) => {
+  const params = new URLSearchParams()
+  for (const criterion of criteria) {
+    params.append('sort_by', criterion.key)
+    params.append('sort_order', criterion.direction)
+  }
+  sessionStorage.setItem(sortCriteriaStorageKey, params.toString())
+}, { deep: true })
 const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
+type NamedFilterValue = { id: number; name: string }
+const filterDictionaries = ref<Record<string, NamedFilterValue[]>>({})
+const categories = ref<NamedFilterValue[]>([])
 const errorMessage = ref('')
 const appliedFilterQuery = ref('')
 const nextCursor = ref<string | null>(null)
@@ -96,6 +117,66 @@ const sizeGalleryPixelsPerMm = ref(loadSizeGalleryPixelsPerMm())
 const showSizeGalleryCalibration = ref(false)
 const sizeGalleryIsCalibrated = ref(localStorage.getItem(sizeGalleryCalibrationStorageKey) !== null)
 
+const sortLabels: Record<string, string> = {
+  id: 'ID', collection_number: 'ID w kolekcji', from_year: 'Rok od', to_year: 'Rok do',
+  created_at: 'Data dodania', updated_at: 'Data modyfikacji', purchase_date: 'Data zakupu',
+  country: 'Kraj', issuer: 'Emitent', denomination: 'Nominał', material: 'Materiał', mint: 'Mennica',
+}
+const filterLabels: Record<string, string> = {
+  countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica',
+  materials: 'Materiał', states: 'Stan', eras: 'Era',
+}
+const appliedCriteria = computed(() => {
+  const params = new URLSearchParams(appliedFilterQuery.value)
+  const chips: string[] = []
+  const add = (label: string, value: string) => { if (value) chips.push(`${label}: ${value}`) }
+  add('Szukaj', params.get('search') ? `${params.get('search_mode') === 'exclude' ? 'bez ' : ''}"${params.get('search')}"` : '')
+  add('Szybkie szukanie', params.get('quick_search') ? `${params.get('quick_search_mode') === 'exclude' ? 'bez ' : ''}"${params.get('quick_search')}"` : '')
+  const dictionaryPrefixes: Record<string, string> = {
+    countries: 'country', issuers: 'issuer', denominations: 'denomination', mints: 'mint',
+    materials: 'material', states: 'state', eras: 'era',
+  }
+  for (const [key, label] of Object.entries(filterLabels)) {
+    const prefix = dictionaryPrefixes[key]
+    const ids = params.getAll(`${prefix}_id`)
+    if (!ids.length) continue
+    const values = ids.map((id) => filterDictionaries.value[key]?.find((item) => item.id === Number(id))?.name ?? `#${id}`)
+    add(label, `${params.get(`${prefix}_mode`) === 'exclude' ? 'bez ' : ''}${values.join(', ')}`)
+  }
+  const collectionIds = params.getAll('collection_id')
+  if (collectionIds.length) {
+    add('Kolekcja', collectionIds.map((id) => collections.value.find((item) => item.id === Number(id))?.name ?? `#${id}`).join(', '))
+  }
+  const categoryIds = params.getAll('category_id')
+  if (categoryIds.length) {
+    const names = categoryIds.map((id) => categories.value.find((item) => item.id === Number(id))?.name ?? `#${id}`)
+    add('Kategoria', `${params.get('category_mode') === 'exclude' ? 'bez ' : ''}${names.join(', ')}${params.get('include_category_children') === 'false' ? ' (bez podkategorii)' : ''}`)
+  }
+  if (params.has('from_year') || params.has('to_year')) {
+    add('Rok emisji', `${params.get('year_mode') === 'exclude' ? 'poza ' : ''}${params.get('from_year') || '…'}–${params.get('to_year') || '…'}`)
+  }
+  if (params.has('has_image')) add('Zdjęcie', params.get('has_image') === 'true' ? 'jest' : 'brak')
+  if (params.has('has_video')) add('Wideo', params.get('has_video') === 'true' ? 'jest' : 'brak')
+  const sortKeys = params.getAll('sort_by')
+  const sortOrders = params.getAll('sort_order')
+  const sorting = sortKeys.map((key, index) => `${sortLabels[key] ?? key} ${sortOrders[index] === 'desc' ? '↓' : '↑'}`)
+  return { filters: chips, sorting }
+})
+
+async function loadFilterSummaryOptions(): Promise<void> {
+  const names = Object.keys(filterLabels)
+  const [dictionaryResults, categoryResponse] = await Promise.all([
+    Promise.all(names.map(async (name) => {
+      const response = await fetch(`/api/dictionaries/${name}`, { cache: 'no-store' })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return [name, await response.json() as NamedFilterValue[]] as const
+    })),
+    fetch('/api/categories', { cache: 'no-store' }),
+  ])
+  for (const [name, items] of dictionaryResults) filterDictionaries.value[name] = items
+  if (categoryResponse.ok) categories.value = await categoryResponse.json() as NamedFilterValue[]
+}
+
 function activeCollectionScopeLabel(): string {
   const ids = filters.collectionIds
   if (ids.length === 0) return 'Wszystkie kolekcje'
@@ -110,11 +191,16 @@ function activeCollectionScopeLabel(): string {
 
 async function loadCollections(): Promise<void> {
   try {
-    const response = await fetch('/api/collections', { cache: 'no-store' })
+    const [response] = await Promise.all([
+      fetch('/api/collections', { cache: 'no-store' }),
+      loadFilterSummaryOptions(),
+    ])
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     collections.value = await response.json() as Collection[]
   } catch {
     collections.value = []
+    filterDictionaries.value = {}
+    categories.value = []
   }
 }
 
@@ -181,6 +267,17 @@ async function loadCoins(): Promise<void> {
   try {
     const query = buildCoinFilterQuery(filters)
     const params = new URLSearchParams(query)
+    const previousParams = new URLSearchParams(appliedFilterQuery.value)
+    const sortChanged = appliedFilterQuery.value !== "" && (
+      previousParams.getAll("sort_by").join("|") !== params.getAll("sort_by").join("|") ||
+      previousParams.getAll("sort_order").join("|") !== params.getAll("sort_order").join("|")
+    )
+    if (sortChanged) {
+      for (const mode of ["image-grid", "size-gallery", "grid", "list"] as ViewMode[]) {
+        sessionStorage.removeItem(scrollPositionStorageKey(mode))
+      }
+      window.scrollTo(0, 0)
+    }
     params.set('limit', '50')
     const response = await fetch(`/api/coins?${params.toString()}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -192,11 +289,12 @@ async function loadCoins(): Promise<void> {
     nextCursor.value = page.next_cursor
     hasMore.value = page.has_more
     appliedFilterQuery.value = query
+    sessionStorage.setItem(filterStateStorageKey, query)
     errorMessage.value = ''
     await nextTick()
     // Preserve the current viewport when filters trigger a reload.
     // History-entry restoration runs separately after the initial catalogue load.
-    if (hasMountedCatalog) {
+    if (hasMountedCatalog && !sortChanged) {
       window.scrollTo(0, scrollY)
     }
   } catch {
@@ -305,15 +403,25 @@ function openCoinDetails(coin: Coin): void {
 function resetFilters(): void {
   resetCoinFilters(filters, isArchive ? 'archived' : 'active')
   void loadCoins()
+  closeAdvancedFilters()
+}
+
+function closeAdvancedFilters(): void {
+  advancedFiltersDialog.value?.close()
+  showAdvancedFilters.value = false
 }
 
 function toggleAdvancedFilters(): void {
   if (showAdvancedFilters.value) {
-    advancedFiltersDialog.value?.close()
-    showAdvancedFilters.value = false
+    closeAdvancedFilters()
   } else {
     showAdvancedFilters.value = true
   }
+}
+
+function submitAdvancedFilters(): void {
+  void loadCoins()
+  closeAdvancedFilters()
 }
 
 let previousBodyOverflow = ''
@@ -502,8 +610,16 @@ onUnmounted(() => {
       </button>
     </form>
       <div v-if="!initialLoading && coins.length > 0" class="results-bar" aria-label="Zakres wyników">
-        <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
-        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
+        <div class="results-count">
+          <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
+          <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
+        </div>
+        <div v-if="appliedCriteria.filters.length || appliedCriteria.sorting.length" class="applied-criteria" aria-label="Aktywne kryteria">
+          <span v-for="item in appliedCriteria.filters" :key="`filter-${item}`" class="criteria-chip">{{ item }}</span>
+          <span v-for="(item, index) in appliedCriteria.sorting" :key="`sort-${index}`" class="criteria-chip sort-chip">
+            {{ index + 1 }}. {{ item }}
+          </span>
+        </div>
       </div>
 
       <dialog v-if="showAdvancedFilters" ref="advancedFiltersDialog" id="advanced-coin-filters" class="advanced-filters" @close="showAdvancedFilters = false">
@@ -512,10 +628,9 @@ onUnmounted(() => {
           <h2>Filtry</h2>
           <p>Uściślij wyszukiwanie według cech monety.</p>
         </div>
-        <button type="button" class="collapse-button" @click="toggleAdvancedFilters">Zwiń</button>
       </div>
 
-      <CoinFilters :filters="filters" show-status @submit="loadCoins" @reset="resetFilters" />
+      <CoinFilters :filters="filters" show-status @submit="submitAdvancedFilters" @reset="resetFilters" @collapse="closeAdvancedFilters" />
     </dialog>
     </div>
 
@@ -606,12 +721,45 @@ onUnmounted(() => {
 }
 
 .results-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  gap: 6px;
   min-height: 42px;
   padding: 6px 0 12px;
   line-height: 1.5;
+}
+
+.results-count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.applied-criteria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 6px;
+}
+
+.criteria-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.sort-chip {
+  border-color: #dbe3ee;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
 }
 
 .page-header h1 {
@@ -817,6 +965,44 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.advanced-filters-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dialog-submit-button,
+.dialog-reset-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dialog-submit-button {
+  border: 0;
+  background: #2563eb;
+  color: #fff;
+}
+
+.dialog-submit-button:hover {
+  background: #1d4ed8;
+}
+
+.dialog-reset-button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+}
+
+.dialog-reset-button:hover {
+  background: #f8fafc;
 }
 
 .advanced-filters-header h2 {

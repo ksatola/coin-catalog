@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from sqlalchemy import Select, String, and_, cast, exists, func, or_, select
 
+from coin_catalog.coin_sorting import SortCriterion, apply_sorting
 from coin_catalog.models import (
     Category,
     CategoryRelation,
@@ -139,8 +140,7 @@ def build_coin_query(
     has_video: bool | None = None,
     video_mode: str = "include",
     status_filter: str = "active",
-    sort_by: str = "id",
-    sort_order: str = "asc",
+    sort_spec: Sequence[SortCriterion] | None = None,
 ) -> Select[tuple[Coin]]:
     statement = select(Coin)
 
@@ -237,15 +237,9 @@ def build_coin_query(
             ~image_match if image_mode == "exclude" else image_match
         )
 
-    sort_columns = {
-        "id": Coin.id,
-        "from_year": Coin.from_year,
-        "to_year": Coin.to_year,
-    }
-    sort_column = sort_columns.get(sort_by, Coin.id)
-    statement = statement.distinct().order_by(
-        sort_column.desc() if sort_order == "desc" else sort_column.asc(),
-        Coin.id.asc(),
+    statement = apply_sorting(
+        statement.distinct(),
+        sort_spec or (SortCriterion("id", "asc"),),
     )
 
     return statement

@@ -1038,3 +1038,41 @@ A user may browse different subsets or presentation modes in separate tabs. Shar
 - Successful mutations explicitly invalidate affected catalogue scopes; a stale scope refreshes on reactivation and restores its prior scroll position.
 - Scroll restoration is scoped to the catalogue/archive view and retains the latest position for that scope across navigation paths.
 - Cache retention, invalidation, scroll restoration, and cursor-page reconstruction require Playwright regression coverage.
+
+
+## D-041 — Multi-Criteria Catalogue Sorting
+
+**Status:** Accepted  
+**Date:** 2026-11-26
+
+The active and archived coin catalogues support an ordered list of independent sort criteria. The order of criteria defines priority; every criterion has its own ascending or descending direction. The supported fields are:
+
+- technical coin ID (id);
+- collection number (collection_number), sorted lexicographically as text;
+- issue start and end year (from_year, to_year), interpreted chronologically using the associated era;
+- creation, modification, and purchase dates (created_at, updated_at, purchase_date);
+- country, issuer, denomination, material, and mint dictionary names.
+
+The API accepts paired repeated query parameters, preserving their order:
+
+    sort_by=country&sort_order=asc&sort_by=from_year&sort_order=desc
+
+The parameter lists must have equal lengths, directions must be asc or desc, and a field may appear only once. If technical ID is not explicitly selected, the backend appends id ASC as the deterministic final tie-breaker. When ID is explicitly selected, it participates at the user's chosen priority and is not duplicated; because it is unique, criteria after it cannot change the resulting order.
+
+All criteria use NULLS LAST, independent of direction. Issue years are converted to a chronological SQL sort key: p.n.e. years are negative, n.e. years are positive, and missing or unrecognized eras produce NULL. Era names are matched exactly. The schema is not extended to implement this behavior.
+
+The opaque versioned cursor contains the complete normalized sort specification and the last row's value for every criterion. Forward and backward keyset predicates use the same ordered specification and NULL semantics. Detail previous/next navigation uses that same ordering independently of which infinite-scroll pages are loaded.
+
+The selected sort specification is persisted in sessionStorage per browser tab and catalogue scope. Filters remain independent from sorting. Changing sort order starts a new cursor sequence and resets the catalogue scroll position. Returning from coin details preserves the sort state and existing loaded catalogue state.
+
+### Rationale
+
+Multi-criteria ordering is needed to make the catalogue useful when individual fields contain repeated values. A complete keyset cursor is required to avoid duplicates and omissions across page boundaries. Explicit NULL ordering and era-aware year normalization make the order predictable and portable across catalogue views.
+
+### Consequences
+
+- Grid, List, image gallery, Size Gallery, and detail navigation use one server-defined order.
+- Sort criteria are independent of active filters and presentation mode.
+- Cursor format changes are versioned; cursors from the previous single-field format are rejected.
+- No database schema or migration changes are required.
+- Backend and Playwright tests must cover mixed directions, duplicate values, NULLs, BCE/CE chronology, pagination, navigation, and per-tab persistence.

@@ -56,7 +56,7 @@ def data(session: Session) -> dict[str, Coin | Category]:
     collection = Collection(name="Test Collection")
     country = Country(name="Polska")
     denomination = Denomination(name="Grosz")
-    era = Era(name="AD")
+    era = Era(name="n.e.")
     root = Category(name="Monety")
     parent = Category(name="Polska")
     child = Category(name="Grosz")

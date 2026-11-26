@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -53,7 +54,15 @@ def session() -> Generator[Session]:
 
 
 @pytest.fixture
-def client(session: Session) -> Generator[TestClient]:
+def client(
+    session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[TestClient]:
+    monkeypatch.setattr(
+        "coin_catalog.routes.coins.reconcile_page_thumbnails",
+        lambda coin_ids: None,
+    )
+
     def override_get_db() -> Generator[Session]:
         yield session
 
@@ -74,7 +83,7 @@ def reference_data(session: Session) -> dict[str, int]:
     mint = Mint(name="Test Mint")
     material = Material(name="Test Material")
     state = State(name="Test State")
-    era = Era(name="CE")
+    era = Era(name="n.e.")
     acquisition_method = AcquisitionMethod(name="Test Acquisition")
 
     session.add_all(
@@ -742,7 +751,7 @@ def test_list_coins_cursor_pagination_supports_sorting_and_null_years(
     assert first.status_code == 200
     first_data = first.json()
 
-    assert [item["from_year"] for item in first_data["items"]] == [None, None]
+    assert [item["from_year"] for item in first_data["items"]] == [1900, 1900]
 
     second = client.get(
         "/coins",
@@ -756,7 +765,17 @@ def test_list_coins_cursor_pagination_supports_sorting_and_null_years(
     assert second.status_code == 200
     second_data = second.json()
 
-    assert [item["from_year"] for item in second_data["items"]] == [1900, 1900]
+    assert [item["from_year"] for item in second_data["items"]] == [1910, None]
+
+    descending = client.get(
+        "/coins",
+        params={"limit": 2, "sort_by": "from_year", "sort_order": "desc"},
+    )
+    assert descending.status_code == 200
+    assert [item["from_year"] for item in descending.json()["items"]] == [
+        1910,
+        1900,
+    ]
 
 
 def test_coin_navigation_respects_filters_and_sorting(
@@ -854,3 +873,319 @@ def test_list_coins_rejects_invalid_cursor(
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid cursor"
+
+
+def test_multi_criteria_sorting_and_cursor_pagination(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    country_a = Country(name="A Country")
+    country_b = Country(name="B Country")
+    session.add_all([country_a, country_b])
+    session.flush()
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=country_b.id,
+            denomination_id=reference_data["denomination_id"],
+            collection_number="10",
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=country_a.id,
+            denomination_id=reference_data["denomination_id"],
+            collection_number="2",
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=country_a.id,
+            denomination_id=reference_data["denomination_id"],
+            collection_number="10",
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=country_a.id,
+            denomination_id=reference_data["denomination_id"],
+            collection_number="1",
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=country_a.id,
+            denomination_id=reference_data["denomination_id"],
+            collection_number="10",
+        ),
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    params = [
+        ("sort_by", "country"),
+        ("sort_order", "asc"),
+        ("sort_by", "collection_number"),
+        ("sort_order", "desc"),
+    ]
+    first = client.get("/coins", params=[*params, ("limit", "2")])
+    assert first.status_code == 200
+    first_data = first.json()
+    assert [item["id"] for item in first_data["items"]] == [
+        coins[1].id,
+        coins[2].id,
+    ]
+    assert first_data["has_more"] is True
+
+    second = client.get(
+        "/coins",
+        params=[
+            *params,
+            ("limit", "2"),
+            ("cursor", first_data["next_cursor"]),
+        ],
+    )
+    assert second.status_code == 200
+    assert [item["id"] for item in second.json()["items"]] == [
+        coins[4].id,
+        coins[3].id,
+    ]
+    assert second.json()["has_more"] is True
+
+    third = client.get(
+        "/coins",
+        params=[
+            *params,
+            ("limit", "2"),
+            ("cursor", second.json()["next_cursor"]),
+        ],
+    )
+    assert third.status_code == 200
+    assert [item["id"] for item in third.json()["items"]] == [coins[0].id]
+    assert third.json()["has_more"] is False
+
+
+def test_year_sorting_uses_bce_and_ce_chronology(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    bce = Era(name="p.n.e.")
+    ce_id = reference_data["era_id"]
+    unknown_era = Era(name="AD")
+    session.add_all([bce, unknown_era])
+    session.flush()
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            from_year=100,
+            from_era_id=bce.id,
+            to_year=100,
+            to_era_id=bce.id,
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            from_year=500,
+            from_era_id=bce.id,
+            to_year=500,
+            to_era_id=bce.id,
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            from_year=1,
+            from_era_id=ce_id,
+            to_year=1,
+            to_era_id=ce_id,
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            from_year=20,
+            from_era_id=unknown_era.id,
+            to_year=20,
+            to_era_id=unknown_era.id,
+        ),
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    response = client.get(
+        "/coins",
+        params={"sort_by": "from_year", "sort_order": "asc"},
+    )
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [
+        coins[1].id,
+        coins[0].id,
+        coins[2].id,
+        coins[3].id,
+    ]
+
+    to_year_response = client.get(
+        "/coins",
+        params={"sort_by": "to_year", "sort_order": "asc"},
+    )
+    assert to_year_response.status_code == 200
+    assert [item["id"] for item in to_year_response.json()] == [
+        coins[1].id,
+        coins[0].id,
+        coins[2].id,
+        coins[3].id,
+    ]
+
+    descending = client.get(
+        "/coins",
+        params={"sort_by": "from_year", "sort_order": "desc"},
+    )
+    assert descending.status_code == 200
+    assert [item["id"] for item in descending.json()] == [
+        coins[2].id,
+        coins[0].id,
+        coins[1].id,
+        coins[3].id,
+    ]
+
+
+def test_sort_validation_rejects_mismatched_criteria(
+    client: TestClient,
+) -> None:
+    response = client.get(
+        "/coins",
+        params=[
+            ("sort_by", "country"),
+            ("sort_order", "asc"),
+            ("sort_by", "mint"),
+        ],
+    )
+    assert response.status_code == 400
+
+
+def test_multi_criteria_navigation_matches_catalogue_order(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    country = Country(name="Navigation country")
+    session.add(country)
+    session.flush()
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=country.id,
+            denomination_id=reference_data["denomination_id"],
+            collection_number=number,
+        )
+        for number in ("A", "B", "C")
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    response = client.get(
+        f"/coins/{coins[1].id}/navigation",
+        params=[
+            ("sort_by", "country"),
+            ("sort_order", "asc"),
+            ("sort_by", "collection_number"),
+            ("sort_order", "asc"),
+        ],
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "previous_id": coins[0].id,
+        "next_id": coins[2].id,
+    }
+
+
+@pytest.mark.parametrize(
+    "sort_field",
+    [
+        "id",
+        "collection_number",
+        "from_year",
+        "to_year",
+        "created_at",
+        "updated_at",
+        "purchase_date",
+        "country",
+        "issuer",
+        "denomination",
+        "material",
+        "mint",
+    ],
+)
+def test_all_supported_sort_fields_are_accepted(
+    client: TestClient,
+    sort_field: str,
+) -> None:
+    response = client.get(
+        "/coins",
+        params={"sort_by": sort_field, "sort_order": "asc"},
+    )
+    assert response.status_code == 200
+
+
+def test_purchase_date_cursor_round_trip_and_nulls_last(
+    client: TestClient,
+    session: Session,
+    reference_data: dict[str, int],
+) -> None:
+    coins = [
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            purchase_date=date(2020, 1, 1),
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+            purchase_date=date(2019, 1, 1),
+        ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+        ),
+    ]
+    session.add_all(coins)
+    session.commit()
+
+    first = client.get(
+        "/coins",
+        params={
+            "limit": 1,
+            "sort_by": "purchase_date",
+            "sort_order": "asc",
+        },
+    )
+    assert first.status_code == 200
+    assert first.json()["items"][0]["id"] == coins[1].id
+
+    second = client.get(
+        "/coins",
+        params={
+            "limit": 1,
+            "sort_by": "purchase_date",
+            "sort_order": "asc",
+            "cursor": first.json()["next_cursor"],
+        },
+    )
+    assert second.status_code == 200
+    assert second.json()["items"][0]["id"] == coins[0].id
+
+    third = client.get(
+        "/coins",
+        params={
+            "limit": 1,
+            "sort_by": "purchase_date",
+            "sort_order": "asc",
+            "cursor": second.json()["next_cursor"],
+        },
+    )
+    assert third.status_code == 200
+    assert third.json()["items"][0]["id"] == coins[2].id

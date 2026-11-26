@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
+import CoinFilterActions from './CoinFilterActions.vue'
+
 import type { Category, CategoryGraphItem, Collection } from '../types'
+import type { SortKey } from '../composables/useCoinFilters'
 import { validateCoinSearch, type CoinFilterState } from '../composables/useCoinFilters'
 
 type DictionaryItem = { id: number; name: string }
 type Dictionaries = Record<string, DictionaryItem[]>
 
 const props = defineProps<{ filters: CoinFilterState; showStatus?: boolean }>()
-const emit = defineEmits<{ submit: []; reset: [] }>()
+const emit = defineEmits<{ submit: []; reset: []; collapse: [] }>()
 
 const dictionaries = ref<Dictionaries>({ countries: [], issuers: [], denominations: [], mints: [], materials: [], states: [], eras: [] })
 const categories = ref<Category[]>([])
@@ -16,6 +19,51 @@ const collections = ref<Collection[]>([])
 const validationErrorMessage = ref('')
 const filtersLoadErrorMessage = ref('')
 const dictionaryLabels: Record<string, string> = { countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica', materials: 'Materiał', states: 'Stan', eras: 'Era' }
+const sortOptions: { value: SortKey; label: string }[] = [
+  { value: 'id', label: 'ID techniczne' },
+  { value: 'collection_number', label: 'ID w kolekcji' },
+  { value: 'from_year', label: 'Rok emisji od' },
+  { value: 'to_year', label: 'Rok emisji do' },
+  { value: 'created_at', label: 'Data dodania' },
+  { value: 'updated_at', label: 'Data modyfikacji' },
+  { value: 'purchase_date', label: 'Data zakupu' },
+  { value: 'country', label: 'Kraj' },
+  { value: 'issuer', label: 'Emitent' },
+  { value: 'denomination', label: 'Nominał' },
+  { value: 'material', label: 'Materiał' },
+  { value: 'mint', label: 'Mennica' },
+]
+function clearSorting(): void {
+  props.filters.sortCriteria.splice(0, props.filters.sortCriteria.length, { key: 'id', direction: 'asc' })
+  submit()
+}
+
+function addSortCriterion(): void {
+  const used = props.filters.sortCriteria.map((criterion) => criterion.key)
+  const next = sortOptions.find((option) => !used.includes(option.value))
+  if (next) {
+    const idIndex = props.filters.sortCriteria.findIndex((criterion) => criterion.key === 'id')
+    const insertionIndex = idIndex >= 0 ? idIndex : props.filters.sortCriteria.length
+    props.filters.sortCriteria.splice(insertionIndex, 0, { key: next.value, direction: 'asc' })
+  }
+}
+function isSortOptionDisabled(key: SortKey, index: number): boolean {
+  const alreadySelected = props.filters.sortCriteria.some(
+    (item, itemIndex) => item.key === key && itemIndex !== index,
+  )
+  return alreadySelected
+}
+
+function removeSortCriterion(index: number): void {
+  if (props.filters.sortCriteria.length > 1) props.filters.sortCriteria.splice(index, 1)
+}
+function moveSortCriterion(index: number, offset: number): void {
+  const target = index + offset
+  if (target < 0 || target >= props.filters.sortCriteria.length) return
+  const [criterion] = props.filters.sortCriteria.splice(index, 1)
+  if (criterion) props.filters.sortCriteria.splice(target, 0, criterion)
+}
+
 const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMode' | 'issuerMode' | 'denominationMode' | 'mintMode' | 'materialMode' | 'stateMode' | 'eraMode'>> = {
   countries: 'countryMode', issuers: 'issuerMode', denominations: 'denominationMode', mints: 'mintMode', materials: 'materialMode', states: 'stateMode', eras: 'eraMode',
 }
@@ -64,6 +112,11 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
+    <CoinFilterActions
+      @reset="emit('reset')"
+      @clear-sorting="clearSorting"
+      @collapse="emit('collapse')"
+    />
     <section class="filter-section">
       <div class="section-heading">
         <div>
@@ -74,30 +127,6 @@ onMounted(loadFilters)
       <label class="option-card">Szukaj
         <input v-model="props.filters.search" type="search" aria-label="Szukaj" />
       </label>
-    </section>
-
-    <section class="filter-section">
-      <div class="section-heading">
-        <div>
-          <h3>Cechy monety</h3>
-          <p>Wybierz jedną lub więcej wartości. Tryb określa, czy mają pasować, czy zostać pominięte.</p>
-        </div>
-      </div>
-      <div class="filter-grid">
-        <div v-for="(items, name) in dictionaries" :key="name" class="filter-card">
-          <div class="filter-card-heading">
-            <label class="filter-label">{{ dictionaryLabels[name] }}</label>
-            <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="dictionaryLabels[name] + ' — tryb'">
-              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'include' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'include'" @click="props.filters[dictionaryModeKey(name)] = 'include'">+</button>
-              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'exclude'" @click="props.filters[dictionaryModeKey(name)] = 'exclude'">−</button>
-            </div>
-          </div>
-          <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4" :aria-label="dictionaryLabels[name]">
-            <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
-          </select>
-          <span class="mode-hint">{{ props.filters[dictionaryModeKey(name)] === 'exclude' ? 'Wybrane wartości zostaną wykluczone' : 'Wybrane wartości zostaną uwzględnione' }}</span>
-        </div>
-      </div>
     </section>
 
     <section class="filter-section">
@@ -128,6 +157,30 @@ onMounted(loadFilters)
           </select>
           <label class="checkbox-field"><input v-model="props.filters.includeCategoryChildren" type="checkbox" /> Uwzględniaj podkategorie</label>
           <span class="mode-hint">{{ props.filters.categoryMode === 'exclude' ? 'Wybrane kategorie zostaną wykluczone' : 'Wybrane kategorie zostaną uwzględnione' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="filter-section">
+      <div class="section-heading">
+        <div>
+          <h3>Cechy monety</h3>
+          <p>Wybierz jedną lub więcej wartości. Tryb określa, czy mają pasować, czy zostać pominięte.</p>
+        </div>
+      </div>
+      <div class="filter-grid">
+        <div v-for="(items, name) in dictionaries" :key="name" class="filter-card">
+          <div class="filter-card-heading">
+            <label class="filter-label">{{ dictionaryLabels[name] }}</label>
+            <div class="mode-toggle mode-toggle-compact" role="group" :aria-label="dictionaryLabels[name] + ' — tryb'">
+              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'include' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'include'" @click="props.filters[dictionaryModeKey(name)] = 'include'">+</button>
+              <button type="button" :class="{ active: props.filters[dictionaryModeKey(name)] === 'exclude' }" :aria-pressed="props.filters[dictionaryModeKey(name)] === 'exclude'" @click="props.filters[dictionaryModeKey(name)] = 'exclude'">−</button>
+            </div>
+          </div>
+          <select v-model="props.filters.dictionarySelections[name as keyof typeof props.filters.dictionarySelections]" multiple size="4" :aria-label="dictionaryLabels[name]">
+            <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
+          </select>
+          <span class="mode-hint">{{ props.filters[dictionaryModeKey(name)] === 'exclude' ? 'Wybrane wartości zostaną wykluczone' : 'Wybrane wartości zostaną uwzględnione' }}</span>
         </div>
       </div>
     </section>
@@ -168,21 +221,34 @@ onMounted(loadFilters)
         <label v-if="props.showStatus" class="option-card">Status
           <select v-model="props.filters.statusFilter"><option value="active">Aktywne</option><option value="archived">Archiwalne</option><option value="all">Wszystkie</option></select>
         </label>
-        <label class="option-card">Sortuj po
-          <select v-model="props.filters.sortBy"><option value="id">ID</option><option value="from_year">Rok od</option><option value="to_year">Rok do</option></select>
-        </label>
-        <label class="option-card">Kierunek
-          <select v-model="props.filters.sortOrder"><option value="asc">Rosnąco</option><option value="desc">Malejąco</option></select>
-        </label>
+        <div class="option-card sort-editor">
+          <strong class="filter-label">Kolejność sortowania</strong>
+          <p class="mode-hint">Kryteria od góry mają wyższy priorytet. Każde ma własny kierunek.</p>
+          <div v-for="(criterion, index) in props.filters.sortCriteria" :key="`sort-${criterion.key}`" class="sort-row">
+            <span class="sort-priority">{{ index + 1 }}.</span>
+            <select v-model="criterion.key" :aria-label="`Kryterium sortowania ${index + 1}`">
+              <option v-for="option in sortOptions" :key="option.value" :value="option.value" :disabled="isSortOptionDisabled(option.value, index)">{{ option.label }}</option>
+            </select>
+            <select v-model="criterion.direction" :aria-label="`Kierunek sortowania ${index + 1}`">
+              <option value="asc">Rosnąco</option>
+              <option value="desc">Malejąco</option>
+            </select>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w górę`" :disabled="index === 0" @click="moveSortCriterion(index, -1)">↑</button>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w dół`" :disabled="index === props.filters.sortCriteria.length - 1" @click="moveSortCriterion(index, 1)">↓</button>
+            <button type="button" :aria-label="`Usuń kryterium ${index + 1}`" :disabled="props.filters.sortCriteria.length === 1" @click="removeSortCriterion(index)">×</button>
+          </div>
+          <button type="button" class="add-sort-button" :disabled="props.filters.sortCriteria.length >= sortOptions.length" @click="addSortCriterion">+ Dodaj kryterium</button>
+        </div>
       </div>
     </section>
 
-    <div class="form-actions">
-      <button class="submit-button" type="submit">Szukaj / filtruj</button>
-      <button class="reset-button" type="button" @click="emit('reset')">Wyczyść filtry</button>
-      <p v-if="validationErrorMessage" class="filter-error">{{ validationErrorMessage }}</p>
-      <p v-if="filtersLoadErrorMessage" class="filter-error">{{ filtersLoadErrorMessage }}</p>
-    </div>
+    <CoinFilterActions
+      @reset="emit('reset')"
+      @clear-sorting="clearSorting"
+      @collapse="emit('collapse')"
+    />
+    <p v-if="validationErrorMessage" class="filter-error">{{ validationErrorMessage }}</p>
+    <p v-if="filtersLoadErrorMessage" class="filter-error">{{ filtersLoadErrorMessage }}</p>
   </form>
 </template>
 
@@ -262,7 +328,47 @@ onMounted(loadFilters)
   gap: 12px;
 }
 
-.filter-card,
+.sort-editor {
+  grid-column: 1 / -1;
+}
+.sort-row {
+  display: grid;
+  grid-template-columns: 28px minmax(150px, 1fr) minmax(120px, 0.7fr) repeat(3, 36px);
+  gap: 6px;
+  align-items: center;
+}
+.sort-priority {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+.sort-row button,
+.add-sort-button,
+.clear-sorting-button {
+  min-height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+.sort-row button:disabled,
+.add-sort-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.add-sort-button {
+  justify-self: start;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.dialog-reset-button:hover,
+.collapse-button:hover {
+  background: #f8fafc;
+}
+
 .option-card {
   display: grid;
   align-content: start;
@@ -387,51 +493,6 @@ onMounted(loadFilters)
 
 .option-card select {
   align-self: end;
-}
-
-.form-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 2px;
-}
-
-.form-actions .submit-button {
-  flex: 1 1 220px;
-  width: auto;
-}
-
-.reset-button {
-  flex: 0 0 auto;
-  min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  background: #fff;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.reset-button:hover {
-  background: #f8fafc;
-}
-
-.submit-button {
-  width: 100%;
-  min-height: 44px;
-  border: 0;
-  border-radius: 7px;
-  background: #2563eb;
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.submit-button:hover {
-  background: #1d4ed8;
 }
 
 .filter-error {

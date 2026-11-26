@@ -189,9 +189,9 @@ The response contains:
     next_cursor
     has_more
 
-The cursor is interpreted only by the backend. It records the selected sort field and direction together with the last sort value and coin ID. Coin ID is the deterministic tie-breaker for the supported sort fields.
+The cursor is interpreted only by the backend. It records the complete ordered sort specification and the last row's value for every criterion. The backend appends technical coin ID ascending as the deterministic final tie-breaker unless ID is explicitly selected as a criterion. An explicit ID criterion uses its configured direction and priority. Each criterion uses NULLS LAST regardless of direction.
 
-The frontend keeps filters and sorting in the catalogue URL but keeps the cursor as transient in-memory pagination state. A filter or sort change resets the loaded result set and starts a new cursor sequence.
+The frontend serializes filters and the ordered multi-criteria sort specification as repeated API query parameters. The sort specification is also persisted in sessionStorage per browser tab and catalogue scope. Detail links carry the current filter and sort context so previous/next navigation can reproduce the same result order. The cursor remains transient in-memory pagination state. A filter or sort change resets the loaded result set and starts a new cursor sequence; a sort change also resets the catalogue scroll position.
 
 The catalogue uses an IntersectionObserver sentinel near the end of the rendered result set to trigger loading of the next batch. Loaded batches are appended to the existing coins collection.
 
@@ -211,7 +211,7 @@ The current category model, search/filtering, collection-number workflow, and co
 
 ## 16. Per-Tab Catalogue State and Scroll Restoration
 
-The active catalogue and archive maintain independent in-memory filter state in each browser tab. Filter changes are not synchronized between tabs.
+The active catalogue and archive maintain independent in-memory filter state in each browser tab. Filter changes are not synchronized between tabs. Multi-criteria sort specifications are persisted in sessionStorage separately for each tab and catalogue scope.
 
 Tab-specific presentation preferences are stored in `sessionStorage`: catalogue view mode, image-gallery column count, and Size Gallery presentation scale. They survive reloads in the same tab without being shared with other tabs. Screen calibration remains in `localStorage` because it describes the browser display rather than a particular browsing session.
 

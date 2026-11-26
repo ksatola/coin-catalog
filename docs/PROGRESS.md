@@ -370,3 +370,20 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Przy zmianie trybu zapisywana jest pozycja opuszczanego widoku, a po aktualizacji DOM przywracana jest pozycja docelowego trybu.
 - Dodano test Playwright sprawdzający niezależne pozycje Galerii, Grid i Rozmiaru.
 - **Weryfikacja: nieuruchomiona po tej zmianie.** Wymagane uruchomienie testów UI, typecheck i build w Dev Container.
+
+
+## 2026-11-26 — Multi-criteria catalogue sorting
+
+Implemented on branch `feature/catalog-multi-sort`.
+
+Implemented in the branch:
+
+- Shared backend sort definitions for all 12 supported fields, including lexicographic collection numbers, dictionary names, timestamps, purchase date, and era-aware issue years.
+- Repeated sort_by/sort_order API parameters with validation and deterministic technical-ID tie-breaking.
+- Versioned multi-value keyset cursors with NULLS LAST handling and matching previous/next navigation predicates.
+- Frontend controls for adding, removing, reordering, and independently directing sort criteria.
+- Tab-scoped sessionStorage persistence for sorting and scroll reset when the applied sort changes.
+- Backend and Playwright regression tests, with backend tests patching thumbnail reconciliation so requests cannot open a runtime SessionLocal connection.
+- Architecture and decision documentation updates.
+
+**Verification status:** the project owner initially reported all 10 tests in `frontend/tests/ui/coin-filters.spec.ts` passing in the Dev Container. A subsequent broader Playwright run reported 19 UI test failures: 18 strict-mode locator failures caused by duplicate controls in the upper/lower filter action bars, plus one filter-persistence test that reloaded before the asynchronous catalogue request had completed. Test locators and synchronization were updated; the affected Playwright suites must be rerun before this work is considered fully verified. Backend pytest/Ruff and frontend type-check/production build results are not established here. No database schema or migration changes are included.

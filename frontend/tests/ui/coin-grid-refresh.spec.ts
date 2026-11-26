@@ -12,7 +12,7 @@ const images = new Map([
 ])
 const dictionaries = {
   countries: [{ id: 1, name: 'Kraj testowy' }], issuers: [], denominations: [{ id: 2, name: 'Nominał testowy' }],
-  mints: [], materials: [], states: [], eras: [{ id: 3, name: 'AD' }],
+  mints: [], materials: [], states: [], eras: [{ id: 3, name: 'n.e.' }],
 }
 
 const validJpeg = Buffer.from(
@@ -90,12 +90,13 @@ test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page
 
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #2' })).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Wyczyść filtry' }).click()
 
   const grid = page.locator('.image-grid')
   await expect(grid.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
@@ -400,12 +401,12 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
 
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await assertImages(4)
 
-  await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Wyczyść filtry' }).click()
   await assertImages(6)
-  await page.getByRole('button', { name: 'Zwiń' }).click()
 
   await page.getByRole('button', { name: '3 monet w wierszu' }).click()
   await assertImages(6)

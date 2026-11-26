@@ -355,6 +355,8 @@ def test_catalog_page_schedules_thumbnail_reconciliation(
         era_id=None,
         category_id=None,
         coin_status="active",
+        sort_by=["id"],
+        sort_order=["asc"],
         limit=50,
         session=session,
         background_tasks=background_tasks,

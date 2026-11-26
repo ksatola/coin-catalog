@@ -37,7 +37,7 @@ const dictionaries = {
   mints: [],
   materials: [],
   states: [],
-  eras: [{ id: 1, name: 'AD' }],
+  eras: [{ id: 1, name: 'n.e.' }],
 }
 
 async function mockCatalog(page: import('@playwright/test').Page): Promise<URL[]> {
@@ -220,4 +220,113 @@ test('nawigacja szczegółów używa endpointu previous/next z filtrami', async 
   expect(requestedNavigation[0]?.searchParams.get('sort_by')).toBe('id')
   await page.getByRole('button', { name: 'Następna →' }).click()
   await expect(page).toHaveURL(/\/monety\/3\?/)
+})
+
+
+test('wysyła wielokryterialne sortowanie w kolejności priorytetów', async ({ page }) => {
+  const requests = await mockCatalog(page)
+  await page.goto('/monety')
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
+  await page.getByRole('combobox', { name: 'Kierunek sortowania 2' }).selectOption('desc')
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
+
+  await expect.poll(() => requests.length).toBeGreaterThan(1)
+  const request = requests.at(-1)
+  expect(request?.searchParams.getAll('sort_by')).toEqual(['country', 'from_year'])
+  expect(request?.searchParams.getAll('sort_order')).toEqual(['asc', 'desc'])
+})
+
+test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({ page }) => {
+  await mockCatalog(page)
+  await page.goto('/monety')
+  await page.evaluate(() => sessionStorage.setItem('coin-catalog:scroll-position:coins:image-grid', '600'))
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
+
+  const stored = await page.evaluate(() => sessionStorage.getItem('coin-catalog:sort-criteria:coins'))
+  const savedScroll = await page.evaluate(() => sessionStorage.getItem('coin-catalog:scroll-position:coins:image-grid'))
+  expect(stored).toContain('sort_by=country')
+  expect(stored).toContain('sort_by=from_year')
+  expect(savedScroll).toBeNull()
+
+  await page.reload()
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('country')
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 2' })).toHaveValue('from_year')
+})
+
+
+test('nawigacja szczegółów zachowuje wszystkie priorytety sortowania', async ({ page }) => {
+  const requestedNavigation: URL[] = []
+  await page.route('**/api/coins/*/navigation*', async (route) => {
+    const url = new URL(route.request().url())
+    requestedNavigation.push(url)
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ previous_id: 1, next_id: 3 }),
+    })
+  })
+  await page.route('**/api/coins/*', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/navigation')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ previous_id: 1, next_id: 3 }),
+      })
+      return
+    }
+    const coinId = Number(url.pathname.split('/').pop())
+    const coin = coins.find((item) => item.id === coinId) ?? coins[1]
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(coin),
+    })
+  })
+
+  await page.goto(
+    '/monety/2?apply_filters=true&sort_by=country&sort_order=asc&sort_by=from_year&sort_order=desc',
+  )
+  await expect(page.getByRole('button', { name: 'Następna →' })).toBeEnabled()
+  expect(requestedNavigation[0]?.searchParams.getAll('sort_by')).toEqual([
+    'country',
+    'from_year',
+  ])
+  expect(requestedNavigation[0]?.searchParams.getAll('sort_order')).toEqual([
+    'asc',
+    'desc',
+  ])
+
+  await page.getByRole('button', { name: 'Następna →' }).click()
+  await expect(page).toHaveURL(/\/monety\/3\?/)
+  const nextUrl = new URL(page.url())
+  expect(nextUrl.searchParams.getAll('sort_by')).toEqual(['country', 'from_year'])
+  expect(nextUrl.searchParams.getAll('sort_order')).toEqual(['asc', 'desc'])
+})
+
+
+test('czyszczenie filtrów nie zmienia niezależnej specyfikacji sortowania', async ({ page }) => {
+  await mockCatalog(page)
+  await page.goto('/monety')
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 2' }).selectOption('from_year')
+  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Wyczyść filtry' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('button', { name: '⚙ Filtry' }).click()
+
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('country')
+  await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 2' })).toHaveValue('from_year')
+  await expect(page.getByRole('searchbox', { name: 'Szukaj', exact: true })).toHaveValue('')
 })

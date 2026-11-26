@@ -3,7 +3,6 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CoinDetail from '../components/CoinDetail.vue'
-import { buildCoinFilterQuery, parseCoinFilterQuery } from '../composables/useCoinFilters'
 import type { Coin } from '../types'
 import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
@@ -24,10 +23,11 @@ function filterContextQuery(): string {
 
 function navigationQuery(): string {
   if (applyCurrentFilters.value) {
-    const params = new URLSearchParams(window.location.search)
-    params.delete('apply_filters')
-    const filters = parseCoinFilterQuery(params)
-    return buildCoinFilterQuery(filters)
+    // Keep the exact catalogue query, including repeated sort_by/sort_order
+    // parameters and their priority order. Rebuilding it from filter state can
+    // silently normalize or discard query context.
+    const params = new URLSearchParams(filterContextQuery())
+    return params.toString()
   }
 
   const status = coin.value?.is_deleted ? 'archived' : 'active'
