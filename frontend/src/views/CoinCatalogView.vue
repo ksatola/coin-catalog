@@ -49,18 +49,22 @@ const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
 const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
-const scrollPositionStorageKey = `coin-catalog:scroll-position:${props.scope}`
+function scrollPositionStorageKey(): string {
+  const position = history.state?.position
+  const entryId = typeof position === 'number' ? String(position) : 'initial'
+  return `coin-catalog:scroll-position:${props.scope}:${entryId}`
+}
 const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
 function loadViewMode(): ViewMode {
-  const stored = localStorage.getItem(viewModeStorageKey)
+  const stored = sessionStorage.getItem(viewModeStorageKey)
   return stored === 'image-grid' || stored === 'size-gallery' || stored === 'grid' || stored === 'list'
     ? stored
     : 'image-grid'
 }
 
 function loadGalleryColumns(): GalleryColumns {
-  const stored = Number(localStorage.getItem(galleryColumnsStorageKey))
+  const stored = Number(sessionStorage.getItem(galleryColumnsStorageKey))
   return stored === 1 || stored === 2 || stored === 3 || stored === 4
     ? stored
     : 2
@@ -70,7 +74,7 @@ const viewMode = ref<ViewMode>(loadViewMode())
 const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
 
 function loadSizeGalleryScale(): SizeGalleryScale {
-  const stored = Number(localStorage.getItem(sizeGalleryScaleStorageKey))
+  const stored = Number(sessionStorage.getItem(sizeGalleryScaleStorageKey))
   return stored === 25 || stored === 50 || stored === 75 || stored === 100 || stored === 125 || stored === 150 || stored === 200 ? stored : 100
 }
 
@@ -108,15 +112,15 @@ async function loadCollections(): Promise<void> {
 }
 
 watch(viewMode, (mode) => {
-  localStorage.setItem(viewModeStorageKey, mode)
+  sessionStorage.setItem(viewModeStorageKey, mode)
 })
 
 watch(galleryColumns, (columns) => {
-  localStorage.setItem(galleryColumnsStorageKey, String(columns))
+  sessionStorage.setItem(galleryColumnsStorageKey, String(columns))
 })
 
 watch(sizeGalleryScale, (scale) => {
-  localStorage.setItem(sizeGalleryScaleStorageKey, String(scale))
+  sessionStorage.setItem(sizeGalleryScaleStorageKey, String(scale))
 })
 
 function saveSizeGalleryCalibration(pixelsPerMm: number): void {
@@ -182,8 +186,6 @@ async function loadCoins(): Promise<void> {
     // reusing history.state.scroll.top on every filter change jumps the page.
     if (hasMountedCatalog) {
       window.scrollTo(0, scrollY)
-    } else if (typeof history.state?.scroll?.top === 'number') {
-      window.scrollTo(0, history.state.scroll.top)
     }
   } catch {
     if (generation !== requestGeneration) return
@@ -232,6 +234,27 @@ async function loadMoreCoins(): Promise<void> {
       loadingMore.value = false
     }
   }
+}
+
+async function restoreCatalogScrollPosition(): Promise<void> {
+  const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey()))
+  if (!Number.isFinite(savedScrollPosition) || savedScrollPosition <= 0) return
+
+  const maximumScroll = (): number => Math.max(
+    0,
+    Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight,
+  )
+
+  // Rebuild enough of the infinite-scroll result set before restoring the saved position.
+  while (hasMore.value && nextCursor.value && maximumScroll() < savedScrollPosition) {
+    const previousCount = coins.value.length
+    await loadMoreCoins()
+    await nextTick()
+    if (coins.value.length === previousCount) break
+  }
+
+  await nextTick()
+  window.scrollTo(0, Math.min(savedScrollPosition, maximumScroll()))
 }
 
 async function archiveCoin(coin: Coin): Promise<void> {
@@ -308,7 +331,7 @@ watch([sentinel, loadingMore], ([element, isLoading]) => {
 })
 
 onBeforeRouteLeave(() => {
-  sessionStorage.setItem(scrollPositionStorageKey, String(window.scrollY))
+  sessionStorage.setItem(scrollPositionStorageKey(), String(window.scrollY))
 
   // A route change can happen while the native filter dialog is open.
   // Release its body scroll lock synchronously before the next view mounts.
@@ -323,11 +346,7 @@ onMounted(async () => {
   await Promise.all([loadCoins(), loadCollections()])
   hasMountedCatalog = true
 
-  const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey))
-  if (Number.isFinite(savedScrollPosition) && savedScrollPosition > 0) {
-    await nextTick()
-    window.scrollTo(0, savedScrollPosition)
-  }
+  await restoreCatalogScrollPosition()
 })
 
 onUnmounted(() => {
