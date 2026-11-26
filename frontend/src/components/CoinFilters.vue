@@ -34,7 +34,11 @@ const sortOptions: { value: SortKey; label: string }[] = [
 function addSortCriterion(): void {
   const used = props.filters.sortCriteria.map((criterion) => criterion.key)
   const next = sortOptions.find((option) => !used.includes(option.value))
-  if (next) props.filters.sortCriteria.push({ key: next.value, direction: 'asc' })
+  if (next) {
+    const idIndex = props.filters.sortCriteria.findIndex((criterion) => criterion.key === 'id')
+    const insertionIndex = idIndex >= 0 ? idIndex : props.filters.sortCriteria.length
+    props.filters.sortCriteria.splice(insertionIndex, 0, { key: next.value, direction: 'asc' })
+  }
 }
 function removeSortCriterion(index: number): void {
   if (props.filters.sortCriteria.length > 1) props.filters.sortCriteria.splice(index, 1)
@@ -204,14 +208,14 @@ onMounted(loadFilters)
           <div v-for="(criterion, index) in props.filters.sortCriteria" :key="`sort-${criterion.key}`" class="sort-row">
             <span class="sort-priority">{{ index + 1 }}.</span>
             <select v-model="criterion.key" :aria-label="`Kryterium sortowania ${index + 1}`">
-              <option v-for="option in sortOptions" :key="option.value" :value="option.value" :disabled="props.filters.sortCriteria.some((item, itemIndex) => item.key === option.value && itemIndex !== index)">{{ option.label }}</option>
+              <option v-for="option in sortOptions" :key="option.value" :value="option.value" :disabled="props.filters.sortCriteria.some((item, itemIndex) => item.key === option.value && itemIndex !== index || option.value === 'id' && index !== props.filters.sortCriteria.length - 1)">{{ option.label }}</option>
             </select>
             <select v-model="criterion.direction" :aria-label="`Kierunek sortowania ${index + 1}`">
               <option value="asc">Rosnąco</option>
               <option value="desc">Malejąco</option>
             </select>
-            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w górę`" :disabled="index === 0" @click="moveSortCriterion(index, -1)">↑</button>
-            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w dół`" :disabled="index === props.filters.sortCriteria.length - 1" @click="moveSortCriterion(index, 1)">↓</button>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w górę`" :disabled="index === 0 || criterion.key === 'id'" @click="moveSortCriterion(index, -1)">↑</button>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w dół`" :disabled="index === props.filters.sortCriteria.length - 1 || props.filters.sortCriteria[index + 1]?.key === 'id'" @click="moveSortCriterion(index, 1)">↓</button>
             <button type="button" :aria-label="`Usuń kryterium ${index + 1}`" :disabled="props.filters.sortCriteria.length === 1" @click="removeSortCriterion(index)">×</button>
           </div>
           <button type="button" class="add-sort-button" :disabled="props.filters.sortCriteria.length >= sortOptions.length" @click="addSortCriterion">+ Dodaj kryterium</button>
