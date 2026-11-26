@@ -11,9 +11,10 @@ from coin_catalog.coin_pagination import (
     apply_before_cursor,
     decode_cursor,
     encode_cursor,
+    cursor_for_coin,
 )
 from coin_catalog.coin_search import build_coin_query
-from coin_catalog.coin_sorting import SortCriterion, apply_sorting, normalize_sort_spec
+from coin_catalog.coin_sorting import SortCriterion, apply_reverse_sorting, normalize_sort_spec
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import SessionLocal, get_db
 from coin_catalog.image_storage import collection_images_dir, thumbnail_path
@@ -352,7 +353,7 @@ def list_coins(
     )
 
     next_cursor = (
-        encode_cursor(__import__("coin_catalog.coin_pagination", fromlist=["cursor_for_coin"]).cursor_for_coin(page_coins[-1], sort_spec))
+        encode_cursor(cursor_for_coin(page_coins[-1], sort_spec))
         if has_more and page_coins
         else None
     )
@@ -398,8 +399,8 @@ def coin_navigation(
     has_video: bool | None = None,
     video_mode: str = "include",
     coin_status: str = Query("active", alias="status"),
-    sort_by: str = "id",
-    sort_order: str = "asc",
+    sort_by: list[str] = Query(default=["id"]),
+    sort_order: list[str] = Query(default=["asc"]),
     session: Session = Depends(get_db),
 ) -> CoinNavigationResponse:
     validate_coin_query(
@@ -421,9 +422,9 @@ def coin_navigation(
             "video_mode": video_mode,
         },
         coin_status,
-        sort_by,
-        sort_order,
     )
+
+    sort_spec = normalize_sort_spec(sort_by, sort_order)
 
     coin = session.get(Coin, coin_id)
     if coin is None:
@@ -463,22 +464,17 @@ def coin_navigation(
         has_video=has_video,
         video_mode=video_mode,
         coin_status=coin_status,
-        sort_by=sort_by,
-        sort_order=sort_order,
+        sort_spec=sort_spec,
     )
 
     current = session.scalar(statement.where(Coin.id == coin_id).limit(1))
     if current is None:
         return CoinNavigationResponse(previous_id=None, next_id=None)
 
-    from coin_catalog.coin_pagination import cursor_for_coin\n\n    current_cursor = cursor_for_coin(current, sort_spec)
+    current_cursor = cursor_for_coin(current, sort_spec)
 
     previous_statement = apply_before_cursor(statement, current_cursor)
-    reverse_spec = tuple(
-        SortCriterion(item.key, "desc" if item.direction == "asc" else "asc")
-        for item in sort_spec
-    )
-    previous_statement = apply_sorting(previous_statement, reverse_spec).limit(1)
+    previous_statement = apply_reverse_sorting(previous_statement, sort_spec).limit(1)
     previous = session.scalar(previous_statement)
 
     next_statement = apply_after_cursor(statement, current_cursor).limit(1)
