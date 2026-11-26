@@ -353,3 +353,12 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Kept quick-search text independent from advanced text search; exclusion is applied in the database query so pagination and detail navigation use the same criteria.
 - Added frontend controls and URL/query serialization for the new modes, plus backend and Playwright regression tests.
 - **Verification status: not yet verified.** The repository-connected environment used for these changes does not provide the project's local `uv`/frontend test execution environment. No passing test, lint, type-check, build, or Playwright result is claimed.
+
+
+## 2026-11-26 — cache katalogu monet i selektywne odświeżanie
+
+- Widoki `/monety` i `/archiwum` są utrzymywane przez Vue `KeepAlive`, dzięki czemu zwykły powrót z widoku szczegółowego nie pobiera ponownie stron katalogu i zachowuje dane, filtry, ustawienia prezentacji oraz stan scrolla.
+- Dodano jawne unieważnianie cache katalogów po utworzeniu monety, edycji/przeniesieniu monety, zmianie przypisanych kategorii oraz archiwizacji/przywróceniu.
+- Nieaktualny katalog odświeża pierwszą stronę przy ponownej aktywacji, a następnie doładowuje strony potrzebne do przywrócenia zapisanej pozycji.
+- Rozszerzono test Playwright o sprawdzenie braku ponownego pobrania listy przy zwykłym powrocie oraz odświeżenia po oznaczeniu katalogu jako nieaktualnego.
+- **Weryfikacja: nieuruchomiona po tej zmianie.** Wymagane uruchomienie testów UI, typecheck i build w Dev Container.
