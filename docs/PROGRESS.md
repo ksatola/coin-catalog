@@ -4,6 +4,21 @@ This document records the current, verified state of the project. A task is mark
 
 ---
 
+## 2026-11-26 — Per-tab catalogue state and scroll restoration
+
+Implemented on branch `fix/coin-catalog-tab-state`:
+
+- Moved catalogue view mode, image-gallery column count, and Size Gallery presentation scale to tab-scoped `sessionStorage`.
+- Kept screen calibration in `localStorage`.
+- Kept filter state in per-tab in-memory application state.
+- Changed scroll-position keys to include catalogue scope and Vue Router history-entry position.
+- Centralized catalogue scroll restoration and load additional cursor pages when needed before restoring a saved position.
+- Disabled Vue Router's competing automatic scroll restoration for `/monety` and `/archiwum`.
+- Added Playwright coverage for independent state across two tabs and restoration after returning from a coin detail page.
+- Updated Size Gallery test setup to store presentation scale in `sessionStorage`.
+
+**Verification status:** automated tests, frontend type-check, and production build have not yet been run for this change. The project owner will run the supplied commands in the Dev Container and provide the results.
+
 ## Current Phase
 
 **Phase 9 — Cross-platform Standalone Packaging is the current phase; planning is established and implementation is at the early-start stage.**
