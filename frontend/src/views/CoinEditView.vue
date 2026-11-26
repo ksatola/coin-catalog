@@ -123,6 +123,9 @@ async function saveCoin(payload: CoinFormSubmit): Promise<void> {
       body: JSON.stringify(coinUpdate),
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    // The coin fields are committed even if a subsequent image operation fails.
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
 
     if (payload.images.avers) await uploadFile(currentCoinId.value, payload.images.avers, 'avers', true)
     if (payload.images.rewers) await uploadFile(currentCoinId.value, payload.images.rewers, 'rewers', true)
@@ -130,8 +133,6 @@ async function saveCoin(payload: CoinFormSubmit): Promise<void> {
     for (const image of payload.images.additionalDeletes) await deleteImage(currentCoinId.value, image)
 
     markClean()
-    markCoinCatalogStale('coins')
-    markCoinCatalogStale('archive')
     await router.push(`/monety/${currentCoinId.value}`)
   } catch {
     errorMessage.value = 'Nie udało się zapisać zmian monety lub jej zdjęć.'
