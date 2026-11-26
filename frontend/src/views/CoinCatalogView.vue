@@ -51,9 +51,10 @@ const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
 const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
 function scrollPositionStorageKey(): string {
-  const position = history.state?.position
-  const entryId = typeof position === 'number' ? String(position) : 'initial'
-  return `coin-catalog:scroll-position:${props.scope}:${entryId}`
+  // Keep the latest position per catalogue scope. A per-history-entry key is
+  // unreliable when returning through popstate because Vue Router may expose
+  // the destination entry's state while route-leave guards are running.
+  return `coin-catalog:scroll-position:${props.scope}`
 }
 const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
