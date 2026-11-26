@@ -5,7 +5,11 @@ import AppNavigation from './components/AppNavigation.vue'
 <template>
   <div class="app">
     <main class="app-content">
-      <RouterView :key="$route.fullPath" />
+      <RouterView v-slot="{ Component, route }">
+      <KeepAlive include="CoinsView,ArchiveView">
+        <component :is="Component" :key="route.fullPath" />
+      </KeepAlive>
+    </RouterView>
     </main>
 
     <AppNavigation />
