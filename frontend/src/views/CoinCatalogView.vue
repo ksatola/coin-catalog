@@ -639,7 +639,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <CoinFilters :filters="filters" show-status @submit="submitAdvancedFilters" @reset="resetFilters" />
+      <CoinFilters :filters="filters" show-status @submit="submitAdvancedFilters" @reset="resetFilters" @collapse="closeAdvancedFilters" />
     </dialog>
     </div>
 
