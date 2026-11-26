@@ -243,6 +243,7 @@ test('wysyła wielokryterialne sortowanie w kolejności priorytetów', async ({ 
 test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({ page }) => {
   await mockCatalog(page)
   await page.goto('/monety')
+  await page.evaluate(() => sessionStorage.setItem('coin-catalog:scroll-position:coins:image-grid', '600'))
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
   await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
   await page.getByRole('button', { name: '+ Dodaj kryterium' }).click()
@@ -250,6 +251,8 @@ test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({
   await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   const stored = await page.evaluate(() => sessionStorage.getItem('coin-catalog:sort-criteria:coins'))
+  const savedScroll = await page.evaluate(() => sessionStorage.getItem('coin-catalog:scroll-position:coins:image-grid'))
   expect(stored).toContain('sort_by=country')
   expect(stored).toContain('sort_by=from_year')
+  expect(savedScroll).toBeNull()
 })
