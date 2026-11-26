@@ -35,13 +35,20 @@ def encode_cursor(cursor: CoinCursor) -> str:
     return encoded.rstrip(b"=").decode("ascii")
 
 
-def decode_cursor(value: str, sort_spec: tuple[SortCriterion, ...]) -> CoinCursor:
+def decode_cursor(
+    value: str,
+    sort_spec: tuple[SortCriterion, ...],
+) -> CoinCursor:
     try:
         padded = value + "=" * (-len(value) % 4)
-        payload = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8"))
+        payload = json.loads(
+            base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8"),
+        )
         if payload.get("version") != 2:
             raise ValueError("Unsupported cursor version")
-        cursor_spec = tuple(SortCriterion(key, direction) for key, direction in payload["sort"])
+        cursor_spec = tuple(
+            SortCriterion(key, direction) for key, direction in payload["sort"]
+        )
         raw_values = payload["values"]
         coin_id = payload["coin_id"]
         if cursor_spec != sort_spec or len(raw_values) != len(sort_spec):
@@ -53,14 +60,24 @@ def decode_cursor(value: str, sort_spec: tuple[SortCriterion, ...]) -> CoinCurso
             for item, raw in zip(sort_spec, raw_values, strict=True)
         )
         return CoinCursor(sort_spec, values, coin_id)
-    except (binascii.Error, KeyError, TypeError, ValueError, json.JSONDecodeError):
+    except (
+        AttributeError,
+        binascii.Error,
+        KeyError,
+        TypeError,
+        ValueError,
+        json.JSONDecodeError,
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid cursor or cursor does not match sorting",
         ) from None
 
 
-def cursor_for_coin(coin: Coin, sort_spec: tuple[SortCriterion, ...]) -> CoinCursor:
+def cursor_for_coin(
+    coin: Coin,
+    sort_spec: tuple[SortCriterion, ...],
+) -> CoinCursor:
     from coin_catalog.coin_sorting import cursor_value
 
     return CoinCursor(
@@ -84,13 +101,13 @@ def _cursor_condition(cursor: CoinCursor, *, after: bool):
                 branch = expression > value if ascending else expression < value
                 branch = or_(branch, expression.is_(None))
                 equal = expression == value
+        elif value is None:
+            branch = expression.is_not(None)
+            equal = expression.is_(None)
         else:
-            if value is None:
-                branch = expression.is_not(None)
-                equal = expression.is_(None)
-            else:
-                branch = expression < value if ascending else expression > value
-                equal = expression == value
+            branch = expression < value if ascending else expression > value
+            equal = expression == value
+
         if branch is not None:
             alternatives.append(and_(*prefix, branch))
         prefix.append(equal)
@@ -98,9 +115,15 @@ def _cursor_condition(cursor: CoinCursor, *, after: bool):
     return or_(*alternatives)
 
 
-def apply_after_cursor(statement: Select[tuple[Coin]], cursor: CoinCursor) -> Select[tuple[Coin]]:
+def apply_after_cursor(
+    statement: Select[tuple[Coin]],
+    cursor: CoinCursor,
+) -> Select[tuple[Coin]]:
     return statement.where(_cursor_condition(cursor, after=True))
 
 
-def apply_before_cursor(statement: Select[tuple[Coin]], cursor: CoinCursor) -> Select[tuple[Coin]]:
+def apply_before_cursor(
+    statement: Select[tuple[Coin]],
+    cursor: CoinCursor,
+) -> Select[tuple[Coin]]:
     return statement.where(_cursor_condition(cursor, after=False))
