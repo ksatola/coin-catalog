@@ -362,3 +362,11 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Nieaktualny katalog odświeża pierwszą stronę przy ponownej aktywacji, a następnie doładowuje strony potrzebne do przywrócenia zapisanej pozycji.
 - Rozszerzono test Playwright o sprawdzenie braku ponownego pobrania listy przy zwykłym powrocie oraz odświeżenia po oznaczeniu katalogu jako nieaktualnego.
 - **Weryfikacja: nieuruchomiona po tej zmianie.** Wymagane uruchomienie testów UI, typecheck i build w Dev Container.
+
+
+## 2026-11-26 — niezależne pozycje scrolla dla trybów katalogu
+
+- Pozycja przewijania jest teraz zapisywana osobno dla każdego trybu prezentacji (`image-grid`, `size-gallery`, `grid`, `list`) oraz zakresu (`coins`, `archive`).
+- Przy zmianie trybu zapisywana jest pozycja opuszczanego widoku, a po aktualizacji DOM przywracana jest pozycja docelowego trybu.
+- Dodano test Playwright sprawdzający niezależne pozycje Galerii, Grid i Rozmiaru.
+- **Weryfikacja: nieuruchomiona po tej zmianie.** Wymagane uruchomienie testów UI, typecheck i build w Dev Container.
