@@ -22,7 +22,8 @@ const makeCoin = (id: number) => ({
   images: [],
 })
 
-async function mockCatalog(page: Page): Promise<void> {
+async function mockCatalog(page: Page): Promise<() => number> {
+  let catalogListRequests = 0
   const coins = Array.from({ length: 150 }, (_, index) => makeCoin(index + 1))
 
   await page.route('**/api/collections', async (route) => {
@@ -31,6 +32,7 @@ async function mockCatalog(page: Page): Promise<void> {
   await page.route('**/api/coins*', async (route) => {
     const url = new URL(route.request().url())
     const path = url.pathname
+    if (path === '/api/coins') catalogListRequests += 1
     if (path.endsWith('/navigation')) {
       await route.fulfill({
         status: 200,
@@ -60,6 +62,7 @@ async function mockCatalog(page: Page): Promise<void> {
       body: JSON.stringify({ items, next_cursor: nextCursor, has_more: nextCursor !== null }),
     })
   })
+  return () => catalogListRequests
 }
 
 test('filtry i ustawienia prezentacji są niezależne między kartami', async ({ page }) => {
@@ -102,7 +105,7 @@ test('filtry i ustawienia prezentacji są niezależne między kartami', async ({
 })
 
 test('powrót do katalogu odtwarza scroll i doładowuje brakujące strony', async ({ page }) => {
-  await mockCatalog(page)
+  const getCatalogListRequestCount = await mockCatalog(page)
   await page.goto('/monety')
 
   const tiles = page.locator('.coin-tile')
@@ -113,6 +116,7 @@ test('powrót do katalogu odtwarza scroll i doładowuje brakujące strony', asyn
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
   await expect(tiles).toHaveCount(150)
 
+  const requestsBeforeDetail = getCatalogListRequestCount()
   const lastTile = tiles.nth(140)
   await lastTile.scrollIntoViewIfNeeded()
   const savedScroll = await page.evaluate(() => window.scrollY)
@@ -122,13 +126,17 @@ test('powrót do katalogu odtwarza scroll i doładowuje brakujące strony', asyn
   await page.goBack()
   await expect(tiles).toHaveCount(150)
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(savedScroll - 10)
+  expect(getCatalogListRequestCount()).toBe(requestsBeforeDetail)
 
   // The bottom navigation creates a new history entry rather than going back.
   // It should still restore the latest catalogue position.
   await tiles.nth(140).click()
   await expect(page).toHaveURL(/\/monety\/141/)
+  const requestsBeforeFreshReturn = getCatalogListRequestCount()
+  await page.evaluate(() => sessionStorage.setItem('coin-catalog:stale:coins', 'true'))
   await page.getByRole('link', { name: 'Monety' }).click()
   await expect(page).toHaveURL(/\/monety$/)
   await expect(tiles).toHaveCount(150)
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(savedScroll - 10)
+  expect(getCatalogListRequestCount()).toBeGreaterThan(requestsBeforeFreshReturn)
 })
