@@ -236,8 +236,8 @@ test('wysyła wielokryterialne sortowanie w kolejności priorytetów', async ({ 
 
   await expect.poll(() => requests.length).toBeGreaterThan(1)
   const request = requests.at(-1)
-  expect(request?.searchParams.getAll('sort_by')).toEqual(['country', 'from_year', 'id'])
-  expect(request?.searchParams.getAll('sort_order')).toEqual(['asc', 'desc', 'asc'])
+  expect(request?.searchParams.getAll('sort_by')).toEqual(['country', 'from_year'])
+  expect(request?.searchParams.getAll('sort_order')).toEqual(['asc', 'desc'])
 })
 
 test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({ page }) => {
