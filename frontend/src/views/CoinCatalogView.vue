@@ -181,9 +181,8 @@ async function loadCoins(): Promise<void> {
     appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
-    // Preserve the user's current position when filters trigger a reload.
-    // Router-restored scroll is only relevant during the initial catalog load;
-    // reusing history.state.scroll.top on every filter change jumps the page.
+    // Preserve the current viewport when filters trigger a reload.
+    // History-entry restoration runs separately after the initial catalogue load.
     if (hasMountedCatalog) {
       window.scrollTo(0, scrollY)
     }
