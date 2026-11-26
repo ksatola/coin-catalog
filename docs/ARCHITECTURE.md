@@ -208,3 +208,11 @@ The following remain future or conditional work:
 Collections, collection-aware coin management, collection-aware image storage, collection filtering, coin moves, cursor pagination, infinite-scroll browsing, and independent detail navigation are part of the current architecture.
 
 The current category model, search/filtering, collection-number workflow, and collection functionality are implemented.
+
+## 16. Per-Tab Catalogue State and Scroll Restoration
+
+The active catalogue and archive maintain independent in-memory filter state in each browser tab. Filter changes are not synchronized between tabs.
+
+Tab-specific presentation preferences are stored in `sessionStorage`: catalogue view mode, image-gallery column count, and Size Gallery presentation scale. They survive reloads in the same tab without being shared with other tabs. Screen calibration remains in `localStorage` because it describes the browser display rather than a particular browsing session.
+
+Scroll position is stored in `sessionStorage` using both the catalogue scope (`coins` or `archive`) and the Vue Router browser-history entry position. When a catalogue history entry is revisited, the catalogue first loads its initial cursor page, then loads additional pages until the saved vertical position is reachable (or no more results are available), and only then restores the viewport. Vue Router's automatic saved-position restoration is disabled for `/monety` and `/archiwum` so there is one owner for catalogue scroll restoration.
