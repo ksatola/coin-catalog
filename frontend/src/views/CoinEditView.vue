@@ -7,6 +7,7 @@ import CollectionAssignment from '../components/CollectionAssignment.vue'
 import CoinForm from '../components/CoinForm.vue'
 import type { Collection, Coin, CoinFormSubmit, CoinImage } from '../types'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
+import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
 const route = useRoute()
 const router = useRouter()
@@ -70,6 +71,8 @@ async function saveCollection(): Promise<void> {
     currentCoinId.value = movedCoin.id
     savedCollectionId.value = movedCoin.collection_id
     selectedCollectionId.value = movedCoin.collection_id
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
     markClean()
   } catch {
     errorMessage.value = 'Nie udało się zapisać kolekcji monety.'
@@ -127,6 +130,8 @@ async function saveCoin(payload: CoinFormSubmit): Promise<void> {
     for (const image of payload.images.additionalDeletes) await deleteImage(currentCoinId.value, image)
 
     markClean()
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
     await router.push(`/monety/${currentCoinId.value}`)
   } catch {
     errorMessage.value = 'Nie udało się zapisać zmian monety lub jej zdjęć.'
