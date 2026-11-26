@@ -40,7 +40,7 @@ async function mockCatalog(page: Page): Promise<void> {
       return
     }
 
-    const detailMatch = path.match(/\\/api\\/coins\\/(\\d+)$/)
+    const detailMatch = path.match(/\/api\/coins\/(\d+)$/)
     if (detailMatch) {
       await route.fulfill({
         status: 200,
@@ -106,7 +106,7 @@ test('powrót do katalogu odtwarza scroll i doładowuje brakujące strony', asyn
   await lastTile.scrollIntoViewIfNeeded()
   const savedScroll = await page.evaluate(() => window.scrollY)
   await lastTile.click()
-  await expect(page).toHaveURL(/\\/monety\\/141/)
+  await expect(page).toHaveURL(/\/monety\/141/)
 
   await page.goBack()
   await expect(tiles).toHaveCount(150)
