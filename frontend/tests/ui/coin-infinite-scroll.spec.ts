@@ -271,6 +271,14 @@ test('nawigacja szczegółów zachowuje wszystkie priorytety sortowania', async 
   })
   await page.route('**/api/coins/*', async (route) => {
     const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/navigation')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ previous_id: 1, next_id: 3 }),
+      })
+      return
+    }
     const coinId = Number(url.pathname.split('/').pop())
     const coin = coins.find((item) => item.id === coinId) ?? coins[1]
     await route.fulfill({
