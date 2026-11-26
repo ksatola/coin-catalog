@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
@@ -10,6 +10,7 @@ import CoinScaleCalibration from '../components/CoinScaleCalibration.vue'
 import CoinSizeGallery from '../components/CoinSizeGallery.vue'
 import { buildCoinFilterQuery, resetCoinFilters, useCoinFilters } from '../composables/useCoinFilters'
 import type { Coin, CoinPageResponse, Collection } from '../types'
+import { consumeCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
 type CatalogScope = 'coins' | 'archive'
 type ViewMode = 'image-grid' | 'size-gallery' | 'grid' | 'list'
@@ -37,6 +38,7 @@ let searchTimer: ReturnType<typeof setTimeout> | undefined
 let requestGeneration = 0
 let observer: IntersectionObserver | undefined
 let hasMountedCatalog = false
+const isRestoringScroll = ref(true)
 
 const isArchive = props.scope === 'archive'
 const pageTitle = isArchive ? 'Archiwum' : 'Monety'
@@ -49,18 +51,27 @@ const viewModeStorageKey = `coin-catalog:view-mode:${props.scope}`
 const galleryColumnsStorageKey = `coin-catalog:gallery-columns:${props.scope}`
 const sizeGalleryScaleStorageKey = `coin-catalog:size-gallery-scale:${props.scope}`
 const sizeGalleryCalibrationStorageKey = `coin-catalog:size-gallery-calibration:${props.scope}`
-const scrollPositionStorageKey = `coin-catalog:scroll-position:${props.scope}`
+function scrollPositionStorageKey(mode: ViewMode = viewMode.value): string {
+  // Each presentation has a different layout height, so each needs its own
+  // remembered viewport position. Scope also separates the active catalogue
+  // from the archive.
+  return `coin-catalog:scroll-position:${props.scope}:${mode}`
+}
+
+function saveCatalogScrollPosition(mode: ViewMode = viewMode.value): void {
+  sessionStorage.setItem(scrollPositionStorageKey(mode), String(window.scrollY))
+}
 const DEFAULT_PIXELS_PER_MM = 96 / 25.4
 
 function loadViewMode(): ViewMode {
-  const stored = localStorage.getItem(viewModeStorageKey)
+  const stored = sessionStorage.getItem(viewModeStorageKey)
   return stored === 'image-grid' || stored === 'size-gallery' || stored === 'grid' || stored === 'list'
     ? stored
     : 'image-grid'
 }
 
 function loadGalleryColumns(): GalleryColumns {
-  const stored = Number(localStorage.getItem(galleryColumnsStorageKey))
+  const stored = Number(sessionStorage.getItem(galleryColumnsStorageKey))
   return stored === 1 || stored === 2 || stored === 3 || stored === 4
     ? stored
     : 2
@@ -70,7 +81,7 @@ const viewMode = ref<ViewMode>(loadViewMode())
 const galleryColumns = ref<GalleryColumns>(loadGalleryColumns())
 
 function loadSizeGalleryScale(): SizeGalleryScale {
-  const stored = Number(localStorage.getItem(sizeGalleryScaleStorageKey))
+  const stored = Number(sessionStorage.getItem(sizeGalleryScaleStorageKey))
   return stored === 25 || stored === 50 || stored === 75 || stored === 100 || stored === 125 || stored === 150 || stored === 200 ? stored : 100
 }
 
@@ -107,16 +118,22 @@ async function loadCollections(): Promise<void> {
   }
 }
 
-watch(viewMode, (mode) => {
-  localStorage.setItem(viewModeStorageKey, mode)
-})
+watch(viewMode, (mode, previousMode) => {
+  // Capture the outgoing layout before Vue changes its rendered content.
+  saveCatalogScrollPosition(previousMode)
+  sessionStorage.setItem(viewModeStorageKey, mode)
+
+  // Restore the last viewport for the incoming layout after its DOM is updated.
+  isRestoringScroll.value = true
+  void nextTick().then(() => restoreCatalogScrollPosition(mode))
+}, { flush: 'sync' })
 
 watch(galleryColumns, (columns) => {
-  localStorage.setItem(galleryColumnsStorageKey, String(columns))
+  sessionStorage.setItem(galleryColumnsStorageKey, String(columns))
 })
 
 watch(sizeGalleryScale, (scale) => {
-  localStorage.setItem(sizeGalleryScaleStorageKey, String(scale))
+  sessionStorage.setItem(sizeGalleryScaleStorageKey, String(scale))
 })
 
 function saveSizeGalleryCalibration(pixelsPerMm: number): void {
@@ -177,13 +194,10 @@ async function loadCoins(): Promise<void> {
     appliedFilterQuery.value = query
     errorMessage.value = ''
     await nextTick()
-    // Preserve the user's current position when filters trigger a reload.
-    // Router-restored scroll is only relevant during the initial catalog load;
-    // reusing history.state.scroll.top on every filter change jumps the page.
+    // Preserve the current viewport when filters trigger a reload.
+    // History-entry restoration runs separately after the initial catalogue load.
     if (hasMountedCatalog) {
       window.scrollTo(0, scrollY)
-    } else if (typeof history.state?.scroll?.top === 'number') {
-      window.scrollTo(0, history.state.scroll.top)
     }
   } catch {
     if (generation !== requestGeneration) return
@@ -231,6 +245,31 @@ async function loadMoreCoins(): Promise<void> {
     if (generation === requestGeneration) {
       loadingMore.value = false
     }
+  }
+}
+
+async function restoreCatalogScrollPosition(mode: ViewMode = viewMode.value): Promise<void> {
+  try {
+    const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey(mode)))
+    if (!Number.isFinite(savedScrollPosition) || savedScrollPosition <= 0) return
+
+    const maximumScroll = (): number => Math.max(
+      0,
+      Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight,
+    )
+
+    // Rebuild enough of the infinite-scroll result set before restoring the saved position.
+    while (hasMore.value && nextCursor.value && maximumScroll() < savedScrollPosition) {
+      const previousCount = coins.value.length
+      await loadMoreCoins()
+      await nextTick()
+      if (coins.value.length === previousCount) break
+    }
+
+    await nextTick()
+    window.scrollTo(0, Math.min(savedScrollPosition, maximumScroll()))
+  } finally {
+    isRestoringScroll.value = false
   }
 }
 
@@ -292,11 +331,11 @@ watch(showAdvancedFilters, async (isOpen) => {
   document.body.style.overflow = previousBodyOverflow
 })
 
-watch([sentinel, loadingMore], ([element, isLoading]) => {
+watch([sentinel, loadingMore, () => isRestoringScroll.value], ([element, isLoading, isRestoring]) => {
   observer?.disconnect()
   observer = undefined
 
-  if (!element || isLoading) return
+  if (!element || isLoading || isRestoring) return
 
   observer = new IntersectionObserver((entries) => {
     if (entries.some((entry) => entry.isIntersecting)) {
@@ -308,7 +347,7 @@ watch([sentinel, loadingMore], ([element, isLoading]) => {
 })
 
 onBeforeRouteLeave(() => {
-  sessionStorage.setItem(scrollPositionStorageKey, String(window.scrollY))
+  saveCatalogScrollPosition()
 
   // A route change can happen while the native filter dialog is open.
   // Release its body scroll lock synchronously before the next view mounts.
@@ -320,14 +359,27 @@ onBeforeRouteLeave(() => {
 })
 
 onMounted(async () => {
+  // Initial mount always fetches the first page, so any pending invalidation is consumed.
+  consumeCoinCatalogStale(props.scope)
   await Promise.all([loadCoins(), loadCollections()])
   hasMountedCatalog = true
 
-  const savedScrollPosition = Number(sessionStorage.getItem(scrollPositionStorageKey))
-  if (Number.isFinite(savedScrollPosition) && savedScrollPosition > 0) {
-    await nextTick()
-    window.scrollTo(0, savedScrollPosition)
+  await restoreCatalogScrollPosition()
+})
+
+onActivated(async () => {
+  if (!hasMountedCatalog) return
+
+  isRestoringScroll.value = true
+  if (consumeCoinCatalogStale(props.scope)) {
+    await loadCoins()
   }
+  await restoreCatalogScrollPosition()
+})
+
+onDeactivated(() => {
+  observer?.disconnect()
+  observer = undefined
 })
 
 onUnmounted(() => {

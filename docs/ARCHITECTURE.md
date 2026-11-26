@@ -208,3 +208,11 @@ The following remain future or conditional work:
 Collections, collection-aware coin management, collection-aware image storage, collection filtering, coin moves, cursor pagination, infinite-scroll browsing, and independent detail navigation are part of the current architecture.
 
 The current category model, search/filtering, collection-number workflow, and collection functionality are implemented.
+
+## 16. Per-Tab Catalogue State and Scroll Restoration
+
+The active catalogue and archive maintain independent in-memory filter state in each browser tab. Filter changes are not synchronized between tabs.
+
+Tab-specific presentation preferences are stored in `sessionStorage`: catalogue view mode, image-gallery column count, and Size Gallery presentation scale. They survive reloads in the same tab without being shared with other tabs. Screen calibration remains in `localStorage` because it describes the browser display rather than a particular browsing session.
+
+The `/monety` and `/archiwum` route views are kept alive while the user navigates elsewhere, retaining loaded cursor pages, filters, presentation settings, and the catalogue component's in-memory state. Returning from coin details does not refetch the coin list. Scroll positions are stored in `sessionStorage` per catalogue scope (`coins` or `archive`) and presentation mode (`image-grid`, `size-gallery`, `grid`, or `list`). Switching modes saves the outgoing mode's viewport and restores the incoming mode's independent viewport. Positions are also restored after route reactivation, including when the app's bottom navigation creates a new history entry. Successful coin creation, coin edits or moves, category assignment changes, archive, and restore mark the affected catalogue scopes stale. A stale catalogue reloads its first cursor page on reactivation, loads additional pages until the saved vertical position is reachable (or no more results are available), and then restores the viewport. Vue Router's automatic saved-position restoration is disabled for `/monety` and `/archiwum` so there is one owner for catalogue scroll restoration.

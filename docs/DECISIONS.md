@@ -1006,3 +1006,35 @@ Oddzielenie revision obrazu od metadata wersji generatora pozwala niezawodnie ro
 - Miniaturki mogą być długo cache'owane, ponieważ URL zawiera wersję obrazu.
 - Regeneracja może być wykonywana zarówno podczas kontroli strony katalogu, jak i przy żądaniu konkretnej miniaturki.
 - Nowa funkcjonalność wymaga deterministycznych testów generatora, storage, revision/cache, retry i widoków katalogowych.
+
+## D-040 — Per-Tab Catalogue Presentation and Scroll State
+
+**Status:** Accepted  
+**Date:** 2026-11-26
+
+Catalogue presentation preferences that should be independently configurable in each browser tab are stored in `sessionStorage`:
+
+- view mode;
+- image-gallery column count;
+- Size Gallery presentation scale.
+
+Screen calibration remains in `localStorage`, because it represents a browser/display measurement rather than a tab-specific browsing preference.
+
+Coin filters remain in the frontend's in-memory state. Each browser tab runs an independent application instance, so filter changes are not synchronized between tabs and are not persisted to shared browser storage.
+
+The catalogue and archive route views are kept alive while navigating to other routes, preserving their loaded coin pages, filters, presentation state, and scroll context in memory. Returning from a coin detail view therefore does not repeat the catalogue list request. Scroll positions are stored in `sessionStorage` per catalogue scope and presentation mode (`image-grid`, `size-gallery`, `grid`, or `list`). Switching presentation modes saves the outgoing mode's viewport and restores the incoming mode's own viewport, including any cursor pages needed to reach it. Positions can also be restored when the view is reactivated, including when the app's bottom navigation creates a new history entry. A catalogue is explicitly marked stale after successful coin creation, editing, category assignment changes, archive, or restore. On reactivation, only a stale catalogue reloads its first cursor page, fetches further pages as needed to make the saved scroll position reachable, and then restores the viewport. Vue Router does not independently restore scroll for the active catalogue and archive routes, avoiding competing restoration mechanisms.
+
+### Rationale
+
+A user may browse different subsets or presentation modes in separate tabs. Shared `localStorage` caused presentation preferences to overwrite each other. Scroll restoration must also work when the app's bottom navigation creates a new history entry; a history-entry-specific key cannot serve that path. Restoring before the required infinite-scroll content exists could clamp the viewport to an earlier position.
+
+### Consequences
+
+- Catalogue presentation preferences survive a reload in the same tab but do not overwrite another tab's settings.
+- Screen calibration remains shared within the same browser origin and catalogue scope.
+- Filter state remains tab-local in memory.
+- Catalogue and archive route views retain loaded pages and UI state in memory while temporarily inactive.
+- Ordinary returns from detail or other routes do not refetch catalogue coin pages.
+- Successful mutations explicitly invalidate affected catalogue scopes; a stale scope refreshes on reactivation and restores its prior scroll position.
+- Scroll restoration is scoped to the catalogue/archive view and retains the latest position for that scope across navigation paths.
+- Cache retention, invalidation, scroll restoration, and cursor-page reconstruction require Playwright regression coverage.

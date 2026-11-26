@@ -7,6 +7,7 @@ import CoinForm from '../components/CoinForm.vue'
 import InlineCategoryCreate from '../components/InlineCategoryCreate.vue'
 import type { CategoryGraphItem, Collection, CoinFormSubmit } from '../types'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
+import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
 const router = useRouter()
 const { markClean, markDirty } = useUnsavedCoinForm()
@@ -89,6 +90,8 @@ async function createCoin(payload: CoinFormSubmit): Promise<void> {
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const coin = await response.json() as { id: number }
+    // The coin row already exists even if a later image/category upload fails.
+    markCoinCatalogStale('coins')
 
     await uploadFile(coin.id, payload.images.avers as File, 'avers')
     await uploadFile(coin.id, payload.images.rewers as File, 'rewers')

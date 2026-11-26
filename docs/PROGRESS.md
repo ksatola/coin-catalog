@@ -4,6 +4,21 @@ This document records the current, verified state of the project. A task is mark
 
 ---
 
+## 2026-11-26 — Per-tab catalogue state and scroll restoration
+
+Implemented on branch `fix/coin-catalog-tab-state`:
+
+- Moved catalogue view mode, image-gallery column count, and Size Gallery presentation scale to tab-scoped `sessionStorage`.
+- Kept screen calibration in `localStorage`.
+- Kept filter state in per-tab in-memory application state.
+- Changed scroll-position keys to include catalogue scope and Vue Router history-entry position.
+- Centralized catalogue scroll restoration and load additional cursor pages when needed before restoring a saved position.
+- Disabled Vue Router's competing automatic scroll restoration for `/monety` and `/archiwum`.
+- Added Playwright coverage for independent state across two tabs and restoration after returning from a coin detail page.
+- Updated Size Gallery test setup to store presentation scale in `sessionStorage`.
+
+**Verification status:** automated tests, frontend type-check, and production build have not yet been run for this change. The project owner will run the supplied commands in the Dev Container and provide the results.
+
 ## Current Phase
 
 **Phase 9 — Cross-platform Standalone Packaging is the current phase; planning is established and implementation is at the early-start stage.**
@@ -338,3 +353,20 @@ Next step: Phase 9 — Cross-platform Standalone Packaging. Planning is establis
 - Kept quick-search text independent from advanced text search; exclusion is applied in the database query so pagination and detail navigation use the same criteria.
 - Added frontend controls and URL/query serialization for the new modes, plus backend and Playwright regression tests.
 - **Verification status: not yet verified.** The repository-connected environment used for these changes does not provide the project's local `uv`/frontend test execution environment. No passing test, lint, type-check, build, or Playwright result is claimed.
+
+
+## 2026-11-26 — cache katalogu monet i selektywne odświeżanie
+
+- Widoki `/monety` i `/archiwum` są utrzymywane przez Vue `KeepAlive`, dzięki czemu zwykły powrót z widoku szczegółowego nie pobiera ponownie stron katalogu i zachowuje dane, filtry, ustawienia prezentacji oraz stan scrolla.
+- Dodano jawne unieważnianie cache katalogów po utworzeniu monety, edycji/przeniesieniu monety, zmianie przypisanych kategorii oraz archiwizacji/przywróceniu.
+- Nieaktualny katalog odświeża pierwszą stronę przy ponownej aktywacji, a następnie doładowuje strony potrzebne do przywrócenia zapisanej pozycji.
+- Rozszerzono test Playwright o sprawdzenie braku ponownego pobrania listy przy zwykłym powrocie oraz odświeżenia po oznaczeniu katalogu jako nieaktualnego.
+- **Weryfikacja: nieuruchomiona po tej zmianie.** Wymagane uruchomienie testów UI, typecheck i build w Dev Container.
+
+
+## 2026-11-26 — niezależne pozycje scrolla dla trybów katalogu
+
+- Pozycja przewijania jest teraz zapisywana osobno dla każdego trybu prezentacji (`image-grid`, `size-gallery`, `grid`, `list`) oraz zakresu (`coins`, `archive`).
+- Przy zmianie trybu zapisywana jest pozycja opuszczanego widoku, a po aktualizacji DOM przywracana jest pozycja docelowego trybu.
+- Dodano test Playwright sprawdzający niezależne pozycje Galerii, Grid i Rozmiaru.
+- **Weryfikacja: nieuruchomiona po tej zmianie.** Wymagane uruchomienie testów UI, typecheck i build w Dev Container.

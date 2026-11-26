@@ -15,7 +15,9 @@ import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 
 const router = createRouter({
   history: createWebHistory(),
-  scrollBehavior(_to, _from, savedPosition) {
+  scrollBehavior(to, _from, savedPosition) {
+    // The catalogue restores its own scroll after rebuilding enough infinite-scroll pages.
+    if (to.path === '/monety' || to.path === '/archiwum') return false
     return savedPosition ?? { top: 0 }
   },
   routes: [
