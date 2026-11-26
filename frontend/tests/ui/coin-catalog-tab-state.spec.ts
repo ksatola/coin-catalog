@@ -129,7 +129,17 @@ test('powrót do katalogu odtwarza scroll i doładowuje brakujące strony', asyn
   expect(getCatalogListRequestCount()).toBe(requestsBeforeDetail)
 
   // The bottom navigation creates a new history entry rather than going back.
-  // It should still restore the latest catalogue position.
+  // An ordinary return must also reuse the cached catalogue without a list request.
+  await tiles.nth(140).click()
+  await expect(page).toHaveURL(/\/monety\/141/)
+  const requestsBeforeBottomReturn = getCatalogListRequestCount()
+  await page.getByRole('link', { name: 'Monety' }).click()
+  await expect(page).toHaveURL(/\/monety$/)
+  await expect(tiles).toHaveCount(150)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(savedScroll - 10)
+  expect(getCatalogListRequestCount()).toBe(requestsBeforeBottomReturn)
+
+  // A successful mutation marks the catalogue stale and causes a refresh on return.
   await tiles.nth(140).click()
   await expect(page).toHaveURL(/\/monety\/141/)
   const requestsBeforeFreshReturn = getCatalogListRequestCount()
