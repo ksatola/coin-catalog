@@ -1030,6 +1030,18 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         coins[3].id,
     ]
 
+    descending = client.get(
+        "/coins",
+        params={"sort_by": "from_year", "sort_order": "desc"},
+    )
+    assert descending.status_code == 200
+    assert [item["id"] for item in descending.json()] == [
+        coins[2].id,
+        coins[0].id,
+        coins[1].id,
+        coins[3].id,
+    ]
+
 def test_sort_validation_rejects_mismatched_criteria(
     client: TestClient,
     reference_data: dict[str, int],
