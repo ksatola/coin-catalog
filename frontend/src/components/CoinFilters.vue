@@ -40,6 +40,13 @@ function addSortCriterion(): void {
     props.filters.sortCriteria.splice(insertionIndex, 0, { key: next.value, direction: 'asc' })
   }
 }
+function isSortOptionDisabled(key: SortKey, index: number): boolean {
+  const alreadySelected = props.filters.sortCriteria.some(
+    (item, itemIndex) => item.key === key && itemIndex !== index,
+  )
+  return alreadySelected || (key === 'id' && index !== props.filters.sortCriteria.length - 1)
+}
+
 function removeSortCriterion(index: number): void {
   if (props.filters.sortCriteria.length > 1) props.filters.sortCriteria.splice(index, 1)
 }
@@ -208,7 +215,7 @@ onMounted(loadFilters)
           <div v-for="(criterion, index) in props.filters.sortCriteria" :key="`sort-${criterion.key}`" class="sort-row">
             <span class="sort-priority">{{ index + 1 }}.</span>
             <select v-model="criterion.key" :aria-label="`Kryterium sortowania ${index + 1}`">
-              <option v-for="option in sortOptions" :key="option.value" :value="option.value" :disabled="props.filters.sortCriteria.some((item, itemIndex) => item.key === option.value && itemIndex !== index || option.value === 'id' && index !== props.filters.sortCriteria.length - 1)">{{ option.label }}</option>
+              <option v-for="option in sortOptions" :key="option.value" :value="option.value" :disabled="isSortOptionDisabled(option.value, index)">{{ option.label }}</option>
             </select>
             <select v-model="criterion.direction" :aria-label="`Kierunek sortowania ${index + 1}`">
               <option value="asc">Rosnąco</option>
