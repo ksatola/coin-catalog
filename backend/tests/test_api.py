@@ -875,7 +875,6 @@ def test_list_coins_rejects_invalid_cursor(
     assert response.json()["detail"] == "Invalid cursor"
 
 
-
 def test_multi_criteria_sorting_and_cursor_pagination(
     client: TestClient,
     session: Session,
@@ -971,7 +970,7 @@ def test_year_sorting_uses_bce_and_ce_chronology(
     bce = Era(name="p.n.e.")
     ce_id = reference_data["era_id"]
     unknown_era = Era(name="AD")
-    session.add(unknown_era)
+    session.add_all([bce, unknown_era])
     session.flush()
     coins = [
         Coin(
@@ -1068,7 +1067,7 @@ def test_multi_criteria_navigation_matches_catalogue_order(
     coins = [
         Coin(
             collection_id=reference_data["collection_id"],
-            country_id=reference_data["country_id"],
+            country_id=country.id,
             denomination_id=reference_data["denomination_id"],
             collection_number=number,
         )
