@@ -62,6 +62,7 @@ def client(
         "coin_catalog.routes.coins.reconcile_page_thumbnails",
         lambda coin_ids: None,
     )
+
     def override_get_db() -> Generator[Session]:
         yield session
 
@@ -968,9 +969,9 @@ def test_year_sorting_uses_bce_and_ce_chronology(
     reference_data: dict[str, int],
 ) -> None:
     bce = Era(name="p.n.e.")
-    ce = Era(name="n.e.")
+    ce_id = reference_data["era_id"]
     unknown_era = Era(name="AD")
-    session.add_all([bce, ce, unknown_era])
+    session.add(unknown_era)
     session.flush()
     coins = [
         Coin(
@@ -990,9 +991,9 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         Coin(
             collection_id=reference_data["collection_id"],
             from_year=1,
-            from_era_id=ce.id,
+            from_era_id=ce_id,
             to_year=1,
-            to_era_id=ce.id,
+            to_era_id=ce_id,
         ),
         Coin(
             collection_id=reference_data["collection_id"],
@@ -1067,7 +1068,8 @@ def test_multi_criteria_navigation_matches_catalogue_order(
     coins = [
         Coin(
             collection_id=reference_data["collection_id"],
-            country_id=country.id,
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
             collection_number=number,
         )
         for number in ("A", "B", "C")
@@ -1127,13 +1129,21 @@ def test_purchase_date_cursor_round_trip_and_nulls_last(
     coins = [
         Coin(
             collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
             purchase_date=date(2020, 1, 1),
         ),
         Coin(
             collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
             purchase_date=date(2019, 1, 1),
         ),
-        Coin(collection_id=reference_data["collection_id"]),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=reference_data["country_id"],
+            denomination_id=reference_data["denomination_id"],
+        ),
     ]
     session.add_all(coins)
     session.commit()
