@@ -765,6 +765,16 @@ def test_list_coins_cursor_pagination_supports_sorting_and_null_years(
 
     assert [item["from_year"] for item in second_data["items"]] == [1910, None]
 
+    descending = client.get(
+        "/coins",
+        params={"limit": 2, "sort_by": "from_year", "sort_order": "desc"},
+    )
+    assert descending.status_code == 200
+    assert [item["from_year"] for item in descending.json()["items"]] == [
+        1910,
+        1900,
+    ]
+
 
 def test_coin_navigation_respects_filters_and_sorting(
     client: TestClient,
