@@ -170,7 +170,7 @@ def cursor_python_value(key: str, value):
             raise ValueError("Invalid numeric cursor value")
         return value
     if not isinstance(value, str):
-        raise ValueError("Invalid text cursor value")
+        raise TypeError("Invalid text cursor value")
     return value
 
 
