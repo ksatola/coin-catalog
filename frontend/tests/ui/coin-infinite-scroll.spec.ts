@@ -256,3 +256,46 @@ test('sortowanie pozostaje zapisane w sessionStorage bieżącej karty', async ({
   expect(stored).toContain('sort_by=from_year')
   expect(savedScroll).toBeNull()
 })
+
+
+test('nawigacja szczegółów zachowuje wszystkie priorytety sortowania', async ({ page }) => {
+  const requestedNavigation: URL[] = []
+  await page.route('**/api/coins/*/navigation*', async (route) => {
+    const url = new URL(route.request().url())
+    requestedNavigation.push(url)
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ previous_id: 1, next_id: 3 }),
+    })
+  })
+  await page.route('**/api/coins/*', async (route) => {
+    const url = new URL(route.request().url())
+    const coinId = Number(url.pathname.split('/').pop())
+    const coin = coins.find((item) => item.id === coinId) ?? coins[1]
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(coin),
+    })
+  })
+
+  await page.goto(
+    '/monety/2?apply_filters=true&sort_by=country&sort_order=asc&sort_by=from_year&sort_order=desc',
+  )
+  await expect(page.getByRole('button', { name: 'Następna →' })).toBeEnabled()
+  expect(requestedNavigation[0]?.searchParams.getAll('sort_by')).toEqual([
+    'country',
+    'from_year',
+  ])
+  expect(requestedNavigation[0]?.searchParams.getAll('sort_order')).toEqual([
+    'asc',
+    'desc',
+  ])
+
+  await page.getByRole('button', { name: 'Następna →' }).click()
+  await expect(page).toHaveURL(/\/monety\/3\?/)
+  const nextUrl = new URL(page.url())
+  expect(nextUrl.searchParams.getAll('sort_by')).toEqual(['country', 'from_year'])
+  expect(nextUrl.searchParams.getAll('sort_order')).toEqual(['asc', 'desc'])
+})
