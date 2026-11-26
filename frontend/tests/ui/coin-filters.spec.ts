@@ -43,11 +43,7 @@ const dictionaries = {
 async function setupIsolatedCatalog(page: Page): Promise<URL[]> {
   const coinRequests: URL[] = []
 
-  // Each Playwright test gets a fresh browser context. Clear tab state explicitly as well.
-  await page.addInitScript(() => {
-    sessionStorage.clear()
-    localStorage.clear()
-  })
+  // Playwright creates a fresh browser context per test, isolating tab and local storage.
 
   await page.route('**/api/dictionaries/*', async (route) => {
     const name = new URL(route.request().url()).pathname.split('/').pop() ?? ''
@@ -149,7 +145,7 @@ test('Wyczyść sortowanie ustawia ID ASC, wysyła request i zachowuje pozostał
   expect(requests.at(-1)?.searchParams.getAll('sort_order')).toEqual(['asc'])
   expect(requests.at(-1)?.searchParams.get('search')).toBe('srebrna moneta')
   await expect(page.getByRole('combobox', { name: 'Kryterium sortowania 1' })).toHaveValue('id')
-  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
 test('Wyczyść filtry usuwa kryteria filtrów, zachowuje sortowanie i zamyka okno', async ({ page }) => {
