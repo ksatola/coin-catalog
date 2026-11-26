@@ -111,6 +111,11 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
+    <CoinFilterActions
+      @reset="emit('reset')"
+      @clear-sorting="clearSorting"
+      @collapse="emit('collapse')"
+    />
     <section class="filter-section">
       <div class="section-heading">
         <div>
