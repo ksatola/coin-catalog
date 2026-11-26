@@ -13,7 +13,11 @@ from coin_catalog.coin_pagination import (
     cursor_for_coin,
 )
 from coin_catalog.coin_search import build_coin_query
-from coin_catalog.coin_sorting import SortCriterion, apply_reverse_sorting, normalize_sort_spec
+from coin_catalog.coin_sorting import (
+    SortCriterion,
+    apply_reverse_sorting,
+    normalize_sort_spec,
+)
 from coin_catalog.collection_stats import recalculate_collection_stats
 from coin_catalog.database import SessionLocal, get_db
 from coin_catalog.image_storage import collection_images_dir, thumbnail_path
@@ -337,9 +341,7 @@ def list_coins(
         statement = load_list_images(statement)
         return list(session.scalars(statement).all())
 
-    coin_cursor = (
-        decode_cursor(cursor, sort_spec) if cursor is not None else None
-    )
+    coin_cursor = decode_cursor(cursor, sort_spec) if cursor is not None else None
     if coin_cursor is not None:
         statement = apply_after_cursor(statement, coin_cursor)
 
@@ -473,7 +475,10 @@ def coin_navigation(
     current_cursor = cursor_for_coin(current, sort_spec)
 
     previous_statement = apply_before_cursor(statement, current_cursor)
-    previous_statement = apply_reverse_sorting(previous_statement, sort_spec).limit(1)
+    previous_statement = apply_reverse_sorting(
+        previous_statement,
+        sort_spec,
+    ).limit(1)
     previous = session.scalar(previous_statement)
 
     next_statement = apply_after_cursor(statement, current_cursor).limit(1)
