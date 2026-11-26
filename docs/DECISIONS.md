@@ -1057,7 +1057,7 @@ The API accepts paired repeated query parameters, preserving their order:
 
     sort_by=country&sort_order=asc&sort_by=from_year&sort_order=desc
 
-The parameter lists must have equal lengths, directions must be asc or desc, and a field may appear only once. If technical ID is not explicitly selected, the backend appends id ASC as the deterministic final tie-breaker. An explicitly selected ID criterion must be last.
+The parameter lists must have equal lengths, directions must be asc or desc, and a field may appear only once. If technical ID is not explicitly selected, the backend appends id ASC as the deterministic final tie-breaker. When ID is explicitly selected, it participates at the user's chosen priority and is not duplicated; because it is unique, criteria after it cannot change the resulting order.
 
 All criteria use NULLS LAST, independent of direction. Issue years are converted to a chronological SQL sort key: p.n.e. years are negative, n.e. years are positive, and missing or unrecognized eras produce NULL. Era names are matched exactly. The schema is not extended to implement this behavior.
 
