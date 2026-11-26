@@ -315,7 +315,6 @@ onMounted(loadFilters)
   gap: 12px;
 }
 
-.filter-card,
 .sort-editor {
   grid-column: 1 / -1;
 }
