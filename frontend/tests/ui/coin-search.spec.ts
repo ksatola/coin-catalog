@@ -51,7 +51,7 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   await page.goto('/monety')
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('polska grosz')
   await openAdvancedFilters(page)
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
   await expect.poll(() =>
     coinRequests.some((request) => request.searchParams.get('quick_search') === 'polska grosz'),
@@ -60,10 +60,10 @@ test('wyszukiwanie wysyła tokeny niezależnie od kolejności', async ({ page })
   const firstSearchRequest = coinRequests.find((request) => request.searchParams.get('quick_search') === 'polska grosz')
   expect(firstSearchRequest?.searchParams.get('status')).toBe('active')
 
-  await page.getByRole('button', { name: 'Zwiń' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('grosz polska')
   await openAdvancedFilters(page)
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect.poll(() =>
     coinRequests.some((request) => request.searchParams.get('quick_search') === 'grosz polska'),
   ).toBe(true)
@@ -75,7 +75,7 @@ test('filtr kolekcji wysyła wybrane identyfikatory', async ({ page }) => {
   await page.goto('/monety')
   await openAdvancedFilters(page)
   await page.getByRole('listbox', { name: 'Kolekcje' }).selectOption(['1', '2'])
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   expect(coinRequests.at(-1)?.searchParams.getAll('collection_id')).toEqual(['1', '2'])
 })
@@ -86,14 +86,14 @@ test('filtr kategorii domyślnie uwzględnia podkategorie i można go wyłączy�
   await page.goto('/monety')
   await openAdvancedFilters(page)
   await page.getByRole('listbox', { name: 'Kategorie' }).selectOption('1')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   let requestUrl = coinRequests.at(-1)
   expect(requestUrl?.searchParams.getAll('category_id')).toEqual(['1'])
   expect(requestUrl?.searchParams.get('include_category_children')).toBe('true')
 
   await page.getByRole('checkbox', { name: 'Uwzględniaj podkategorie' }).uncheck()
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
   requestUrl = coinRequests.at(-1)
   expect(requestUrl?.searchParams.get('include_category_children')).toBe('false')
 })
@@ -103,7 +103,7 @@ test('wyszukiwanie krótsze niż trzy znaki jest blokowane w UI', async ({ page 
   await page.goto('/monety')
   await page.getByRole('searchbox', { name: 'Szukaj monet' }).fill('ab')
   await openAdvancedFilters(page)
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await expect(page.getByText('Każdy fragment wyszukiwania musi mieć co najmniej 3 znaki.')).toBeVisible()
 })
 
@@ -128,7 +128,7 @@ test('advanced criteria serialize their include/exclude mode separately', async 
   await openAdvancedFilters(page)
   await page.getByRole('group', { name: 'Kraj — tryb' }).getByRole('button', { name: '−' }).click()
   await page.getByLabel('Kraj', { exact: true }).selectOption('1')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   const request = coinRequests.at(-1)
   expect(request?.searchParams.get('country_mode')).toBe('exclude')
@@ -143,7 +143,7 @@ test('reset restores negative search modes to include', async ({ page }) => {
   await page.getByRole('button', { name: 'Wyklucz dopasowania' }).click()
   await openAdvancedFilters(page)
   await page.getByRole('group', { name: 'Kraj — tryb' }).getByRole('button', { name: '−' }).click()
-  await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Wyczyść filtry' }).click()
 
   await expect.poll(() => coinRequests.at(-1)?.searchParams.has('quick_search_mode')).toBe(false)
   await expect.poll(() => coinRequests.at(-1)?.searchParams.has('country_mode')).toBe(false)
