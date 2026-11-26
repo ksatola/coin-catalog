@@ -1044,7 +1044,6 @@ def test_year_sorting_uses_bce_and_ce_chronology(
 
 def test_sort_validation_rejects_mismatched_criteria(
     client: TestClient,
-    reference_data: dict[str, int],
 ) -> None:
     response = client.get(
         "/coins",
