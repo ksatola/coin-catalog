@@ -70,10 +70,21 @@ test('filtry i ustawienia prezentacji są niezależne między kartami', async ({
   await mockCatalog(secondTab)
   await secondTab.goto('/monety')
 
+  await page.getByRole('button', { name: '3 monet w wierszu' }).click()
+  await expect(page.getByRole('button', { name: '3 monet w wierszu' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(secondTab.getByRole('button', { name: '2 monet w wierszu' })).toHaveAttribute('aria-pressed', 'true')
+
   await page.getByRole('button', { name: '▦ Grid' }).click()
   await expect(page.getByRole('button', { name: '▦ Grid' })).toHaveClass(/active/)
   await expect(secondTab.getByRole('button', { name: '▦ Galeria' })).toHaveClass(/active/)
 
+  await page.getByRole('button', { name: '◉ Rozmiar' }).click()
+  await page.getByRole('button', { name: 'Skala 50%' }).click()
+  await secondTab.getByRole('button', { name: '◉ Rozmiar' }).click()
+  await expect(page.getByRole('button', { name: 'Skala 50%' })).toHaveClass(/active/)
+  await expect(secondTab.getByRole('button', { name: 'Skala 100%, wymaga kalibracji' })).toHaveClass(/active/)
+
+  await page.getByRole('button', { name: '▦ Grid' }).click()
   await secondTab.getByRole('button', { name: '☷ Lista' }).click()
   await expect(secondTab.getByRole('button', { name: '☷ Lista' })).toHaveClass(/active/)
   await expect(page.getByRole('button', { name: '▦ Grid' })).toHaveClass(/active/)
