@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session, selectinload
 
 from coin_catalog.coin_move import move_coin
 from coin_catalog.coin_pagination import (
-    CoinCursor,
     apply_after_cursor,
     apply_before_cursor,
     decode_cursor,
