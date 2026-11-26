@@ -237,6 +237,9 @@ def build_coin_query(
             ~image_match if image_mode == "exclude" else image_match
         )
 
-    statement = apply_sorting(statement.distinct(), sort_spec or (SortCriterion("id", "asc"),))
+    statement = apply_sorting(
+        statement.distinct(),
+        sort_spec or (SortCriterion("id", "asc"),),
+    )
 
     return statement
