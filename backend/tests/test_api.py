@@ -75,7 +75,7 @@ def reference_data(session: Session) -> dict[str, int]:
     mint = Mint(name="Test Mint")
     material = Material(name="Test Material")
     state = State(name="Test State")
-    era = Era(name="CE")
+    era = Era(name="n.e.")
     acquisition_method = AcquisitionMethod(name="Test Acquisition")
 
     session.add_all(
@@ -743,7 +743,7 @@ def test_list_coins_cursor_pagination_supports_sorting_and_null_years(
     assert first.status_code == 200
     first_data = first.json()
 
-    assert [item["from_year"] for item in first_data["items"]] == [None, None]
+    assert [item["from_year"] for item in first_data["items"]] == [1900, 1900]
 
     second = client.get(
         "/coins",
@@ -757,7 +757,7 @@ def test_list_coins_cursor_pagination_supports_sorting_and_null_years(
     assert second.status_code == 200
     second_data = second.json()
 
-    assert [item["from_year"] for item in second_data["items"]] == [1900, 1900]
+    assert [item["from_year"] for item in second_data["items"]] == [1910, None]
 
 
 def test_coin_navigation_respects_filters_and_sorting(
