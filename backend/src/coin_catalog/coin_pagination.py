@@ -95,8 +95,6 @@ def _cursor_condition(cursor: CoinCursor, *, after: bool):
             alternatives.append(and_(*prefix, branch))
         prefix.append(equal)
 
-    id_comparison = Coin.id > cursor.coin_id if after else Coin.id < cursor.coin_id
-    alternatives.append(and_(*prefix, id_comparison))
     return or_(*alternatives)
 
 
