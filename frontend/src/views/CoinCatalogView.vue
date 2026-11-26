@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import CoinFilters from '../components/CoinFilters.vue'
@@ -38,6 +38,9 @@ watch(() => filters.sortCriteria, (criteria) => {
 }, { deep: true })
 const coins = ref<Coin[]>([])
 const collections = ref<Collection[]>([])
+type NamedFilterValue = { id: number; name: string }
+const filterDictionaries = ref<Record<string, NamedFilterValue[]>>({})
+const categories = ref<NamedFilterValue[]>([])
 const errorMessage = ref('')
 const appliedFilterQuery = ref('')
 const nextCursor = ref<string | null>(null)
@@ -109,6 +112,67 @@ const sizeGalleryPixelsPerMm = ref(loadSizeGalleryPixelsPerMm())
 const showSizeGalleryCalibration = ref(false)
 const sizeGalleryIsCalibrated = ref(localStorage.getItem(sizeGalleryCalibrationStorageKey) !== null)
 
+const sortLabels: Record<string, string> = {
+  id: 'ID', collection_number: 'ID w kolekcji', from_year: 'Rok od', to_year: 'Rok do',
+  created_at: 'Data dodania', updated_at: 'Data modyfikacji', purchase_date: 'Data zakupu',
+  country: 'Kraj', issuer: 'Emitent', denomination: 'Nominał', material: 'Materiał', mint: 'Mennica',
+}
+const filterLabels: Record<string, string> = {
+  countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica',
+  materials: 'Materiał', states: 'Stan', eras: 'Era',
+}
+const appliedCriteria = computed(() => {
+  const params = new URLSearchParams(appliedFilterQuery.value)
+  const chips: string[] = []
+  const add = (label: string, value: string) => { if (value) chips.push(`${label}: ${value}`) }
+  add('Szukaj', params.get('search') ? `${params.get('search_mode') === 'exclude' ? 'bez ' : ''}"${params.get('search')}"` : '')
+  add('Szybkie szukanie', params.get('quick_search') ? `${params.get('quick_search_mode') === 'exclude' ? 'bez ' : ''}"${params.get('quick_search')}"` : '')
+  const dictionaryPrefixes: Record<string, string> = {
+    countries: 'country', issuers: 'issuer', denominations: 'denomination', mints: 'mint',
+    materials: 'material', states: 'state', eras: 'era',
+  }
+  for (const [key, label] of Object.entries(filterLabels)) {
+    const prefix = dictionaryPrefixes[key]
+    const ids = params.getAll(`${prefix}_id`)
+    if (!ids.length) continue
+    const values = ids.map((id) => filterDictionaries.value[key]?.find((item) => item.id === Number(id))?.name ?? `#${id}`)
+    add(label, `${params.get(`${prefix}_mode`) === 'exclude' ? 'bez ' : ''}${values.join(', ')}`)
+  }
+  const collectionIds = params.getAll('collection_id')
+  if (collectionIds.length) {
+    add('Kolekcja', collectionIds.map((id) => collections.value.find((item) => item.id === Number(id))?.name ?? `#${id}`).join(', '))
+  }
+  const categoryIds = params.getAll('category_id')
+  if (categoryIds.length) {
+    const names = categoryIds.map((id) => categories.value.find((item) => item.id === Number(id))?.name ?? `#${id}`)
+    add('Kategoria', `${params.get('category_mode') === 'exclude' ? 'bez ' : ''}${names.join(', ')}${params.get('include_category_children') === 'false' ? ' (bez podkategorii)' : ''}`)
+  }
+  if (params.has('from_year') || params.has('to_year')) {
+    add('Rok emisji', `${params.get('year_mode') === 'exclude' ? 'poza ' : ''}${params.get('from_year') || '…'}–${params.get('to_year') || '…'}`)
+  }
+  if (params.has('has_image')) add('Zdjęcie', params.get('has_image') === 'true' ? 'jest' : 'brak')
+  if (params.has('has_video')) add('Wideo', params.get('has_video') === 'true' ? 'jest' : 'brak')
+  if (params.has('status')) add('Status', params.get('status') === 'archived' ? 'Archiwalne' : params.get('status') === 'all' ? 'Wszystkie' : 'Aktywne')
+  const sortKeys = params.getAll('sort_by')
+  const sortOrders = params.getAll('sort_order')
+  const sorting = sortKeys.map((key, index) => `${sortLabels[key] ?? key} ${sortOrders[index] === 'desc' ? '↓' : '↑'}`)
+  return { filters: chips, sorting }
+})
+
+async function loadFilterSummaryOptions(): Promise<void> {
+  const names = Object.keys(filterLabels)
+  const [dictionaryResults, categoryResponse] = await Promise.all([
+    Promise.all(names.map(async (name) => {
+      const response = await fetch(`/api/dictionaries/${name}`, { cache: 'no-store' })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return [name, await response.json() as NamedFilterValue[]] as const
+    })),
+    fetch('/api/categories', { cache: 'no-store' }),
+  ])
+  for (const [name, items] of dictionaryResults) filterDictionaries.value[name] = items
+  if (categoryResponse.ok) categories.value = await categoryResponse.json() as NamedFilterValue[]
+}
+
 function activeCollectionScopeLabel(): string {
   const ids = filters.collectionIds
   if (ids.length === 0) return 'Wszystkie kolekcje'
@@ -123,11 +187,16 @@ function activeCollectionScopeLabel(): string {
 
 async function loadCollections(): Promise<void> {
   try {
-    const response = await fetch('/api/collections', { cache: 'no-store' })
+    const [response] = await Promise.all([
+      fetch('/api/collections', { cache: 'no-store' }),
+      loadFilterSummaryOptions(),
+    ])
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     collections.value = await response.json() as Collection[]
   } catch {
     collections.value = []
+    filterDictionaries.value = {}
+    categories.value = []
   }
 }
 
@@ -526,8 +595,16 @@ onUnmounted(() => {
       </button>
     </form>
       <div v-if="!initialLoading && coins.length > 0" class="results-bar" aria-label="Zakres wyników">
-        <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
-        <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
+        <div class="results-count">
+          <strong>{{ coins.length }} {{ coins.length === 1 ? 'moneta' : coins.length < 5 ? 'monety' : 'monet' }}</strong>
+          <span class="results-scope">{{ activeCollectionScopeLabel() }}</span>
+        </div>
+        <div v-if="appliedCriteria.filters.length || appliedCriteria.sorting.length" class="applied-criteria" aria-label="Aktywne kryteria">
+          <span v-for="item in appliedCriteria.filters" :key="`filter-${item}`" class="criteria-chip">{{ item }}</span>
+          <span v-for="(item, index) in appliedCriteria.sorting" :key="`sort-${index}`" class="criteria-chip sort-chip">
+            {{ index + 1 }}. {{ item }}
+          </span>
+        </div>
       </div>
 
       <dialog v-if="showAdvancedFilters" ref="advancedFiltersDialog" id="advanced-coin-filters" class="advanced-filters" @close="showAdvancedFilters = false">
@@ -630,12 +707,45 @@ onUnmounted(() => {
 }
 
 .results-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  gap: 6px;
   min-height: 42px;
   padding: 6px 0 12px;
   line-height: 1.5;
+}
+
+.results-count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.applied-criteria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 6px;
+}
+
+.criteria-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.sort-chip {
+  border-color: #dbe3ee;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
 }
 
 .page-header h1 {
