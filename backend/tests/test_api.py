@@ -1038,3 +1038,31 @@ def test_multi_criteria_navigation_matches_catalogue_order(
         "previous_id": coins[0].id,
         "next_id": coins[2].id,
     }
+
+
+@pytest.mark.parametrize(
+    "sort_field",
+    [
+        "id",
+        "collection_number",
+        "from_year",
+        "to_year",
+        "created_at",
+        "updated_at",
+        "purchase_date",
+        "country",
+        "issuer",
+        "denomination",
+        "material",
+        "mint",
+    ],
+)
+def test_all_supported_sort_fields_are_accepted(
+    client: TestClient,
+    sort_field: str,
+) -> None:
+    response = client.get(
+        "/coins",
+        params={"sort_by": sort_field, "sort_order": "asc"},
+    )
+    assert response.status_code == 200
