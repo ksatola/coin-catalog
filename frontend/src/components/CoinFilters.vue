@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
+import CoinFilterActions from './CoinFilterActions.vue'
+
 import type { Category, CategoryGraphItem, Collection } from '../types'
 import type { SortKey } from '../composables/useCoinFilters'
 import { validateCoinSearch, type CoinFilterState } from '../composables/useCoinFilters'
@@ -109,9 +111,11 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
-    <div class="filter-top-actions">
-      <button type="button" class="dialog-reset-button" @click="clearSorting">Wyczyść sortowanie</button>
-    </div>
+    <CoinFilterActions
+      @reset="emit('reset')"
+      @clear-sorting="clearSorting"
+      @collapse="emit('collapse')"
+    />
     <section class="filter-section">
       <div class="section-heading">
         <div>
@@ -237,14 +241,13 @@ onMounted(loadFilters)
       </div>
     </section>
 
-    <div class="form-actions">
-      <button class="dialog-submit-button" type="submit">Szukaj / filtruj</button>
-      <button class="dialog-reset-button" type="button" @click="emit('reset')">Wyczyść filtry</button>
-      <button class="dialog-reset-button" type="button" @click="clearSorting">Wyczyść sortowanie</button>
-      <button class="collapse-button" type="button" @click="emit('collapse')">Zwiń</button>
-      <p v-if="validationErrorMessage" class="filter-error">{{ validationErrorMessage }}</p>
-      <p v-if="filtersLoadErrorMessage" class="filter-error">{{ filtersLoadErrorMessage }}</p>
-    </div>
+    <CoinFilterActions
+      @reset="emit('reset')"
+      @clear-sorting="clearSorting"
+      @collapse="emit('collapse')"
+    />
+    <p v-if="validationErrorMessage" class="filter-error">{{ validationErrorMessage }}</p>
+    <p v-if="filtersLoadErrorMessage" class="filter-error">{{ filtersLoadErrorMessage }}</p>
   </form>
 </template>
 
@@ -258,11 +261,6 @@ onMounted(loadFilters)
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
-}
-
-.filter-top-actions {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .filter-section {
@@ -494,49 +492,6 @@ onMounted(loadFilters)
 
 .option-card select {
   align-self: end;
-}
-
-.form-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 2px;
-}
-
-.dialog-submit-button,
-.dialog-reset-button,
-.collapse-button {
-  flex: 0 0 auto;
-  min-height: 44px;
-  padding: 8px 16px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.dialog-submit-button {
-  border: 0;
-  background: #2563eb;
-  color: #fff;
-}
-
-.dialog-submit-button:hover {
-  background: #1d4ed8;
-}
-
-.dialog-reset-button,
-.collapse-button {
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #475569;
-}
-
-.collapse-button {
-  color: #334155;
-  border-radius: 9px;
 }
 
 .filter-error {
