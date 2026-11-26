@@ -977,21 +977,29 @@ def test_year_sorting_uses_bce_and_ce_chronology(
             collection_id=reference_data["collection_id"],
             from_year=100,
             from_era_id=bce.id,
+            to_year=100,
+            to_era_id=bce.id,
         ),
         Coin(
             collection_id=reference_data["collection_id"],
             from_year=500,
             from_era_id=bce.id,
+            to_year=500,
+            to_era_id=bce.id,
         ),
         Coin(
             collection_id=reference_data["collection_id"],
             from_year=1,
             from_era_id=ce.id,
+            to_year=1,
+            to_era_id=ce.id,
         ),
         Coin(
             collection_id=reference_data["collection_id"],
             from_year=20,
             from_era_id=unknown_era.id,
+            to_year=20,
+            to_era_id=unknown_era.id,
         ),
     ]
     session.add_all(coins)
@@ -1009,6 +1017,18 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         coins[3].id,
     ]
 
+
+    to_year_response = client.get(
+        "/coins",
+        params={"sort_by": "to_year", "sort_order": "asc"},
+    )
+    assert to_year_response.status_code == 200
+    assert [item["id"] for item in to_year_response.json()] == [
+        coins[1].id,
+        coins[0].id,
+        coins[2].id,
+        coins[3].id,
+    ]
 
 def test_sort_validation_rejects_mismatched_criteria(
     client: TestClient,
