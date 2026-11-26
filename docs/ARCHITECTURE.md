@@ -191,7 +191,7 @@ The response contains:
 
 The cursor is interpreted only by the backend. It records the complete ordered sort specification and the last row's value for every criterion. The backend appends technical coin ID ascending as the deterministic final tie-breaker unless ID is explicitly selected as a criterion. An explicit ID criterion uses its configured direction and priority. Each criterion uses NULLS LAST regardless of direction.
 
-The frontend keeps filters and the ordered multi-criteria sort specification in the catalogue URL and persists the sort specification in sessionStorage per browser tab and catalogue scope. The cursor remains transient in-memory pagination state. A filter or sort change resets the loaded result set and starts a new cursor sequence; a sort change also resets the catalogue scroll position.
+The frontend serializes filters and the ordered multi-criteria sort specification as repeated API query parameters. The sort specification is also persisted in sessionStorage per browser tab and catalogue scope. Detail links carry the current filter and sort context so previous/next navigation can reproduce the same result order. The cursor remains transient in-memory pagination state. A filter or sort change resets the loaded result set and starts a new cursor sequence; a sort change also resets the catalogue scroll position.
 
 The catalogue uses an IntersectionObserver sentinel near the end of the rendered result set to trigger loading of the next batch. Loaded batches are appended to the existing coins collection.
 
