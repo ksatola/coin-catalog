@@ -104,6 +104,34 @@ test('filtry i ustawienia prezentacji są niezależne między kartami', async ({
   await secondTab.close()
 })
 
+test('każdy tryb katalogu pamięta własną pozycję scrolla', async ({ page }) => {
+  await mockCatalog(page)
+  await page.goto('/monety')
+  await expect(page.locator('.coin-tile')).toHaveCount(50)
+
+  const setScroll = async (position: number) => {
+    await page.evaluate((value) => window.scrollTo(0, value), position)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(position)
+  }
+  const expectScroll = async (position: number) => {
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(position)
+  }
+
+  // Image Gallery is the default mode.
+  await setScroll(250)
+  await page.getByRole('button', { name: '▦ Grid' }).click()
+  await setScroll(650)
+  await page.getByRole('button', { name: '◉ Rozmiar' }).click()
+  await setScroll(1050)
+
+  await page.getByRole('button', { name: '▦ Galeria' }).click()
+  await expectScroll(250)
+  await page.getByRole('button', { name: '▦ Grid' }).click()
+  await expectScroll(650)
+  await page.getByRole('button', { name: '◉ Rozmiar' }).click()
+  await expectScroll(1050)
+})
+
 test('powrót do katalogu odtwarza scroll i doładowuje brakujące strony', async ({ page }) => {
   const getCatalogListRequestCount = await mockCatalog(page)
   await page.goto('/monety')
