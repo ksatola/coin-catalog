@@ -109,9 +109,6 @@ onMounted(loadFilters)
 
 <template>
   <form class="coin-filters" @submit.prevent="submit">
-    <div class="filter-top-actions">
-      <button type="button" class="clear-sorting-button" @click="clearSorting">Wyczyść sortowanie</button>
-    </div>
     <section class="filter-section">
       <div class="section-heading">
         <div>
@@ -240,6 +237,7 @@ onMounted(loadFilters)
     <div class="form-actions">
       <button class="dialog-submit-button" type="submit">Szukaj / filtruj</button>
       <button class="dialog-reset-button" type="button" @click="emit('reset')">Wyczyść filtry</button>
+      <button class="dialog-reset-button" type="button" @click="clearSorting">Wyczyść sortowanie</button>
       <button class="collapse-button" type="button" @click="emit('collapse')">Zwiń</button>
       <p v-if="validationErrorMessage" class="filter-error">{{ validationErrorMessage }}</p>
       <p v-if="filtersLoadErrorMessage" class="filter-error">{{ filtersLoadErrorMessage }}</p>
@@ -359,24 +357,6 @@ onMounted(loadFilters)
   font-size: 13px;
   font-weight: 600;
 }
-.filter-top-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.clear-sorting-button {
-  min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  background: #fff;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.clear-sorting-button:hover,
 .dialog-reset-button:hover,
 .collapse-button:hover {
   background: #f8fafc;
