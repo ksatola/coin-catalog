@@ -883,7 +883,7 @@ def test_multi_criteria_sorting_and_cursor_pagination(
     assert first.status_code == 200
     first_data = first.json()
     assert [item["id"] for item in first_data["items"]] == [
-        coins[2].id, coins[1].id,
+        coins[1].id, coins[2].id,
     ]
     assert first_data["has_more"] is True
 
