@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 
 import type { Category } from '../types'
+import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
 const props = defineProps<{
   coinId: number
@@ -62,6 +63,8 @@ async function attach(): Promise<void> {
       }
     }
 
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
     await load()
   } catch {
     errorMessage.value = 'Nie udało się przypisać kategorii.'
@@ -81,6 +84,8 @@ async function detach(category: Category): Promise<void> {
       throw new Error(`HTTP ${response.status}`)
     }
 
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
     await load()
   } catch {
     errorMessage.value = 'Nie udało się usunąć kategorii z monety.'
@@ -136,6 +141,8 @@ async function create(): Promise<void> {
     )
     if (!attachResponse.ok) throw new Error(`HTTP ${attachResponse.status}`)
 
+    markCoinCatalogStale('coins')
+    markCoinCatalogStale('archive')
     await load()
     cancel()
   } catch {
