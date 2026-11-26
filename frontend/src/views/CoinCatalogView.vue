@@ -152,7 +152,6 @@ const appliedCriteria = computed(() => {
   }
   if (params.has('has_image')) add('Zdjęcie', params.get('has_image') === 'true' ? 'jest' : 'brak')
   if (params.has('has_video')) add('Wideo', params.get('has_video') === 'true' ? 'jest' : 'brak')
-  if (params.has('status')) add('Status', params.get('status') === 'archived' ? 'Archiwalne' : params.get('status') === 'all' ? 'Wszystkie' : 'Aktywne')
   const sortKeys = params.getAll('sort_by')
   const sortOrders = params.getAll('sort_order')
   const sorting = sortKeys.map((key, index) => `${sortLabels[key] ?? key} ${sortOrders[index] === 'desc' ? '↓' : '↑'}`)
