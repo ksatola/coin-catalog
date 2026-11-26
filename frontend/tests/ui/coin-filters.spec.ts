@@ -162,6 +162,31 @@ test('Wyczyść filtry usuwa kryteria filtrów, zachowuje sortowanie i zamyka ok
   expect(requests.at(-1)?.searchParams.getAll('sort_order')).toEqual(['asc'])
 })
 
+test('dolny przycisk Wyczyść sortowanie również przywraca ID ASC', async ({ page }) => {
+  const requests = await setupIsolatedCatalog(page)
+  await openFilters(page)
+
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: 'Wyczyść sortowanie' }).last().click()
+
+  await expect.poll(() => requests.at(-1)?.searchParams.getAll('sort_by')).toEqual(['id'])
+  expect(requests.at(-1)?.searchParams.getAll('sort_order')).toEqual(['asc'])
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('górny przycisk Wyczyść filtry usuwa filtry bez zmiany sortowania', async ({ page }) => {
+  const requests = await setupIsolatedCatalog(page)
+  await openFilters(page)
+
+  await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('srebrna moneta')
+  await page.getByRole('combobox', { name: 'Kryterium sortowania 1' }).selectOption('country')
+  await page.getByRole('button', { name: 'Wyczyść filtry' }).first().click()
+
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect.poll(() => requests.at(-1)?.searchParams.get('search')).toBeNull()
+  expect(requests.at(-1)?.searchParams.getAll('sort_by')).toEqual(['country'])
+})
+
 test('Zwiń zamyka okno zarówno z górnego, jak i dolnego paska', async ({ page }) => {
   await setupIsolatedCatalog(page)
   await openFilters(page)
