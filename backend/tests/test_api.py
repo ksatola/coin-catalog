@@ -1017,7 +1017,6 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         coins[3].id,
     ]
 
-
     to_year_response = client.get(
         "/coins",
         params={"sort_by": "to_year", "sort_order": "asc"},
@@ -1041,6 +1040,7 @@ def test_year_sorting_uses_bce_and_ce_chronology(
         coins[1].id,
         coins[3].id,
     ]
+
 
 def test_sort_validation_rejects_mismatched_criteria(
     client: TestClient,
