@@ -908,6 +908,12 @@ def test_multi_criteria_sorting_and_cursor_pagination(
             denomination_id=reference_data["denomination_id"],
             collection_number="1",
         ),
+        Coin(
+            collection_id=reference_data["collection_id"],
+            country_id=country_a.id,
+            denomination_id=reference_data["denomination_id"],
+            collection_number="10",
+        ),
     ]
     session.add_all(coins)
     session.commit()
@@ -937,10 +943,22 @@ def test_multi_criteria_sorting_and_cursor_pagination(
     )
     assert second.status_code == 200
     assert [item["id"] for item in second.json()["items"]] == [
+        coins[4].id,
         coins[3].id,
-        coins[0].id,
     ]
-    assert second.json()["has_more"] is False
+    assert second.json()["has_more"] is True
+
+    third = client.get(
+        "/coins",
+        params=[
+            *params,
+            ("limit", "2"),
+            ("cursor", second.json()["next_cursor"]),
+        ],
+    )
+    assert third.status_code == 200
+    assert [item["id"] for item in third.json()["items"]] == [coins[0].id]
+    assert third.json()["has_more"] is False
 
 
 def test_year_sorting_uses_bce_and_ce_chronology(
