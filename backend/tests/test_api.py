@@ -53,8 +53,14 @@ def session() -> Generator[Session]:
 
 
 @pytest.fixture
-def client(session: Session, monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient]:
-    monkeypatch.setattr("coin_catalog.routes.coins.reconcile_page_thumbnails", lambda coin_ids: None)
+def client(
+    session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[TestClient]:
+    monkeypatch.setattr(
+        "coin_catalog.routes.coins.reconcile_page_thumbnails",
+        lambda coin_ids: None,
+    )
     def override_get_db() -> Generator[Session]:
         yield session
 
