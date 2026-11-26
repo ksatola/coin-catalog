@@ -70,7 +70,7 @@ def decode_cursor(
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid cursor or cursor does not match sorting",
+            detail="Invalid cursor",
         ) from None
 
 
