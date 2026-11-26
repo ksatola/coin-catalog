@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 
 import type { Category, CategoryGraphItem, Collection } from '../types'
+import type { SortKey } from '../composables/useCoinFilters'
 import { validateCoinSearch, type CoinFilterState } from '../composables/useCoinFilters'
 
 type DictionaryItem = { id: number; name: string }
@@ -16,6 +17,35 @@ const collections = ref<Collection[]>([])
 const validationErrorMessage = ref('')
 const filtersLoadErrorMessage = ref('')
 const dictionaryLabels: Record<string, string> = { countries: 'Kraj', issuers: 'Emitent', denominations: 'Nominał', mints: 'Mennica', materials: 'Materiał', states: 'Stan', eras: 'Era' }
+const sortOptions: { value: SortKey; label: string }[] = [
+  { value: 'id', label: 'ID techniczne' },
+  { value: 'collection_number', label: 'ID w kolekcji' },
+  { value: 'from_year', label: 'Rok emisji od' },
+  { value: 'to_year', label: 'Rok emisji do' },
+  { value: 'created_at', label: 'Data dodania' },
+  { value: 'updated_at', label: 'Data modyfikacji' },
+  { value: 'purchase_date', label: 'Data zakupu' },
+  { value: 'country', label: 'Kraj' },
+  { value: 'issuer', label: 'Emitent' },
+  { value: 'denomination', label: 'Nominał' },
+  { value: 'material', label: 'Materiał' },
+  { value: 'mint', label: 'Mennica' },
+]
+function addSortCriterion(): void {
+  const used = props.filters.sortCriteria.map((criterion) => criterion.key)
+  const next = sortOptions.find((option) => !used.includes(option.value))
+  if (next) props.filters.sortCriteria.push({ key: next.value, direction: 'asc' })
+}
+function removeSortCriterion(index: number): void {
+  if (props.filters.sortCriteria.length > 1) props.filters.sortCriteria.splice(index, 1)
+}
+function moveSortCriterion(index: number, offset: number): void {
+  const target = index + offset
+  if (target < 0 || target >= props.filters.sortCriteria.length) return
+  const [criterion] = props.filters.sortCriteria.splice(index, 1)
+  if (criterion) props.filters.sortCriteria.splice(target, 0, criterion)
+}
+
 const dictionaryModeKeys: Record<string, keyof Pick<CoinFilterState, 'countryMode' | 'issuerMode' | 'denominationMode' | 'mintMode' | 'materialMode' | 'stateMode' | 'eraMode'>> = {
   countries: 'countryMode', issuers: 'issuerMode', denominations: 'denominationMode', mints: 'mintMode', materials: 'materialMode', states: 'stateMode', eras: 'eraMode',
 }
@@ -168,12 +198,24 @@ onMounted(loadFilters)
         <label v-if="props.showStatus" class="option-card">Status
           <select v-model="props.filters.statusFilter"><option value="active">Aktywne</option><option value="archived">Archiwalne</option><option value="all">Wszystkie</option></select>
         </label>
-        <label class="option-card">Sortuj po
-          <select v-model="props.filters.sortBy"><option value="id">ID</option><option value="from_year">Rok od</option><option value="to_year">Rok do</option></select>
-        </label>
-        <label class="option-card">Kierunek
-          <select v-model="props.filters.sortOrder"><option value="asc">Rosnąco</option><option value="desc">Malejąco</option></select>
-        </label>
+        <div class="option-card sort-editor">
+          <strong class="filter-label">Kolejność sortowania</strong>
+          <p class="mode-hint">Kryteria od góry mają wyższy priorytet. Każde ma własny kierunek.</p>
+          <div v-for="(criterion, index) in props.filters.sortCriteria" :key="`sort-${criterion.key}`" class="sort-row">
+            <span class="sort-priority">{{ index + 1 }}.</span>
+            <select v-model="criterion.key" :aria-label="`Kryterium sortowania ${index + 1}`">
+              <option v-for="option in sortOptions" :key="option.value" :value="option.value" :disabled="props.filters.sortCriteria.some((item, itemIndex) => item.key === option.value && itemIndex !== index)">{{ option.label }}</option>
+            </select>
+            <select v-model="criterion.direction" :aria-label="`Kierunek sortowania ${index + 1}`">
+              <option value="asc">Rosnąco</option>
+              <option value="desc">Malejąco</option>
+            </select>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w górę`" :disabled="index === 0" @click="moveSortCriterion(index, -1)">↑</button>
+            <button type="button" :aria-label="`Przesuń kryterium ${index + 1} w dół`" :disabled="index === props.filters.sortCriteria.length - 1" @click="moveSortCriterion(index, 1)">↓</button>
+            <button type="button" :aria-label="`Usuń kryterium ${index + 1}`" :disabled="props.filters.sortCriteria.length === 1" @click="removeSortCriterion(index)">×</button>
+          </div>
+          <button type="button" class="add-sort-button" :disabled="props.filters.sortCriteria.length >= sortOptions.length" @click="addSortCriterion">+ Dodaj kryterium</button>
+        </div>
       </div>
     </section>
 
@@ -263,6 +305,41 @@ onMounted(loadFilters)
 }
 
 .filter-card,
+.sort-editor {
+  grid-column: 1 / -1;
+}
+.sort-row {
+  display: grid;
+  grid-template-columns: 28px minmax(150px, 1fr) minmax(120px, 0.7fr) repeat(3, 36px);
+  gap: 6px;
+  align-items: center;
+}
+.sort-priority {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+.sort-row button,
+.add-sort-button {
+  min-height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+.sort-row button:disabled,
+.add-sort-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.add-sort-button {
+  justify-self: start;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
 .option-card {
   display: grid;
   align-content: start;
