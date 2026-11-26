@@ -90,7 +90,7 @@ test('wyczyszczenie filtrów odświeża zdjęcia monet w galerii', async ({ page
 
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
 
   await expect(page.getByRole('link', { name: 'Moneta #1' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Moneta #2' })).toHaveCount(0)
@@ -400,7 +400,7 @@ test('rzeczywiste przełączanie widoków i filtrów nie gubi obrazów', async (
 
   await page.getByRole('button', { name: '⚙ Filtry' }).click()
   await page.getByRole('searchbox', { name: 'Szukaj', exact: true }).fill('test')
-  await page.getByRole('button', { name: 'Szukaj / filtruj' }).click()
+  await page.getByRole('dialog').locator('.filter-actions').last().getByRole('button', { name: 'Szukaj / filtruj' }).click()
   await assertImages(4)
 
   await page.getByRole('button', { name: 'Wyczyść filtry' }).click()
