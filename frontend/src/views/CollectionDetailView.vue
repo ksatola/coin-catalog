@@ -84,6 +84,7 @@ onMounted(load)
           v-if="coins.length"
           :coins="coins"
           @details="(coin) => router.push(`/monety/${coin.id}`)"
+          @duplicate="(coin) => router.push(`/dodaj?copy_from=${coin.id}`)"
         />
         <p v-else class="empty-state">Ta kolekcja nie zawiera jeszcze monet.</p>
       </section>
