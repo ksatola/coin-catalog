@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import CollectionAssignment from '../components/CollectionAssignment.vue'
 import CoinForm from '../components/CoinForm.vue'
 import InlineCategoryCreate from '../components/InlineCategoryCreate.vue'
-import type { CategoryGraphItem, Collection, CoinFormSubmit } from '../types'
+import type { CategoryGraphItem, Collection, Coin, CoinCreate, CoinFormSubmit } from '../types'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
@@ -17,6 +17,7 @@ const selectedCategoryIds = ref<number[]>([])
 const categoriesErrorMessage = ref('')
 const collections = ref<Collection[]>([])
 const selectedCollectionId = ref(0)
+const copiedCoinValues = ref<Partial<CoinCreate> | null>(null)
 const collectionsErrorMessage = ref('')
 
 async function loadCategories(): Promise<void> {
@@ -45,6 +46,21 @@ async function loadCollections(): Promise<void> {
   }
 }
 
+async function loadCopiedCoin(): Promise<void> {
+  const sourceId = Number(router.currentRoute.value.query.copy_from)
+  if (!Number.isInteger(sourceId) || sourceId <= 0) return
+
+  try {
+    const response = await fetch(`/api/coins/${sourceId}`, { cache: 'no-store' })
+    if (!response.ok) throw new Error('HTTP ' + response.status)
+    const source = await response.json() as Coin
+    const { id: _id, created_at: _createdAt, updated_at: _updatedAt, is_deleted: _isDeleted, images: _images, ...values } = source
+    copiedCoinValues.value = values
+    selectedCollectionId.value = source.collection_id
+  } catch {
+    errorMessage.value = 'Nie udało się pobrać monety do skopiowania.'
+  }
+}
 async function addCreatedCategory(category: CategoryGraphItem): Promise<void> {
   categories.value.push(category)
   await nextTick()
@@ -120,7 +136,7 @@ watch(selectedCollectionId, () => {
 onMounted(() => {
   markClean()
   void loadCategories()
-  void loadCollections()
+  void loadCollections().then(loadCopiedCoin)
 })
 </script>
 
@@ -163,7 +179,7 @@ onMounted(() => {
       </section>
     </div>
 
-    <CoinForm @submit="createCoin" @cancel="cancelCreating" />
+    <CoinForm :initial-values="copiedCoinValues" @submit="createCoin" @cancel="cancelCreating" />
   </section>
 </template>
 
