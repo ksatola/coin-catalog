@@ -18,7 +18,7 @@ type Dictionaries = {
   acquisition_methods: DictionaryItem[]
 }
 
-const props = defineProps<{ coin?: Coin | null; imageCoinId?: number }>()
+const props = defineProps<{ coin?: Coin | null; imageCoinId?: number; initialValues?: Partial<CoinCreate> | null }>()
 const emit = defineEmits<{ submit: [payload: CoinFormSubmit]; cancel: [] }>()
 const { markDirty, markClean } = useUnsavedCoinForm()
 
@@ -330,6 +330,19 @@ function loadCoinIntoForm(coin: Coin | null | undefined): void {
 }
 
 watch(() => props.coin, loadCoinIntoForm, { immediate: true })
+watch(() => props.initialValues, (values) => {
+  if (props.coin || !values) return
+  markClean()
+  Object.assign(form, { ...emptyForm, ...values })
+  weightInput.value = formatDecimalInput(form.weight)
+  diameterInput.value = formatDecimalInput(form.diameter)
+  purchasePriceInput.value = formatDecimalInput(form.purchase_price)
+  purchaseDateInput.value = form.purchase_date ?? ''
+  purchaseDateError.value = ''
+  validationMessage.value = ''
+  clearImages()
+  void nextTick().then(markClean)
+}, { immediate: true })
 watch(() => props.imageCoinId, (coinId) => {
   if (coinId && coinId !== props.coin?.id) void refreshCoinImages(coinId)
 })

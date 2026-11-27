@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import CollectionAssignment from '../components/CollectionAssignment.vue'
 import CoinForm from '../components/CoinForm.vue'
 import InlineCategoryCreate from '../components/InlineCategoryCreate.vue'
-import type { CategoryGraphItem, Collection, CoinFormSubmit } from '../types'
+import type { CategoryGraphItem, Collection, Coin, CoinCreate, CoinFormSubmit } from '../types'
 import { useUnsavedCoinForm } from '../composables/useUnsavedCoinForm'
 import { markCoinCatalogStale } from '../composables/coinCatalogFreshness'
 
@@ -17,6 +17,7 @@ const selectedCategoryIds = ref<number[]>([])
 const categoriesErrorMessage = ref('')
 const collections = ref<Collection[]>([])
 const selectedCollectionId = ref(0)
+const copiedCoinValues = ref<Partial<CoinCreate> | null>(null)
 const collectionsErrorMessage = ref('')
 
 async function loadCategories(): Promise<void> {
@@ -45,6 +46,50 @@ async function loadCollections(): Promise<void> {
   }
 }
 
+async function loadCopiedCoin(): Promise<void> {
+  const sourceId = Number(router.currentRoute.value.query.copy_from)
+  if (!Number.isInteger(sourceId) || sourceId <= 0) return
+
+  try {
+    const response = await fetch(`/api/coins/${sourceId}`, { cache: 'no-store' })
+    if (!response.ok) throw new Error('HTTP ' + response.status)
+    const source = await response.json() as Coin
+    const categoryResponse = await fetch(`/api/coins/${sourceId}/categories`, { cache: 'no-store' })
+    if (!categoryResponse.ok) throw new Error('Nie udało się pobrać kategorii monety.')
+    const sourceCategories = await categoryResponse.json() as Array<{ id: number }>
+    selectedCategoryIds.value = sourceCategories.map((category) => category.id)
+    copiedCoinValues.value = {
+      country_id: source.country_id,
+      issuer_id: source.issuer_id,
+      denomination_id: source.denomination_id,
+      from_year: source.from_year,
+      from_era_id: source.from_era_id,
+      to_year: source.to_year,
+      to_era_id: source.to_era_id,
+      mint_id: source.mint_id,
+      material_id: source.material_id,
+      state_id: source.state_id,
+      description: source.description,
+      weight: source.weight,
+      diameter: source.diameter,
+      collection_number: source.collection_number,
+      has_video: source.has_video,
+      source: source.source,
+      avers_description: source.avers_description,
+      revers_description: source.revers_description,
+      literature: source.literature,
+      acquisition_method_id: source.acquisition_method_id,
+      acquisition_method_text: source.acquisition_method_text,
+      purchase_price: source.purchase_price,
+      purchase_date: source.purchase_date,
+    }
+    selectedCollectionId.value = source.collection_id
+    await nextTick()
+    markClean()
+  } catch {
+    errorMessage.value = 'Nie udało się pobrać monety do skopiowania.'
+  }
+}
 async function addCreatedCategory(category: CategoryGraphItem): Promise<void> {
   categories.value.push(category)
   await nextTick()
@@ -120,7 +165,7 @@ watch(selectedCollectionId, () => {
 onMounted(() => {
   markClean()
   void loadCategories()
-  void loadCollections()
+  void loadCollections().then(loadCopiedCoin)
 })
 </script>
 
@@ -163,7 +208,7 @@ onMounted(() => {
       </section>
     </div>
 
-    <CoinForm @submit="createCoin" @cancel="cancelCreating" />
+    <CoinForm :initial-values="copiedCoinValues" @submit="createCoin" @cancel="cancelCreating" />
   </section>
 </template>
 

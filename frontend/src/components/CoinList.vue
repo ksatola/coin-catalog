@@ -16,7 +16,7 @@ type Dictionaries = {
 }
 
 const props = defineProps<{ coins: Coin[] }>()
-const emit = defineEmits<{ details: [coin: Coin]; archive: [coin: Coin]; restore: [coin: Coin] }>()
+const emit = defineEmits<{ details: [coin: Coin]; duplicate: [coin: Coin]; archive: [coin: Coin]; restore: [coin: Coin] }>()
 const dictionaries = reactive<Dictionaries>({
   countries: [],
   issuers: [],
@@ -99,6 +99,7 @@ void loadDictionaries()
       <div class="actions">
         <button type="button" @click="emit('details', coin)">Szczegóły</button>
         <RouterLink class="button" :to="`/monety/${coin.id}/edytuj`">Edytuj</RouterLink>
+        <button type="button" @click="emit('duplicate', coin)">Kopiuj</button>
         <button v-if="!coin.is_deleted" type="button" @click="emit('archive', coin)">Archiwizuj</button>
         <button v-else type="button" @click="emit('restore', coin)">Przywróć</button>
       </div>
