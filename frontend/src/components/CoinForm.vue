@@ -341,6 +341,7 @@ watch(() => props.initialValues, (values) => {
   purchaseDateError.value = ''
   validationMessage.value = ''
   clearImages()
+  void nextTick().then(markClean)
 }, { immediate: true })
 watch(() => props.imageCoinId, (coinId) => {
   if (coinId && coinId !== props.coin?.id) void refreshCoinImages(coinId)
