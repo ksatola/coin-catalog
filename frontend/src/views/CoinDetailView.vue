@@ -91,6 +91,11 @@ async function loadCoin(): Promise<void> {
   }
 }
 
+function duplicateCoin(): void {
+  if (!coin.value) return
+  void router.push(`/dodaj?copy_from=${coin.value.id}`)
+}
+
 function goToCoin(coinId: number | null): void {
   if (coinId === null) return
   void router.push(detailPath(coinId))
@@ -189,7 +194,7 @@ onMounted(loadCoin)
             Edytuj
           </button>
 
-          <button type="button" class="button" @click="archiveCoin">
+          <button type="button" class="button" @click="duplicateCoin">\n            Kopiuj\n          </button>\n\n          <button type="button" class="button" @click="archiveCoin">
             Archiwizuj
           </button>
         </template>
