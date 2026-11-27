@@ -395,6 +395,10 @@ async function restoreCoin(coin: Coin): Promise<void> {
   }
 }
 
+function duplicateCoin(coin: Coin): void {
+  void router.push(`/dodaj?copy_from=${coin.id}`)
+}
+
 function openCoinDetails(coin: Coin): void {
   const query = appliedFilterQuery.value
   router.push(`/monety/${coin.id}${query ? `?${query}` : ''}`)
@@ -665,6 +669,7 @@ onUnmounted(() => {
         v-else
         :coins="coins"
         @details="openCoinDetails"
+        @duplicate="duplicateCoin"
         @archive="archiveCoin"
         @restore="restoreCoin"
       />
