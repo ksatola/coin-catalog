@@ -194,7 +194,11 @@ onMounted(loadCoin)
             Edytuj
           </button>
 
-          <button type="button" class="button" @click="duplicateCoin">\n            Kopiuj\n          </button>\n\n          <button type="button" class="button" @click="archiveCoin">
+          <button type="button" class="button" @click="duplicateCoin">
+            Kopiuj
+          </button>
+
+          <button type="button" class="button" @click="archiveCoin">
             Archiwizuj
           </button>
         </template>
