@@ -54,6 +54,10 @@ async function loadCopiedCoin(): Promise<void> {
     const response = await fetch(`/api/coins/${sourceId}`, { cache: 'no-store' })
     if (!response.ok) throw new Error('HTTP ' + response.status)
     const source = await response.json() as Coin
+    const categoryResponse = await fetch(`/api/coins/${sourceId}/categories`, { cache: 'no-store' })
+    if (!categoryResponse.ok) throw new Error('Nie udało się pobrać kategorii monety.')
+    const sourceCategories = await categoryResponse.json() as Array<{ id: number }>
+    selectedCategoryIds.value = sourceCategories.map((category) => category.id)
     copiedCoinValues.value = {
       country_id: source.country_id,
       issuer_id: source.issuer_id,
@@ -80,6 +84,8 @@ async function loadCopiedCoin(): Promise<void> {
       purchase_date: source.purchase_date,
     }
     selectedCollectionId.value = source.collection_id
+    await nextTick()
+    markClean()
   } catch {
     errorMessage.value = 'Nie udało się pobrać monety do skopiowania.'
   }
