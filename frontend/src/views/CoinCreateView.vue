@@ -54,8 +54,31 @@ async function loadCopiedCoin(): Promise<void> {
     const response = await fetch(`/api/coins/${sourceId}`, { cache: 'no-store' })
     if (!response.ok) throw new Error('HTTP ' + response.status)
     const source = await response.json() as Coin
-    const { id: _id, created_at: _createdAt, updated_at: _updatedAt, is_deleted: _isDeleted, images: _images, ...values } = source
-    copiedCoinValues.value = values
+    copiedCoinValues.value = {
+      country_id: source.country_id,
+      issuer_id: source.issuer_id,
+      denomination_id: source.denomination_id,
+      from_year: source.from_year,
+      from_era_id: source.from_era_id,
+      to_year: source.to_year,
+      to_era_id: source.to_era_id,
+      mint_id: source.mint_id,
+      material_id: source.material_id,
+      state_id: source.state_id,
+      description: source.description,
+      weight: source.weight,
+      diameter: source.diameter,
+      collection_number: source.collection_number,
+      has_video: source.has_video,
+      source: source.source,
+      avers_description: source.avers_description,
+      revers_description: source.revers_description,
+      literature: source.literature,
+      acquisition_method_id: source.acquisition_method_id,
+      acquisition_method_text: source.acquisition_method_text,
+      purchase_price: source.purchase_price,
+      purchase_date: source.purchase_date,
+    }
     selectedCollectionId.value = source.collection_id
   } catch {
     errorMessage.value = 'Nie udało się pobrać monety do skopiowania.'
