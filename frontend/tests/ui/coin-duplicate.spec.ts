@@ -144,7 +144,9 @@ test('kopiuje dane monety i kategorie, ale wymaga nowych zdjęć i tworzy nowy r
 
   const actionButtons = page.locator('.detail-actions button')
   await expect(actionButtons).toHaveText(['Edytuj', 'Kopiuj', 'Archiwizuj'])
+  await expect.poll(() => requests.sourceImageLists).toBe(1)
   const imageListRequestsBeforeCopy = requests.sourceImageLists
+  const imageFileRequestsBeforeCopy = requests.sourceImageFiles
 
   await page.getByRole('button', { name: 'Kopiuj', exact: true }).click()
   await expect(page).toHaveURL(`/dodaj?copy_from=${sourceCoinId}`)
@@ -163,12 +165,12 @@ test('kopiuje dane monety i kategorie, ale wymaga nowych zdjęć i tworzy nowy r
   await expect(page.getByLabel('Literatura')).toHaveValue(sourceCoin.literature)
   await expect(page.getByLabel('Cena zakupu')).toHaveValue('123.45')
   await expect(page.getByRole('textbox', { name: 'Data zakupu' })).toHaveValue(sourceCoin.purchase_date)
-  await expect(page.getByLabel('Sposób nabycia')).toHaveValue(sourceCoin.acquisition_method_text)
+  await expect(page.locator('#acquisition-method-text')).toHaveValue(sourceCoin.acquisition_method_text)
   await expect(page.getByLabel('Wybierz kategorie').locator('option:checked')).toHaveCount(2)
   await expect(page.getByText('oryginal-awers.jpg')).toHaveCount(0)
   await expect(page.getByText('oryginal-rewers.jpg')).toHaveCount(0)
   expect(requests.sourceImageLists).toBe(imageListRequestsBeforeCopy)
-  expect(requests.sourceImageFiles).toBe(0)
+  expect(requests.sourceImageFiles).toBe(imageFileRequestsBeforeCopy)
 
   await dropJpeg(page, 0, 'nowy-awers.jpg')
   await dropJpeg(page, 1, 'nowy-rewers.jpg')
